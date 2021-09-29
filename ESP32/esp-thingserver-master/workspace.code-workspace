@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "RGBArrayNeoPixel",
+			"path": "examples/RGBArrayNeoPixel"
+		},
+		{
+			"name": "Elektroauto ESP VSCode",
+			"path": "../../../../../../../Downloads/Elektroauto-beta/Elektroauto ESP VSCode"
+		}
+	],
+	"settings": {}
+}
