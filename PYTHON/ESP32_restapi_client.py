@@ -54,7 +54,8 @@ class ESP32Client(object):
         logging.info(f"Connecting to microscope {self.host}:{self.port}")
         #self.populate_extensions()
 
-    extensions = None
+    is_filter_init = False
+    filter_position = 0
         
     @property
     def base_uri(self):
@@ -105,7 +106,9 @@ class ESP32Client(object):
         r = self.post_json(path, payload)
         return r    
 
-    def set_laser_red(self, value):
+    def set_laser_red(self, value, auto_filterswitch=False):
+        if auto_filterswitch and value >0:
+            self.switch_filter("R")
         payload = {
             "value": value
         }
@@ -113,7 +116,9 @@ class ESP32Client(object):
         r = self.post_json(path, payload)
         return r    
     
-    def set_laser_green(self, value):
+    def set_laser_green(self, value, auto_filterswitch=False):
+        if auto_filterswitch and value >0:
+            self.switch_filter("G")
         payload = {
             "value": value
         }
@@ -121,7 +126,9 @@ class ESP32Client(object):
         r = self.post_json(path, payload)
         return r    
     
-    def set_laser_blue(self, value):
+    def set_laser_blue(self, value, auto_filterswitch=False):
+        if auto_filterswitch and value >0:
+            self.switch_filter("B")
         payload = {
             "value": value
         }
@@ -181,14 +188,7 @@ class ESP32Client(object):
         path = '/lens_z'
         r = self.post_json(path, payload)
         return r
-  
-    def switch_filter(self, value=100):
-        payload = {
-            "None": 1,            
-        }
-        path = '/switch_filter'
-        r = self.post_json(path)
-        return r
+
     
     def send_jpeg(self, image):
 
@@ -211,16 +211,41 @@ class ESP32Client(object):
         files = {'media': open(iName, 'rb')}
         requests.post(self.base_uri + path, files=files)
         
-    def switch_filter(self, timeout=20):
-        payload = {
-            "None": 0,            
-        }
-        path = '/switch_filter'
-        r = self.post_json(path, payload, timeout=timeout)
+    def switch_filter(self, colour="R", timeout=20, is_filter_init=None, speed=20):
+        
+        # switch off all lasers first!        
         self.set_laser_red(0)
         self.set_laser_blue(0)
         self.set_laser_green(0)
-        return r
+
+        if is_filter_init is not None:
+            self.is_filter_init = is_filter_init
+            
+        if not self.is_filter_init:
+            self.move_filter(steps=-2000, speed=speed)
+            time.sleep(4)
+            self.is_filter_init = True
+            self.filter_position = 0
+            
+        # measured in steps from zero position
+        pos_blue = 300
+        pos_green = 900
+        pos_red = 1500
+            
+        steps = 0
+        if colour=="R":
+            steps = pos_red-self.filter_position
+            self.filter_position = pos_red
+        if colour=="G":
+            steps = pos_green - self.filter_position
+            self.filter_position = pos_green
+        if colour=="B":
+            steps = pos_blue - self.filter_position
+            self.filter_position = pos_blue
+            
+        self.move_filter(steps=steps, speed=speed)
+            
+        
              
         
     def send_ledmatrix(self, led_pattern):
@@ -247,91 +272,92 @@ class ESP32Client(object):
         return r
     
         
+if __name__ == "__main__":
+            
+        
+    #%
+    host = '192.168.43.226'
+    host = '192.168.2.147'
+    host = '192.168.2.151'
+    esp32 = ESP32Client(host, port=80)
+    
+    #esp32.set_led((100,2,5))
+    #esp32.move_x(steps=2000, speed=8)
+    #esp32.move_y(steps=2000, speed=6)
+    
+    #%%
+    esp32.lens_x(value=10000)
+    esp32.lens_z(value=10000)
+    #%%
+    for ix in range(0,32000,100):
+        esp32.lens_x(value=ix)
+        for iy in range(0,32000,100):
+            esp32.lens_z(value=iy)
+    esp32.lens_z(value=0)
+    esp32.lens_x(value=0)
+    
+    #%%
+    esp32.lens_x(value=0)
+    esp32.lens_z(value=0)
+    #%%
+    for iy in range(0,1000,1):
+        esp32.set_laser(np.sin(iy/1000*np.pi*100)*10000)
+    
+        
+    #%%
+    esp32.move_z(steps=500,  speed=1000)
+    
+    #%%
+    for i in range(100):
+        print(i)
+        esp32.move_z(steps=i*100, speed=i*100)
         
     
-#%
-host = '192.168.43.226'
-host = '192.168.2.147'
-host = '192.168.2.151'
-esp32 = ESP32Client(host, port=80)
-
-#esp32.set_led((100,2,5))
-#esp32.move_x(steps=2000, speed=8)
-#esp32.move_y(steps=2000, speed=6)
-
-#%%
-esp32.lens_x(value=10000)
-esp32.lens_z(value=10000)
-#%%
-for ix in range(0,32000,100):
-    esp32.lens_x(value=ix)
-    for iy in range(0,32000,100):
-        esp32.lens_z(value=iy)
-esp32.lens_z(value=0)
-esp32.lens_x(value=0)
-
-#%%
-esp32.lens_x(value=0)
-esp32.lens_z(value=0)
-#%%
-for iy in range(0,1000,1):
-    esp32.set_laser(np.sin(iy/1000*np.pi*100)*10000)
-
+    #%%
+    for i in range(100):
+        print(i)
+        esp32.post(value = i)
     
-#%%
-esp32.move_z(steps=500,  speed=1000)
-
-#%%
-for i in range(100):
-    print(i)
-    esp32.move_z(steps=i*100, speed=i*100)
+    #%%
+    esp32.set_laser_red(10000)
+    esp32.set_laser_blue(10000)
+    esp32.set_laser_green(10000)
     
-
-#%%
-for i in range(100):
-    print(i)
-    esp32.post(value = i)
-
-#%%
-esp32.set_laser_red(10000)
-esp32.set_laser_blue(10000)
-esp32.set_laser_green(10000)
-
-time.sleep(1)
-
-esp32.set_laser_red(0)
-esp32.set_laser_blue(0)
-esp32.set_laser_green(0)
-#%%
-esp32.move_filter(steps=-800, speed=20)
-# %%
-esp32.set_laser_red(0)
-esp32.set_laser_blue(0000)
-
-#%%
-esp32.set_laser_red(0)
-
-#%%
-esp32.set_led(colour=(0,255,255))
-
-#%%
-esp32.switch_filter()
-
-#%%
-image = np.random.randn(320,240)*255
-esp32.send_jpeg(image)
-
-#%%
-N_leds = 4
-I_max = 100
-iiter = 0 
-while(True):
-    iiter+=1
+    time.sleep(1)
     
-    image = np.ones((320,240))*(iiter%2)*255 # np.random.randn(320,240)*
-    esp32.send_jpeg(np.uint8(image))
-    led_pattern = np.array((np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
-                   np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
-                   np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds))))
+    esp32.set_laser_red(0)
+    esp32.set_laser_blue(0)
+    esp32.set_laser_green(0)
+    #%%
+    esp32.move_filter(steps=-800, speed=20)
+    # %%
+    esp32.set_laser_red(0)
+    esp32.set_laser_blue(0000)
     
-    esp32.send_ledmatrix(led_pattern)
+    #%%
+    esp32.set_laser_red(0)
+    
+    #%%
+    esp32.set_led(colour=(0,255,255))
+    
+    #%%
+    esp32.switch_filter()
+    
+    #%%
+    image = np.random.randn(320,240)*255
+    esp32.send_jpeg(image)
+    
+    #%%
+    N_leds = 4
+    I_max = 100
+    iiter = 0 
+    while(True):
+        iiter+=1
+        
+        image = np.ones((320,240))*(iiter%2)*255 # np.random.randn(320,240)*
+        esp32.send_jpeg(np.uint8(image))
+        led_pattern = np.array((np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
+                       np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
+                       np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds))))
+        
+        esp32.send_ledmatrix(led_pattern)

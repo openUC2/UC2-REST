@@ -24,6 +24,8 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define MS3 0
 #define SLEEP 0 // optional (just delete SLEEP from everywhere if not used)
 
+#define ENABLE 26
+
 // Motor Z
 #define DIR_Z 23
 #define STEP_Z 2
@@ -259,6 +261,10 @@ void setup() {
 
   Serial.println("Ready.");
 
+
+// Enable Motors
+  pinMode(ENABLE, OUTPUT);
+  digitalWrite(ENABLE, LOW);
 
 }
 
