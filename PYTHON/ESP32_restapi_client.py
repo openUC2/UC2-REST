@@ -270,8 +270,16 @@ class ESP32Client(object):
         path = '/move_filter'
         r = self.post_json(path, payload,timeout=timeout)
         return r
+
+    def set_galvo_amplitudex(self, amplitudex = 0, timeout=1):
+        payload = {
+            "value": amplitudex,           
+        }
+        path = '/galvo/amplitudex'
+        r = self.post_json(path, payload,timeout=timeout)
+        return r
     
-        
+#%%    
 if __name__ == "__main__":
             
         
@@ -279,6 +287,7 @@ if __name__ == "__main__":
     host = '192.168.43.226'
     host = '192.168.2.147'
     host = '192.168.2.151'
+    host = '192.168.137.119'
     esp32 = ESP32Client(host, port=80)
     
     #esp32.set_led((100,2,5))
