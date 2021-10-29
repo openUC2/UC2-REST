@@ -4,18 +4,23 @@
 #include <ArduinoJson.h>
 #include <Stepper.h>
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoMatrix.h>
+
 
 // Setup MOTOR
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 200
 #define RPM 120
 
-// Brightfield
-#define NEOLED_PIN    5
-#define LED_COUNT 1
-Adafruit_NeoPixel strip(LED_COUNT, NEOLED_PIN, NEO_GRB + NEO_KHZ800);
+// LED ARRAY
+#define LED_ARRAY_PIN 23
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(4, 4, LED_ARRAY_PIN,
+                            NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
+                            NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
+                            NEO_GRB            + NEO_KHZ800);
 
-#define SWITCH_FILTER 22
+#define SWITCH_FILTER 0
 
 #define DIR 2
 #define STEP 4
@@ -42,7 +47,7 @@ const char *PWD = "12345678"; // "MurBen3128";//
 String hostname = "ESPLENS";
 
 /*LASER GPIO pin*/
-int LASER_PIN_red = 18;// 22;
+int LASER_PIN_red = 22;// 22;
 int LASER_PIN_green = 19;
 int LASER_PIN_blue = 21;
 int LED_PIN = 4;
@@ -89,7 +94,7 @@ WebServer server(80);
 // JSON data buffer
 //StaticJsonDocument<2500> jsonDocument;
 char buffer[2500];
-DynamicJsonDocument jsonDocument(2048);
+DynamicJsonDocument jsonDocument(4096);
 
 
 void setup() {
@@ -107,15 +112,18 @@ void setup() {
   digitalWrite(LASER_PIN_blue, LOW);
 
   // Brightfield LEd
-  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.setBrightness(255); // Set BRIGHTNESS to about 1/5 (max = 255)
-  set_led_RGB(255, 255, 255);
+  // LED Matrix
+  matrix.begin();
+  matrix.setTextWrap(false);
+  matrix.setBrightness(255);
+  matrix.fillScreen(matrix.Color(255,255,255));
+  matrix.show();
+
   // Visualize, that ESP is on!
   digitalWrite(LED_PIN, HIGH);
   Serial.println("Turing on");
 
   delay(1000);
-  set_led_RGB(0, 0, 0);
   digitalWrite(LED_PIN, LOW);
   Serial.println("Turing off");
   delay(1000);
@@ -204,7 +212,7 @@ void connectToWiFi() {
 void setup_routing() {
 
   // POST
-  server.on("/led", HTTP_POST, set_led);
+  server.on("/matrix", HTTP_POST, handleMatrix);
   server.on("/led_white", HTTP_POST, set_led_white);
   server.on("/move_z", HTTP_POST, move_z);
   server.on("/move_filter", HTTP_POST, move_filter);
@@ -375,27 +383,6 @@ void move_z() {
 
 
 /*
-   Set LED
-*/
-void set_led() {
-  if (server.hasArg("plain") == false) {
-    //handle error here
-  }
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-
-  // Get RGB components
-  int red = jsonDocument["red"];
-  int green = jsonDocument["green"];
-  int blue = jsonDocument["blue"];
-
-  set_led_RGB(red, green, blue);
-
-  // Respond to the client
-  server.send(200, "application/json", "{}");
-}
-
-/*
    Move Filter
 */
 
@@ -430,11 +417,6 @@ void move_filter() {
 }
 
 
-void set_led_RGB(int R, int G, int B)  {
-  strip.setPixelColor(0, strip.Color(R,   G,   B));
-  strip.show();
-}
-
 
 
 void switch_filters() {
@@ -463,4 +445,37 @@ void switch_filters() {
   // Respond to the client
   server.send(200, "application/json", "{}");
 
+}
+
+
+void handleMatrix(){
+
+  Serial.println("HandleMatrix");
+  
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+  Serial.println(body);
+
+  int arraySize = jsonDocument["red"].size();   //get size of JSON Array
+  Serial.print("\nSize of value array: ");
+  Serial.println(arraySize);
+ 
+  for (int i = 0; i < arraySize; i++) { //Iterate through results
+    int red = jsonDocument["red"][i];  //Implicit cast
+    int green = jsonDocument["green"][i];  //Implicit cast
+    int blue = jsonDocument["blue"][i];  //Implicit cast
+    Serial.println(red);
+    int ix = i%4;
+    int iy = i/4;
+    set_led_RGB(ix, iy, red, green, blue);
+  }
+
+  // Respond to the client
+  server.send(200, "application/json", "{}");
+  
+}
+
+void set_led_RGB(int Nx, int Ny, int R, int G, int B)  {
+  matrix.drawPixel(Nx, Ny, matrix.Color(R,   G,   B));
+  matrix.show();
 }
