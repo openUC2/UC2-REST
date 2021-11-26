@@ -19,28 +19,33 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define MOTOR_STEPS 200
 #define RPM 120
 
-#define PIN_ENABLE 26
+#define PIN_ENABLE 19
+
+// Motor X
+#define DIR_X 18
+#define STEP_X 21
+
+// Motor Y
+#define DIR_Y 18
+#define STEP_Y 22
+
+// Motor Z
+#define DIR_Z 18
+#define STEP_Z 27
+
 
 #define MS1 0
 #define MS2 0
 #define MS3 0
 #define SLEEP 0 // optional (just delete SLEEP from everywhere if not used)
 
-// Motor Z
-#define DIR_Z 23
-#define STEP_Z 2
 
 A4988 stepper_z(MOTOR_STEPS, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 
-// Motor X
-#define DIR_X 23
-#define STEP_X 32
+
 
 A4988 stepper_x(MOTOR_STEPS, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 
-// Motor Y
-#define DIR_Y 23
-#define STEP_Y 25
 
 A4988 stepper_y(MOTOR_STEPS, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
 

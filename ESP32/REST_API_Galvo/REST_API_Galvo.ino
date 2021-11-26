@@ -6,6 +6,7 @@
 #include <Ps3Controller.h>
 #include "A4988.h"
 #include <Adafruit_NeoPixel.h>
+#include "pindef.h"
 
 #define is_wifi true
 #define is_ps3 true
@@ -32,10 +33,6 @@ int x_amplitude = 0;
 #define LED_COUNT 1
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-// Galvo Pins
-#define GALVO_PIN_X 25
-#define GALVO_PIN_Y 26
-
 // Setup MOTOR
 // Motor steps per revolution. Most stepper_zs are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 200
@@ -47,24 +44,9 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define SLEEP 0 // optional (just delete SLEEP from everywhere if not used)
 
 #define ENABLE 26
-
-// Motor Z
-#define DIR_Z 23
-#define STEP_Z 2
-
-A4988 stepper_z(MOTOR_STEPS, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
-
-// Motor X
-#define DIR_X 23
-#define STEP_X 32
-
-A4988 stepper_x(MOTOR_STEPS, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
-
-// Motor Y
-#define DIR_Y 23
-#define STEP_Y 25
-
-A4988 stepper_y(MOTOR_STEPS, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
+A4988 stepper_x(MOTOR_STEPS, PIN_DIR_X, PIN_STEP_X, SLEEP, MS1, MS2, MS3);
+A4988 stepper_y(MOTOR_STEPS, PIN_DIR_Y, PIN_STEP_Y, SLEEP, MS1, MS2, MS3);
+A4988 stepper_z(MOTOR_STEPS, PIN_DIR_Z, PIN_STEP_Z, SLEEP, MS1, MS2, MS3);
 
 
 //#define home_wifi
@@ -163,9 +145,13 @@ int stick_ry = 0;
 
 boolean is_sofi = false;
 boolean is_laser_red = false;
-int laser_power = 0;
+int laserval = 0;
 int lens_x = 0;
 int lens_z = 0;
+
+boolean motor_x_on = false;
+boolean motor_y_on = false;
+boolean motor_z_on = false;
 
 
 void onConnect() {
@@ -232,13 +218,6 @@ void setup() {
   /*
      Set target motor RPM.
   */
-  Serial.println("Stepper Z");
-  stepper_z.begin(RPM);
-  stepper_z.enable();
-  stepper_z.setMicrostep(1);  // Set microstep mode to 1:1
-  stepper_z.rotate(360);     // forward revolution
-  stepper_z.rotate(-360);    // reverse revolution
-
   Serial.println("Stepper X");
   stepper_x.begin(RPM);
   stepper_x.enable();
@@ -253,7 +232,13 @@ void setup() {
   stepper_y.rotate(360);     // forward revolution
   stepper_y.rotate(-360);    // reverse revolution
 
-  
+  Serial.println("Stepper Z");
+  stepper_z.begin(RPM);
+  stepper_z.enable();
+  stepper_z.setMicrostep(1);  // Set microstep mode to 1:1
+  stepper_z.rotate(360);     // forward revolution
+  stepper_z.rotate(-360);    // reverse revolution
+
   // assign a task for the motor so that it runs when we need it
   if (is_wifi) {
     Serial.println("Start runStepperTask");
@@ -295,7 +280,6 @@ void setup() {
   Serial.println("Starting the programm");
 }
 
-
 void loop() {
 
   /*
@@ -321,9 +305,11 @@ void loop() {
       stick_ly = Ps3.data.analog.stick.ly;
       stick_ly = stick_ly - sgn(stick_ly) * offset_val;
       run_motor_z(sgn(stick_ly) * 5, stick_ly * 5);
+      motor_z_on = true;
     }
     else {
-      if (abs(stick_ly) > 0) {
+      if (motor_z_on) {
+        motor_z_on=false;
         stick_ly = 0;
         run_motor_z(0, 0); // switch motor off;
       }
@@ -353,9 +339,11 @@ void loop() {
       stick_rx = Ps3.data.analog.stick.rx;
       stick_rx = stick_rx - sgn(stick_rx) * offset_val;
       run_motor_y(sgn(stick_rx) * 5, stick_rx * 5);
+      motor_y_on = true;
     }
     else {
-      if (abs(stick_rx) > 0) {
+      if (motor_y_on) {
+        motor_y_on = false;
         stick_rx = 0;
         motor_x_running = false;
         run_motor_y(0, 0); // switch motor off;
@@ -368,9 +356,11 @@ void loop() {
       motor_y_running = true;
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
       run_motor_x(sgn(stick_ry) * 5, stick_ry * 5);
+      motor_x_on = true;
     }
     else {
-      if (abs(stick_ry) > 0) {
+      if (motor_x_on) {
+        motor_x_on = false;
         stick_ly = 0;
         motor_y_running = false;
         run_motor_x(0, 0); // switch motor off;
@@ -413,7 +403,7 @@ void loop() {
       strip.setPixelColor(0, strip.Color(0, 0, 0));
       strip.show();
       is_laser_red = false;
-      laser_power = 0;
+      laserval = 0;
       run_laser(0);
     }
 
@@ -461,8 +451,8 @@ void loop() {
       //if(not is_laser_red){
       Serial.println("Laser on");
       is_laser_red = true;
-      laser_power += 200;
-      run_laser(laser_power);
+      laserval += 200;
+      run_laser(laserval);
       delay(100);
       //}
 
@@ -472,7 +462,7 @@ void loop() {
       if (is_laser_red) {
         Serial.println("Laser off");
         is_laser_red = false;
-        laser_power = 0;
+        laserval = 0;
         run_laser(0);
       }
 
@@ -504,28 +494,34 @@ void loop() {
 void controlGalvoTask( void * parameter ) {
   int x_amplitude_last = x_amplitude;
 
-  int SineValues[256];
+  int n_samples = 10;
 
-  float ConversionFactor = (2 * PI) / 256;
+  int SineValues1[n_samples];
+
+  float ConversionFactor = (2 * PI) / n_samples;
   float RadAngle;
   // calculate sine values
 
-  for (int MyAngle = 0; MyAngle < 256; MyAngle++) {
+  for (int MyAngle = 0; MyAngle < n_samples; MyAngle++) {
     RadAngle = MyAngle * ConversionFactor;
-    SineValues[MyAngle] = (sin(RadAngle) * 127) + 128;
+    SineValues1[MyAngle] = (cos(RadAngle) * floor(n_samples/2-1)) + ceil(n_samples/2);
   }
 
+  int SineValues[n_samples] = {0,50,100,150,200,250,200,150,100,50};
   while (1) {
-    for (int iy = y_start; iy < y_stop; iy = iy + y_step)
+    ledcWrite(PWM_CHANNEL_LASER, laserval );
+    for (int iy = 0; iy < (n_samples); iy = iy + 1) //(int iy = -(n_samples/2); iy < (n_samples/2); iy = iy + 1)
     {
       if (x_amplitude_last != x_amplitude) {
         x_amplitude_last = x_amplitude;
-        dacWrite(GALVO_PIN_X, x_amplitude);
+        dacWrite(PIN_GALVO_X, x_amplitude);
       }
       y_active = true;
-      dacWrite(GALVO_PIN_Y, SineValues[iy]);
+      dacWrite(PIN_GALVO_Y, SineValues[iy]);//abs(iy*2));//SineValues[iy]);
       y_active = false;
-      delay(y_delay);
+      if(iy == 250)
+        digitalWrite(LASER_PIN_PLUS, LOW); //switch off laser again when roundtrip is reached
+      delay(1);
     }
   }
   vTaskDelete(NULL);
@@ -538,11 +534,16 @@ void controlGalvoTask( void * parameter ) {
 void runStepperTask( void * param) {
   uint8_t* localparameters = (uint8_t*)param;
   while (is_wifi) {
-    stepper_x.move(localparameters[0]);
-    stepper_y.move(localparameters[1]);
-    stepper_z.move(localparameters[2]);
-    //Serial.println((String)localparameters[0] + " - " + (String)localparameters[1] + " - " + (String)localparameters[2]);
-  }
+    if(abs(localparameters[0])>0){
+      stepper_x.move(localparameters[0]);
+    }
+    if(abs(localparameters[1])>0){
+      stepper_y.move(localparameters[1]);
+    }
+    if(abs(localparameters[2])>0){
+      stepper_z.move(localparameters[2]);
+    }
+   }
   vTaskDelete( NULL );
 }
 
@@ -696,7 +697,6 @@ void run_lens_x(int lensval) {
     Set Laser
 
 */
-
 void set_laser() {
   if (server.hasArg("plain") == false) {
     //handle error here
@@ -705,10 +705,8 @@ void set_laser() {
   deserializeJson(jsonDocument, body);
 
   // Get RGB components
-  int value = jsonDocument["value"];
+  laserval = jsonDocument["value"];
 
-  // apply a nonlinear look-up table
-  int laserval = value;
   //int laserval = (int)(pow(((float)(value) / (float)pwm_max), 2) * (float)pwm_max);
   // Respond to the client
   server.send(200, "application/json", "{}");
@@ -733,46 +731,8 @@ void run_laser(int laserval) {
 
 */
 
-void move_z() {
-
-
-  server.send(200, "application/json", "{}");
-  if (server.hasArg("plain") == false) {
-    //handle error here
-  }
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-
-  // Get RGB components
-  int steps = jsonDocument["steps"];
-  int speed = jsonDocument["speed"];
-  Serial.print("move_Z ");
-  Serial.print(steps);
-  Serial.println(speed);
-
-  run_motor_z(steps, speed);
-}
-
-void run_motor_z(int steps, int speed) {
-
-  // Set the speed to 5 rpm:
-  stepper_z.begin(abs(speed));
-
-  if (steps == 0) {
-    // run unsupervised
-    glob_motor_steps[2] = sgn(speed) * 10;
-  }
-  else {
-    // run only the number of steps we want
-    glob_motor_steps[2] = steps;
-    stepper_z.rotate(steps);
-  }
-}
-
 
 void move_x() {
-
-  Serial.println("move_x");
   server.send(200, "application/json", "{}");
   if (server.hasArg("plain") == false) {
     //handle error here
@@ -783,15 +743,10 @@ void move_x() {
   // Get RGB components
   int steps = jsonDocument["steps"];
   int speed = jsonDocument["speed"];
-
   run_motor_x(steps, speed);
 }
 
 void run_motor_x(int steps, int speed) {
-
-  // Set the speed to 5 rpm:
-  stepper_x.begin(abs(speed));
-
   if (steps == 0) {
     // run unsupervised
     glob_motor_steps[0] = sgn(speed) * 10;
@@ -799,13 +754,13 @@ void run_motor_x(int steps, int speed) {
   else {
     // run only the number of steps we want
     glob_motor_steps[0] = 0;
+    stepper_x.begin(abs(speed));
     stepper_x.rotate(steps);
   }
 }
 
 
 void move_y() {
-
   Serial.println("move_y");
   server.send(200, "application/json", "{}");
   if (server.hasArg("plain") == false) {
@@ -819,11 +774,9 @@ void move_y() {
   int speed = jsonDocument["speed"];
 
   run_motor_y(steps, speed);
-
 }
 
 void run_motor_y(int steps, int speed) {
-
   // Set the speed to 5 rpm:
   stepper_y.begin(abs(speed));
 
@@ -833,9 +786,42 @@ void run_motor_y(int steps, int speed) {
   }
   else {
     // run only the number of steps we want
-    glob_motor_steps[1] = steps;
+    glob_motor_steps[1] = 0;
+    stepper_y.begin(abs(speed));
     stepper_y.rotate(steps);
-    Serial.println(steps);
+  }
+}
+
+
+void move_z() {
+
+
+  server.send(200, "application/json", "{}");
+  if (server.hasArg("plain") == false) {
+    //handle error here
+  }
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+
+  // Get RGB components
+  int steps = jsonDocument["steps"];
+  int speed = jsonDocument["speed"];
+  run_motor_z(steps, speed);
+}
+
+void run_motor_z(int steps, int speed) {
+  // Set the speed to 5 rpm:
+  stepper_z.begin(abs(speed));
+
+  if (steps == 0) {
+    // run unsupervised
+    glob_motor_steps[2] = sgn(speed) * 10;
+  }
+  else {
+    // run only the number of steps we want
+    glob_motor_steps[2] = 0;
+    stepper_z.begin(abs(speed));
+    stepper_z.rotate(steps);  
   }
 }
 

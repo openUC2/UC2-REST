@@ -22,12 +22,16 @@ import cv2
 from tempfile import NamedTemporaryFile 
 #import matplotlib.pyplot as plt
 
+import apidef
+
 ACTION_RUNNING_KEYWORDS = ["idle", "pending", "running"]
 ACTION_OUTPUT_KEYS = ["output", "return"]
 
 class ESP32Client(object):
     # headers = {'ESP32-version': '*'}
     headers={"Content-Type":"application/json"}
+
+    api = apidef.apidef()
 
     def __init__(self, host, port=31950):
         if isinstance(host, zeroconf.ServiceInfo):
@@ -80,12 +84,6 @@ class ESP32Client(object):
         r.raise_for_status()
         r = r.json()
         return r
-
-
-    def get_temperature(self):
-        path = "/temperature"
-        r = self.get_json(path)
-        return r['value']
     
     #% LED
     def set_led(self, colour=(0,0,0)):
@@ -94,7 +92,7 @@ class ESP32Client(object):
             "green": colour[1], 
             "blue": colour[2]
         }
-        path = '/led'
+        path = self.api.PATH_LED
         r = self.post_json(path, payload)
         return r
     
@@ -102,7 +100,7 @@ class ESP32Client(object):
         payload = {
             "value": value
         }
-        path = '/laser'
+        path = self.api.PATH_LASER
         r = self.post_json(path, payload)
         return r    
 
@@ -112,7 +110,7 @@ class ESP32Client(object):
         payload = {
             "value": value
         }
-        path = '/laser_red'
+        path = self.api.PATH_LASER_RED
         r = self.post_json(path, payload)
         return r    
     
@@ -122,7 +120,7 @@ class ESP32Client(object):
         payload = {
             "value": value
         }
-        path = '/laser_green'
+        path = self.api.PATH_LASER_GREEN
         r = self.post_json(path, payload)
         return r    
     
@@ -132,17 +130,16 @@ class ESP32Client(object):
         payload = {
             "value": value
         }
-        path = '/laser_blue'
+        path = self.api.PATH_LASER_BLUE
         r = self.post_json(path, payload)
         return r    
-    
     
     def move_x(self, steps=100, speed=10):
         payload = {
             "steps": steps, 
             "speed": speed,            
         }
-        path = '/move_x'
+        path = self.api.PATH_MOVE_X
         r = self.post_json(path, payload)
         return r
     
@@ -151,24 +148,16 @@ class ESP32Client(object):
             "steps": steps, 
             "speed": speed,            
         }
-        path = '/move_y'
+        path = self.api.PATH_MOVE_Y
         r = self.post_json(path, payload)
         return r
     
-    def lens_x(self, value=100):
-        payload = {
-            "lens_value": value,            
-        }
-        path = '/lens_x'
-        r = self.post_json(path, payload)
-        return r
-
     def move_z(self, steps=100, speed=10,timeout=1):
         payload = {
             "steps": steps, 
             "speed": speed,            
         }
-        path = '/move_z'
+        path = self.api.PATH_MOVE_Z
         r = self.post_json(path, payload,timeout=timeout)
         return r
 
@@ -177,21 +166,27 @@ class ESP32Client(object):
             "steps": steps, 
             "speed": speed,            
         }
-        path = '/move_filter'
+        path = self.api.PATH_FILTER_MOVE
         r = self.post_json(path, payload,timeout=timeout)
+        return r
+
+    def lens_x(self, value=100):
+        payload = {
+            "lens_value": value,            
+        }
+        path = self.api.PATH_LENS_X
+        r = self.post_json(path, payload)
         return r
     
     def lens_z(self, value=100):
         payload = {
             "lens_value": value,            
         }
-        path = '/lens_z'
+        path = self.api.PATH_LENS_Z
         r = self.post_json(path, payload)
         return r
-
     
     def send_jpeg(self, image):
-
         temp = NamedTemporaryFile()
         
         #add JPEG format to the NamedTemporaryFile  
@@ -199,15 +194,8 @@ class ESP32Client(object):
         
         #save the numpy array image onto the NamedTemporaryFile
         cv2.imwrite(iName,image)
-        _, img_encoded = cv2.imencode('test.jpg', image)
-
-        content_type = 'image/jpeg'
-        headers = {'content-type': content_type}
-        payload = img_encoded.tostring()
-        path = '/uploadimage'
-
-        #r = self.post_json(path, payload=payload, headers = headers)
-        #requests.post(self.base_uri + path, data=img_encoded.tostring(), headers=headers)      
+        # TODO: not ideal _, img_encodedsv2.imencode('test.jpg', image)
+        path = self.api.PATH_LCD_DISP
         files = {'media': open(iName, 'rb')}
         requests.post(self.base_uri + path, files=files)
         
@@ -244,129 +232,23 @@ class ESP32Client(object):
             self.filter_position = pos_blue
             
         self.move_filter(steps=steps, speed=speed)
-            
-        
-             
         
     def send_ledmatrix(self, led_pattern):
         headers = {"Content-Type":"application/json"}
-        path = '/matrix'
+        path = self.api.PATH_LED_MATRIX
         payload = {
             "red": led_pattern[0,:,:].flatten().tolist(), 
             "green": led_pattern[1,:,:].flatten().tolist(),            
             "blue": led_pattern[2,:,:].flatten().tolist()                 
         }
-        print(self.base_uri + path)
-        print(payload)
         requests.post(self.base_uri + path, data=json.dumps(payload), headers=headers)
-        #r = self.post_json(path, payload=payload, headers = headers)
-        
+        return None
            
-    def move_filter(self, steps=100, speed=10,timeout=1):
-        payload = {
-            "steps": steps, 
-            "speed": speed,            
-        }
-        path = '/move_filter'
-        r = self.post_json(path, payload,timeout=timeout)
-        return r
-
     def set_galvo_amplitudex(self, amplitudex = 0, timeout=1):
         payload = {
             "value": amplitudex,           
         }
-        path = '/galvo/amplitudex'
+        path = self.api.PATH_GALVO_AMP_X
         r = self.post_json(path, payload,timeout=timeout)
         return r
-    
-#%%    
-if __name__ == "__main__":
-            
-        
-    #%
-    host = '192.168.43.226'
-    host = '192.168.2.147'
-    host = '192.168.2.151'
-    host = '192.168.137.119'
-    esp32 = ESP32Client(host, port=80)
-    
-    #esp32.set_led((100,2,5))
-    #esp32.move_x(steps=2000, speed=8)
-    #esp32.move_y(steps=2000, speed=6)
-    
-    #%%
-    esp32.lens_x(value=10000)
-    esp32.lens_z(value=10000)
-    #%%
-    for ix in range(0,32000,100):
-        esp32.lens_x(value=ix)
-        for iy in range(0,32000,100):
-            esp32.lens_z(value=iy)
-    esp32.lens_z(value=0)
-    esp32.lens_x(value=0)
-    
-    #%%
-    esp32.lens_x(value=0)
-    esp32.lens_z(value=0)
-    #%%
-    for iy in range(0,1000,1):
-        esp32.set_laser(np.sin(iy/1000*np.pi*100)*10000)
-    
-        
-    #%%
-    esp32.move_z(steps=500,  speed=1000)
-    
-    #%%
-    for i in range(100):
-        print(i)
-        esp32.move_z(steps=i*100, speed=i*100)
-        
-    
-    #%%
-    for i in range(100):
-        print(i)
-        esp32.post(value = i)
-    
-    #%%
-    esp32.set_laser_red(10000)
-    esp32.set_laser_blue(10000)
-    esp32.set_laser_green(10000)
-    
-    time.sleep(1)
-    
-    esp32.set_laser_red(0)
-    esp32.set_laser_blue(0)
-    esp32.set_laser_green(0)
-    #%%
-    esp32.move_filter(steps=-800, speed=20)
-    # %%
-    esp32.set_laser_red(0)
-    esp32.set_laser_blue(0000)
-    
-    #%%
-    esp32.set_laser_red(0)
-    
-    #%%
-    esp32.set_led(colour=(0,255,255))
-    
-    #%%
-    esp32.switch_filter()
-    
-    #%%
-    image = np.random.randn(320,240)*255
-    esp32.send_jpeg(image)
-    
-    #%%
-    N_leds = 4
-    I_max = 100
-    iiter = 0 
-    while(True):
-        iiter+=1
-        
-        image = np.ones((320,240))*(iiter%2)*255 # np.random.randn(320,240)*
-        esp32.send_jpeg(np.uint8(image))
-        led_pattern = np.array((np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
-                       np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds)),
-                       np.reshape(np.random.randint(0,I_max ,N_leds**2),(N_leds,N_leds))))
-        
-        esp32.send_ledmatrix(led_pattern)
+
