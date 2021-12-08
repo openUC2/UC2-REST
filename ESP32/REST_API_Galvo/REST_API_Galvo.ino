@@ -145,7 +145,7 @@ int stick_ry = 0;
 
 boolean is_sofi = false;
 boolean is_laser_red = false;
-int laserval = 0;
+int laserval = 1000;
 int lens_x = 0;
 int lens_z = 0;
 
@@ -263,7 +263,7 @@ void setup() {
     1);                       // Core #
 
   Serial.println("Done with setting up Tasks");
-  
+
   // Connect PS3 Controller
   if (is_ps3) {
     Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
@@ -309,7 +309,7 @@ void loop() {
     }
     else {
       if (motor_z_on) {
-        motor_z_on=false;
+        motor_z_on = false;
         stick_ly = 0;
         run_motor_z(0, 0); // switch motor off;
       }
@@ -504,14 +504,16 @@ void controlGalvoTask( void * parameter ) {
 
   for (int MyAngle = 0; MyAngle < n_samples; MyAngle++) {
     RadAngle = MyAngle * ConversionFactor;
-    SineValues1[MyAngle] = (cos(RadAngle) * floor(n_samples/2-1)) + ceil(n_samples/2);
+    SineValues1[MyAngle] = (cos(RadAngle) * floor(n_samples / 2 - 1)) + ceil(n_samples / 2);
   }
 
-  int SineValues[n_samples] = {0,50,100,150,200,250,200,150,100,50};
+  //int SineValues[n_samples] = {0,50,100,150,200,250,200,150,100,50};
+  int SineValues[n_samples] = {0, 250, 0, 250, 0, 250, 0, 250, 0, 250};
   while (1) {
-    ledcWrite(PWM_CHANNEL_LASER, laserval );
-    for (int iy = 0; iy < (n_samples); iy = iy + 1) //(int iy = -(n_samples/2); iy < (n_samples/2); iy = iy + 1)
-    {
+    /*
+      ledcWrite(PWM_CHANNEL_LASER, laserval );
+      for (int iy = 0; iy < (n_samples); iy = iy + 1) //(int iy = -(n_samples/2); iy < (n_samples/2); iy = iy + 1)
+      {
       if (x_amplitude_last != x_amplitude) {
         x_amplitude_last = x_amplitude;
         dacWrite(PIN_GALVO_X, x_amplitude);
@@ -522,6 +524,17 @@ void controlGalvoTask( void * parameter ) {
       if(iy == 250)
         digitalWrite(LASER_PIN_PLUS, LOW); //switch off laser again when roundtrip is reached
       delay(1);
+      }*/
+
+    for (int ix = 0; ix < 3; ix ++) {
+      dacWrite(PIN_GALVO_X, ix * (127));
+      delay(1);
+      ledcWrite(PWM_CHANNEL_LASER, 1000);
+      for (int iy = 0; iy < 2; iy ++) {
+        dacWrite(PIN_GALVO_Y, iy * 255);
+        delay(1);
+      }
+      ledcWrite(PWM_CHANNEL_LASER, 0);
     }
   }
   vTaskDelete(NULL);
@@ -534,16 +547,16 @@ void controlGalvoTask( void * parameter ) {
 void runStepperTask( void * param) {
   uint8_t* localparameters = (uint8_t*)param;
   while (is_wifi) {
-    if(abs(localparameters[0])>0){
+    if (abs(localparameters[0]) > 0) {
       stepper_x.move(localparameters[0]);
     }
-    if(abs(localparameters[1])>0){
+    if (abs(localparameters[1]) > 0) {
       stepper_y.move(localparameters[1]);
     }
-    if(abs(localparameters[2])>0){
+    if (abs(localparameters[2]) > 0) {
       stepper_z.move(localparameters[2]);
     }
-   }
+  }
   vTaskDelete( NULL );
 }
 
@@ -821,7 +834,7 @@ void run_motor_z(int steps, int speed) {
     // run only the number of steps we want
     glob_motor_steps[2] = 0;
     stepper_z.begin(abs(speed));
-    stepper_z.rotate(steps);  
+    stepper_z.rotate(steps);
   }
 }
 

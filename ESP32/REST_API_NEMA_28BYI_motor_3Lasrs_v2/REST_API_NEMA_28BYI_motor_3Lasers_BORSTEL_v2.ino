@@ -15,7 +15,6 @@
 #define LED_COUNT 1
 Adafruit_NeoPixel strip(LED_COUNT, NEOLED_PIN, NEO_GRB + NEO_KHZ800);
 
-#define SWITCH_FILTER 22
 
 #define DIR 2
 #define STEP 4
@@ -120,11 +119,11 @@ void setup() {
   /*
      Set target motor RPM.
   */
-  stepper.begin(RPM);
-  pinMode(SWITCH_FILTER, INPUT_PULLUP);
+  
 
   // if using enable/disable on ENABLE pin (active LOW) instead of SLEEP uncomment next line
   // stepper.setEnableActiveState(LOW);
+  stepper.begin(RPM);
   stepper.enable();
   stepper.setMicrostep(1);  // Set microstep mode to 1:1
   Serial.print("start stepper z");
@@ -152,9 +151,6 @@ void setup() {
   ledcWrite(LASER_PIN_red, 0);
 
   Serial.println("Initialization finished.");
-
-
-
 
   // One complete revolution is 360°
   stepper.rotate(360);     // forward revolution
@@ -209,8 +205,7 @@ void setup_routing() {
   server.on("/laser_green", HTTP_POST, set_laser_green);
   server.on("/laser_blue", HTTP_POST, set_laser_blue);
   server.on("/laser_red", HTTP_POST, set_laser_red);
-  server.on("/switch_filter", HTTP_POST, switch_filters);
-
+  
   // start server
   server.begin();
 }
@@ -372,14 +367,11 @@ void set_led() {
 
 
 void move_filter() {
-
   Serial.println("move_filter");
-  server.send(200, "application/json", "{}");
   if (server.hasArg("plain") == false) {
     //handle error here
   }
   String body = server.arg("plain");
-  server.send(200, "application/json", "{}");
   deserializeJson(jsonDocument, body);
 
   // Get RGB components
@@ -388,16 +380,14 @@ void move_filter() {
 
   // Set the speed to 5 rpm:
   stepper_filter.setSpeed(speed);
-
-
-  Serial.print("steps filter: ");
-  Serial.print(steps);
   stepper_filter.step(steps );
 
   digitalWrite(stp1, LOW);
   digitalWrite(stp2, LOW);
   digitalWrite(stp3, LOW);
   digitalWrite(stp4, LOW);
+
+  server.send(200, "application/json", "{}");
 }
 
 
@@ -407,31 +397,3 @@ void set_led_RGB(int R, int G, int B)  {
 }
 
 
-
-void switch_filters() {
-  Serial.println("Start switching Filters ...");
-
-  int val_switch_filter = 0;
-  int time_start = millis();
-   if (server.hasArg("plain") == false) {
-    Serial.println("Something went wrong...");
-  }  
-  stepper_filter.setSpeed(15);
-    
-  while (not val_switch_filter) {
-    Serial.println(val_switch_filter);
-    if ((millis() - time_start) > 3000)
-      val_switch_filter = digitalRead(SWITCH_FILTER);
-    stepper_filter.step(1);
-  }
-  digitalWrite(stp1, LOW);
-  digitalWrite(stp2, LOW);
-  digitalWrite(stp3, LOW);
-  digitalWrite(stp4, LOW);
-
-
-  Serial.println("Filter Switched.");
-  // Respond to the client
-  server.send(200, "application/json", "{}");
-
-}
