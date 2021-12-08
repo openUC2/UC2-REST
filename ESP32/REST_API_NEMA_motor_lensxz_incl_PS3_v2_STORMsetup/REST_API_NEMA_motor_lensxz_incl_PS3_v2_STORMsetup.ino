@@ -9,7 +9,7 @@
 
 
 // LEDs 
-#define LED_PIN    18
+#define LED_PIN    0
 #define LED_COUNT 1
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -31,7 +31,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // Motor Z
 #define DIR_Z 18
-#define STEP_Z 27
+#define STEP_Z 23
 
 
 #define MS1 0
@@ -70,8 +70,8 @@ int LASER_PIN_MINUS = 0;//23;
 
 
 /*Lens GPIO pins*/
-int LENS_X_PIN = 21;
-int LENS_Z_PIN = 22;
+int LENS_X_PIN = 0;
+int LENS_Z_PIN = 0;
 
 ///* topics - DON'T FORGET TO REGISTER THEM! */
 int LED_val = 0;
@@ -116,6 +116,10 @@ int pwm_frequency = 800000;//19000; //12000
 int pwm_max = (int)pow(2, pwm_resolution);
 // lens x-channel
 int PWM_CHANNEL_X = 0;
+
+
+int speed_multiplier = 2;
+
 
 // lens z-channel
 int PWM_CHANNEL_Z = 1;
@@ -280,7 +284,6 @@ void loop() {
 
 
 
-
   if (Ps3.isConnected()) {
 
     /*
@@ -290,7 +293,7 @@ void loop() {
       // move_z
       stick_ly = Ps3.data.analog.stick.ly;
       stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-      run_motor_z(sgn(stick_ly) * 5, stick_ly * 5);
+      run_motor_z(sgn(stick_ly) * 5, stick_ly * speed_multiplier);
     }
     else {
       if (abs(stick_ly) > 0) {
@@ -325,7 +328,7 @@ void loop() {
       motor_x_running = true;
       stick_rx = Ps3.data.analog.stick.rx;
       stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-      run_motor_y(sgn(stick_rx) * 5, stick_rx * 5);
+      run_motor_y(sgn(stick_rx) * 5, stick_rx * speed_multiplier);
     }
     else {
       if (abs(stick_rx) > 0) {
@@ -340,7 +343,7 @@ void loop() {
       stick_ry = Ps3.data.analog.stick.ry;
       motor_y_running = true;
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-      run_motor_x(sgn(stick_ry) * 5, stick_ry * 5);
+      run_motor_x(sgn(stick_ry) * 5, stick_ry * speed_multiplier);
     }
     else {
       if (abs(stick_ry) > 0) {
@@ -766,7 +769,10 @@ void move_y() {
 void run_motor_y(int steps, int speed) {
 
   // Set the speed to 5 rpm:
+  
   stepper_y.begin(abs(speed));
+
+  Serial.println(speed);
 
   if (steps == 0) {
     // run unsupervised
