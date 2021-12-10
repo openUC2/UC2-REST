@@ -1,9 +1,11 @@
 
 #include <WiFi.h>
 #include <WebServer.h>
- 
+#include "SPIFFS.h"
+
+
 WebServer server(80);
- 
+
 const char* ssid = "Blynk";
 const char* password =  "12345678";
 
@@ -12,50 +14,57 @@ const char * swaggerUI = "<!DOCTYPE html><html><head> <meta charset=\"UTF-8\"> <
 const char * answer = "[{\"value\":\"10.5\",\"timestamp\":\"22/10/2017 10:10\"},{\"value\":\"11.0\",\"timestamp\":\"22/10/2017 10:20\"}]";
 
 void setup() {
- 
-    Serial.begin(115200);
-    WiFi.begin(ssid, password);  //Connect to the WiFi network
- 
-    while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
- 
-        delay(500);
-        Serial.println("Waiting to connect...");
- 
-    }
- 
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());  //Print the local IP
-    server.enableCORS();
-    server.on("/temperature", handleTemperature); 
-    server.on("/swagger.json", handleSwaggerJson);
-    server.on("/swaggerUI", handleSwaggerUI);
+  Serial.begin(115200);
+  // Initialize SPIFFS
+  if (!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
 
-    
-    server.begin(); //Start the server
-    Serial.println("Server listening");
- 
+
+  WiFi.begin(ssid, password);  //Connect to the WiFi network
+
+  while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
+
+    delay(500);
+    Serial.println("Waiting to connect...");
+
+  }
+
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());  //Print the local IP
+  server.enableCORS();
+  server.on("/temperature", handleTemperature);
+  server.on("/openapi.json", handleSwaggerJson);
+  server.on("/index.html", handleSwaggerUI);
+
+
+  server.begin(); //Start the server
+  Serial.println("Server listening");
+
 }
- 
+
 void loop() {
- 
-    server.handleClient(); //Handling of incoming requests
- 
+
+  server.handleClient(); //Handling of incoming requests
+
 }
- 
+
 void handleTemperature() { //Handler for the body path
- 
-    server.send(200, "application/json", answer);
+
+  server.send(200, "application/json", answer);
 
 }
 
 void handleSwaggerJson() { //Handler for the body path
- 
-     server.send(200, "application/json", swaggerJSON);
-
+  File file = SPIFFS.open("/openapi.json", "r");  
+  size_t sent = server.streamFile(file, "application/json");  
+  file.close();  
+  return;  
 }
 
-void handleSwaggerUI() { //Handler for the body path 
-
-      server.send(200, "text/html", swaggerUI);
-
+void handleSwaggerUI() { //Handler for the body path
+  File file = SPIFFS.open("/index.html", "r");  
+  size_t sent = server.streamFile(file, "text/html");  
+  file.close();  
 }
