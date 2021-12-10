@@ -117,13 +117,13 @@ class ESP32Client(object):
         else:
             return None 
 
-    def post_json(self, path, payload={}, headers=None, timeout=1, is_thread=False):
-        if is_thread:
+    def post_json(self, path, payload={}, headers=None, timeout=1, is_blocking=False):
+        if is_blocking:
+            self.post_json_thread(path, payload, headers, timeout)
+        else:
             t = threading.Thread(target=self.post_json_thread, args = (path, payload, headers, timeout))
             t.daemon = True
             t.start()
-        else:
-            self.post_json_thread(path, payload, headers, timeout)
         return None
 
     def post_json_thread(self, path, payload={}, headers=None, timeout=10):
@@ -194,33 +194,22 @@ class ESP32Client(object):
     def set_laser_blue(self, value, auto_filterswitch=False):
         return self.set_laser('B', value, auto_filterswitch)
         
-    def move_x(self, steps=100, speed=10):
-        payload = {
-            "steps": steps, 
-            "speed": speed,            
-        }
-        path = '/move_x'
-        r = self.post_json(path, payload)
-        return r
-    
-    def move_y(self, steps=100, speed=10):
-        payload = {
-            "steps": steps, 
-            "speed": speed,            
-        }
-        path = '/move_y'
-        r = self.post_json(path, payload)
-        return r
-    
-    def lens_x(self, value=100):
-        payload = {
-            "lens_value": value,            
-        }
-        path = '/lens_x'
-        r = self.post_json(path, payload)
+
+    def move_x(self, steps=100, speed=10, is_blocking=False):
+        r = self.move_stepper(axis="x", steps=steps, speed=speed, timeout=1, backlash=0, is_blocking=is_blocking)
         return r
 
-    def move_z(self, steps=100, speed=10, timeout=1, backlash=20):
+    def move_y(self, steps=100, speed=10, is_blocking=False):
+        r = self.move_stepper(axis="y", steps=steps, speed=speed, timeout=1, backlash=0, is_blocking=is_blocking)
+        return r    
+
+    def move_z(self, steps=100, speed=10, is_blocking=False):
+        r = self.move_stepper(axis="z", steps=steps, speed=speed, timeout=1, backlash=20, is_blocking=is_blocking)
+        return r    
+
+    def move_stepper(self, axis="z", steps=100, speed=10, timeout=1, backlash=20, is_blocking=False):
+        path = '/move_'+axis
+
         # detect change in direction
         if np.sign(self.steps_z_last) != np.sign(steps):
             # we want to overshoot a bit
@@ -233,9 +222,15 @@ class ESP32Client(object):
             "speed": np.int(speed),            
         }
         self.steps_z_last = steps
+        r = self.post_json(path, payload,timeout=timeout, is_blocking=is_blocking)
+        return r
 
-        path = '/move_z'
-        r = self.post_json(path, payload,timeout=timeout)
+    def lens_x(self, value=100):
+        payload = {
+            "lens_value": value,            
+        }
+        path = '/lens_x'
+        r = self.post_json(path, payload)
         return r
 
     def move_filter(self, steps=100, speed=10,timeout=10):
@@ -342,14 +337,21 @@ class ESP32Client(object):
         r = self.post_json(path, payload,timeout=timeout)
         return r
 
-    def galvo_x(self, amplitude_x = 0, timeout=1):
+    def galvo_pos_x(self, pos_x = 0, timeout=1):
         payload = {
-            "value": amplitude_x          
+            "value": pos_x          
         }
-        path = '/galvo/amplitudex'
+        path = '/galvo/position_x'
         r = self.post_json(path, payload,timeout=timeout)
         return r
     
+    def galvo_amp_y(self, amp_y = 0, timeout=1):
+        payload = {
+            "value": amp_y          
+        }
+        path = '/galvo/amplitude_y'
+        r = self.post_json(path, payload,timeout=timeout)
+        return r
         
 if __name__ == "__main__":
             
