@@ -21,6 +21,17 @@
         "summary": "Endpoint for getting temperature measurements",
         "description": "",
         "operationId": "getTemperature",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Pet object that needs to be added to the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Pet"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "A list of temperature measurements",

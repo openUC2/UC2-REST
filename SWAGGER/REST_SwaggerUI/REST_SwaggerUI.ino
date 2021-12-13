@@ -74,6 +74,11 @@ void handleStepper() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
 
+  // Some documentation
+  String tag = "Stepper Motor";
+  String summary = "Control a bipolar stepper motor";
+  String description = "";
+
   // Extract Values and move 
   int steps = jsonDocument["steps"];
   int speed = jsonDocument["speed"];

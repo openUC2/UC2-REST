@@ -1,7 +1,12 @@
+import re
+import func_name_extract_line as fnel
+
+
 class openapi:
     endpoint = None 
     response = None
     variables = None
+    documentation = None
     
     def __init__(self):
         pass
@@ -24,12 +29,12 @@ class INO2OpenAPI:
         self._extract_endpoints()
         
         # 2. get relevant information from function that is called by an endpoint
-        N_endpoints = len(self.endpoints)
-        print("Found Endoints: "+str(N_endpoints))
+        self.N_endpoints = len(self.endpoints)
+        print("Found Endoints: "+str(self.N_endpoints))
         
         self.apidefiitions = []
         # iterate over all endpoints        
-        for iendpoints in range(N_endpoints):
+        for iendpoints in range(self.N_endpoints):
             fct_info = self._extract_fct(self.endpoints[iendpoints]["fct_endpoint"])
             
             # 3. extract response codes
@@ -38,24 +43,28 @@ class INO2OpenAPI:
             # 4. extrac variables
             variables = self._extract_variables(fct_info)
             
+            # 5. extract documentation strings
+            documentation = self._extract_documentation(fct_info)
+            
             # construct api            
             api = openapi()
             api.endpoint = self.endpoints[iendpoints]
             api.response = response 
             api.variables = variables
+            api.documentation = documentation
             
             self.apidefiitions.append(api)
             
     def _extract_endpoints(self):
         # extract HTTP endpoints from INO file
         search_key = "server.on("
-        with open(filename, 'r') as f:
+        with open(self.filename, 'r') as f:
             self.line_keys = f.readlines()
 
         endpoints = []
         
-        for iline in range(len(line_keys)):
-            linecontent = line_keys[iline]
+        for iline in range(len(self.line_keys)):
+            linecontent = self.line_keys[iline]
             if linecontent.find(search_key)>=0 and linecontent.find("Swagger")<0:
                 # store endpoints in dictionary
                 fct_endpoint = linecontent.split(",")[-1].split(")")[0].replace(" ","")
@@ -78,7 +87,7 @@ class INO2OpenAPI:
                 end = self.all_fcts[ifct][2]
                 # put togehter code for one function
                 for iline in  range(start,end):
-                    fct_code.append(line_keys[iline])
+                    fct_code.append(self.line_keys[iline])
         return fct_code
         
     def _extract_response(self, fct_code):
@@ -112,8 +121,7 @@ class INO2OpenAPI:
                     if fct_code[iline].find(vtype)>=0:
                         variable_type = vtype
                 
-                variable = {"variable_strig": variable_string,
-                            "variable_type": variable_type}
+                variable = {variable_string: variable_type}
                 
                 variable_strings.append(variable)
             except Exception as  e :
@@ -122,3 +130,39 @@ class INO2OpenAPI:
         resopnse_return = {'variables': variable_strings}
         return resopnse_return
                         
+    def _extract_documentation(self, fct_code):
+            #extrac values that can be altered 
+        variable_strings = [] 
+        summary = ''
+        tag = ''
+        description = ''
+        
+        for iline in range(len(fct_code)):
+            # scan for relevant retur messages
+            try:
+                codeline = fct_code[iline]
+                if codeline.find('tag')>=0:
+                    print(codeline)
+                    tag =  codeline.split('=')[-1].split(";")[0].replace("\"","")
+                if codeline.find('summary')>=0:
+                    summary =  codeline.split('=')[-1].split(";")[0].replace("\"","")
+                if codeline.find('description')>=0:
+                    description =  codeline.split('=')[-1].split(";")[0].replace("\"","")
+
+
+            except Exception as  e :
+                pass #print(e)
+
+        docu_return = {'tag': tag,
+                       'summary': summary,
+                       'description': description}
+        return docu_return
+    
+if __name__ == '__main__':
+    path = '/Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/UC2-REST/SWAGGER/'
+    filename = path+'/REST_SwaggerUI/REST_SwaggerUI.ino'
+
+    converter = INO2OpenAPI(filename)
+    converter.convert()
+
+    print(converter.apidefiitions[0].__dict__)

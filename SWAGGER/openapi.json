@@ -1,0 +1,18 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a placeholder description.",
+    "version": "1.0.0",
+    "title": "UC2 application"
+  },
+  "host": "0.0.0.0",
+  "tags": [
+    {
+      "name": "Temperature",
+      "description": "Getting temperature measurements"
+    }
+  ],
+  "paths": [
+    "{\"paths\": [{\"  /stepper/move\": {\"get\": {\"tags\": [\" Stepper Motor\"], \"summary\": \" Control a bipolar stepper motor\", \"description\": \" \", \"operationId\": \"get  steppermove\", \"required\": true, \"schema\": {\"$ref\": \"#/definitions/Pet\"}, \"produces\": [\"\\\"application/json\\\"\"], \"parameters\": [{\"steps\": \"int\"}, {\"speed\": \"int\"}], \"responses\": {\"200\": {\"description\": \"A placeholder for the description\", \"schema\": {\"$ref\": \"#/definitions/temperatureMeasurement\"}}}}}}]}"
+  ]
+}
