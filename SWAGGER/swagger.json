@@ -1,0 +1,59 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a sample server Petstore server.",
+    "version": "1.0.0",
+    "title": "IoT application"
+  },
+  "host": "0.0.0.0",
+  "tags": [
+    {
+      "name": "Temperature",
+      "description": "Getting temperature measurements"
+    }
+  ],
+  "paths": {
+    "/temperature": {
+      "get": {
+        "tags": [
+          "Temperature"
+        ],
+        "summary": "Endpoint for getting temperature measurements",
+        "description": "",
+        "operationId": "getTemperature",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Pet object that needs to be added to the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Pet"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of temperature measurements",
+            "schema": {
+              "$ref": "#/definitions/temperatureMeasurement"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "temperatureMeasurement": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

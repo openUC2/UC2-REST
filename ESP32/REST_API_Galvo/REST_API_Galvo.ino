@@ -12,7 +12,7 @@
 #define is_ps3 true
 
 
-
+// galvo
 int x_start = 0;
 int x_stop = 255;
 int x_step = 5;
@@ -26,8 +26,9 @@ int t_start = 0;
 boolean y_active = false;
 boolean x_active = false;
 
-int x_amplitude = 0;
-
+int galvo_amplitude_y = 255;
+int galvo_position_x = 0;
+int galvo_delay_y = 500;
 // LEDs
 #define LED_PIN    18
 #define LED_COUNT 1
@@ -43,7 +44,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define MS3 0
 #define SLEEP 0 // optional (just delete SLEEP from everywhere if not used)
 
-#define ENABLE 26
+#define ENABLE 13
 A4988 stepper_x(MOTOR_STEPS, PIN_DIR_X, PIN_STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_y(MOTOR_STEPS, PIN_DIR_Y, PIN_STEP_Y, SLEEP, MS1, MS2, MS3);
 A4988 stepper_z(MOTOR_STEPS, PIN_DIR_Z, PIN_STEP_Z, SLEEP, MS1, MS2, MS3);
@@ -62,7 +63,7 @@ const char* password = "12345678";
 String hostname = "ESPLENS";
 
 /*LASER GPIO pin*/
-int LASER_PIN_PLUS = 27;// 22;
+int LASER_PIN_PLUS = 14;// 22;
 int LASER_PIN_MINUS = 0;//23;
 
 
@@ -166,27 +167,36 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Start");
 
-  /* set led and laser as output to control led on-off */
-  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.show();            // Turn OFF all pixels ASAP
-  strip.setBrightness(255); // Set BRIGHTNESS to about 1/5 (max = 255)
-  // Visualize, that ESP is on!
-  strip.setPixelColor(0, strip.Color(255, 255, 255));
-  strip.show();
-  strip.setPixelColor(0, strip.Color(0, 0, 0));
-  strip.show();
-
   // switch of the laser directly
   pinMode(LASER_PIN_PLUS, OUTPUT);
   pinMode(LASER_PIN_MINUS, OUTPUT);
   digitalWrite(LASER_PIN_PLUS, LOW);
   digitalWrite(LASER_PIN_MINUS, LOW);
 
+  // assign a task for the motor so that it runs when we need it
+  if (is_wifi) {
+    Serial.println("Start runStepperTask");
+    xTaskCreatePinnedToCore(
+      runStepperTask,             // Task function.
+      "runStepperTask",           // String with name of task.
+      10000,                   // Stack size in words.
+      (void*)&glob_motor_steps,      // Parameter passed as input of the task
+      1,                         // Priority of the task.
+      NULL,                     // Task handle.
+      0);                       // core #
+  }
+
+
   // initiliaze connection
   if (is_wifi) {
     connectToWiFi();
     setup_routing();
   }
+
+   // Enable Motors
+  pinMode(ENABLE, OUTPUT);
+  digitalWrite(ENABLE, LOW);
+
 
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_X, pwm_frequency, pwm_resolution);
@@ -220,48 +230,25 @@ void setup() {
   */
   Serial.println("Stepper X");
   stepper_x.begin(RPM);
-  stepper_x.enable();
   stepper_x.setMicrostep(1);  // Set microstep mode to 1:1
   stepper_x.rotate(360);     // forward revolution
   stepper_x.rotate(-360);    // reverse revolution
 
   Serial.println("Stepper Y");
   stepper_y.begin(RPM);
-  stepper_y.enable();
   stepper_y.setMicrostep(1);  // Set microstep mode to 1:1
   stepper_y.rotate(360);     // forward revolution
   stepper_y.rotate(-360);    // reverse revolution
 
   Serial.println("Stepper Z");
   stepper_z.begin(RPM);
-  stepper_z.enable();
   stepper_z.setMicrostep(1);  // Set microstep mode to 1:1
   stepper_z.rotate(360);     // forward revolution
   stepper_z.rotate(-360);    // reverse revolution
 
-  // assign a task for the motor so that it runs when we need it
-  if (is_wifi) {
-    Serial.println("Start runStepperTask");
-    xTaskCreatePinnedToCore(
-      runStepperTask,             // Task function.
-      "runStepperTask",           // String with name of task.
-      10000,                   // Stack size in words.
-      (void*)&glob_motor_steps,      // Parameter passed as input of the task
-      1,                         // Priority of the task.
-      NULL,                     // Task handle.
-      0);                       // core #
-  }
 
   Serial.println("Start controlGalvoTask");
-  xTaskCreatePinnedToCore(
-    controlGalvoTask,             /* Task function. */
-    "controlGalvoTask",           /* String with name of task. */
-    10000,                     /* Stack size in words. */
-    (void*)&x_amplitude,      /* Parameter passed as input of the task */
-    1,                         /* Priority of the task. */
-    NULL,
-    1);                       // Core #
-
+  xTaskCreatePinnedToCore(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL, 1);
   Serial.println("Done with setting up Tasks");
 
   // Connect PS3 Controller
@@ -273,10 +260,7 @@ void setup() {
   Serial.println("Ready.");
 
 
-  // Enable Motors
-  pinMode(ENABLE, OUTPUT);
-  digitalWrite(ENABLE, LOW);
-
+  digitalWrite(ENABLE, HIGH);
   Serial.println("Starting the programm");
 }
 
@@ -285,7 +269,7 @@ void loop() {
   /*
     for (int ix = x_start; ix < x_stop; ix = ix + x_step) {
       Serial.printlnloo(ix);
-      x_amplitude = ix;
+      galvo_position_x = ix;
       delay(x_delay);
     }
   */
@@ -489,57 +473,31 @@ void loop() {
 
 }
 
-
-
 void controlGalvoTask( void * parameter ) {
-  int x_amplitude_last = x_amplitude;
-
-  int n_samples = 10;
-
-  int SineValues1[n_samples];
-
-  float ConversionFactor = (2 * PI) / n_samples;
-  float RadAngle;
-  // calculate sine values
-
-  for (int MyAngle = 0; MyAngle < n_samples; MyAngle++) {
-    RadAngle = MyAngle * ConversionFactor;
-    SineValues1[MyAngle] = (cos(RadAngle) * floor(n_samples / 2 - 1)) + ceil(n_samples / 2);
-  }
-
-  //int SineValues[n_samples] = {0,50,100,150,200,250,200,150,100,50};
-  int SineValues[n_samples] = {0, 250, 0, 250, 0, 250, 0, 250, 0, 250};
   while (1) {
-    /*
+    if (true) {
       ledcWrite(PWM_CHANNEL_LASER, laserval );
-      for (int iy = 0; iy < (n_samples); iy = iy + 1) //(int iy = -(n_samples/2); iy < (n_samples/2); iy = iy + 1)
-      {
-      if (x_amplitude_last != x_amplitude) {
-        x_amplitude_last = x_amplitude;
-        dacWrite(PIN_GALVO_X, x_amplitude);
+      dacWrite(PIN_GALVO_Y,  galvo_amplitude_y * 1); 
+      delayMicroseconds(galvo_delay_y );
+      dacWrite(PIN_GALVO_Y,  0); //abs(iy*2));//SineValues[iy]);
+      digitalWrite(LASER_PIN_PLUS, LOW); //switch off laser again when roundtrip is reached
+      delayMicroseconds(galvo_delay_y );
+    }
+    else {
+      for (int ix = 0; ix < 1; ix ++) {
+        dacWrite(PIN_GALVO_X, ix * (127));
+        delayMicroseconds(50);
+        ledcWrite(PWM_CHANNEL_LASER, 1000);
+        for (int iy = 0; iy < 2; iy ++) {
+          dacWrite(PIN_GALVO_Y, iy * 255);
+          delay(1);
+        }
+        ledcWrite(PWM_CHANNEL_LASER, 0);
       }
-      y_active = true;
-      dacWrite(PIN_GALVO_Y, SineValues[iy]);//abs(iy*2));//SineValues[iy]);
-      y_active = false;
-      if(iy == 250)
-        digitalWrite(LASER_PIN_PLUS, LOW); //switch off laser again when roundtrip is reached
-      delay(1);
-      }*/
-
-    for (int ix = 0; ix < 3; ix ++) {
-      dacWrite(PIN_GALVO_X, ix * (127));
-      delay(1);
-      ledcWrite(PWM_CHANNEL_LASER, 1000);
-      for (int iy = 0; iy < 2; iy ++) {
-        dacWrite(PIN_GALVO_Y, iy * 255);
-        delay(1);
-      }
-      ledcWrite(PWM_CHANNEL_LASER, 0);
     }
   }
   vTaskDelete(NULL);
 }
-
 
 
 
@@ -609,7 +567,9 @@ void setup_routing() {
   server.on("/lens_z", HTTP_POST, move_lens_z);
   server.on("/laser", HTTP_POST, set_laser);
   server.on("/sofi", HTTP_POST, set_sofi);
-  server.on("/galvo/amplitudex", HTTP_POST, set_galvo_amplitudex);
+  server.on("/galvo/position_x", HTTP_POST, set_galvo_positionx);
+  server.on("/galvo/amplitude_y", HTTP_POST, set_galvo_amplitudey);
+  server.on("/galvo/galvodelay_y", HTTP_POST, set_galvo_delay_y);
   server.on("/identify", identify);
   // start server
   server.begin();
@@ -767,8 +727,10 @@ void run_motor_x(int steps, int speed) {
   else {
     // run only the number of steps we want
     glob_motor_steps[0] = 0;
+    digitalWrite(ENABLE, LOW);
     stepper_x.begin(abs(speed));
     stepper_x.rotate(steps);
+    digitalWrite(ENABLE, HIGH);
   }
 }
 
@@ -800,8 +762,10 @@ void run_motor_y(int steps, int speed) {
   else {
     // run only the number of steps we want
     glob_motor_steps[1] = 0;
+    digitalWrite(ENABLE, LOW);
     stepper_y.begin(abs(speed));
     stepper_y.rotate(steps);
+    digitalWrite(ENABLE, HIGH);
   }
 }
 
@@ -833,8 +797,10 @@ void run_motor_z(int steps, int speed) {
   else {
     // run only the number of steps we want
     glob_motor_steps[2] = 0;
+    digitalWrite(ENABLE, LOW);
     stepper_z.begin(abs(speed));
     stepper_z.rotate(steps);
+    digitalWrite(ENABLE, HIGH);
   }
 }
 
@@ -881,14 +847,41 @@ void set_led() {
   server.send(200, "application/json", "{}");
 }
 
-void set_galvo_amplitudex(void) {
+void set_galvo_positionx(void) {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
 
   // Get RGB components
-  x_amplitude = jsonDocument["value"];
-  Serial.print("x_amplitude: ");
-  Serial.print(x_amplitude);
+  galvo_position_x = jsonDocument["value"];
+  Serial.print("galvo_position_x: ");
+  Serial.print(galvo_position_x);
+
+  // Respond to the client
+  server.send(200, "application/json", "{}");
+}
+
+
+void set_galvo_amplitudey(void) {
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+
+  // Get RGB components
+  galvo_amplitude_y = jsonDocument["value"];
+  Serial.print("galvo_amplitude_y: ");
+  Serial.print(galvo_amplitude_y);
+
+  // Respond to the client
+  server.send(200, "application/json", "{}");
+}
+
+void set_galvo_delay_y(void) {
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+
+  // Get RGB components
+  galvo_delay_y = jsonDocument["value"];
+  Serial.print("galvo_delay_y: ");
+  Serial.print(galvo_delay_y);
 
   // Respond to the client
   server.send(200, "application/json", "{}");
