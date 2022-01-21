@@ -39,16 +39,9 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define MS3 0
 #define SLEEP 0 // optional (just delete SLEEP from everywhere if not used)
 
-
 A4988 stepper_z(MOTOR_STEPS, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
-
-
-
 A4988 stepper_x(MOTOR_STEPS, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
-
-
 A4988 stepper_y(MOTOR_STEPS, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
-
 
 //#define home_wifi
 #ifdef home_wifi
@@ -59,7 +52,7 @@ const char* ssid = "Blynk";
 const char* password = "12345678";
 #endif
 
-boolean is_wifi = false;
+boolean is_wifi = true;
 
 
 String hostname = "ESPLENS";
@@ -70,8 +63,8 @@ int LASER_PIN_MINUS = 0;//23;
 
 
 /*Lens GPIO pins*/
-int LENS_X_PIN = 0;
-int LENS_Z_PIN = 0;
+int LENS_X_PIN = 25;
+int LENS_Z_PIN = 26;
 
 ///* topics - DON'T FORGET TO REGISTER THEM! */
 int LED_val = 0;
@@ -396,8 +389,8 @@ void loop() {
     int offset_val_shoulder = 5;
     if ( abs(Ps3.data.analog.button.r2) > offset_val_shoulder) {
       // lens_x++ coarse
-      if ((lens_x + 1000 < pwm_max)) {
-        lens_x += 1000;
+      if ((lens_x + 100 < pwm_max)) {
+        lens_x += 100;
         run_lens_x(lens_x);
       }
       delay(100);
@@ -405,8 +398,8 @@ void loop() {
 
     if ( abs(Ps3.data.analog.button.l2) > offset_val_shoulder) {
       // lens_x-- coarse
-      if ((lens_x - 1000 > 0)) {
-        lens_x -= 1000;
+      if ((lens_x - 100 > 0)) {
+        lens_x -= 100;
         run_lens_x(lens_x);
       }
       delay(100);
@@ -415,17 +408,17 @@ void loop() {
 
     if ( abs(Ps3.data.analog.button.r1) > offset_val_shoulder) {
       // lens_x + semi coarse
-      if ((lens_x + 100 < pwm_max)) {
-        lens_x += 100;
-        run_lens_x(lens_x);
+      if ((lens_z+ 100 < pwm_max)) {
+        lens_z += 100;
+        run_lens_z(lens_z);
         delay(100);
       }
     }
     if ( abs(Ps3.data.analog.button.l1) > offset_val_shoulder) {
-      // lens_x - semi coarse
-      if ((lens_x - 100 > 0)) {
-        lens_x -= 100;
-        run_lens_x(lens_x);
+      // lens_z - semi coarse
+      if ((lens_z - 100 > 0)) {
+        lens_z-= 100;
+        run_lens_z(lens_z);
         delay(50);
       }
     }
@@ -480,7 +473,7 @@ void runsofi(void * parameter) {
     run_lens_z(ampl_z);
     run_lens_x(ampl_x);
     delay(50);
-    run_lens_z(0);
+    run_lens_z(lens_z);
     run_lens_x(lens_x);
     delay(50);
   }
