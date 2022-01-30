@@ -12,8 +12,7 @@ int DIR_X = 5;
 int DIR_Y = 6;
 int DIR_Z = 7;
 int ENABLE = 8;
-#endif
-#ifdef IS_ESP32
+#else 
 // Motor pins
 int STEP_X = 16;
 int STEP_Y = 17;
@@ -38,8 +37,8 @@ float SCREW_PITCH_X_MM = 1;
 float SCREW_PITCH_Y_MM = 1;
 float SCREW_PITCH_Z_MM = 1;
 
-int MICROSTEPPING_X = 8;
-int MICROSTEPPING_Y = 8;
+int MICROSTEPPING_X = 4;
+int MICROSTEPPING_Y = 4;
 int MICROSTEPPING_Z = 16;
 
 static const float HOMING_VELOCITY_X = 1;

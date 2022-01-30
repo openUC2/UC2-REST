@@ -11,13 +11,13 @@ import json
 import time
 import numpy as np
 import logging
-import zeroconf
 import threading
 import json
 import time
 import cv2
 import os
 import socket
+import serial
 
 from tempfile import NamedTemporaryFile
 from imswitch.imcommon.model import initLogger
@@ -45,40 +45,33 @@ class ESP32Client(object):
     backlash_z = 40
     is_driving = False
     is_sending = False
-
-    def __init__(self, host, port=31950):
-        if isinstance(host, zeroconf.ServiceInfo):
-            # If we have an mDNS ServiceInfo object, try each address
-            # in turn, to see if it works (sometimes you get addresses
-            # that don't work, if your network config is odd).
-            # TODO: figure out why we can get mDNS packets even when
-            # the microscope is unreachable by that IP
-            for addr in host.parsed_addresses():
-                if ":" in addr:
-                    self.host = f"[{addr}]"
-                else:
-                    self.host = addr
-                self.port = host.port
-                try:
-                    self.get_json(self.base_uri)
-                    break
-                except:
-                    logging.info(f"Couldn't connect to {addr}, we'll try another address if possible.")
-        else:
-            self.host = host
-            self.port = port
-
-        # check if host is up
-        self.is_connected = self.isConnected()
-
-        self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
-
-
+    
+    is_wifi = False
+    is_serial = False
+    
     is_filter_init = False
     filter_position = 0
 
     steps_z_last = 0
+    
+    def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
+        
+        if host is not None:
+            # use client in wireless mode
+            self.is_wifi = True
+            self.host = host
+            self.port = port
+    
+            # check if host is up
+            self.is_connected = self.isConnected()
+    
+            self.__logger = initLogger(self, tryInheritParent=True)
+            self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
+
+        elif serialport is not None:
+            # use client in wired mode
+            self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
+            self.serialdevice = serial.Serial(port=serialport, baudrate=baudrate, timeout=1)
 
     def isConnected(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,13 +83,12 @@ class ESP32Client(object):
         except:
             return False
 
-
     @property
     def base_uri(self):
         return f"http://{self.host}:{self.port}"
 
-    def get_json(self, path, wait_for_result=False):
-        if self.is_connected:
+    def get_json_thread(self, path, wait_for_result=False):
+        if self.is_connected and self.is_wifi:
             t = threading.Thread(target=self.get_json_thread, args = (path))
             t.daemon = True
             t.start()
@@ -106,9 +98,9 @@ class ESP32Client(object):
             return None
         return None
 
-    def get_json_thread(self, path):
+    def get_json(self, path):
         """Perform an HTTP GET request and return the JSON response"""
-        if self.is_connected:
+        if self.is_connected and self.is_wifi:
             if not path.startswith("http"):
                 path = self.base_uri + path
             try:
@@ -126,10 +118,18 @@ class ESP32Client(object):
                 self.is_sending = False
                 # not connected
                 return None
+        elif self.is_serial:
+            path = path.replace(self.base_uri,"")
+            message = {"task":path}
+            message = json.dumps(message)
+            self.serialdevice.flushInput()
+            self.serialdevice.flushOutput()    
+            returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
+            return returnmessage
         else:
             return None
 
-    def post_json(self, path, payload={}, headers=None, timeout=1, is_blocking=True):
+    def post_json_thread(self, path, payload={}, headers=None, timeout=1, is_blocking=True):
         tmp_counter = 0
         while self.is_sending:
             time.sleep(.1)
@@ -146,28 +146,49 @@ class ESP32Client(object):
             t.start()
             return None
 
-    def post_json_thread(self, path, payload={}, headers=None, timeout=10):
+    def post_json(self, path, payload={}, headers=None, timeout=10):
         """Make an HTTP POST request and return the JSON response"""
-        print(timeout)
-        if not path.startswith("http"):
-            path = self.base_uri + path
-        if headers is None:
-            headers = self.headers
+        if self.is_connected and self.is_wifi:
+            if not path.startswith("http"):
+                path = self.base_uri + path
+            if headers is None:
+                headers = self.headers
+            try:
+                r = requests.post(path, json=payload, headers=headers,timeout=timeout)
+                r.raise_for_status()
+                r = r.json()
+                self.is_connected = True
+                self.is_sending = False
+                return r
+            except Exception as e:
+                self.__logger.error(e)
+                self.is_connected = False
+                self.is_sending = False
+                # not connected
+                return None
+        elif self.is_serial:
+            path = path.replace(self.base_uri,"")
+            payload["task"] = {path}
+            message = json.dumps(message)
+            self.serialdevice.flushInput()
+            self.serialdevice.flushOutput()    
+            self.serialdevice.write(message.encode(encoding='UTF-8'))
+            
+            returnmessage = self.readSerial()
+            return returnmessage
 
+    def readSerial(serial):
+        returnmessage = ''
+        rmessage = ' ' 
+        while rmessage !='': 
+            rmessage = arduino1.readline().decode()
+            returnmessage += rmessage
         try:
-            r = requests.post(path, json=payload, headers=headers,timeout=timeout)
-            r.raise_for_status()
-            r = r.json()
-            self.is_connected = True
-            self.is_sending = False
-            return r
-        except Exception as e:
-            self.__logger.error(e)
-            self.is_connected = False
-            self.is_sending = False
-            # not connected
-            return None
-
+            print(Text)
+            returnmessage = json.loads(returnmessage)
+            return returnmessage
+        except:
+            return False
 
     def get_temperature(self):
         path = "/temperature"

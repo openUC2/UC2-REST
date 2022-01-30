@@ -1,17 +1,49 @@
-/*
-  This a simple example of the aREST Library for Arduino (Uno/Mega/Due/Teensy)
-  using the Serial port. See the README file for more details.
+#define DEBUG 1
+// CASES:
+// 1 Arduino -> Serial only
+// 2 ESP32 -> Serial only
+// 3 ESP32 -> Wifi only
+// 4 ESP32 -> Wifi + Serial ?
 
-  Written in 2014 by Marco Schwartz under a GPL license.
+// load configuration
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
+//#define ESP32_WIFI
+//#define ESP32_SERIAL_WIFI
+
+// load modules
+#define IS_DAC 1
+#define IS_LASER 
+
+#ifdef ARDUINO_SERIAL
+#define IS_SERIAL
+#define IS_ARDUINO
+#endif 
+
+#ifdef ESP32_SERIAL
+#define IS_SERIAL
+#define IS_ESP32
+#endif 
+
+#ifdef ESP32_WIFI
+#define IS_WIFI
+#define IS_ESP32
+#endif 
+
+#ifdef ESP32_SERIAL_WIFI
+#define IS_WIFI
+#define IS_SERIAL
+#define IS_ESP32
+#endif
+
+
+
+/*
+   START CODE HERE
 */
 
 
-#define DEBUG 1
-
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
-#define IS_ARDUINO
-#else
-#define IS_ESP32
+#ifdef IS_WIFI
 #include <WiFi.h>
 #include <WebServer.h>
 #include "wifi_parameters.h"
@@ -20,30 +52,36 @@
 
 #include <ArduinoJson.h>
 #include <AccelStepper.h>
-
-
-#include "def_motor.h"
-
-
+#include "motor_parameters.h"
+#include "LASER_parameters.h"
 
 
 
 //Where the JSON for the current instruction lives
-#ifdef IS_ESP32
+#ifdef IS_ARDUINO
+DynamicJsonDocument jsonDocument(400);
+#else
 char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
-WebServer server(80);
+#endif
 String output;
-#else
-DynamicJsonDocument jsonDocument(200);
+
+
+#ifdef IS_WIFI && IS_ESP32
+WebServer server(80);
+#endif
+
+#ifdef IS_DAC
+#include "DAC_Module.h"
+DAC_Module *dac = new DAC_Module();
 #endif
 
 
 /*
- * 
- * Register devices
- * 
- */
+
+   Register devices
+
+*/
 
 // https://www.pjrc.com/teensy/td_libs_AccelStepper.html
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
@@ -51,16 +89,22 @@ AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 
 
-
 /*
- * 
- * Register functions
- * 
- */
+   Register functions
+*/
 String motor_act_endpoint = "/motor_act";
 String motor_set_endpoint = "/motor_set";
 String motor_get_endpoint = "/motor_get";
+String DAC_act_endpoint = "/DAC_act";
+String DAC_set_endpoint = "/DAC_set";
+String DAC_get_endpoint = "/DAC_get";
+String LASER_act_endpoint = "/LASER_act";
+String LASER_set_endpoint = "/LASER_set";
+String LASER_get_endpoint = "/LASER_get";
 
+/*
+   Setup
+*/
 void setup(void)
 {
   // Start Serial
@@ -68,7 +112,7 @@ void setup(void)
   Serial.println("Start");
 
   // connect to wifi if necessary
-#ifdef IS_ESP32
+#ifdef IS_WIFI && IS_ESP32
   connectToWiFi();
   setup_routing();
 #endif
@@ -76,7 +120,7 @@ void setup(void)
 
   /*
      Motor related settings
-  */  
+  */
   Serial.println("Setting Up Motors");
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
@@ -93,16 +137,71 @@ void setup(void)
   stepper_Y.enableOutputs();
   stepper_Z.enableOutputs();
 
+
+
+ #ifdef IS_LASER
+ Serial.println("Setting Up LASERs");
+   // switch of the LASER directly
+  pinMode(LASER_PIN_1, OUTPUT);
+  pinMode(LASER_PIN_2, OUTPUT);
+  pinMode(LASER_PIN_3, OUTPUT);
+  digitalWrite(LASER_PIN_1, LOW);
+  digitalWrite(LASER_PIN_2, LOW);
+  digitalWrite(LASER_PIN_3, LOW);
+  /* setup the PWM ports and reset them to 0*/
+  ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
+  ledcWrite(PWM_CHANNEL_LASER_2, 0);
+
+  ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
+  ledcWrite(PWM_CHANNEL_LASER_3, 0);
+
+  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
+  ledcWrite(LASER_PIN_1, 0);
+  #endif
+
+  #ifdef IS_DAC
+  Serial.println("Setting Up DAC");
+  dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
+  delay(1000);
+  dac->Stop(DAC_CHANNEL_1);
+  #endif
+
+
+  // list modules
+#ifdef IS_LASER 
+Serial.println("IS_LASER"); 
+#endif
+#ifdef IS_DAC 
+Serial.println("IS_DAC"); 
+#endif
+#ifdef IS_SERIAL 
+Serial.println("IS_SERIAL"); 
+#endif
+#ifdef IS_WIFI 
+Serial.println("IS_WIFI"); 
+#endif
+#ifdef IS_ARDUINO 
+Serial.println("IS_ARDUINO"); 
+#endif
+#ifdef IS_ESP32 
+Serial.println("IS_ESP32"); 
+#endif
+
+
 }
 
 
 
 
 void loop() {
-#ifdef IS_ARDUINO
+#ifdef IS_SERIAL
   if (Serial.available()) {
     deserializeJson(jsonDocument, Serial);
     String task = jsonDocument["task"];
+    if (DEBUG) Serial.println(task);
     if (task == motor_act_endpoint)
       motor_act_fct(jsonDocument);
     else if (task == motor_set_endpoint)
@@ -110,31 +209,54 @@ void loop() {
     else if (task == motor_get_endpoint)
       jsonDocument = motor_get_fct(jsonDocument);
 
-    //Senden
-    serializeJson(jsonDocument, Serial);
-    Serial.println();
-  }
+#ifdef IS_DAC
+    else if (task == DAC_act_endpoint)
+      DAC_act_fct(jsonDocument);
+    else if (task == DAC_set_endpoint)
+      DAC_set_fct(jsonDocument);
+    else if (task == DAC_get_endpoint)
+      jsonDocument = DAC_get_fct(jsonDocument);
 #endif
 
 
-#ifdef IS_ESP32
+#ifdef IS_LASER
+    else if (task == LASER_act_endpoint)
+      jsonDocument = LASER_act_fct(jsonDocument);
+    else if (task == LASER_set_endpoint)
+      jsonDocument = LASER_get_fct(jsonDocument);
+    else if (task == LASER_get_endpoint)
+      jsonDocument = LASER_set_fct(jsonDocument);
+#endif
+
+    // Send JSON information back
+    serializeJson(jsonDocument, Serial);
+    Serial.println();
+
+
+  }
+#endif
+
+  /*
+    stepper_X.run();
+    stepper_Y.run();
+    stepper_Z.run();
+  */
+#ifdef IS_WIFI && IS_ESP32
   server.handleClient();
 #endif
 
 }
 
 
-
-
 /*
- * 
- * 
- * Define Endpoints
- * 
- * 
- */
 
-#ifdef IS_ESP32
+
+   Define Endpoints
+
+
+*/
+
+#ifdef IS_WIFI && IS_ESP32
 void setup_routing() {
   // GET
   //  server.on("/temperature", getTemperature);
@@ -145,6 +267,18 @@ void setup_routing() {
   server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
+
+#ifdef IS_DAC
+  server.on(DAC_act_endpoint, HTTP_POST, DAC_act_fct_http);
+  server.on(DAC_get_endpoint, HTTP_POST, DAC_get_fct_http);
+  server.on(DAC_set_endpoint, HTTP_POST, DAC_set_fct_http);
+#endif
+
+#ifdef IS_LASER
+  server.on(LASER_act_endpoint, HTTP_POST, LASER_act_fct_http);
+  server.on(LASER_get_endpoint, HTTP_POST, LASER_get_fct_http);
+  server.on(LASER_set_endpoint, HTTP_POST, LASER_set_fct_http);
+#endif
 
   // start server
   server.begin();
