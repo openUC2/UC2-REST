@@ -16,11 +16,11 @@ int ENABLE = 8;
 // Motor pins
 int STEP_X = 2;
 int STEP_Y = 23;
-int STEP_Z = 18;
+int STEP_Z = 0;
 int DIR_X = 4;
 int DIR_Y = 4;
 int DIR_Z = 4;
-int ENABLE = 22;
+int ENABLE = 0;
 #endif
 
 // for stepper.h

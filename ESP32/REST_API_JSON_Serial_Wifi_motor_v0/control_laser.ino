@@ -29,7 +29,7 @@ DynamicJsonDocument LASER_act_fct(JsonDocument& Values) {
 #endif
     //TODO: Write AnalogWrite for Arduino
   }
-  else if (LASERid == 2) {
+  else if (LASERid == 3) {
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
     LASER_val_3 = LASERval;

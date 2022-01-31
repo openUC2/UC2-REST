@@ -175,17 +175,20 @@ void setup(void)
   digitalWrite(LASER_PIN_2, LOW);
   digitalWrite(LASER_PIN_3, LOW);
   /* setup the PWM ports and reset them to 0*/
+  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
+  ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(500);
+  ledcWrite(PWM_CHANNEL_LASER_1, 0);
+  
   ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
+  ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_2, 0);
 
   ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
+  ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
-
-  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
-  ledcWrite(LASER_PIN_1, 0);
 #endif
 
 #ifdef IS_DAC

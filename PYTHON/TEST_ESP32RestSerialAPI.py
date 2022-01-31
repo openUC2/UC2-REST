@@ -17,7 +17,7 @@ r = esp32.move_stepper(axis=2, steps=100, speed=100, is_absolute=False, is_block
 print(r)
 
 #%%
-r = esp32.set_laser(channel='R', value=100)
+r = esp32.set_laser(channel='B', value=00000)
 print(r)
 
 #%%
@@ -27,7 +27,13 @@ r = esp32.readSerial()
 print(r)
 
 #%%
-payload = {"task":"/motor_act", "axis":2, "speed": 100, "position": 1000, "isabsolute":1}
+payload = {"task":"/motor_act", "axis":2, "speed": 100, "position": 100, "isabsolute":1}
+esp32.writeSerial(payload)
+r = esp32.readSerial()
+print(r)
+
+#%%
+payload = {"task":"/LASER_act", "LASERid": 1, "LASERval": 1000}
 esp32.writeSerial(payload)
 r = esp32.readSerial()
 print(r)
