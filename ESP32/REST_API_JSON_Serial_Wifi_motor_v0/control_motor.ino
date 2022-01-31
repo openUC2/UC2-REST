@@ -10,12 +10,14 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
   int isabsolute = Values["isabsolute"];
   int isblocking = Values["isblocking"];
 
+  /*
   // apply default values if nothing was sent
-  if(axis == NULL) axis = 1;
-  if(mspeed == NULL) axis = 0;
-  if(mposition == NULL) axis = 0;
-  if(isabsolute == NULL) axis = 1;
-  if(isblocking == NULL) axis = 1;
+  if (axis == "null") axis = 1;
+  if (mspeed == "null") axis = 0;
+  if (mposition == "null") axis = 0;
+  if (isabsolute == "null") axis = 1;
+  if (isblocking == "null") axis = 1;
+  */
   
   if (DEBUG) {
     Serial.print("axis "); Serial.println(axis);
@@ -25,34 +27,40 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
     Serial.print("isblocking "); Serial.println(isblocking);
   }
 
-  if (mspeed == 0) {
+  /*
+    if (mspeed == 0) {
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
-  }
+    }
+  */
 
-  switch (axis) {
-    case 1:
-      stepper_X.setSpeed((float)mspeed * steps_per_mm_X);
-      if (isabsolute) stepper_X.moveTo(mposition * steps_per_mm_X);
-      else stepper_X.move(mposition * steps_per_mm_X);
-      if(isblocking) stepper_X.runToPosition();
-      break;
-    case 2:
+  if (axis == 1) {
+    stepper_X.begin(mspeed);
+    if (isabsolute) stepper_X.move(mposition * steps_per_mm_X);
+    else stepper_X.move(mposition * steps_per_mm_X);
+    POSITION_MOTOR_X = - mposition * steps_per_mm_X;
+    //if(isblocking) stepper_X.runToPosition();
+  }
+  else if (axis == 2) {
+    stepper_Y.begin(mspeed);
+    if (isabsolute) stepper_Y.move(mposition * steps_per_mm_Y);
+    else stepper_Y.move(mposition * steps_per_mm_Y);
+    POSITION_MOTOR_Y = - mposition * steps_per_mm_Y;
+    /*
       stepper_Y.setSpeed((float)mspeed * steps_per_mm_Y);
       if (isabsolute) stepper_Y.moveTo(mposition * steps_per_mm_Y);
       else stepper_Y.moveTo(mposition * steps_per_mm_Y);
       if(isblocking) stepper_Y.runToPosition();
-      break;
-    case 3:
-      stepper_Z.setSpeed((float)mspeed * steps_per_mm_Z);
-      if (isabsolute) stepper_Z.moveTo(mposition * steps_per_mm_Z);
-      else stepper_Z.move(mposition * steps_per_mm_Z);
-      if(isblocking) stepper_Z.runToPosition();
-    default:
-      // Statement(s)
-      break;
+    */
   }
+  else if (axis == 3) {
+    stepper_Z.begin(mspeed);
+    if (isabsolute) stepper_Z.move(mposition * steps_per_mm_Z);
+    else stepper_Z.move(mposition * steps_per_mm_Z);
+    POSITION_MOTOR_Z = - mposition * steps_per_mm_Z;
+  }
+
   Values.clear();
   Values["return"] = 1;
 
@@ -61,7 +69,7 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
 
 DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
   int axis = Values["axis"];
-  
+
   if (DEBUG) {
     Serial.print("axis "); Serial.println(axis);
   }
@@ -72,68 +80,69 @@ DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
   int pinstep = jsonDocument["pinstep"];
   int pindir = jsonDocument["pindir"];
   int isenabled = Values["isenabled"];
-    
+
 
   if (currentposition != NULL) {
     if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
     switch (axis) {
       case 1:
-        stepper_X.setCurrentPosition(currentposition);break;
+        POSITION_MOTOR_X = currentposition; //stepper_X.setCurrentPosition(currentposition);break;
       case 2:
-        stepper_Y.setCurrentPosition(currentposition);break;
+        POSITION_MOTOR_Y = currentposition; //stepper_Y.setCurrentPosition(currentposition);break;
       case 3:
-        stepper_Z.setCurrentPosition(currentposition);break;
+        POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
     }
   }
   if (maxspeed != NULL) {
     switch (axis) {
       case 1:
-        stepper_X.setMaxSpeed(maxspeed);break;
+        stepper_X.begin(maxspeed); //stepper_X.setMaxSpeed(maxspeed);break;
       case 2:
-        stepper_Y.setMaxSpeed(maxspeed);break;
+        stepper_Y.begin(maxspeed); //stepper_Y.setMaxSpeed(maxspeed);break;
       case 3:
-        stepper_Z.setMaxSpeed(maxspeed);break;
+        stepper_Z.begin(maxspeed); //stepper_Z.setMaxSpeed(maxspeed);break;
     }
   }
 
-  if (acceleration != NULL) {
-    switch (axis) {
-      case 1:
-        stepper_X.setAcceleration(acceleration);break;
-      case 2:
-        stepper_Y.setAcceleration(acceleration);break;
-      case 3:
-        stepper_Z.setAcceleration(acceleration);break;
+  /*
+    if (acceleration != NULL) {
+      switch (axis) {
+        case 1:
+          stepper_X.setAcceleration(acceleration);break;
+        case 2:
+          stepper_Y.setAcceleration(acceleration);break;
+        case 3:
+          stepper_Z.setAcceleration(acceleration);break;
+      }
     }
-  }
+  */
 
   if (pindir != NULL and pinstep != NULL) {
-    switch (axis) {
-      case 1:
-        STEP_X = pinstep;
-        DIR_X = pindir;
-        stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-        break;
-      case 2:
-        STEP_Y = pinstep;
-        DIR_Y = pindir;
-        stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-        break;
-      case 3:
-        STEP_Z = pinstep;
-        DIR_Z = pindir;
-        stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
-        break;
+    if (axis == 1) {
+      STEP_X = pinstep;
+      DIR_X = pindir;
+      A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3); //stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+    }
+    else if (axis == 2) {
+      STEP_Y = pinstep;
+      DIR_Y = pindir;
+      A4988 stepper_X(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3); //stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
+    }
+    else if (axis == 3) {
+      STEP_Z = pinstep;
+      DIR_Z = pindir;
+      A4988 stepper_X(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3); //stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
     }
   }
 
   if (DEBUG) Serial.print("isenabled "); Serial.println(isenabled);
-  if (isenabled != NULL and isenabled){
-    digitalWrite(ENABLE, 0);}
-  else if (isenabled != NULL and not isenabled){
+  if (isenabled != NULL and isenabled) {
+    digitalWrite(ENABLE, 0);
+  }
+  else if (isenabled != NULL and not isenabled) {
     digitalWrite(ENABLE, 1);
   }
-  
+
   Values.clear();
   Values["return"] = 1;
 
@@ -150,34 +159,34 @@ DynamicJsonDocument motor_get_fct(JsonDocument& Values) {
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
 
-  int mmaxspeed = 0;
-  int mspeed = 0;
+  //int mmaxspeed = 0;
+  //int mspeed = 0;
   int mposition = 0;
   int pinstep = 0;
   int pindir = 0;
 
   switch (axis) {
     case 1:
-      if(DEBUG) Serial.println("AXIS 1");
-      mmaxspeed = stepper_X.maxSpeed();
-      mspeed = stepper_X.speed();
-      mposition = stepper_X.currentPosition();
+      if (DEBUG) Serial.println("AXIS 1");
+      //mmaxspeed = stepper_X.maxSpeed();
+      //mspeed = stepper_X.speed();
+      mposition = POSITION_MOTOR_X;//stepper_X.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
       break;
     case 2:
-    if(DEBUG) Serial.println("AXIS 2");
-      mmaxspeed = stepper_Y.maxSpeed();
-      mspeed = stepper_Y.speed();
-      mposition = stepper_Y.currentPosition();
+      if (DEBUG) Serial.println("AXIS 2");
+      //mmaxspeed = stepper_Y.maxSpeed();
+      //mspeed = stepper_Y.speed();
+      mposition = POSITION_MOTOR_Y;//stepper_Y.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
       break;
     case 3:
-    if(DEBUG) Serial.println("AXIS 3");
-      mmaxspeed = stepper_Z.maxSpeed();
-      mspeed = stepper_Z.speed();
-      mposition = stepper_Z.currentPosition();
+      if (DEBUG) Serial.println("AXIS 3");
+      //mmaxspeed = stepper_Z.maxSpeed();
+      //mspeed = stepper_Z.speed();
+      mposition = POSITION_MOTOR_Z;//stepper_Z.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
       break;
@@ -185,8 +194,8 @@ DynamicJsonDocument motor_get_fct(JsonDocument& Values) {
 
   jsonDocument.clear();
   jsonDocument["position"] = mposition;
-  jsonDocument["speed"] = mspeed;
-  jsonDocument["maxspeed"] = mmaxspeed;
+  //jsonDocument["speed"] = mspeed;
+  //jsonDocument["maxspeed"] = mmaxspeed;
   jsonDocument["pinstep"] = pinstep;
   jsonDocument["pindir"] = pindir;
   return jsonDocument;

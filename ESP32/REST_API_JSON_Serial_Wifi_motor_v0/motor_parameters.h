@@ -23,9 +23,23 @@ int DIR_Z = 4;
 int ENABLE = 22;
 #endif
 
+// for stepper.h
+#define MOTOR_STEPS 200
+#define SLEEP 0
+#define MS1 0
+#define MS2 0
+#define MS3 0
+#define RPM 120
+
+
 // Joystick
 static const bool ENABLE_JOYSTICK = true;
 constexpr int joystickSensitivity = 75; // for comparison with number in the range of 0-512
+
+int POSITION_MOTOR_X = 0;
+int POSITION_MOTOR_Y = 0;
+int POSITION_MOTOR_Z = 0;
+
 
 // Motorized stage
 static const int FULLSTEPS_PER_REV_X = 200;

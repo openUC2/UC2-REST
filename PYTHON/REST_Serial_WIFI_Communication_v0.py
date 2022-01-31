@@ -47,7 +47,7 @@ Text = {"task":"motor_set", "set_task": "stop", "axis":1}
 
 Text = {"task":"/DAC_act", "frequency": 1000, "offset":00, "dac_channel": 2, "amplitude":0}
 
-Text = {"task":"/LASER_act", "laserid": 1, "laserval": 1000}
+Text = {"task":"/LASER_act", "LASERid": 1, "LASERval": 1000}
 
 
 Text = {"task":"/motor_act", "axis":1, "speed": 10, "position": 10, "isblocking":1, "isabsolute":1}

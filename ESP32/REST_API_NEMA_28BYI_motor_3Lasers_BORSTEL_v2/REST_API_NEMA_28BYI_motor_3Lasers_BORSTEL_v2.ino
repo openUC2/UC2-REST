@@ -2,8 +2,9 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
-#include <Stepper.h>
 #include <Adafruit_NeoPixel.h>
+#include "A4988.h"
+#include <Stepper.h>
 
 // Setup MOTOR
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
@@ -19,7 +20,7 @@ Adafruit_NeoPixel strip(LED_COUNT, NEOLED_PIN, NEO_GRB + NEO_KHZ800);
 #define DIR 4
 #define STEP 2
 #define SLEEP 13 // optional (just delete SLEEP from everywhere if not used)
-#include "A4988.h"
+
 #define MS1 10
 #define MS2 11
 #define MS3 12

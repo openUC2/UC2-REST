@@ -176,14 +176,17 @@ class ESP32Client(object):
                 return None
         elif self.is_serial:
             payload["task"] = path
-            payload = json.dumps(payload)
-            self.serialdevice.flushInput()
-            self.serialdevice.flushOutput()    
-            self.serialdevice.write(payload.encode(encoding='UTF-8'))
-            
+            self.writeSerial(payload)
             returnmessage = self.readSerial()
             return returnmessage
 
+    def writeSerial(self, payload):
+        self.serialdevice.flushInput()
+        self.serialdevice.flushOutput()    
+        if type(payload)==dict:
+            payload = json.dumps(payload)
+        self.serialdevice.write(payload.encode(encoding='UTF-8'))
+        
     def readSerial(self):
         returnmessage = ''
         rmessage = '' 
@@ -215,21 +218,22 @@ class ESP32Client(object):
     def set_laser(self, channel='R', value=0, auto_filterswitch=False, timeout=20, is_blocking = True):
         if auto_filterswitch and value >0:
             self.switch_filter(channel, timeout=timeout,is_blocking=is_blocking)
-        payload = {
-            "value": value
-        }
-        path = ''
+        
+        path = '/LASER_act'
         if channel == 'R':
-            path = '/laser_red'
+            LASERid = 1
         if channel == 'G':
-            path = '/laser_green'
+            LASERid = 2
         if channel == 'B':
-            path = '/laser_blue'
-        if channel == 'W':
-            path = '/led_white'
-        if channel == "":
-            path = "/laser"
-        r = self.post_json(path, payload, is_blocking=is_blocking)
+            LASERid = 3
+            
+        payload = {
+            "task": path, 
+            "LASERid": LASERid,
+            "LASERval": value   
+        }
+
+        r = self.post_json(path, payload)
         return r
 
 
@@ -358,7 +362,6 @@ class ESP32Client(object):
 
 
     def move_filter(self, steps=100, speed=10,timeout=250,is_blocking=False, axis=2):
-        
         r = self.move_stepper(axis=axis, steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
         return r
 

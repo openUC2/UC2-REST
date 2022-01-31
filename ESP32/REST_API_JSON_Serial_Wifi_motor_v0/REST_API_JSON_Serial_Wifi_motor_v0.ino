@@ -19,17 +19,17 @@
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
 #define IS_ARDUINO
-#endif 
+#endif
 
 #ifdef ESP32_SERIAL
 #define IS_SERIAL
 #define IS_ESP32
-#endif 
+#endif
 
 #ifdef ESP32_WIFI
 #define IS_WIFI
 #define IS_ESP32
-#endif 
+#endif
 
 #ifdef ESP32_SERIAL_WIFI
 #define IS_WIFI
@@ -52,7 +52,8 @@
 
 
 #include <ArduinoJson.h>
-#include <AccelStepper.h>
+//#include <AccelStepper.h>
+#include "A4988.h"
 #include "motor_parameters.h"
 #include "LASER_parameters.h"
 
@@ -85,9 +86,12 @@ DAC_Module *dac = new DAC_Module();
 */
 #ifdef IS_MOTOR
 // https://www.pjrc.com/teensy/td_libs_AccelStepper.html
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
+A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
+A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
+//AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+//AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
+//AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 #endif
 
 /*
@@ -127,23 +131,43 @@ void setup(void)
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
 
-  stepper_X.setMaxSpeed(MAX_VELOCITY_X_mm * steps_per_mm_X);
-  stepper_Y.setMaxSpeed(MAX_VELOCITY_Y_mm * steps_per_mm_Y);
-  stepper_Z.setMaxSpeed(MAX_VELOCITY_Z_mm * steps_per_mm_Z);
+  stepper_X.begin(RPM);
+  stepper_X.enable();
+  stepper_X.setMicrostep(1);
+  stepper_X.move(100);
+  stepper_X.move(-100);
 
-  stepper_X.setAcceleration(MAX_ACCELERATION_X_mm * steps_per_mm_X);
-  stepper_Y.setAcceleration(MAX_ACCELERATION_Y_mm * steps_per_mm_Y);
-  stepper_Z.setAcceleration(MAX_ACCELERATION_Z_mm * steps_per_mm_Z);
+  stepper_Y.begin(RPM);
+  stepper_Y.enable();
+  stepper_Y.setMicrostep(1);
+  stepper_Y.move(100);
+  stepper_Y.move(-100);
 
-  stepper_X.enableOutputs();
-  stepper_Y.enableOutputs();
-  stepper_Z.enableOutputs();
+  stepper_Z.begin(RPM);
+  stepper_Z.enable();
+  stepper_Z.setMicrostep(1);
+  stepper_Z.move(100);
+  stepper_Z.move(-100);
+
+  /*
+    stepper_X.setMaxSpeed(MAX_VELOCITY_X_mm * steps_per_mm_X);
+    stepper_Y.setMaxSpeed(MAX_VELOCITY_Y_mm * steps_per_mm_Y);
+    stepper_Z.setMaxSpeed(MAX_VELOCITY_Z_mm * steps_per_mm_Z);
+
+    stepper_X.setAcceleration(MAX_ACCELERATION_X_mm * steps_per_mm_X);
+    stepper_Y.setAcceleration(MAX_ACCELERATION_Y_mm * steps_per_mm_Y);
+    stepper_Z.setAcceleration(MAX_ACCELERATION_Z_mm * steps_per_mm_Z);
+
+    stepper_X.enableOutputs();
+    stepper_Y.enableOutputs();
+    stepper_Z.enableOutputs();
+  */
 #endif
 
 
- #ifdef IS_LASER
- Serial.println("Setting Up LASERs");
-   // switch of the LASER directly
+#ifdef IS_LASER
+  Serial.println("Setting Up LASERs");
+  // switch of the LASER directly
   pinMode(LASER_PIN_1, OUTPUT);
   pinMode(LASER_PIN_2, OUTPUT);
   pinMode(LASER_PIN_3, OUTPUT);
@@ -162,37 +186,37 @@ void setup(void)
   ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
   ledcWrite(LASER_PIN_1, 0);
-  #endif
+#endif
 
-  #ifdef IS_DAC
+#ifdef IS_DAC
   Serial.println("Setting Up DAC");
   dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
   delay(1000);
   dac->Stop(DAC_CHANNEL_1);
-  #endif
+#endif
 
 
   // list modules
-#ifdef IS_LASER 
-Serial.println("IS_LASER"); 
+#ifdef IS_LASER
+  Serial.println("IS_LASER");
 #endif
-#ifdef IS_DAC 
-Serial.println("IS_DAC"); 
+#ifdef IS_DAC
+  Serial.println("IS_DAC");
 #endif
-#ifdef IS_SERIAL 
-Serial.println("IS_SERIAL"); 
+#ifdef IS_SERIAL
+  Serial.println("IS_SERIAL");
 #endif
-#ifdef IS_WIFI 
-Serial.println("IS_WIFI"); 
+#ifdef IS_WIFI
+  Serial.println("IS_WIFI");
 #endif
-#ifdef IS_ARDUINO 
-Serial.println("IS_ARDUINO"); 
+#ifdef IS_ARDUINO
+  Serial.println("IS_ARDUINO");
 #endif
-#ifdef IS_ESP32 
-Serial.println("IS_ESP32"); 
+#ifdef IS_ESP32
+  Serial.println("IS_ESP32");
 #endif
-#ifdef IS_MOTOR 
-Serial.println("IS_MOTOR"); 
+#ifdef IS_MOTOR
+  Serial.println("IS_MOTOR");
 #endif
 
 }
@@ -204,14 +228,15 @@ void loop() {
 #ifdef IS_SERIAL
   if (Serial.available()) {
     deserializeJson(jsonDocument, Serial);
-    String task = jsonDocument["task"];  
-    
+    String task = jsonDocument["task"];
+
     if (task == "null") return;
     if (DEBUG) Serial.print("TASK: "); Serial.println(task);
 
-#ifdef IS_MOTOR    
-    if (task == motor_act_endpoint){
-      motor_act_fct(jsonDocument);}
+#ifdef IS_MOTOR
+    if (task == motor_act_endpoint) {
+      motor_act_fct(jsonDocument);
+    }
     else if (task == motor_set_endpoint)
       motor_set_fct(jsonDocument);
     else if (task == motor_get_endpoint)
@@ -278,7 +303,7 @@ void setup_routing() {
   server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
-#endif 
+#endif
 
 #ifdef IS_DAC
   server.on(DAC_act_endpoint, HTTP_POST, DAC_act_fct_http);
