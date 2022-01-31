@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+    #!/usr/bin/env python
 # coding: utf-8
 #%%
 """
@@ -20,9 +20,14 @@ import socket
 import serial
 
 from tempfile import NamedTemporaryFile
-from imswitch.imcommon.model import initLogger
 
-#import matplotlib.pyplot as plt
+try: 
+    from imswitch.imcommon.model import initLogger
+    IS_IMSWITCH = True
+except: 
+    print("No imswitch available")
+    IS_IMSWITCH = False
+    
 
 ACTION_RUNNING_KEYWORDS = ["idle", "pending", "running"]
 ACTION_OUTPUT_KEYS = ["output", "return"]
@@ -52,7 +57,7 @@ class ESP32Client(object):
     is_filter_init = False
     filter_position = 0
 
-    steps_z_last = 0
+    steps_last = 0
     
     def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
         
@@ -65,13 +70,16 @@ class ESP32Client(object):
             # check if host is up
             self.is_connected = self.isConnected()
     
-            self.__logger = initLogger(self, tryInheritParent=True)
-            self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
+            if IS_IMSWITCH:
+                self.__logger = initLogger(self, tryInheritParent=True)
+                self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
 
         elif serialport is not None:
             # use client in wired mode
             self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
+            self.is_serial = True
             self.serialdevice = serial.Serial(port=serialport, baudrate=baudrate, timeout=1)
+            print("Connected to "+serialport)
 
     def isConnected(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -167,29 +175,25 @@ class ESP32Client(object):
                 # not connected
                 return None
         elif self.is_serial:
-            path = path.replace(self.base_uri,"")
-            payload["task"] = {path}
-            message = json.dumps(message)
+            payload["task"] = path
+            payload = json.dumps(payload)
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()    
-            self.serialdevice.write(message.encode(encoding='UTF-8'))
+            self.serialdevice.write(payload.encode(encoding='UTF-8'))
             
             returnmessage = self.readSerial()
             return returnmessage
 
-    def readSerial(serial):
+    def readSerial(self):
         returnmessage = ''
-        rmessage = ' ' 
-        while rmessage !='': 
-            rmessage = arduino1.readline().decode()
+        rmessage = '' 
+        while True:
+            rmessage =  self.serialdevice.readline().decode()
             returnmessage += rmessage
-        try:
-            print(Text)
-            returnmessage = json.loads(returnmessage)
-            return returnmessage
-        except:
-            return False
-
+            if rmessage.find("//")==0: break
+        #TODO: Here we need to cast the JSON to som
+        return returnmessage
+       
     def get_temperature(self):
         path = "/temperature"
         r = self.get_json(path)
@@ -230,37 +234,39 @@ class ESP32Client(object):
 
 
     def move_x(self, steps=100, speed=10, is_blocking=False):
-        r = self.move_stepper(axis="x", steps=steps, speed=speed, timeout=1, backlash=self.backlash_x, is_blocking=is_blocking)
+        r = self.move_stepper(axis=1, steps=steps, speed=speed, timeout=1, backlash=self.backlash_x, is_blocking=is_blocking)
         return r
 
     def move_y(self, steps=100, speed=10, is_blocking=False):
-        r = self.move_stepper(axis="y", steps=steps, speed=speed, timeout=1, backlash=self.backlash_y, is_blocking=is_blocking)
+        r = self.move_stepper(axis=2, steps=steps, speed=speed, timeout=1, backlash=self.backlash_y, is_blocking=is_blocking)
         return r
 
     def move_z(self, steps=100, speed=10, is_blocking=False):
-        r = self.move_stepper(axis="z", steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
+        r = self.move_stepper(axis=3, steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
         return r
 
-    def move_stepper(self, axis="z", steps=100, speed=10, timeout=1, backlash=20, is_blocking=False):
-        path = '/move_'+axis
-
-
-        if np.abs(steps) < 10:
-            speed = 50
-
+    def move_stepper(self, axis=1, steps=100, speed=10, is_absolute=False, timeout=1, backlash=20, is_blocking=False):
+        
+        path = "/motor_act"
+        
         # detect change in direction
-        if np.sign(self.steps_z_last) != np.sign(steps):
+        if np.sign(self.steps_last) != np.sign(steps):
             # we want to overshoot a bit
             print("Detected position change:")
             steps += (np.sign(steps)*backlash)
             print(steps)
 
         payload = {
-            "steps": np.int(steps),
+            "task":"/motor_act", 
+            "position": np.int(steps),
+            "isblocking": is_blocking,
+            "isabsolute": is_absolute,
             "speed": np.int(speed),
+            "axis": axis
         }
-        self.steps_z_last = steps
-        r = self.post_json(path, payload,timeout=timeout, is_blocking=is_blocking)
+        self.steps_last = steps
+        self.is_driving = True
+        r = self.post_json(path, payload, timeout=timeout)
         self.is_driving = False
         return r
 
@@ -337,9 +343,6 @@ class ESP32Client(object):
         self.move_filter(steps=steps, speed=speed, is_blocking=is_blocking)
 
 
-
-
-
     def send_ledmatrix(self, led_pattern):
         headers = {"Content-Type":"application/json"}
         path = '/matrix'
@@ -354,13 +357,9 @@ class ESP32Client(object):
             requests.post(self.base_uri + path, data=json.dumps(payload), headers=headers)
 
 
-    def move_filter(self, steps=100, speed=10,timeout=250,is_blocking=False):
-        payload = {
-            "steps": steps,
-            "speed": speed,
-        }
-        path = '/move_filter'
-        r = self.post_json(path, payload,timeout=timeout,is_blocking=is_blocking)
+    def move_filter(self, steps=100, speed=10,timeout=250,is_blocking=False, axis=2):
+        
+        r = self.move_stepper(axis=axis, steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
         return r
 
     def galvo_pos_x(self, pos_x = 0, timeout=1):

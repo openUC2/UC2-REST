@@ -1,4 +1,4 @@
-
+#ifdef IS_MOTOR
 
 // Custom function accessible by the API
 DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
@@ -228,4 +228,5 @@ void motor_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
+#endif
 #endif

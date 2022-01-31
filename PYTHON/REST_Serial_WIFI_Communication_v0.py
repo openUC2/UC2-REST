@@ -3,7 +3,9 @@ import serial
 import time
 import json 
 
-arduino1 = serial.Serial(port='/dev/cu.SLAB_USBtoUART', baudrate=115200, timeout=1)
+port = "/dev/cu.SLAB_USBtoUART"
+port = "/dev/cu.wchusbserial1430"
+arduino1 = serial.Serial(port=port, baudrate=115200, timeout=1)
 
 
 def writeSerial(Text):
@@ -13,18 +15,16 @@ def writeSerial(Text):
     arduino1.write(Text.encode(encoding='UTF-8'))
     return Text
 
-def readSerial():
+def readSerial():   
     Text = ''
     rmessage = ' ' 
-    while rmessage !='': 
+    iiter = 0
+    while True: 
         rmessage = arduino1.readline().decode()
         Text += rmessage
-    try:
-        print(Text)
-        Text = json.loads(Text)
-        return Text
-    except:
-        return False
+        if rmessage.find("//")==0: break
+
+    return Text
 
 def doSomething(i):
     Text = {"Geschwindigkeit": [1000, i*12, i], "Richtung":[1,1,-1]}
@@ -45,14 +45,16 @@ Text = {"task":"motor_set", "set_task": "currentposition", "currentposition": 10
 Text = {"task":"/motor_get", "axis":1}
 Text = {"task":"motor_set", "set_task": "stop", "axis":1}
 
-Text = {"task":"/DAC_act", "frequency": 1000, "offset":0, "dac_channel": 1}
+Text = {"task":"/DAC_act", "frequency": 1000, "offset":00, "dac_channel": 2, "amplitude":0}
 
 Text = {"task":"/LASER_act", "laserid": 1, "laserval": 1000}
 
 
+Text = {"task":"/motor_act", "axis":1, "speed": 10, "position": 10, "isblocking":1, "isabsolute":1}
+
 
 print("send: " + writeSerial(Text))                
-print("get:  " + str(readSerial()))
+print(str(readSerial()))
 '''
 Values = readSerial()
 if Values != False:

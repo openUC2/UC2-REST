@@ -12,8 +12,9 @@
 //#define ESP32_SERIAL_WIFI
 
 // load modules
-#define IS_DAC 1
-#define IS_LASER 
+//#define IS_DAC 1 // ESP32-only
+#define IS_LASER // ESP32-only
+#define IS_MOTOR
 
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
@@ -82,12 +83,12 @@ DAC_Module *dac = new DAC_Module();
    Register devices
 
 */
-
+#ifdef IS_MOTOR
 // https://www.pjrc.com/teensy/td_libs_AccelStepper.html
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
-
+#endif
 
 /*
    Register functions
@@ -118,6 +119,7 @@ void setup(void)
 #endif
 
 
+#ifdef IS_MOTOR
   /*
      Motor related settings
   */
@@ -136,7 +138,7 @@ void setup(void)
   stepper_X.enableOutputs();
   stepper_Y.enableOutputs();
   stepper_Z.enableOutputs();
-
+#endif
 
 
  #ifdef IS_LASER
@@ -189,7 +191,9 @@ Serial.println("IS_ARDUINO");
 #ifdef IS_ESP32 
 Serial.println("IS_ESP32"); 
 #endif
-
+#ifdef IS_MOTOR 
+Serial.println("IS_MOTOR"); 
+#endif
 
 }
 
@@ -200,14 +204,19 @@ void loop() {
 #ifdef IS_SERIAL
   if (Serial.available()) {
     deserializeJson(jsonDocument, Serial);
-    String task = jsonDocument["task"];
-    if (DEBUG) Serial.println(task);
-    if (task == motor_act_endpoint)
-      motor_act_fct(jsonDocument);
+    String task = jsonDocument["task"];  
+    
+    if (task == "null") return;
+    if (DEBUG) Serial.print("TASK: "); Serial.println(task);
+
+#ifdef IS_MOTOR    
+    if (task == motor_act_endpoint){
+      motor_act_fct(jsonDocument);}
     else if (task == motor_set_endpoint)
       motor_set_fct(jsonDocument);
     else if (task == motor_get_endpoint)
       jsonDocument = motor_get_fct(jsonDocument);
+#endif
 
 #ifdef IS_DAC
     else if (task == DAC_act_endpoint)
@@ -231,6 +240,7 @@ void loop() {
     // Send JSON information back
     serializeJson(jsonDocument, Serial);
     Serial.println();
+    Serial.println("//");
 
 
   }
@@ -263,10 +273,12 @@ void setup_routing() {
   //server.on("/env", getEnv);
   // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
 
+#ifdef IS_MOTOR
   // POST
   server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
+#endif 
 
 #ifdef IS_DAC
   server.on(DAC_act_endpoint, HTTP_POST, DAC_act_fct_http);

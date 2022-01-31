@@ -14,12 +14,12 @@ int DIR_Z = 7;
 int ENABLE = 8;
 #else 
 // Motor pins
-int STEP_X = 16;
-int STEP_Y = 17;
+int STEP_X = 2;
+int STEP_Y = 23;
 int STEP_Z = 18;
-int DIR_X = 19;
-int DIR_Y = 20;
-int DIR_Z = 21;
+int DIR_X = 4;
+int DIR_Y = 4;
+int DIR_Z = 4;
 int ENABLE = 22;
 #endif
 
