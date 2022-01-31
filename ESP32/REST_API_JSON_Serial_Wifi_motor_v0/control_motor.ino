@@ -37,16 +37,16 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
 
   if (axis == 1) {
     stepper_X.begin(mspeed);
-    if (isabsolute) stepper_X.move(mposition * steps_per_mm_X);
-    else stepper_X.move(mposition * steps_per_mm_X);
-    POSITION_MOTOR_X = - mposition * steps_per_mm_X;
+    if (isabsolute) stepper_X.move(mposition);
+    else stepper_X.move(mposition);
+    POSITION_MOTOR_X = - mposition;
     //if(isblocking) stepper_X.runToPosition();
   }
   else if (axis == 2) {
     stepper_Y.begin(mspeed);
-    if (isabsolute) stepper_Y.move(mposition * steps_per_mm_Y);
-    else stepper_Y.move(mposition * steps_per_mm_Y);
-    POSITION_MOTOR_Y = - mposition * steps_per_mm_Y;
+    if (isabsolute) stepper_Y.move(mposition);
+    else stepper_Y.move(mposition);
+    POSITION_MOTOR_Y = - mposition;
     /*
       stepper_Y.setSpeed((float)mspeed * steps_per_mm_Y);
       if (isabsolute) stepper_Y.moveTo(mposition * steps_per_mm_Y);
@@ -56,9 +56,9 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
   }
   else if (axis == 3) {
     stepper_Z.begin(mspeed);
-    if (isabsolute) stepper_Z.move(mposition * steps_per_mm_Z);
-    else stepper_Z.move(mposition * steps_per_mm_Z);
-    POSITION_MOTOR_Z = - mposition * steps_per_mm_Z;
+    if (isabsolute) stepper_Z.move(mposition);
+    else stepper_Z.move(mposition);
+    POSITION_MOTOR_Z = - mposition;
   }
 
   Values.clear();

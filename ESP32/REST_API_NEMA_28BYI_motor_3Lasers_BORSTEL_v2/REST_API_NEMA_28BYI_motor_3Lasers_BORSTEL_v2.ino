@@ -4,7 +4,6 @@
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
 #include "A4988.h"
-#include <Stepper.h>
 
 // Setup MOTOR
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
