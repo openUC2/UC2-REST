@@ -17,6 +17,11 @@
   move the motor
   {"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
 
+  operate the analog out
+  {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
+
+
+
 */
 
 #define DEBUG 1
@@ -27,8 +32,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -58,9 +63,11 @@
 # ifdef IS_ESP32
 #define IS_DAC // ESP32-only
 #define IS_PS3 // ESP32-only
+#define IS_ANALOGOUT// ESP32-only
 #endif
 #define IS_LASER
 #define IS_MOTOR
+
 
 #define BAUDRATE 57600
 
@@ -70,10 +77,11 @@
 #include "wifi_parameters.h"
 #endif
 
+#ifdef IS_ANALOGOUT
+#include "analogout_parameters.h"
+#endif
 
 #include <ArduinoJson.h>
-
-
 
 
 //Where the JSON for the current instruction lives
@@ -93,8 +101,8 @@ WebServer server(80);
 #endif
 
 #ifdef IS_DAC
-#include "dac_Module.h"
-dac_Module *dac = new dac_Module();
+#include "DAC_Module.h"
+DAC_Module *dac = new DAC_Module();
 #endif
 
 #ifdef IS_PS3
@@ -131,6 +139,10 @@ const char* dac_get_endpoint = "/dac_get";
 const char* state_act_endpoint = "/state_act";
 const char* state_set_endpoint = "/state_set";
 const char* state_get_endpoint = "/state_get";
+const char* analogout_act_endpoint = "/analogout_act";
+const char* analogout_set_endpoint = "/analogout_set";
+const char* analogout_get_endpoint = "/analogout_get";
+
 
 /*
    Setup
@@ -236,9 +248,22 @@ void setup(void)
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
-  dac->Setup(dac_CHANNEL_1, 0, 1000, 0, 0, 2);
+  dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
   //delay(1000);
-  //dac->Stop(dac_CHANNEL_1);
+  //dac->Stop(DAC_CHANNEL_1);
+#endif
+
+
+#ifdef IS_ANALOGOUT
+  Serial.println("Setting Up ANALOGOUT");
+  /* setup the PWM ports and reset them to 0*/
+  ledcSetup(PWM_CHANNEL_analogout_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analogout_PIN_1, PWM_CHANNEL_analogout_1);
+  ledcWrite(PWM_CHANNEL_analogout_1, 0);
+
+  ledcSetup(PWM_CHANNEL_analogout_2, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analogout_PIN_2, PWM_CHANNEL_analogout_2);
+  ledcWrite(PWM_CHANNEL_analogout_2, 0);
 #endif
 
 
@@ -262,24 +287,26 @@ void setup(void)
   Serial.println(dac_act_endpoint);
   Serial.println(dac_get_endpoint);
   Serial.println(dac_set_endpoint);
-  delay(50);
 #endif
 #ifdef IS_MOTOR
   Serial.println(motor_act_endpoint);
   Serial.println(motor_get_endpoint);
   Serial.println(motor_set_endpoint);
-  delay(50);
 #endif
 #ifdef IS_LASER
   Serial.println(laser_act_endpoint);
   Serial.println(laser_get_endpoint);
   Serial.println(laser_set_endpoint);
-  delay(50);
+#endif
+#ifdef IS_ANALOGOUT
+  Serial.println(analogout_act_endpoint);
+  Serial.println(analogout_get_endpoint);
+  Serial.println(analogout_set_endpoint);
 #endif
 }
 
 
-
+char* task ="";
 
 void loop() {
 #ifdef IS_SERIAL
@@ -292,7 +319,14 @@ void loop() {
     }
 
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
+    
+    #ifdef IS_ARDUINO
     char* task = jsonDocument["task"];
+    #else
+    String task_s = jsonDocument["task"];
+    char task[50];
+    task_s.toCharArray(task, 50);
+    #endif
     //jsonDocument.garbageCollect(); // memory leak?
     /*if (task == "null") return;*/
     if (DEBUG) {
@@ -303,37 +337,37 @@ void loop() {
     /*
         Return state
     */
-    if (strcmp(task,state_act_endpoint)==0)
+    if (strcmp(task, state_act_endpoint) == 0)
       state_act_fct();
-    if (strcmp(task,state_set_endpoint)==0)
+    if (strcmp(task, state_set_endpoint) == 0)
       state_set_fct();
-    if (strcmp(task,state_get_endpoint)==0)
+    if (strcmp(task, state_get_endpoint) == 0)
       state_get_fct();
 
     /*
       Drive Motors
     */
 #ifdef IS_MOTOR
-    if (strcmp(task,motor_act_endpoint)==0) {
+    if (strcmp(task, motor_act_endpoint) == 0) {
       motor_act_fct();
     }
-    if (strcmp(task,motor_set_endpoint)==0){
+    if (strcmp(task, motor_set_endpoint) == 0) {
       motor_set_fct();
     }
-    if (strcmp(task,motor_get_endpoint)==0){
+    if (strcmp(task, motor_get_endpoint) == 0) {
       motor_get_fct();
     }
 #endif
-    
+
     /*
       Drive DAC
     */
 #ifdef IS_DAC
-    if (strcmp(task,dac_act_endpoint)==0)
+    if (strcmp(task, dac_act_endpoint) == 0)
       dac_act_fct();
-    if (strcmp(task,dac_set_endpoint)==0)
+    if (strcmp(task, dac_set_endpoint) == 0)
       dac_set_fct();
-    if (strcmp(task,dac_get_endpoint)==0)
+    if (strcmp(task, dac_get_endpoint) == 0)
       dac_get_fct();
 #endif
 
@@ -341,13 +375,27 @@ void loop() {
       Drive Laser
     */
 #ifdef IS_LASER
-    if (strcmp(task,laser_act_endpoint)==0)
+    if (strcmp(task, laser_act_endpoint) == 0)
       LASER_act_fct();
-    if (strcmp(task,laser_set_endpoint)==0)
+    if (strcmp(task, laser_set_endpoint) == 0)
       LASER_get_fct();
-    if (strcmp(task,laser_get_endpoint)==0)
+    if (strcmp(task, laser_get_endpoint) == 0)
       LASER_set_fct();
 #endif
+
+
+    /*
+      Drive Analogout
+    */
+#ifdef IS_ANALOGOUT
+    if (strcmp(task, analogout_act_endpoint) == 0)
+      analogout_act_fct();
+    if (strcmp(task, analogout_set_endpoint) == 0)
+      analogout_set_fct();
+    if (strcmp(task, analogout_get_endpoint) == 0)
+      analogout_get_fct();
+#endif
+
 
     // Send JSON information back
     Serial.println("++");
@@ -355,22 +403,14 @@ void loop() {
     Serial.println();
     Serial.println("--");
     jsonDocument.clear();
-
-
-
-
+    
   }
 #endif
-
 
 #ifdef IS_PS3
   control_PS3();
 #endif
-  /*
-    stepper_X.run();
-    stepper_Y.run();
-    stepper_Z.run();
-  */
+
 #ifdef IS_WIFI && IS_ESP32
   server.handleClient();
 #endif
@@ -379,11 +419,7 @@ void loop() {
 
 
 /*
-
-
-   Define Endpoints
-
-
+   Define Endpoints for HTTP REST API
 */
 
 #ifdef IS_WIFI && IS_ESP32
@@ -416,6 +452,11 @@ void setup_routing() {
   server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
 #endif
 
+#ifdef IS_ANALOGOUT
+  server.on(analogout_act_endpoint, HTTP_POST, analogout_act_fct_http);
+  server.on(analogout_get_endpoint, HTTP_POST, analogout_get_fct_http);
+  server.on(analogout_set_endpoint, HTTP_POST, analogout_set_fct_http);
+#endif
   // start server
   server.begin();
 }

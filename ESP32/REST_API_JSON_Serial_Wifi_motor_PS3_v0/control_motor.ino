@@ -11,15 +11,15 @@ void motor_act_fct() {
   int isblocking = jsonDocument["isblocking"];
   int isenabled = jsonDocument["isenabled"];
 
-  
+  /*
   // apply default jsonDocument if nothing was sent
-  if (axis == "null") axis = 1;
-  if (mspeed == "null") axis = 0;
-  if (mposition == "null") axis = 0;
-  if (isabsolute == "null") axis = 1;
-  if (isblocking == "null") axis = 1;
-  if (isenabled == "null") axis = 0;
-  
+  if (strcmp(axis, "null")==0) axis = 1;
+  if (strcmp(mspeed, "null")==0) mspeed = 0;
+  if (strcmp(mposition, "null")==0) mposition = 0;
+  if (strcmp(isabsolute, "null")==0) isabsolute = 1;
+  if (strcmp(isblocking, "null")==0) isblocking = 1;
+  if (strcmp(isenabled, "null")==0) isenabled = 0;
+  */
   
   if (DEBUG) {
     Serial.print("axis "); Serial.println(axis);
@@ -59,8 +59,7 @@ void motor_act_fct() {
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
-
-  return jsonDocument ;
+  
 }
 
 void motor_set_fct() {

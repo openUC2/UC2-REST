@@ -13,18 +13,18 @@ boolean dac_is_running = false;
 
 
 // Custom function accessible by the API
-DynamicJsonDocument DAC_act_fct(JsonDocument& Values) {
+void dac_act_fct() {
   // here you can do something
 
-  Serial.println("DAC_act_fct");
+  Serial.println("dac_act_fct");
 
-  if (Values["dac_channel"] == 1)
+  if (jsonDocument["dac_channel"] == 1)
     dac_channel = DAC_CHANNEL_1;
-  else if (Values["dac_channel"] == 2)
+  else if (jsonDocument["dac_channel"] == 2)
     dac_channel = DAC_CHANNEL_2;
-  frequency = Values["frequency"];
-  int offset = Values["offset"];
-  int amplitude = Values["amplitude"];
+  frequency = jsonDocument["frequency"];
+  int offset = jsonDocument["offset"];
+  int amplitude = jsonDocument["amplitude"];
 
   //Scale output of a DAC channel using two bit pattern:
   if (amplitude == 0 or amplitude == NULL) scale = 0;
@@ -56,33 +56,28 @@ DynamicJsonDocument DAC_act_fct(JsonDocument& Values) {
       dac->dac_offset_set(dac_channel, offset);
   }
 
-  Values.clear();
-  Values["return"] = 1;
-
-
-
-  return Values ;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 }
 
-DynamicJsonDocument DAC_set_fct(JsonDocument& Values) {
+void dac_set_fct() {
   // here you can set parameters
-  int value = Values["value"];
+  int value = jsonDocument["value"];
 
   if (DEBUG) {
     Serial.print("value "); Serial.println(value);
   }
 
-  int DAC_set = jsonDocument["DAC_set"];
+  int dac_set = jsonDocument["dac_set"];
 
-  if (DAC_set != NULL) {
-    if (DEBUG) Serial.print("DAC_set "); Serial.println(DAC_set);
+  if (dac_set != NULL) {
+    if (DEBUG) Serial.print("dac_set "); Serial.println(dac_set);
     // SET SOMETHING
   }
 
-  Values.clear();
-  Values["return"] = 1;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 
-  return Values ;
 }
 
 
@@ -90,13 +85,12 @@ DynamicJsonDocument DAC_set_fct(JsonDocument& Values) {
 
 
 // Custom function accessible by the API
-DynamicJsonDocument DAC_get_fct(JsonDocument& Values) {
+void dac_get_fct() {
   // GET SOME PARAMETERS HERE
-  int DAC_variable = 12343;
+  int dac_variable = 12343;
 
   jsonDocument.clear();
-  jsonDocument["DAC_variable"] = DAC_variable;
-  return jsonDocument;
+  jsonDocument["dac_variable"] = dac_variable;
 }
 
 
@@ -106,29 +100,29 @@ DynamicJsonDocument DAC_get_fct(JsonDocument& Values) {
 
 
 #ifdef IS_WIFI 
-void DAC_act_fct_http() {
+void dac_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = DAC_act_fct(jsonDocument);
+  dac_act_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void DAC_get_fct_http() {
+void dac_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = DAC_get_fct(jsonDocument);
+  dac_get_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
 
 
 // wrapper for HTTP requests
-void DAC_set_fct_http() {
+void dac_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = DAC_set_fct(jsonDocument);
+  dac_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }

@@ -7,8 +7,6 @@ void state_act_fct() {
   Serial.println("state_act_fct");
   jsonDocument.clear();
   jsonDocument["return"] = 1;
-
-  return jsonDocument ;
 }
 
 void state_set_fct() {
@@ -16,7 +14,6 @@ void state_set_fct() {
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 
-  return jsonDocument ;
 }
 
 // Custom function accessible by the API
@@ -27,7 +24,6 @@ void state_get_fct() {
   jsonDocument["identifier_id"] = identifier_id;
   jsonDocument["identifier_date"] = identifier_date;
   jsonDocument["identifier_author"] = identifier_author;
-  return jsonDocument;
 }
 
 

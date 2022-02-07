@@ -41,7 +41,6 @@ DynamicJsonDocument LASER_act_fct() {
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
-  return jsonDocument ;
 }
 
 void LASER_set_fct() {
@@ -90,8 +89,6 @@ void LASER_set_fct() {
 
 jsonDocument.clear();
 jsonDocument["return"] = 1;
-
-return jsonDocument ;
 }
 
 // Custom function accessible by the API
@@ -123,8 +120,6 @@ void LASER_get_fct() {
   jsonDocument["LASERid"] = LASERid;
   jsonDocument["LASERval"] = LASERval;
   jsonDocument["LASERpin"] = LASERpin;
-  return jsonDocument;
-
 }
 
 
