@@ -2,12 +2,12 @@
 
 
 // Custom function accessible by the API
-DynamicJsonDocument LASER_act_fct(JsonDocument& Values) {
+DynamicJsonDocument LASER_act_fct() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
-  int LASERid = Values["LASERid"];
-  int LASERval = Values["LASERval"];
+  int LASERid = jsonDocument["LASERid"];
+  int LASERval = jsonDocument["LASERval"];
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
@@ -29,23 +29,22 @@ DynamicJsonDocument LASER_act_fct(JsonDocument& Values) {
 #else
     analogWrite(PWM_CHANNEL_LASER_2, LASERval);
 #endif
-    //TODO: Write AnalogWrite for Arduino
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
 #else
-    analogWrite(PWM_CHANNEL_LASER_2, LASERval);
+    analogWrite(PWM_CHANNEL_LASER_3, LASERval);
 #endif
   }
 
-  Values.clear();
-  Values["return"] = 1;
-  return Values ;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
+  return jsonDocument ;
 }
 
-DynamicJsonDocument LASER_set_fct(JsonDocument& Values) {
+void LASER_set_fct() {
   // here you can set parameters
   int LASERid = jsonDocument["LASERid"];
   int LASERpin = jsonDocument["LASERpin"];
@@ -89,14 +88,14 @@ DynamicJsonDocument LASER_set_fct(JsonDocument& Values) {
   }
 }
 
-Values.clear();
-Values["return"] = 1;
+jsonDocument.clear();
+jsonDocument["return"] = 1;
 
-return Values ;
+return jsonDocument ;
 }
 
 // Custom function accessible by the API
-DynamicJsonDocument LASER_get_fct(JsonDocument& Values) {
+void LASER_get_fct() {
   // GET SOME PARAMETERS HERE
   int LASERid = jsonDocument["LASERid"];
   int LASERpin = 0;
@@ -136,7 +135,7 @@ DynamicJsonDocument LASER_get_fct(JsonDocument& Values) {
 void LASER_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = LASER_act_fct(jsonDocument);
+  LASER_act_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
@@ -145,7 +144,7 @@ void LASER_act_fct_http() {
 void LASER_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = LASER_get_fct(jsonDocument);
+  LASER_get_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
@@ -154,7 +153,7 @@ void LASER_get_fct_http() {
 void LASER_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = LASER_set_fct(jsonDocument);
+  LASER_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }

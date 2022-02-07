@@ -14,7 +14,6 @@ int DIR_Z = 7;
 int ENABLE = 8;
 #else 
 // Motor pins - multicolour fluorescence
-
 int STEP_X = 2;
 int STEP_Y = 23;
 int STEP_Z = 0;

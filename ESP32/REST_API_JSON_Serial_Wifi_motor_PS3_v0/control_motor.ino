@@ -1,18 +1,18 @@
 #ifdef IS_MOTOR
 
 // Custom function accessible by the API
-DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
+void motor_act_fct() {
   Serial.println("motor_act_fct");
 
-  int axis = Values["axis"];
-  int mspeed = Values["speed"];
-  long mposition = Values["position"];
-  int isabsolute = Values["isabsolute"];
-  int isblocking = Values["isblocking"];
-  int isenabled = Values["isenabled"];
+  int axis = jsonDocument["axis"];
+  int mspeed = jsonDocument["speed"];
+  long mposition = jsonDocument["position"];
+  int isabsolute = jsonDocument["isabsolute"];
+  int isblocking = jsonDocument["isblocking"];
+  int isenabled = jsonDocument["isenabled"];
 
   
-  // apply default values if nothing was sent
+  // apply default jsonDocument if nothing was sent
   if (axis == "null") axis = 1;
   if (mspeed == "null") axis = 0;
   if (mposition == "null") axis = 0;
@@ -30,13 +30,6 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
     Serial.print("isenabled "); Serial.println(isenabled);
   }
 
-  /*
-    if (mspeed == 0) {
-    stepper_X.stop();
-    stepper_Y.stop();
-    stepper_Z.stop();
-    }
-  */
 
   if (axis == 1) {
     digitalWrite(ENABLE, LOW);
@@ -64,14 +57,14 @@ DynamicJsonDocument motor_act_fct(JsonDocument& Values) {
     POSITION_MOTOR_Z = - mposition;
   }
 
-  Values.clear();
-  Values["return"] = 1;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 
-  return Values ;
+  return jsonDocument ;
 }
 
-DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
-  int axis = Values["axis"];
+void motor_set_fct() {
+  int axis = jsonDocument["axis"];
 
   if (DEBUG) {
     Serial.print("axis "); Serial.println(axis);
@@ -82,7 +75,7 @@ DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
   int acceleration = jsonDocument["acceleration"];
   int pinstep = jsonDocument["pinstep"];
   int pindir = jsonDocument["pindir"];
-  int isenabled = Values["isenabled"];
+  int isenabled = jsonDocument["isenabled"];
 
 
   if (currentposition != NULL) {
@@ -107,18 +100,6 @@ DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
     }
   }
 
-  /*
-    if (acceleration != NULL) {
-      switch (axis) {
-        case 1:
-          stepper_X.setAcceleration(acceleration);break;
-        case 2:
-          stepper_Y.setAcceleration(acceleration);break;
-        case 3:
-          stepper_Z.setAcceleration(acceleration);break;
-      }
-    }
-  */
 
   if (pindir != NULL and pinstep != NULL) {
     if (axis == 1) {
@@ -146,18 +127,14 @@ DynamicJsonDocument motor_set_fct(JsonDocument& Values) {
     digitalWrite(ENABLE, 1);
   }
 
-  Values.clear();
-  Values["return"] = 1;
-
-  return Values ;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 }
 
 
 
-
-
 // Custom function accessible by the API
-DynamicJsonDocument motor_get_fct(JsonDocument& Values) {
+void motor_get_fct() {
   int axis = jsonDocument["axis"];
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
@@ -201,7 +178,6 @@ DynamicJsonDocument motor_get_fct(JsonDocument& Values) {
   //jsonDocument["maxspeed"] = mmaxspeed;
   jsonDocument["pinstep"] = pinstep;
   jsonDocument["pindir"] = pindir;
-  return jsonDocument;
 }
 
 
@@ -218,7 +194,7 @@ DynamicJsonDocument motor_get_fct(JsonDocument& Values) {
 void motor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = motor_act_fct(jsonDocument);
+  motor_act_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
@@ -227,7 +203,7 @@ void motor_act_fct_http() {
 void motor_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = motor_get_fct(jsonDocument);
+  motor_get_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
@@ -236,7 +212,7 @@ void motor_get_fct_http() {
 void motor_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  jsonDocument = motor_set_fct(jsonDocument);
+  motor_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }

@@ -1,23 +1,23 @@
 /*
- * 
- * Serial protocol looks like so:
- * 
- * {"task": "/state_get"}
- * returns:
- * 
-++
-{"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
---
+
+   Serial protocol looks like so:
+
+   {"task": "/state_get"}
+   returns:
+
+  ++
+  {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
+  --
 
 
 
-turn on the laser:
-{"task": "/laser_act", "LASERid":1, "LASERval":2}
+  turn on the laser:
+  {"task": "/laser_act", "LASERid":1, "LASERval":2}
 
-move the motor
-{"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
+  move the motor
+  {"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
 
- */
+*/
 
 #define DEBUG 1
 // CASES:
@@ -59,17 +59,10 @@ move the motor
 #define IS_DAC // ESP32-only
 #define IS_PS3 // ESP32-only
 #endif
-#define IS_LASER 
-//#define IS_MOTOR
+#define IS_LASER
+#define IS_MOTOR
 
-
-
-#define BAUDRATE 115200
-
-/*
-   START CODE HERE
-*/
-
+#define BAUDRATE 57600
 
 #ifdef IS_WIFI
 #include <WiFi.h>
@@ -79,17 +72,15 @@ move the motor
 
 
 #include <ArduinoJson.h>
-//#include <AccelStepper.h>
-#include "A4988.h"
-#include "motor_parameters.h"
-#include "LASER_parameters.h"
+
 
 
 
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
-StaticJsonDocument<400> jsonDocument;
-//DynamicJsonDocument jsonDocument(400);
+// shhould not be more than 300 !!!
+//StaticJsonDocument<512> jsonDocument;
+DynamicJsonDocument jsonDocument(300);
 #else
 char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
@@ -111,35 +102,35 @@ dac_Module *dac = new dac_Module();
 #endif
 
 /*
-
    Register devices
-
 */
 #ifdef IS_MOTOR
-// https://www.pjrc.com/teensy/td_libs_AccelStepper.html
+#include "A4988.h"
+#include "motor_parameters.h"
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
-//AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-//AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-//AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+#endif
+
+#ifdef IS_LASER
+#include "LASER_parameters.h"
 #endif
 
 /*
    Register functions
 */
-const String laser_act_endpoint = "/laser_act";
-const String laser_set_endpoint = "/laser_set";
-const String laser_get_endpoint = "/laser_get";
-const String motor_act_endpoint = "/motor_act";
-const String motor_set_endpoint = "/motor_set";
-const String motor_get_endpoint = "/motor_get";
-const String dac_act_endpoint = "/dac_act";
-const String dac_set_endpoint = "/dac_set";
-const String dac_get_endpoint = "/dac_get";
-const String state_act_endpoint = "/state_act";
-const String state_set_endpoint = "/state_set";
-const String state_get_endpoint = "/state_get";
+const char* laser_act_endpoint = "/laser_act";
+const char* laser_set_endpoint = "/laser_set";
+const char* laser_get_endpoint = "/laser_get";
+const char* motor_act_endpoint = "/motor_act";
+const char* motor_set_endpoint = "/motor_set";
+const char* motor_get_endpoint = "/motor_get";
+const char* dac_act_endpoint = "/dac_act";
+const char* dac_set_endpoint = "/dac_set";
+const char* dac_get_endpoint = "/dac_get";
+const char* state_act_endpoint = "/state_act";
+const char* state_set_endpoint = "/state_set";
+const char* state_get_endpoint = "/state_get";
 
 /*
    Setup
@@ -157,9 +148,9 @@ void setup(void)
 #endif
 
 
-Serial.println(state_act_endpoint);
-Serial.println(state_get_endpoint);
-Serial.println(state_set_endpoint);
+  Serial.println(state_act_endpoint);
+  Serial.println(state_get_endpoint);
+  Serial.println(state_set_endpoint);
 
 
 #ifdef IS_MOTOR
@@ -224,7 +215,7 @@ Serial.println(state_set_endpoint);
   digitalWrite(LASER_PIN_2, LOW);
   digitalWrite(LASER_PIN_3, LOW);
 
-  #ifdef IS_ESP32
+#ifdef IS_ESP32
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
@@ -240,7 +231,7 @@ Serial.println(state_set_endpoint);
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
-  #endif
+#endif
 #endif
 
 #ifdef IS_DAC
@@ -300,51 +291,62 @@ void loop() {
       return;
     }
 
-    //if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
-    String task = jsonDocument["task"];
-
-    /*if (task == "null") return;
+    if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
+    char* task = jsonDocument["task"];
+    //jsonDocument.garbageCollect(); // memory leak?
+    /*if (task == "null") return;*/
     if (DEBUG) {
-      Serial.print("TASK: "); 
-      Serial.println(String(jsonDocument["task"]));
+      Serial.print("TASK: ");
+      Serial.println(task);
     }
+
+    /*
+        Return state
     */
+    if (strcmp(task,state_act_endpoint)==0)
+      state_act_fct();
+    if (strcmp(task,state_set_endpoint)==0)
+      state_set_fct();
+    if (strcmp(task,state_get_endpoint)==0)
+      state_get_fct();
 
-    // Return state
-    if (task == state_act_endpoint)
-      state_act_fct(jsonDocument);
-    if (task == state_set_endpoint)
-      state_set_fct(jsonDocument);
-    if (task == state_get_endpoint)
-      state_get_fct(jsonDocument);
-
+    /*
+      Drive Motors
+    */
 #ifdef IS_MOTOR
-    if (task == motor_act_endpoint) {
-      motor_act_fct(jsonDocument);
+    if (strcmp(task,motor_act_endpoint)==0) {
+      motor_act_fct();
     }
-    else if (task == motor_set_endpoint)
-      motor_set_fct(jsonDocument);
-    else if (task == motor_get_endpoint)
-      jsonDocument = motor_get_fct(jsonDocument);
+    if (strcmp(task,motor_set_endpoint)==0){
+      motor_set_fct();
+    }
+    if (strcmp(task,motor_get_endpoint)==0){
+      motor_get_fct();
+    }
 #endif
-
+    
+    /*
+      Drive DAC
+    */
 #ifdef IS_DAC
-    else if (task == dac_act_endpoint)
-      dac_act_fct(jsonDocument);
-    else if (task == dac_set_endpoint)
-      dac_set_fct(jsonDocument);
-    else if (task == dac_get_endpoint)
-      jsonDocument = dac_get_fct(jsonDocument);
+    if (strcmp(task,dac_act_endpoint)==0)
+      dac_act_fct();
+    if (strcmp(task,dac_set_endpoint)==0)
+      dac_set_fct();
+    if (strcmp(task,dac_get_endpoint)==0)
+      dac_get_fct();
 #endif
 
-
+    /*
+      Drive Laser
+    */
 #ifdef IS_LASER
-    else if (task == laser_act_endpoint)
-      jsonDocument = LASER_act_fct(jsonDocument);
-    else if (task == laser_set_endpoint)
-      jsonDocument = LASER_get_fct(jsonDocument);
-    else if (task == laser_get_endpoint)
-      jsonDocument = LASER_set_fct(jsonDocument);
+    if (strcmp(task,laser_act_endpoint)==0)
+      LASER_act_fct();
+    if (strcmp(task,laser_set_endpoint)==0)
+      LASER_get_fct();
+    if (strcmp(task,laser_get_endpoint)==0)
+      LASER_set_fct();
 #endif
 
     // Send JSON information back
@@ -352,8 +354,9 @@ void loop() {
     serializeJson(jsonDocument, Serial);
     Serial.println();
     Serial.println("--");
-
     jsonDocument.clear();
+
+
 
 
   }
