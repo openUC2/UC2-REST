@@ -1,3 +1,24 @@
+/*
+ * 
+ * Serial protocol looks like so:
+ * 
+ * {"task": "/state_get"}
+ * returns:
+ * 
+++
+{"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
+--
+
+
+
+turn on the laser:
+{"task": "/laser_act", "LASERid":1, "LASERval":2}
+
+move the motor
+{"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
+
+ */
+
 #define DEBUG 1
 // CASES:
 // 1 Arduino -> Serial only
@@ -10,11 +31,6 @@
 //#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
-
-// load modules
-//#define IS_DAC 1 // ESP32-only
-//#define IS_LASER // ESP32-only
-#define IS_MOTOR
 
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
@@ -38,6 +54,17 @@
 #endif
 
 
+// load modules
+# ifdef IS_ESP32
+#define IS_DAC // ESP32-only
+#define IS_PS3 // ESP32-only
+#endif
+#define IS_LASER 
+//#define IS_MOTOR
+
+
+
+#define BAUDRATE 115200
 
 /*
    START CODE HERE
@@ -61,7 +88,8 @@
 
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
-DynamicJsonDocument jsonDocument(400);
+StaticJsonDocument<400> jsonDocument;
+//DynamicJsonDocument jsonDocument(400);
 #else
 char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
@@ -74,10 +102,13 @@ WebServer server(80);
 #endif
 
 #ifdef IS_DAC
-#include "DAC_Module.h"
-DAC_Module *dac = new DAC_Module();
+#include "dac_Module.h"
+dac_Module *dac = new dac_Module();
 #endif
 
+#ifdef IS_PS3
+#include <Ps3Controller.h>
+#endif
 
 /*
 
@@ -97,15 +128,18 @@ A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 /*
    Register functions
 */
-String motor_act_endpoint = "/motor_act";
-String motor_set_endpoint = "/motor_set";
-String motor_get_endpoint = "/motor_get";
-String DAC_act_endpoint = "/DAC_act";
-String DAC_set_endpoint = "/DAC_set";
-String DAC_get_endpoint = "/DAC_get";
-String LASER_act_endpoint = "/LASER_act";
-String LASER_set_endpoint = "/LASER_set";
-String LASER_get_endpoint = "/LASER_get";
+const String laser_act_endpoint = "/laser_act";
+const String laser_set_endpoint = "/laser_set";
+const String laser_get_endpoint = "/laser_get";
+const String motor_act_endpoint = "/motor_act";
+const String motor_set_endpoint = "/motor_set";
+const String motor_get_endpoint = "/motor_get";
+const String dac_act_endpoint = "/dac_act";
+const String dac_set_endpoint = "/dac_set";
+const String dac_get_endpoint = "/dac_get";
+const String state_act_endpoint = "/state_act";
+const String state_set_endpoint = "/state_set";
+const String state_get_endpoint = "/state_get";
 
 /*
    Setup
@@ -113,7 +147,7 @@ String LASER_get_endpoint = "/LASER_get";
 void setup(void)
 {
   // Start Serial
-  Serial.begin(115200);
+  Serial.begin(BAUDRATE);
   Serial.println("Start");
 
   // connect to wifi if necessary
@@ -121,6 +155,11 @@ void setup(void)
   connectToWiFi();
   setup_routing();
 #endif
+
+
+Serial.println(state_act_endpoint);
+Serial.println(state_get_endpoint);
+Serial.println(state_set_endpoint);
 
 
 #ifdef IS_MOTOR
@@ -131,18 +170,21 @@ void setup(void)
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
 
+  Serial.println("Setting Up Motor X");
   stepper_X.begin(RPM);
   stepper_X.enable();
   stepper_X.setMicrostep(1);
   stepper_X.move(100);
   stepper_X.move(-100);
 
+  Serial.println("Setting Up Motor X");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
   stepper_Y.move(100);
   stepper_Y.move(-100);
 
+  Serial.println("Setting Up Motor X");
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);
@@ -164,6 +206,13 @@ void setup(void)
   */
 #endif
 
+#ifdef IS_PS3
+  Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
+  Ps3.attachOnConnect(onConnect);
+  Ps3.begin("01:02:03:04:05:06");
+  Serial.println("PS3 controler is set up.");
+#endif
+
 
 #ifdef IS_LASER
   Serial.println("Setting Up LASERs");
@@ -174,12 +223,14 @@ void setup(void)
   digitalWrite(LASER_PIN_1, LOW);
   digitalWrite(LASER_PIN_2, LOW);
   digitalWrite(LASER_PIN_3, LOW);
+
+  #ifdef IS_ESP32
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
   ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_1, 0);
-  
+
   ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
   ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(500);
@@ -189,23 +240,18 @@ void setup(void)
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
+  #endif
 #endif
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
-  dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
-  delay(1000);
-  dac->Stop(DAC_CHANNEL_1);
+  dac->Setup(dac_CHANNEL_1, 0, 1000, 0, 0, 2);
+  //delay(1000);
+  //dac->Stop(dac_CHANNEL_1);
 #endif
 
 
   // list modules
-#ifdef IS_LASER
-  Serial.println("IS_LASER");
-#endif
-#ifdef IS_DAC
-  Serial.println("IS_DAC");
-#endif
 #ifdef IS_SERIAL
   Serial.println("IS_SERIAL");
 #endif
@@ -218,10 +264,27 @@ void setup(void)
 #ifdef IS_ESP32
   Serial.println("IS_ESP32");
 #endif
-#ifdef IS_MOTOR
-  Serial.println("IS_MOTOR");
+#ifdef IS_PS3
+  Serial.println("IS_PS3");
 #endif
-
+#ifdef IS_DAC
+  Serial.println(dac_act_endpoint);
+  Serial.println(dac_get_endpoint);
+  Serial.println(dac_set_endpoint);
+  delay(50);
+#endif
+#ifdef IS_MOTOR
+  Serial.println(motor_act_endpoint);
+  Serial.println(motor_get_endpoint);
+  Serial.println(motor_set_endpoint);
+  delay(50);
+#endif
+#ifdef IS_LASER
+  Serial.println(laser_act_endpoint);
+  Serial.println(laser_get_endpoint);
+  Serial.println(laser_set_endpoint);
+  delay(50);
+#endif
 }
 
 
@@ -230,11 +293,30 @@ void setup(void)
 void loop() {
 #ifdef IS_SERIAL
   if (Serial.available()) {
-    deserializeJson(jsonDocument, Serial);
+    DeserializationError error = deserializeJson(jsonDocument, Serial);
+    if (error) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+
+    //if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
     String task = jsonDocument["task"];
 
-    if (task == "null") return;
-    if (DEBUG) Serial.print("TASK: "); Serial.println(task);
+    /*if (task == "null") return;
+    if (DEBUG) {
+      Serial.print("TASK: "); 
+      Serial.println(String(jsonDocument["task"]));
+    }
+    */
+
+    // Return state
+    if (task == state_act_endpoint)
+      state_act_fct(jsonDocument);
+    if (task == state_set_endpoint)
+      state_set_fct(jsonDocument);
+    if (task == state_get_endpoint)
+      state_get_fct(jsonDocument);
 
 #ifdef IS_MOTOR
     if (task == motor_act_endpoint) {
@@ -247,33 +329,40 @@ void loop() {
 #endif
 
 #ifdef IS_DAC
-    else if (task == DAC_act_endpoint)
-      DAC_act_fct(jsonDocument);
-    else if (task == DAC_set_endpoint)
-      DAC_set_fct(jsonDocument);
-    else if (task == DAC_get_endpoint)
-      jsonDocument = DAC_get_fct(jsonDocument);
+    else if (task == dac_act_endpoint)
+      dac_act_fct(jsonDocument);
+    else if (task == dac_set_endpoint)
+      dac_set_fct(jsonDocument);
+    else if (task == dac_get_endpoint)
+      jsonDocument = dac_get_fct(jsonDocument);
 #endif
 
 
 #ifdef IS_LASER
-    else if (task == LASER_act_endpoint)
+    else if (task == laser_act_endpoint)
       jsonDocument = LASER_act_fct(jsonDocument);
-    else if (task == LASER_set_endpoint)
+    else if (task == laser_set_endpoint)
       jsonDocument = LASER_get_fct(jsonDocument);
-    else if (task == LASER_get_endpoint)
+    else if (task == laser_get_endpoint)
       jsonDocument = LASER_set_fct(jsonDocument);
 #endif
 
     // Send JSON information back
+    Serial.println("++");
     serializeJson(jsonDocument, Serial);
     Serial.println();
-    Serial.println("//");
+    Serial.println("--");
+
+    jsonDocument.clear();
 
 
   }
 #endif
 
+
+#ifdef IS_PS3
+  control_PS3();
+#endif
   /*
     stepper_X.run();
     stepper_Y.run();
@@ -301,6 +390,10 @@ void setup_routing() {
   //server.on("/env", getEnv);
   // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
 
+  server.on(state_act_endpoint, HTTP_POST, state_act_fct_http);
+  server.on(state_get_endpoint, HTTP_POST, state_get_fct_http);
+  server.on(state_set_endpoint, HTTP_POST, state_set_fct_http);
+
 #ifdef IS_MOTOR
   // POST
   server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
@@ -309,15 +402,15 @@ void setup_routing() {
 #endif
 
 #ifdef IS_DAC
-  server.on(DAC_act_endpoint, HTTP_POST, DAC_act_fct_http);
-  server.on(DAC_get_endpoint, HTTP_POST, DAC_get_fct_http);
-  server.on(DAC_set_endpoint, HTTP_POST, DAC_set_fct_http);
+  server.on(dac_act_endpoint, HTTP_POST, dac_act_fct_http);
+  server.on(dac_get_endpoint, HTTP_POST, dac_get_fct_http);
+  server.on(dac_set_endpoint, HTTP_POST, dac_set_fct_http);
 #endif
 
 #ifdef IS_LASER
-  server.on(LASER_act_endpoint, HTTP_POST, LASER_act_fct_http);
-  server.on(LASER_get_endpoint, HTTP_POST, LASER_get_fct_http);
-  server.on(LASER_set_endpoint, HTTP_POST, LASER_set_fct_http);
+  server.on(laser_act_endpoint, HTTP_POST, LASER_act_fct_http);
+  server.on(laser_get_endpoint, HTTP_POST, LASER_get_fct_http);
+  server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
 #endif
 
   // start server

@@ -10,6 +10,7 @@ from ESP32RestSerialAPI import ESP32Client
 
 serialport = "/dev/cu.SLAB_USBtoUART"
 serialport = "/dev/cu.SLAB_USBtoUART"
+serialport = "/dev/cu.wchusbserial1430"
 esp32 = ESP32Client(serialport=serialport)
 
 #%%
