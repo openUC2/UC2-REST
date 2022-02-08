@@ -18,6 +18,10 @@ This provides a simple client to control all kinds of actions.
 - Download the Arduino IDE 1.8.1 from [here](https://www.arduino.cc/en/software/OldSoftwareReleases)
 - Install it
 
+### Install Serial driver
+
+In case you use a chinese derivate Arduino or an ESP32 board, you most likely need to install the ***CH340*** serial driver. Please have a look [here](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all)
+
 ### Get the right Boards
 
 If you want an ESP32 board, please add the following sources to the preferences (Boards). More information can be found [here](https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/)
