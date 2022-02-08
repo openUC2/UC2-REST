@@ -1,7 +1,3 @@
-int analogout_PIN_1 = 22;
-int analogout_PIN_2 = 23;
-int analogout_PIN_3 = 0;
-
 #ifndef IS_LASER
 // PWM Stuff - ESP only
 int pwm_resolution = 15;

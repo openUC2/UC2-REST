@@ -35,7 +35,7 @@ r = esp32.readSerial()
 print(r)
 
 #%%
-payload = {"task":"/LASER_act", "LASERid": 1, "LASERval": 1000}
+payload = {"task":"/laser_act", "LASERid": 1, "LASERval": 1000}
 esp32.writeSerial(payload)
 r = esp32.readSerial()
 print(r)

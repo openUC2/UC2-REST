@@ -1,14 +1,3 @@
-#ifdef IS_ARDUINO
-// for CNC Shield 
-int LASER_PIN_1 = 9; // X-endstop
-int LASER_PIN_2 = 10;// Y-endstop
-int LASER_PIN_3 = 11;// Z-endstop
-#else 
-// Multicoloursetup
-int LASER_PIN_1 = 18;
-int LASER_PIN_2 = 19;
-int LASER_PIN_3 = 21;
-#endif
 int LASER_val_1 = 0;
 int LASER_val_2 = 0;
 int LASER_val_3 = 0;

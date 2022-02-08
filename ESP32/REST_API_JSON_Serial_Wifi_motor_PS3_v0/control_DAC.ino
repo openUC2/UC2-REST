@@ -25,6 +25,7 @@ void dac_act_fct() {
   frequency = jsonDocument["frequency"];
   int offset = jsonDocument["offset"];
   int amplitude = jsonDocument["amplitude"];
+  clk_div = jsonDocument["clk_div"];
 
   //Scale output of a DAC channel using two bit pattern:
   if (amplitude == 0 or amplitude == NULL) scale = 0;
