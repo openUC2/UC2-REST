@@ -2,45 +2,50 @@
 
 
 // Custom function accessible by the API
-DynamicJsonDocument LASER_act_fct() {
+void LASER_act_fct() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
-  int LASERid = jsonDocument["LASERid"];
-  int LASERval = jsonDocument["LASERval"];
+  int LASERid = (int)jsonDocument["LASERid"];
+  int LASERval = (int)jsonDocument["LASERval"];
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
     Serial.print("LASERval "); Serial.println(LASERval);
   }
 
+
+#ifdef IS_ESP32
   if (LASERid == 1) {
     LASER_val_1 = LASERval;
-#ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
-#else
-    analogWrite(PWM_CHANNEL_LASER_1, LASERval);
-#endif
   }
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
-#ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
-#else
-    analogWrite(PWM_CHANNEL_LASER_2, LASERval);
-#endif
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
-#ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
-#else
-    analogWrite(PWM_CHANNEL_LASER_3, LASERval);
-#endif
   }
+#else
+ if (LASERid == 1) {
+    LASER_val_1 = LASERval;
+    analogWrite(PWM_CHANNEL_LASER_1, LASERval);
+  }
+  else if (LASERid == 2) {
+    LASER_val_2 = LASERval;
+    analogWrite(PWM_CHANNEL_LASER_2, LASERval);
+  }
+  else if (LASERid == 3) {
+    LASER_val_3 = LASERval;
+    analogWrite(PWM_CHANNEL_LASER_3, LASERval);
+  }
+#endif
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
+  Serial.println("Leaving Laser");
 }
 
 void LASER_set_fct() {
