@@ -37,7 +37,7 @@ void motor_act_fct() {
     if (isabsolute) stepper_X.move(mposition);
     else stepper_X.move(mposition);
     if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_X = - mposition;
+    POSITION_MOTOR_X += mposition;
     //if(isblocking) stepper_X.runToPosition();
   }
   else if (axis == 2) {
@@ -46,7 +46,7 @@ void motor_act_fct() {
     if (isabsolute) stepper_Y.move(mposition);
     else stepper_Y.move(mposition);
     if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_Y = - mposition;
+    POSITION_MOTOR_Y += mposition;
   }
   else if (axis == 3) {
     digitalWrite(ENABLE, LOW);
@@ -54,7 +54,7 @@ void motor_act_fct() {
     if (isabsolute) stepper_Z.move(mposition);
     else stepper_Z.move(mposition);
     if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_Z = - mposition;
+    POSITION_MOTOR_Z += mposition;
   }
 
   jsonDocument.clear();

@@ -8,7 +8,7 @@ int analogout_PIN_1 = 21;
 int analogout_PIN_2 = 22;
 int analogout_PIN_3 = 0;
 
-// Stepper 
+// Stepper
 #ifdef IS_ARDUINO
 // Motor pins
 int STEP_X = 2;
@@ -18,7 +18,7 @@ int DIR_X = 5;
 int DIR_Y = 6;
 int DIR_Z = 7;
 int ENABLE = 8;
-#else 
+#else
 // Motor pins - multicolour fluorescence
 int STEP_X = 2;
 int STEP_Y = 23;
@@ -40,11 +40,11 @@ int DIR_Z = 23;
 
 // Laser PWM pins
 #ifdef IS_ARDUINO
-// for CNC Shield 
+// for CNC Shield
 int LASER_PIN_1 = 9; // X-endstop
 int LASER_PIN_2 = 10;// Y-endstop
 int LASER_PIN_3 = 11;// Z-endstop
-#else 
+#else
 int LASER_PIN_1 = 18;
 int LASER_PIN_2 = 19;
 int LASER_PIN_3 = 21;

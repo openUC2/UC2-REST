@@ -17,14 +17,17 @@ void LASER_act_fct() {
 
 #ifdef IS_ESP32
   if (LASERid == 1) {
+    Serial.println("Laser1");
     LASER_val_1 = LASERval;
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
   }
   else if (LASERid == 2) {
+    Serial.println("Laser2");
     LASER_val_2 = LASERval;
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
   }
   else if (LASERid == 3) {
+    Serial.println("Laser3");
     LASER_val_3 = LASERval;
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
   }
@@ -45,7 +48,6 @@ void LASER_act_fct() {
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
-  Serial.println("Leaving Laser");
 }
 
 void LASER_set_fct() {

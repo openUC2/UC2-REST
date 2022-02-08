@@ -29,13 +29,13 @@ import serial.tools.list_ports
 
 from tempfile import NamedTemporaryFile
 
-try: 
+try:
     from imswitch.imcommon.model import initLogger
     IS_IMSWITCH = True
-except: 
+except:
     print("No imswitch available")
     IS_IMSWITCH = False
-    
+
 
 ACTION_RUNNING_KEYWORDS = ["idle", "pending", "running"]
 ACTION_OUTPUT_KEYS = ["output", "return"]
@@ -58,49 +58,49 @@ class ESP32Client(object):
     backlash_z = 40
     is_driving = False
     is_sending = False
-    
+
     is_wifi = False
     is_serial = False
-    
+
     is_filter_init = False
     filter_position = 0
 
     steps_last = 0
-    
+
     def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
-        
-        
+
+
         if IS_IMSWITCH:
             if IS_IMSWITCH: self.__logger = initLogger(self, tryInheritParent=True)
-                
-        
+
+
         if host is not None:
             # use client in wireless mode
             self.is_wifi = True
             self.host = host
             self.port = port
-    
+
             # check if host is up
             self.is_connected = self.isConnected()
             if IS_IMSWITCH: self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
-            
+
         elif serialport is not None:
             # use client in wired mode
             self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
             self.is_serial = True
-            
+
             if IS_IMSWITCH: self.__logger.debug(f'Searching for SERIAL devices...')
             try:
                 self.serialdevice = serial.Serial(port=self.serialport, baudrate=baudrate, timeout=1)
                 time.sleep(2) # let it warm up
             except:
-                # try to find the PORT 
+                # try to find the PORT
                 _available_ports = serial.tools.list_ports.comports(include_links=False)
-                for iport in _available_ports: 
+                for iport in _available_ports:
                     # list of possible serial ports
                     if IS_IMSWITCH: self.__logger.debug(iport.device)
-                    portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb") # TODO: Hardcoded :/ 
-                    if iport.device.startswith(portslist): 
+                    portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb") # TODO: Hardcoded :/
+                    if iport.device.startswith(portslist):
                         try:
                             self.serialdevice = serial.Serial(port=iport.device, baudrate=baudrate, timeout=1)
                             _state = self.get_state()
@@ -108,16 +108,16 @@ class ESP32Client(object):
                             if _identifier_name == "UC2_Feather":
                                 self.serialport = iport.device
                                 return
-                            
+
                         except:
                             if IS_IMSWITCH: self.__logger.debug("Trying out port "+iport.device+" failed")
                             self.is_connected = False
         else:
             self.is_connected = False
             if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
-            
-            
-                
+
+
+
 
 
     def isConnected(self):
@@ -159,7 +159,7 @@ class ESP32Client(object):
             message = {"task":path}
             message = json.dumps(message)
             self.serialdevice.flushInput()
-            self.serialdevice.flushOutput()    
+            self.serialdevice.flushOutput()
             returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
             return returnmessage
         else:
@@ -189,7 +189,7 @@ class ESP32Client(object):
         elif self.is_serial:
             payload["task"] = path
             self.writeSerial(payload)
-            try: 
+            try:
                 is_blocking = payload['isblocking']
             except:
                 is_blocking = True
@@ -198,20 +198,20 @@ class ESP32Client(object):
 
     def writeSerial(self, payload):
         self.serialdevice.flushInput()
-        self.serialdevice.flushOutput()    
+        self.serialdevice.flushOutput()
         if type(payload)==dict:
             payload = json.dumps(payload)
         self.serialdevice.write(payload.encode(encoding='UTF-8'))
-        
+
     def readSerial(self, is_blocking=True, timeout = 2):
         returnmessage = ''
-        rmessage = '' 
+        rmessage = ''
         _time0 = time.time()
         while is_blocking:
             rmessage =  self.serialdevice.readline().decode()
             returnmessage += rmessage
             if rmessage.find("--")==0 or (time.time()-_time0)>timeout: break
-        
+
         # casting to dict
         try:
             returnmessage = json.loads(returnmessage.split("--")[0].split("++")[-1])
@@ -220,7 +220,7 @@ class ESP32Client(object):
             else: print("Casting json string from serial to Python dict failed")
             returnmessage = ""
         return returnmessage
-       
+
     def get_temperature(self):
         path = "/temperature"
         r = self.get_json(path)
@@ -236,25 +236,25 @@ class ESP32Client(object):
         path = '/led'
         r = self.post_json(path, payload)
         return r
-    
-    
+
+
     def set_galvo(self, dac_channel=1, frequency=1, offset=0, amplitude=0, clk_div=1000, timeout=1):
-        
+
         path = "/dac_act"
         payload = {
             "task":path,
-            "dac_channel": dac_channel, # 1 or 2 
-            "frequency":frequency, 
-            "offset":offset, 
-            "amplitude":amplitude, 
-            "clk_div": clk_div    
+            "dac_channel": dac_channel, # 1 or 2
+            "frequency":frequency,
+            "offset":offset,
+            "amplitude":amplitude,
+            "clk_div": clk_div
         }
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
     def get_state(self, timeout=1):
         path = "/state_get"
-        
+
         payload = {
             "task":path
         }
@@ -266,7 +266,7 @@ class ESP32Client(object):
     def set_laser(self, channel='R', value=0, auto_filterswitch=False, timeout=20, is_blocking = True):
         if auto_filterswitch and value >0:
             self.switch_filter(channel, timeout=timeout,is_blocking=is_blocking)
-        
+
         path = '/laser_act'
         if channel == 'R':
             LASERid = 1
@@ -274,11 +274,11 @@ class ESP32Client(object):
             LASERid = 2
         if channel == 'B':
             LASERid = 3
-            
+
         payload = {
-            "task": path, 
+            "task": path,
             "LASERid": LASERid,
-            "LASERval": value   
+            "LASERval": value
         }
 
         r = self.post_json(path, payload)
@@ -298,9 +298,9 @@ class ESP32Client(object):
         return r
 
     def move_stepper(self, axis=1, steps=100, speed=10, is_absolute=False, timeout=1, backlash=20, is_blocking=False):
-        
+
         path = "/motor_act"
-        
+
         # detect change in direction
         if np.sign(self.steps_last) != np.sign(steps):
             # we want to overshoot a bit
@@ -309,7 +309,7 @@ class ESP32Client(object):
             print(steps)
 
         payload = {
-            "task":"/motor_act", 
+            "task":"/motor_act",
             "position": np.int(steps),
             "isblocking": is_blocking,
             "isabsolute": is_absolute,

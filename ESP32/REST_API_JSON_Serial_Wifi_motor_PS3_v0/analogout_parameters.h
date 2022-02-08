@@ -13,6 +13,6 @@ int analogout_VIBRATE = 0;
 int analogout_SOFI_1 = 0;
 int analogout_SOFI_2 = 0;
 
-int PWM_CHANNEL_analogout_1 = 3;
-int PWM_CHANNEL_analogout_2 = 4;
-int PWM_CHANNEL_analogout_3 = 5;
+int PWM_CHANNEL_analogout_1 = 4;
+int PWM_CHANNEL_analogout_2 = 5;
+int PWM_CHANNEL_analogout_3 = 6;
