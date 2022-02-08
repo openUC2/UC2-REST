@@ -20,7 +20,8 @@
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
 
-
+  operate the dac (e.g. lightsheet)
+  {"task": "/dac_act", "dac_channel": 19, "frequency":1, "offset":0, "amplitude":0, "clk_div": 10000}
 
 */
 
@@ -68,6 +69,11 @@
 #define IS_LASER
 #define IS_MOTOR
 
+/*
+ *  Pindefintion per Setup 
+ */
+//#include pindef_lightsheet
+#include "pindef.h"
 
 #define BAUDRATE 57600
 
@@ -193,6 +199,7 @@ void setup(void)
   stepper_Z.setMicrostep(1);
   stepper_Z.move(100);
   stepper_Z.move(-100);
+  digitalWrite(ENABLE, HIGH);
 
   /*
     stepper_X.setMaxSpeed(MAX_VELOCITY_X_mm * steps_per_mm_X);
@@ -249,6 +256,7 @@ void setup(void)
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
   dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
+  dac->Setup(DAC_CHANNEL_2, 0, 1000, 0, 0, 2);
   //delay(1000);
   //dac->Stop(DAC_CHANNEL_1);
 #endif
