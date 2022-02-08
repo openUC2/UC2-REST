@@ -91,7 +91,16 @@ StepperMotor
 - Navigate to the folder [PYTHON](https://github.com/openUC2/UC2-REST/tree/master/PYTHON)
 - Install the following dependencies via `pip`:
 ```pip install requests python-opencv```
-- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py) and execute it in Python
+- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py) 
+- Adapt the `serialport`:
+```
+serialport = "/dev/cu.SLAB_USBtoUART"
+serialport = "/dev/cu.SLAB_USBtoUART"
+serialport = "/dev/cu.wchusbserial1430"
+serialport = "COM3"
+```
+- Execute script in Python and check result
+- In case of an error, file an Issue here 
 
 
 ## API defintion
