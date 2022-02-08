@@ -14,10 +14,18 @@ import logging
 import threading
 import json
 import time
-import cv2
 import os
+import sys
+
+
+try:
+    import cv2
+    is_cv2 = True
+except:
+    is_cv2 = False
 import socket
 import serial
+import serial.tools.list_ports
 
 from tempfile import NamedTemporaryFile
 
@@ -61,6 +69,11 @@ class ESP32Client(object):
     
     def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
         
+        
+        if IS_IMSWITCH:
+            self.__logger = initLogger(self, tryInheritParent=True)
+                
+        
         if host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -69,17 +82,42 @@ class ESP32Client(object):
     
             # check if host is up
             self.is_connected = self.isConnected()
-    
-            if IS_IMSWITCH:
-                self.__logger = initLogger(self, tryInheritParent=True)
-                self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
-
+            self.__logger.debug(f"Connecting to microscope {self.host}:{self.port}")
+            
         elif serialport is not None:
             # use client in wired mode
             self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
             self.is_serial = True
-            self.serialdevice = serial.Serial(port=serialport, baudrate=baudrate, timeout=1)
-            print("Connected to "+serialport)
+            
+            if IS_IMSWITCH: self.__logger.debug(f'Searching for SERIAL devices...')
+            try:
+                self.serialdevice = serial.Serial(port=self.serialport, baudrate=baudrate, timeout=1)
+            except:
+                # try to find the PORT 
+                _available_ports = serial.tools.list_ports.comports(include_links=False)
+                for iport in _available_ports: 
+                    # list of possible serial ports
+                    if IS_IMSWITCH: self.__logger.debug(iport.device)
+                    portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb") # TODO: Hardcoded :/ 
+                    if iport.device.startswith(portslist): 
+                        try:
+                            self.serialdevice = serial.Serial(port=iport.device, baudrate=baudrate, timeout=1)
+                            _state = self.get_state()
+                            _identifier_name = _state["identifier_name"]
+                            if _identifier_name == "UC2_Feather":
+                                self.serialport = iport.device
+                                return
+                            
+                        except:
+                            if IS_IMSWITCH: self.__logger.debug("Trying out port "+iport.device+" failed")
+                            self.is_connected = False
+        else:
+            self.is_connected = False
+            if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
+            
+            
+                
+
 
     def isConnected(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -121,7 +159,7 @@ class ESP32Client(object):
                 return self.getmessage
 
             except Exception as e:
-                self.__logger.error(e)
+                if IS_IMSWITCH: self.__logger.error(e)
                 self.is_connected = False
                 self.is_sending = False
                 # not connected
@@ -169,7 +207,7 @@ class ESP32Client(object):
                 self.is_sending = False
                 return r
             except Exception as e:
-                self.__logger.error(e)
+                if IS_IMSWITCH: self.__logger.error(e)
                 self.is_connected = False
                 self.is_sending = False
                 # not connected
@@ -187,14 +225,23 @@ class ESP32Client(object):
             payload = json.dumps(payload)
         self.serialdevice.write(payload.encode(encoding='UTF-8'))
         
-    def readSerial(self):
+    def readSerial(self, is_blocking=True):
         returnmessage = ''
         rmessage = '' 
-        while True:
+        icounter = 0
+        while is_blocking:
             rmessage =  self.serialdevice.readline().decode()
             returnmessage += rmessage
-            if rmessage.find("//")==0: break
-        #TODO: Here we need to cast the JSON to som
+            icounter+=1
+            if rmessage.find("//")==0 or icounter>20: break
+        
+        # casting to dict
+        try:
+            returnmessage = json.loads(returnmessage.split("--")[0].split("++")[-1])
+        except:
+            pass
+        #TODO: self.__logger.debug("Casting json string from serial to Python dict failed")
+
         return returnmessage
        
     def get_temperature(self):
@@ -211,6 +258,16 @@ class ESP32Client(object):
         }
         path = '/led'
         r = self.post_json(path, payload)
+        return r
+    
+    
+    def get_state(self, timeout=1):
+        path = "/state_get"
+        
+        payload = {
+            "task":path
+        }
+        r = self.post_json(path, payload, timeout=timeout)
         return r
 
 
@@ -237,15 +294,15 @@ class ESP32Client(object):
         return r
 
 
-    def move_x(self, steps=100, speed=10, is_blocking=False):
+    def move_x(self, steps=100, speed=1000, is_blocking=False):
         r = self.move_stepper(axis=1, steps=steps, speed=speed, timeout=1, backlash=self.backlash_x, is_blocking=is_blocking)
         return r
 
-    def move_y(self, steps=100, speed=10, is_blocking=False):
+    def move_y(self, steps=100, speed=1000, is_blocking=False):
         r = self.move_stepper(axis=2, steps=steps, speed=speed, timeout=1, backlash=self.backlash_y, is_blocking=is_blocking)
         return r
 
-    def move_z(self, steps=100, speed=10, is_blocking=False):
+    def move_z(self, steps=100, speed=1000, is_blocking=False):
         r = self.move_stepper(axis=3, steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
         return r
 
@@ -292,26 +349,26 @@ class ESP32Client(object):
 
 
     def send_jpeg(self, image):
+        if is_cv2:
+            temp = NamedTemporaryFile()
 
-        temp = NamedTemporaryFile()
+            #add JPEG format to the NamedTemporaryFile
+            iName = "".join([str(temp.name),".jpg"])
 
-        #add JPEG format to the NamedTemporaryFile
-        iName = "".join([str(temp.name),".jpg"])
+            #save the numpy array image onto the NamedTemporaryFile
+            cv2.imwrite(iName,image)
+            _, img_encoded = cv2.imencode('test.jpg', image)
 
-        #save the numpy array image onto the NamedTemporaryFile
-        cv2.imwrite(iName,image)
-        _, img_encoded = cv2.imencode('test.jpg', image)
+            content_type = 'image/jpeg'
+            headers = {'content-type': content_type}
+            payload = img_encoded.tostring()
+            path = '/uploadimage'
 
-        content_type = 'image/jpeg'
-        headers = {'content-type': content_type}
-        payload = img_encoded.tostring()
-        path = '/uploadimage'
-
-        #r = self.post_json(path, payload=payload, headers = headers)
-        #requests.post(self.base_uri + path, data=img_encoded.tostring(), headers=headers)
-        files = {'media': open(iName, 'rb')}
-        if self.is_connected:
-            requests.post(self.base_uri + path, files=files)
+            #r = self.post_json(path, payload=payload, headers = headers)
+            #requests.post(self.base_uri + path, data=img_encoded.tostring(), headers=headers)
+            files = {'media': open(iName, 'rb')}
+            if self.is_connected:
+                requests.post(self.base_uri + path, files=files)
 
     def switch_filter(self, colour="R", timeout=20, is_filter_init=None, speed=250, is_blocking=True):
 
@@ -361,7 +418,7 @@ class ESP32Client(object):
             requests.post(self.base_uri + path, data=json.dumps(payload), headers=headers)
 
 
-    def move_filter(self, steps=100, speed=10,timeout=250,is_blocking=False, axis=2):
+    def move_filter(self, steps=100, speed=200,timeout=250,is_blocking=False, axis=2):
         r = self.move_stepper(axis=axis, steps=steps, speed=speed, timeout=1, backlash=self.backlash_z, is_blocking=is_blocking)
         return r
 
