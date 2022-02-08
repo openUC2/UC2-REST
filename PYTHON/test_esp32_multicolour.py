@@ -5,7 +5,7 @@
 from espclient import ESP32Client
 import time
 #%%
-host = '192.168.137.145'
+host = '192.168.137.151'
 esp32 = ESP32Client(host, port=80)
 
 #%%
@@ -39,3 +39,7 @@ esp32.move_filter(steps=1000, speed=250)
 time.sleep(.5)
 # blue
 esp32.move_filter(steps=1000, speed=250)
+
+
+#%%
+esp32.move_z(100)

@@ -1,7 +1,7 @@
 #ifdef IS_ANALOGOUT
 
 // Custom function accessible by the API
-DynamicJsonDocument analogout_act_fct() {
+void analogout_act_fct() {
   // here you can do something
   Serial.println("analogout_act_fct");
 
