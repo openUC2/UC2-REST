@@ -35,8 +35,8 @@ https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com
 Go to Tools -> Manage Libraries and add the following libraries (More information [here](https://arduinogetstarted.com/faq/how-to-install-library-on-arduino-ide):
 
 ```
-ArduinoJson
-StepperMotor
+ArduinoJson (Benoit Blanchon)
+StepperDriver (by Laurentiu Badea)
 ```
 
 ### Compile and Upload Arduino Firmware
@@ -72,6 +72,9 @@ StepperMotor
 
 ```
 - *Optional*: Adapt some pin settings in thhe file `pindef.h`
+- Now select the port of your arduino device. go to `tools`-> `Ports` and select the one that looks like your arduino/esp32
+- Now upload the code (hit the right-arrow on the left hand side)
+- Compiling can take a moment
 
 
 ### Test the code using the Arduino Serial
