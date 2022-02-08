@@ -8,7 +8,6 @@
   ++
   {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
   --
-  {"task": "/laser_act", "LASERid":1, "LASERval":2}
 
 
 
@@ -34,8 +33,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-//#define ARDUINO_SERIAL
-#define ESP32_SERIAL
+#define ARDUINO_SERIAL
+//#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -239,13 +238,12 @@ void setup(void)
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
-  ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(50);
+  ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_1, 0);
-  Serial.println("ledcWrite(PWM_CHANNEL_LASER_1, LASERval);");
 
   ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
-  ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(50);
+  ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_2, 0);
 
   ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
@@ -385,8 +383,8 @@ void loop() {
       Drive Laser
     */
 #ifdef IS_LASER
-    if (strcmp(task, laser_act_endpoint) == 0){
-      LASER_act_fct();Serial.println("Next");}
+    if (strcmp(task, laser_act_endpoint) == 0)
+      LASER_act_fct();
     if (strcmp(task, laser_set_endpoint) == 0)
       LASER_get_fct();
     if (strcmp(task, laser_get_endpoint) == 0)
