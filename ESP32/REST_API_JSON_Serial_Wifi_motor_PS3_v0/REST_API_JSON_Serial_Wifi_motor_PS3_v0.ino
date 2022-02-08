@@ -33,8 +33,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
