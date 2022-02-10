@@ -12,7 +12,7 @@
 
 
   turn on the laser:
-  {"task": "/laser_act", "LASERid":1, "LASERval":2}
+  {"task": "/laser_act", "LASERid":1, "LASERval":10000}
 
   move the motor
   {"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
@@ -21,7 +21,7 @@
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
 
   operate the dac (e.g. lightsheet)
-  {"task": "/dac_act", "dac_channel": 19, "frequency":1, "offset":0, "amplitude":0, "clk_div": 10000}
+  {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
 */
 
@@ -255,8 +255,8 @@ void setup(void)
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
-  dac->Setup(DAC_CHANNEL_1, 0, 1000, 0, 0, 2);
-  dac->Setup(DAC_CHANNEL_2, 0, 1000, 0, 0, 2);
+  dac->Setup(DAC_CHANNEL_1, 0, 1, 0, 0, 2);
+  dac->Setup(DAC_CHANNEL_2, 0, 1, 0, 0, 2);
   //delay(1000);
   //dac->Stop(DAC_CHANNEL_1);
 #endif
