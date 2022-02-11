@@ -33,8 +33,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-//#define ARDUINO_SERIAL
-#define ESP32_SERIAL
+#define ARDUINO_SERIAL
+//#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -73,8 +73,8 @@
  */
 //#include pindef_lightsheet
 //#include "pindef.h"
-#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
+//#include "pindef_multicolour.h"
+#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 
@@ -251,6 +251,17 @@ void setup(void)
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
+#else 
+  pinMode(LASER_PIN_1, OUTPUT);
+  analogWrite(LASER_PIN_1, 100); delay(500);
+  analogWrite(LASER_PIN_1, 0); 
+  pinMode(LASER_PIN_2, OUTPUT);
+  analogWrite(LASER_PIN_2, 100); delay(500);
+  analogWrite(LASER_PIN_2, 0); 
+  pinMode(LASER_PIN_3, OUTPUT);
+  analogWrite(LASER_PIN_3, 100); delay(500);
+  analogWrite(LASER_PIN_3, 0); 
+  
 #endif
 #endif
 

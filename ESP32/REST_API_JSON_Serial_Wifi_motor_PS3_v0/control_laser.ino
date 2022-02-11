@@ -20,7 +20,8 @@ void LASER_act_fct() {
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
 #else
-    analogWrite(PWM_CHANNEL_LASER_1, LASERval);
+    Serial.println("Turning on laser 1");
+    analogWrite(LASER_PIN_1, LASERval);
 #endif
   }
   else if (LASERid == 2) {
@@ -29,7 +30,7 @@ void LASER_act_fct() {
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
 #else
-    analogWrite(PWM_CHANNEL_LASER_2, LASERval);
+    analogWrite(LASER_PIN_2, LASERval);
 #endif
   }
   else if (LASERid == 3) {
@@ -38,7 +39,7 @@ void LASER_act_fct() {
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
 #else
-    analogWrite(PWM_CHANNEL_LASER_3, LASERval);
+    analogWrite(LASER_PIN_3, LASERval);
 #endif
   }
 
