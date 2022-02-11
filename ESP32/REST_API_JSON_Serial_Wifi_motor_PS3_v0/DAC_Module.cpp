@@ -1,7 +1,6 @@
 // Based on https://github.com/krzychb/dac-cosine/blob/master/main/dac-cosine.c
 #include <stdio.h>
 #include <string.h>
-#ifdef IS_ESP32
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -155,4 +154,3 @@ void DAC_Module::Setup(dac_channel_t channel, int clk_div, int frequency, int sc
     dac_output_enable(channel);
 
 }
-#endif

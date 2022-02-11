@@ -6,45 +6,41 @@ void LASER_act_fct() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
-  int LASERid = (int)jsonDocument["LASERid"];
-  int LASERval = (int)jsonDocument["LASERval"];
+  int LASERid = jsonDocument["LASERid"];
+  int LASERval = jsonDocument["LASERval"];
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
     Serial.print("LASERval "); Serial.println(LASERval);
   }
 
-
-#ifdef IS_ESP32
   if (LASERid == 1) {
-    Serial.println("Laser1");
     LASER_val_1 = LASERval;
+    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
+#ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
-  }
-  else if (LASERid == 2) {
-    Serial.println("Laser2");
-    LASER_val_2 = LASERval;
-    ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
-  }
-  else if (LASERid == 3) {
-    Serial.println("Laser3");
-    LASER_val_3 = LASERval;
-    ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
-  }
 #else
- if (LASERid == 1) {
-    LASER_val_1 = LASERval;
     analogWrite(PWM_CHANNEL_LASER_1, LASERval);
+#endif
   }
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
+    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
+#ifdef IS_ESP32
+    ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
+#else
     analogWrite(PWM_CHANNEL_LASER_2, LASERval);
+#endif
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
+    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
+#ifdef IS_ESP32
+    ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
+#else
     analogWrite(PWM_CHANNEL_LASER_3, LASERval);
-  }
 #endif
+  }
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;

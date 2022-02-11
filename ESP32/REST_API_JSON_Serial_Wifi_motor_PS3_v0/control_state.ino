@@ -24,6 +24,7 @@ void state_get_fct() {
   jsonDocument["identifier_id"] = identifier_id;
   jsonDocument["identifier_date"] = identifier_date;
   jsonDocument["identifier_author"] = identifier_author;
+  jsonDocument["identifier_setup"] = identifier_setup;
 }
 
 

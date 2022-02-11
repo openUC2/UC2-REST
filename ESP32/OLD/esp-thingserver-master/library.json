@@ -1,0 +1,45 @@
+{
+  "name": "esp-thingserver",
+  "description": "A library for creating Lab Things. Runs on ESP8266 and ESP32",
+  "keywords": "Communication",
+  "version": "0.2.0",
+  "authors": {
+    "name": "Joel Collins",
+    "email": "joel@jtcollins.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/labthings/esp-thingserver"
+  },
+  "license": "MPL-2.0",
+  "platforms": "espressif8266,espressif32",
+  "dependencies": {
+    "ArduinoJson": "^6.15.0",
+    "NTPClient": "^3.1.0",
+    "ESP Async WebServer": "^1.2.0"
+  },
+  "export": {
+    "include": [
+      "src/*.cpp",
+      "src/*.h",
+      "examples/*"
+    ]
+  },
+  "examples": [
+    {
+      "name": "BME280",
+      "base": "examples/BME280/src",
+      "files": ["main.cpp"]
+    },
+    {
+      "name": "LED",
+      "base": "examples/LED/src",
+      "files": ["main.cpp"]
+    },
+    {
+      "name": "NeoPixel",
+      "base": "examples/RGBArrayNeoPixel/src",
+      "files": ["main.cpp"]
+    }
+  ]
+}

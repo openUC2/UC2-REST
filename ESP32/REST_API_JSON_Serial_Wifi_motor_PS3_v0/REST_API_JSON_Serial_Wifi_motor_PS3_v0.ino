@@ -33,8 +33,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -62,7 +62,6 @@
 
 // load modules
 # ifdef IS_ESP32
-#define IS_DAC // ESP32-only
 #define IS_PS3 // ESP32-only
 #define IS_ANALOGOUT// ESP32-only
 #endif
@@ -70,10 +69,11 @@
 #define IS_MOTOR
 
 /*
- *  Pindefintion per Setup
+ *  Pindefintion per Setup 
  */
 //#include pindef_lightsheet
-#include "pindef.h"
+//#include "pindef.h"
+#include "pindef_cellSTORM.h"
 
 #define BAUDRATE 115200
 
@@ -183,22 +183,22 @@ void setup(void)
   stepper_X.begin(RPM);
   stepper_X.enable();
   stepper_X.setMicrostep(1);
-  stepper_X.move(10);
-  stepper_X.move(-10);
+  stepper_X.move(100);
+  stepper_X.move(-100);
 
   Serial.println("Setting Up Motor X");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
-  stepper_Y.move(10);
-  stepper_Y.move(-10);
+  stepper_Y.move(100);
+  stepper_Y.move(-100);
 
   Serial.println("Setting Up Motor X");
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);
-  stepper_Z.move(10);
-  stepper_Z.move(-10);
+  stepper_Z.move(100);
+  stepper_Z.move(-100);
   digitalWrite(ENABLE, HIGH);
 
   /*
@@ -248,7 +248,7 @@ void setup(void)
 
   ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
-  ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(50);
+  ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
 #endif
 #endif
@@ -326,8 +326,8 @@ void loop() {
       return;
     }
 
-//    if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
-
+    if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
+    
     #ifdef IS_ARDUINO
     char* task = jsonDocument["task"];
     #else
@@ -411,7 +411,7 @@ void loop() {
     Serial.println();
     Serial.println("--");
     jsonDocument.clear();
-
+    
   }
 #endif
 
