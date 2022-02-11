@@ -36,13 +36,14 @@ void control_PS3() {
       run_motor(sgn(stick_ly) * 5, stick_ly * 5, 1);
       stepper_1_on = true;
       if (DEBUG) Serial.println("Motor 1: " + String(stick_ly));
-      
+
     }
     else {
       if (stepper_1_on) {
         stepper_1_on = false;
         stick_ly = 0;
         run_motor(0, 0, 1); // switch motor off;
+        digitalWrite(ENABLE, HIGH);
       }
     }
 
@@ -64,6 +65,7 @@ void control_PS3() {
         stick_rx = 0;
         stepper_2_running = false;
         run_motor(0, 0, 2); // switch motor off;
+        digitalWrite(ENABLE, HIGH);
       }
     }
 
@@ -74,7 +76,7 @@ void control_PS3() {
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
       run_motor(sgn(stick_ry) * 5, stick_ry * 5, 3);
       stepper_3_on = true;
-      if (DEBUG) Serial.println("Motor 3: "+ String(stick_ry));
+      if (DEBUG) Serial.println("Motor 3: " + String(stick_ry));
     }
     else {
       if (stepper_3_on) {
@@ -82,7 +84,22 @@ void control_PS3() {
         stick_ly = 0;
         stepper_3_running = false;
         run_motor(0, 0, 3); // switch motor off;
+        digitalWrite(ENABLE, HIGH);
       }
+    }
+
+
+    if ( Ps3.data.button.down) {
+      // fine focus +
+      run_stepper_3(10, 10);
+      delay(100);
+      run_stepper_3(0, 0);
+    }
+    if ( Ps3.data.button.up) {
+      // fine focus -
+      run_stepper_3(-10, -10);
+      delay(100);
+      run_stepper_3(0, 0);
     }
 
 
@@ -115,18 +132,6 @@ void control_PS3() {
     //      lens_x += 1;
     //      delay(100);
     //      run_lens_x(lens_x);
-    //    }
-    //    if ( Ps3.data.button.down) {
-    //      // fine focus +
-    //      run_stepper_3(10, 10);
-    //      delay(100);
-    //      run_stepper_3(0, 0);
-    //    }
-    //    if ( Ps3.data.button.up) {
-    //      // fine focus -
-    //      run_stepper_3(-10, -10);
-    //      delay(100);
-    //      run_stepper_3(0, 0);
     //    }
     //    if ( Ps3.data.button.start) {
     //      // reset
@@ -225,20 +230,20 @@ void control_PS3() {
 
 
 
-  void run_motor(int steps, int speed, int axis) {
-    if (axis == 1) {
-      stepper_X.begin(abs(speed));
-      stepper_X.rotate(steps);
-    }
-    else if (axis == 2) {
-      stepper_Y.begin(abs(speed));
-      stepper_Y.rotate(steps);
-    }
-    else if (axis == 3) {
-      stepper_Z.begin(abs(speed));
-      stepper_Z.rotate(steps);
-    }
+void run_motor(int steps, int speed, int axis) {
+  if (axis == 1) {
+    stepper_X.begin(abs(speed));
+    stepper_X.rotate(steps);
   }
+  else if (axis == 2) {
+    stepper_Y.begin(abs(speed));
+    stepper_Y.rotate(steps);
+  }
+  else if (axis == 3) {
+    stepper_Z.begin(abs(speed));
+    stepper_Z.rotate(steps);
+  }
+}
 
 
 #endif

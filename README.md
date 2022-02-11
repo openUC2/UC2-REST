@@ -35,16 +35,16 @@ https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com
 Go to Tools -> Manage Libraries and add the following libraries (More information [here](https://arduinogetstarted.com/faq/how-to-install-library-on-arduino-ide):
 
 ```
-ArduinoJson
-StepperMotor
+ArduinoJson (Benoit Blanchon)
+StepperDriver (by Laurentiu Badea)
 ```
 
 ### Compile and Upload Arduino Firmware
 
-- Download this repository 
+- Download this repository following this [link](https://github.com/openUC2/UC2-REST/archive/refs/heads/master.zip)
 - Go to the folder that contains the file `REST_API_JSON_Serial_Wifi_motor_PS3_v0.ino` in [.ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0](https://github.com/openUC2/UC2-REST/tree/master/ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0)
 - Select the board you want to install it to (e.g. Arduino or ESP32 from the Boardmanager) 
-- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines
+- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab *REST_API_JSON_Serial_Wifi_motor_PS3_v0*)
 ```
  // CASES:
 // 1 Arduino -> Serial only
@@ -72,6 +72,9 @@ StepperMotor
 
 ```
 - *Optional*: Adapt some pin settings in thhe file `pindef.h`
+- Now select the port of your arduino device. go to `tools`-> `Ports` and select the one that looks like your arduino/esp32
+- Now upload the code (hit the right-arrow on the left hand side)
+- Compiling can take a moment
 
 
 ### Test the code using the Arduino Serial
@@ -91,7 +94,16 @@ StepperMotor
 - Navigate to the folder [PYTHON](https://github.com/openUC2/UC2-REST/tree/master/PYTHON)
 - Install the following dependencies via `pip`:
 ```pip install requests python-opencv```
-- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py) and execute it in Python
+- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py) 
+- Adapt the `serialport`:
+```
+serialport = "/dev/cu.SLAB_USBtoUART"
+serialport = "/dev/cu.SLAB_USBtoUART"
+serialport = "/dev/cu.wchusbserial1430"
+serialport = "COM3"
+```
+- Execute script in Python and check result
+- In case of an error, file an Issue here 
 
 
 ## API defintion

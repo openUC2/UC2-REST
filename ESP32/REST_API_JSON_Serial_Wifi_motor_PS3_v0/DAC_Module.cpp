@@ -1,3 +1,4 @@
+#ifndef IS_ARDUINO
 // Based on https://github.com/krzychb/dac-cosine/blob/master/main/dac-cosine.c
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+
 
 #include "soc/rtc_io_reg.h"
 #include "soc/rtc_cntl_reg.h"
