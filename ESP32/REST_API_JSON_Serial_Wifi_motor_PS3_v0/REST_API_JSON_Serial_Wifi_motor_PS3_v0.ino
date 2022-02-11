@@ -73,7 +73,9 @@
  *  Pindefintion per Setup
  */
 //#include pindef_lightsheet
-#include "pindef.h"
+//#include "pindef.h"
+#include "pindef_multicolour.h"
+//#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 
