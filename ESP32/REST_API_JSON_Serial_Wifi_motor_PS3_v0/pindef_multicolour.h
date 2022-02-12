@@ -15,7 +15,7 @@ int STEP_Z = 2;
 int DIR_X = 4;
 int DIR_Y = 4;
 int DIR_Z = 4;
-int ENABLE = 0;
+int ENABLE = 5;
 
 int LASER_PIN_1 = 18;
 int LASER_PIN_2 = 19;
