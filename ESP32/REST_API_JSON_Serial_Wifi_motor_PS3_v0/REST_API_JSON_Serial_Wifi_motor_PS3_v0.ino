@@ -16,6 +16,7 @@
 
   move the motor
   {"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
+  {"task": "/motor_act", "axis":12, "speed":1000, "position":1000, "position2":1000, "isabsolute":1, "isblocking":1}
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
@@ -180,17 +181,21 @@ void setup(void)
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
 
+int MOTOR_ACCEL = 5000;
+int MOTOR_DECEL = 5000;
   Serial.println("Setting Up Motor X");
   stepper_X.begin(RPM);
   stepper_X.enable();
   stepper_X.setMicrostep(1);
+  stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_X.move(100);
   stepper_X.move(-100);
-
+  
   Serial.println("Setting Up Motor X");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
+  stepper_Y.setSpeedProfile(stepper_Y.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_Y.move(100);
   stepper_Y.move(-100);
 
@@ -198,6 +203,7 @@ void setup(void)
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);
+  stepper_Z.setSpeedProfile(stepper_Z.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_Z.move(100);
   stepper_Z.move(-100);
   digitalWrite(ENABLE, HIGH);

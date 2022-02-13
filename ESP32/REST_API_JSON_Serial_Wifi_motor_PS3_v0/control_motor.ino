@@ -1,65 +1,59 @@
 #ifdef IS_MOTOR
-
+#include "SyncDriver.h"
 // Custom function accessible by the API
 void motor_act_fct() {
   Serial.println("motor_act_fct");
-
-  int axis = jsonDocument["axis"];
   int mspeed = jsonDocument["speed"];
-  long mposition = jsonDocument["position"];
+  long mposition1 = jsonDocument["pos1"];
+  long mposition2 = jsonDocument["pos2"];
+  long mposition3 = jsonDocument["pos3"];
   int isabsolute = jsonDocument["isabsolute"];
   int isblocking = jsonDocument["isblocking"];
   int isenabled = jsonDocument["isenabled"];
+  int currentposition = 0;
 
   /*
-  // apply default jsonDocument if nothing was sent
-  if (strcmp(axis, "null")==0) axis = 1;
-  if (strcmp(mspeed, "null")==0) mspeed = 0;
-  if (strcmp(mposition, "null")==0) mposition = 0;
-  if (strcmp(isabsolute, "null")==0) isabsolute = 1;
-  if (strcmp(isblocking, "null")==0) isblocking = 1;
-  if (strcmp(isenabled, "null")==0) isenabled = 0;
+    // apply default jsonDocument if nothing was sent
+    if (strcmp(axis, "null")==0) axis = 1;
+    if (strcmp(mspeed, "null")==0) mspeed = 0;
+    if (strcmp(mposition, "null")==0) mposition = 0;
+    if (strcmp(isabsolute, "null")==0) isabsolute = 1;
+    if (strcmp(isblocking, "null")==0) isblocking = 1;
+    if (strcmp(isenabled, "null")==0) isenabled = 0;
   */
-  
+
   if (DEBUG) {
-    Serial.print("axis "); Serial.println(axis);
     Serial.print("speed "); Serial.println(mspeed);
-    Serial.print("position "); Serial.println(mposition);
+    Serial.print("position1 "); Serial.println(mposition1);
+    Serial.print("position2 "); Serial.println(mposition2);
+    Serial.print("position3 "); Serial.println(mposition3);
     Serial.print("isabsolute "); Serial.println(isabsolute);
     Serial.print("isblocking "); Serial.println(isblocking);
     Serial.print("isenabled "); Serial.println(isenabled);
   }
 
+  digitalWrite(ENABLE, LOW);
+  stepper_X.begin(mspeed);
+  stepper_Y.begin(mspeed);
+  stepper_Z.begin(mspeed);
 
-  if (axis == 1) {
-    digitalWrite(ENABLE, LOW);
-    stepper_X.begin(mspeed);
-    if (isabsolute) stepper_X.move(mposition);
-    else stepper_X.move(mposition);
-    if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_X += mposition;
-    //if(isblocking) stepper_X.runToPosition();
+  if (isabsolute) {
+    mposition1 = mposition1 - POSITION_MOTOR_X;
+    mposition2 = mposition2 - POSITION_MOTOR_Y;
+    mposition3 = mposition3 - POSITION_MOTOR_Z;
   }
-  else if (axis == 2) {
-    digitalWrite(ENABLE, LOW);
-    stepper_Y.begin(mspeed);
-    if (isabsolute) stepper_Y.move(mposition);
-    else stepper_Y.move(mposition);
-    if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_Y += mposition;
-  }
-  else if (axis == 3) {
-    digitalWrite(ENABLE, LOW);
-    stepper_Z.begin(mspeed);
-    if (isabsolute) stepper_Z.move(mposition);
-    else stepper_Z.move(mposition);
-    if (not isenabled) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_Z += mposition;
-  }
+  SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
+  controller.rotate(mposition1, mposition2, mposition3);
+  if (not isenabled) digitalWrite(ENABLE, HIGH);
+  POSITION_MOTOR_X += mposition1;
+  POSITION_MOTOR_Y += mposition2;
+  POSITION_MOTOR_Z += mposition3;
 
   jsonDocument.clear();
-  jsonDocument["return"] = 1;
-  
+  jsonDocument["POSITION_MOTOR_X"] = POSITION_MOTOR_X;
+  jsonDocument["POSITION_MOTOR_Y"] = POSITION_MOTOR_Y;
+  jsonDocument["POSITION_MOTOR_Z"] = POSITION_MOTOR_Z;
+
 }
 
 void motor_set_fct() {
