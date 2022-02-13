@@ -91,16 +91,16 @@ void control_PS3() {
 
     if ( Ps3.data.button.down) {
       // fine focus +
-      run_stepper_3(10, 10);
+      run_motor(10,10,3);
       delay(100);
-      run_stepper_3(0, 0);
+      run_motor(0,0,3);
     }
     if ( Ps3.data.button.up) {
       // fine focus -
-      run_stepper_3(-10, -10);
+      run_motor(-10,-10,3);
       delay(100);
-      run_stepper_3(0, 0);
-    }
+run_motor(0,0,3);
+}
 
 
     //
