@@ -35,8 +35,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -75,8 +75,8 @@
  */
 //#include pindef_lightsheet
 //#include "pindef.h"
-//#include "pindef_multicolour.h"
-#include "pindef_STORM_Berlin.h"
+#include "pindef_multicolour.h"
+//#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 
@@ -191,8 +191,8 @@ int MOTOR_DECEL = 5000;
   stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_X.move(100);
   stepper_X.move(-100);
-  
-  Serial.println("Setting Up Motor X");
+
+  Serial.println("Setting Up Motor Y");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
@@ -200,7 +200,7 @@ int MOTOR_DECEL = 5000;
   stepper_Y.move(100);
   stepper_Y.move(-100);
 
-  Serial.println("Setting Up Motor X");
+  Serial.println("Setting Up Motor Z");
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);
@@ -258,17 +258,17 @@ int MOTOR_DECEL = 5000;
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
-#else 
+#else
   pinMode(LASER_PIN_1, OUTPUT);
   analogWrite(LASER_PIN_1, 100); delay(500);
-  analogWrite(LASER_PIN_1, 0); 
+  analogWrite(LASER_PIN_1, 0);
   pinMode(LASER_PIN_2, OUTPUT);
   analogWrite(LASER_PIN_2, 100); delay(500);
-  analogWrite(LASER_PIN_2, 0); 
+  analogWrite(LASER_PIN_2, 0);
   pinMode(LASER_PIN_3, OUTPUT);
   analogWrite(LASER_PIN_3, 100); delay(500);
-  analogWrite(LASER_PIN_3, 0); 
-  
+  analogWrite(LASER_PIN_3, 0);
+
 #endif
 #endif
 

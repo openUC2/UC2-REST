@@ -4,6 +4,7 @@
  */
 
 // analog out (e.g. Lenses)
+
 int analogout_PIN_1 = 22;
 int analogout_PIN_2 = 24;
 int analogout_PIN_3 = 0;
@@ -20,3 +21,5 @@ int ENABLE = 5;
 int LASER_PIN_1 = 18;
 int LASER_PIN_2 = 19;
 int LASER_PIN_3 = 21;
+
+String identifier_setup = "multicolour";
