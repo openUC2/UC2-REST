@@ -26,7 +26,7 @@ void LASER_act_fct() {
   }
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
-    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
+    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_2);}
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
 #else
@@ -35,7 +35,7 @@ void LASER_act_fct() {
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
-    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
+    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_3);}
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
 #else
