@@ -33,8 +33,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -73,8 +73,8 @@
  */
 //#include pindef_lightsheet
 //#include "pindef.h"
-//#include "pindef_multicolour.h"
-#include "pindef_STORM_Berlin.h"
+#include "pindef_multicolour.h"
+//#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 
@@ -187,14 +187,14 @@ void setup(void)
   stepper_X.move(100);
   stepper_X.move(-100);
 
-  Serial.println("Setting Up Motor X");
+  Serial.println("Setting Up Motor Y");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
   stepper_Y.move(100);
   stepper_Y.move(-100);
 
-  Serial.println("Setting Up Motor X");
+  Serial.println("Setting Up Motor Z");
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);

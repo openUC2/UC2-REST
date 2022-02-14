@@ -20,13 +20,13 @@ int DIR_Z = 7;
 int ENABLE = 8;
 #else 
 // Motor pins - multicolour fluorescence
-int STEP_X = 0;
+int STEP_X = 5;
 int STEP_Y = 23;
 int STEP_Z = 2;
 int DIR_X = 4;
 int DIR_Y = 4;
 int DIR_Z = 4;
-int ENABLE = 0;
+int ENABLE = 15;
 //Lightsheet?
 /*int ENABLE = 26;
 int STEP_X = 32;
