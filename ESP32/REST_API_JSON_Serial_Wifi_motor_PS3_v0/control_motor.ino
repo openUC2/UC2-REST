@@ -6,7 +6,7 @@ void motor_act_fct() {
   int mspeed = jsonDocument["speed"];
   long mposition1 = jsonDocument["pos1"];
   long mposition2 = jsonDocument["pos2"];
-  long mposition3 = jsonDocument["pos3"];
+  long mposition3 = jsonDocument["posmot3"];
   int isabsolute = jsonDocument["isabsolute"];
   int isblocking = jsonDocument["isblocking"];
   int isenabled = jsonDocument["isenabled"];
@@ -70,8 +70,16 @@ void motor_set_fct() {
   int pindir = jsonDocument["pindir"];
   int isenabled = jsonDocument["isenabled"];
 
+  if (DEBUG) {
+    Serial.print("currentposition "); Serial.println(currentposition);
+    Serial.print("maxspeed "); Serial.println(maxspeed);
+    Serial.print("acceleration "); Serial.println(acceleration);
+    Serial.print("pinstep "); Serial.println(pinstep);
+    Serial.print("pindir "); Serial.println(pindir);
+    Serial.print("isenabled "); Serial.println(isenabled);
+  }
 
-  if (currentposition != NULL) {
+  if (currentposition != 0) {
     if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
     switch (axis) {
       case 1:
@@ -82,7 +90,7 @@ void motor_set_fct() {
         POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
     }
   }
-  if (maxspeed != NULL) {
+  if (maxspeed != 0) {
     switch (axis) {
       case 1:
         stepper_X.begin(maxspeed); //stepper_X.setMaxSpeed(maxspeed);break;
@@ -92,9 +100,7 @@ void motor_set_fct() {
         stepper_Z.begin(maxspeed); //stepper_Z.setMaxSpeed(maxspeed);break;
     }
   }
-
-
-  if (pindir != NULL and pinstep != NULL) {
+  if (pindir != 0 and pinstep != 0) {
     if (axis == 1) {
       STEP_X = pinstep;
       DIR_X = pindir;
@@ -112,8 +118,8 @@ void motor_set_fct() {
     }
   }
 
-  if (DEBUG) Serial.print("isenabled "); Serial.println(isenabled);
-  if (isenabled != NULL and isenabled) {
+  //if (DEBUG) Serial.print("isenabled "); Serial.println(isenabled);
+  if (isenabled != 0 and isenabled) {
     digitalWrite(ENABLE, 0);
   }
   else if (isenabled != NULL and not isenabled) {

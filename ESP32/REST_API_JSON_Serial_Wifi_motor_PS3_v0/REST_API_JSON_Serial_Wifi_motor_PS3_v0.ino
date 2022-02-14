@@ -15,8 +15,7 @@
   {"task": "/laser_act", "LASERid":1, "LASERval":10000}
 
   move the motor
-  {"task": "/motor_act", "axis":1, "speed":1000, "position":1000, "isabsolute":1, "isblocking":1}
-  {"task": "/motor_act", "axis":12, "speed":1000, "position":1000, "position2":1000, "isabsolute":1, "isblocking":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabsolute":1, "isblocking":1, "isenabled":1}
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
