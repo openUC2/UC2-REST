@@ -16,6 +16,8 @@
 
   move the motor
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabsolute":1, "isblocking":1, "isenabled":1}
+  {'task': '/motor_set', 'axis': 1, 'currentposition': 1} 
+  {'task': '/motor_get', 'axis': 1} 
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
