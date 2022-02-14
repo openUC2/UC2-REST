@@ -6,7 +6,7 @@ void motor_act_fct() {
   int mspeed = jsonDocument["speed"];
   long mposition1 = jsonDocument["pos1"];
   long mposition2 = jsonDocument["pos2"];
-  long mposition3 = jsonDocument["posmot3"];
+  long mposition3 = jsonDocument["pos3"];
   int isabsolute = jsonDocument["isabsolute"];
   int isblocking = jsonDocument["isblocking"];
   int isenabled = jsonDocument["isenabled"];
