@@ -76,7 +76,7 @@
 //#include "pindef_multicolour.h"
 #include "pindef_STORM_Berlin.h"
 
-#define BAUDRATE 115200
+#define BAUDRATE 57600
 
 #ifdef IS_WIFI
 #include <WiFi.h>
@@ -428,6 +428,7 @@ void loop() {
     Serial.println();
     Serial.println("--");
     jsonDocument.clear();
+    jsonDocument.garbageCollect();
 
   }
 #endif
