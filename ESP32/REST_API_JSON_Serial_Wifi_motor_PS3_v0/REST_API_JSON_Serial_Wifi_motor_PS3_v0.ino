@@ -13,15 +13,7 @@
   {"task": "/laser_act", "LASERid":1, "LASERval":10000}
 
   move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen
-  
-  
-  
-  
-  
-  
-  
-  ########":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1} 
   {'task': '/motor_get', 'axis': 1} 
 
