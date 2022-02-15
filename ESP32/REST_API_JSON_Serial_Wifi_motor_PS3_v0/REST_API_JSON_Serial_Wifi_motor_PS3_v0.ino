@@ -24,6 +24,14 @@
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
 */
+/*
+ *  Pindefintion per Setup
+ */
+//#include pindef_lightsheet
+//#include "pindef.h"
+#include "pindef_multicolour.h"
+//#include "pindef_STORM_Berlin.h"
+
 
 #define DEBUG 1
 // CASES:
@@ -33,8 +41,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-#define ARDUINO_SERIAL
-//#define ESP32_SERIAL
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -64,17 +72,11 @@
 # ifdef IS_ESP32
 #define IS_PS3 // ESP32-only
 #define IS_ANALOGOUT// ESP32-only
+#define IS_DAC
 #endif
 #define IS_LASER
 #define IS_MOTOR
 
-/*
- *  Pindefintion per Setup
- */
-//#include pindef_lightsheet
-//#include "pindef.h"
-//#include "pindef_multicolour.h"
-#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 

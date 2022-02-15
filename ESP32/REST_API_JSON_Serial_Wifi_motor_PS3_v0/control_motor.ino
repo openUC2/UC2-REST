@@ -46,7 +46,7 @@ void motor_act_fct() {
   }
   SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
   // weird error in controller? 
-  if(not(mposition1==0 or mposition2==0 or mposition3==0)){
+  if(not(mposition1==0 and mposition2==0 and mposition3==0)){
   controller.rotate(mposition1, mposition2, mposition3);}
   if (not isen) digitalWrite(ENABLE, HIGH);
   POSITION_MOTOR_X += mposition1;
