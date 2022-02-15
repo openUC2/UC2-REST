@@ -29,11 +29,11 @@
  */
 //#include pindef_lightsheet
 //#include "pindef.h"
-#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
+//#include "pindef_multicolour.h"
+#include "pindef_STORM_Berlin.h"
 
 
-#define DEBUG 1
+#define DEBUG 0
 // CASES:
 // 1 Arduino -> Serial only
 // 2 ESP32 -> Serial only
@@ -41,8 +41,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-//#define ARDUINO_SERIAL
-#define ESP32_SERIAL
+#define ARDUINO_SERIAL
+//#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -443,6 +443,8 @@ void loop() {
   server.handleClient();
 #endif
 
+freeMemory(); 
+
 }
 
 
@@ -489,3 +491,25 @@ void setup_routing() {
   server.begin();
 }
 #endif
+
+
+
+
+
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
+}

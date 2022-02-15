@@ -53,6 +53,9 @@ void motor_act_fct() {
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
 
+Serial.println("memory");
+  Serial.println(jsonDocument.memoryUsage());
+
 
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
