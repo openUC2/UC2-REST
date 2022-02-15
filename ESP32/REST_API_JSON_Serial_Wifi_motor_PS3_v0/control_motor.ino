@@ -11,6 +11,7 @@ void motor_act_fct() {
   int isblock = jsonDocument["isblock"];
   int isen = jsonDocument["isen"];
   int currentposition = 0;
+  jsonDocument.clear();
 
   /*
     // apply default jsonDocument if nothing was sent
@@ -32,6 +33,7 @@ void motor_act_fct() {
     Serial.print("isen "); Serial.println(isen);
   }
 
+
   digitalWrite(ENABLE, LOW);
   stepper_X.begin(mspeed);
   stepper_Y.begin(mspeed);
@@ -51,7 +53,7 @@ void motor_act_fct() {
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
 
-  jsonDocument.clear();
+
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;
