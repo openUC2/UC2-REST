@@ -7,9 +7,9 @@ void motor_act_fct() {
   long mposition1 = jsonDocument["pos1"];
   long mposition2 = jsonDocument["pos2"];
   long mposition3 = jsonDocument["pos3"];
-  int isabsolute = jsonDocument["isabsolute"];
-  int isblocking = jsonDocument["isblocking"];
-  int isenabled = jsonDocument["isenabled"];
+  int isabs = jsonDocument["isabs"];
+  int isblock = jsonDocument["isblock"];
+  int isen = jsonDocument["isen"];
   int currentposition = 0;
 
   /*
@@ -17,9 +17,9 @@ void motor_act_fct() {
     if (strcmp(axis, "null")==0) axis = 1;
     if (strcmp(mspeed, "null")==0) mspeed = 0;
     if (strcmp(mposition, "null")==0) mposition = 0;
-    if (strcmp(isabsolute, "null")==0) isabsolute = 1;
-    if (strcmp(isblocking, "null")==0) isblocking = 1;
-    if (strcmp(isenabled, "null")==0) isenabled = 0;
+    if (strcmp(isabs, "null")==0) isabs = 1;
+    if (strcmp(isblock, "null")==0) isblock = 1;
+    if (strcmp(isen, "null")==0) isen = 0;
   */
 
   if (DEBUG) {
@@ -27,9 +27,9 @@ void motor_act_fct() {
     Serial.print("position1 "); Serial.println(mposition1);
     Serial.print("position2 "); Serial.println(mposition2);
     Serial.print("position3 "); Serial.println(mposition3);
-    Serial.print("isabsolute "); Serial.println(isabsolute);
-    Serial.print("isblocking "); Serial.println(isblocking);
-    Serial.print("isenabled "); Serial.println(isenabled);
+    Serial.print("isabs "); Serial.println(isabs);
+    Serial.print("isblock "); Serial.println(isblock);
+    Serial.print("isen "); Serial.println(isen);
   }
 
   digitalWrite(ENABLE, LOW);
@@ -37,20 +37,20 @@ void motor_act_fct() {
   stepper_Y.begin(mspeed);
   stepper_Z.begin(mspeed);
 
-  if (isabsolute) {
+  if (isabs) {
     mposition1 = mposition1 - POSITION_MOTOR_X;
     mposition2 = mposition2 - POSITION_MOTOR_Y;
     mposition3 = mposition3 - POSITION_MOTOR_Z;
   }
   SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
-  if(isblocking){
+  if(isblock){
   controller.rotate(mposition1, mposition2, mposition3);}
   else{
   controller.startRotate(mposition1, mposition2, mposition3);
   unsigned wait_time = controller.nextAction();
-  // TODO: This will do only one step?  
+  // TODO: This will do only one step?
   }
-  if (not isenabled) digitalWrite(ENABLE, HIGH);
+  if (not isen) digitalWrite(ENABLE, HIGH);
   POSITION_MOTOR_X += mposition1;
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
@@ -74,7 +74,7 @@ void motor_set_fct() {
   int acceleration = jsonDocument["acceleration"];
   int pinstep = jsonDocument["pinstep"];
   int pindir = jsonDocument["pindir"];
-  int isenabled = jsonDocument["isenabled"];
+  int isen = jsonDocument["isen"];
 
   if (DEBUG) {
     Serial.print("currentposition "); Serial.println(currentposition);
@@ -82,7 +82,7 @@ void motor_set_fct() {
     Serial.print("acceleration "); Serial.println(acceleration);
     Serial.print("pinstep "); Serial.println(pinstep);
     Serial.print("pindir "); Serial.println(pindir);
-    Serial.print("isenabled "); Serial.println(isenabled);
+    Serial.print("isen "); Serial.println(isen);
   }
 
 
@@ -125,11 +125,11 @@ void motor_set_fct() {
     }
   }
 
-  //if (DEBUG) Serial.print("isenabled "); Serial.println(isenabled);
-  if (isenabled != 0 and isenabled) {
+  //if (DEBUG) Serial.print("isen "); Serial.println(isen);
+  if (isen != 0 and isen) {
     digitalWrite(ENABLE, 0);
   }
-  else if (isenabled != NULL and not isenabled) {
+  else if (isen != NULL and not isen) {
     digitalWrite(ENABLE, 1);
   }
 
@@ -175,6 +175,8 @@ void motor_get_fct() {
       mposition = POSITION_MOTOR_Z;//stepper_Z.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
+      break;
+    default:
       break;
   }
 

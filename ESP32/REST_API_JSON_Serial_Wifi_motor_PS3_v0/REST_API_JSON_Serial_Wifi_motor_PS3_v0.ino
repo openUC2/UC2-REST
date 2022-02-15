@@ -9,13 +9,19 @@
   {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
   --
 
-
-
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000}
 
   move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabsolute":1, "isblocking":1, "isenabled":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen
+  
+  
+  
+  
+  
+  
+  
+  ########":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1} 
   {'task': '/motor_get', 'axis': 1} 
 
@@ -35,8 +41,8 @@
 // 4 ESP32 -> Wifi + Serial ?
 
 // load configuration
-//#define ARDUINO_SERIAL
-#define ESP32_SERIAL
+#define ARDUINO_SERIAL
+//#define ESP32_SERIAL
 //#define ESP32_WIFI
 //#define ESP32_SERIAL_WIFI
 
@@ -75,8 +81,8 @@
  */
 //#include pindef_lightsheet
 //#include "pindef.h"
-#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
+//#include "pindef_multicolour.h"
+#include "pindef_STORM_Berlin.h"
 
 #define BAUDRATE 115200
 
@@ -189,24 +195,24 @@ int MOTOR_DECEL = 5000;
   stepper_X.enable();
   stepper_X.setMicrostep(1);
   stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-  stepper_X.move(100);
-  stepper_X.move(-100);
+  stepper_X.move(10);
+  stepper_X.move(-10);
 
   Serial.println("Setting Up Motor Y");
   stepper_Y.begin(RPM);
   stepper_Y.enable();
   stepper_Y.setMicrostep(1);
   stepper_Y.setSpeedProfile(stepper_Y.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-  stepper_Y.move(100);
-  stepper_Y.move(-100);
+  stepper_Y.move(10);
+  stepper_Y.move(-10);
 
   Serial.println("Setting Up Motor Z");
   stepper_Z.begin(RPM);
   stepper_Z.enable();
   stepper_Z.setMicrostep(1);
   stepper_Z.setSpeedProfile(stepper_Z.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-  stepper_Z.move(100);
-  stepper_Z.move(-100);
+  stepper_Z.move(10);
+  stepper_Z.move(-10);
   digitalWrite(ENABLE, HIGH);
 
   /*
