@@ -21,6 +21,11 @@ static inline int8_t sgn(int val) {
 
 void onConnect() {
   Serial.println("PS3 Controller Connected.");
+  stepper_X.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
+  stepper_Y.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
+  stepper_Z.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
+
+
 }
 
 void control_PS3() {
@@ -91,16 +96,16 @@ void control_PS3() {
 
     if ( Ps3.data.button.down) {
       // fine focus +
-      run_motor(10,10,3);
+      run_motor(10, 10, 3);
       delay(100);
-      run_motor(0,0,3);
+      run_motor(0, 0, 3);
     }
     if ( Ps3.data.button.up) {
       // fine focus -
-      run_motor(-10,-10,3);
+      run_motor(-10, -10, 3);
       delay(100);
-run_motor(0,0,3);
-}
+      run_motor(0, 0, 3);
+    }
 
 
     //
@@ -231,6 +236,8 @@ run_motor(0,0,3);
 
 
 void run_motor(int steps, int speed, int axis) {
+
+  digitalWrite(ENABLE, LOW);
   if (axis == 1) {
     stepper_X.begin(abs(speed));
     stepper_X.rotate(steps);
@@ -243,6 +250,7 @@ void run_motor(int steps, int speed, int axis) {
     stepper_Z.begin(abs(speed));
     stepper_Z.rotate(steps);
   }
+  digitalWrite(ENABLE, HIGH);
 }
 
 
