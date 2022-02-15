@@ -76,7 +76,7 @@
 //#include "pindef_multicolour.h"
 #include "pindef_STORM_Berlin.h"
 
-#define BAUDRATE 57600
+#define BAUDRATE 115200
 
 #ifdef IS_WIFI
 #include <WiFi.h>
