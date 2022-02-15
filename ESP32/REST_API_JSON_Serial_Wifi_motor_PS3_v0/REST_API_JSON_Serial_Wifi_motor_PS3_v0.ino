@@ -428,6 +428,7 @@ void loop() {
     Serial.println();
     Serial.println("--");
     jsonDocument.clear();
+    jsonDocument.garbageCollect();
 
   }
 #endif

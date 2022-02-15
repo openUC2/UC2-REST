@@ -43,22 +43,18 @@ void motor_act_fct() {
     mposition3 = mposition3 - POSITION_MOTOR_Z;
   }
   SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
-  if(isblock){
+  // weird error in controller? 
+  if(not(mposition1==0 or mposition2==0 or mposition3==0)){
   controller.rotate(mposition1, mposition2, mposition3);}
-  else{
-  controller.startRotate(mposition1, mposition2, mposition3);
-  unsigned wait_time = controller.nextAction();
-  // TODO: This will do only one step?
-  }
   if (not isen) digitalWrite(ENABLE, HIGH);
   POSITION_MOTOR_X += mposition1;
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
 
   jsonDocument.clear();
-  jsonDocument["POSITION_MOTOR_X"] = POSITION_MOTOR_X;
-  jsonDocument["POSITION_MOTOR_Y"] = POSITION_MOTOR_Y;
-  jsonDocument["POSITION_MOTOR_Z"] = POSITION_MOTOR_Z;
+  jsonDocument["POSX"] = POSITION_MOTOR_X;
+  jsonDocument["POSY"] = POSITION_MOTOR_Y;
+  jsonDocument["POSZ"] = POSITION_MOTOR_Z;
 
 }
 
@@ -84,7 +80,6 @@ void motor_set_fct() {
     Serial.print("pindir "); Serial.println(pindir);
     Serial.print("isen "); Serial.println(isen);
   }
-
 
   if (currentposition != 0) {
     if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
