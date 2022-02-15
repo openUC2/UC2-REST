@@ -72,7 +72,7 @@
 # ifdef IS_ESP32
 #define IS_PS3 // ESP32-only
 #define IS_ANALOGOUT// ESP32-only
-#define IS_DAC
+
 #endif
 #define IS_LASER
 #define IS_MOTOR
