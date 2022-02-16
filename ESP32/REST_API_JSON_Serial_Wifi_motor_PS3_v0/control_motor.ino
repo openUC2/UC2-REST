@@ -11,6 +11,7 @@ void motor_act_fct() {
   int isblock = jsonDocument["isblock"];
   int isen = jsonDocument["isen"];
   int currentposition = 0;
+  jsonDocument.clear();
 
   /*
     // apply default jsonDocument if nothing was sent
@@ -32,6 +33,7 @@ void motor_act_fct() {
     Serial.print("isen "); Serial.println(isen);
   }
 
+
   digitalWrite(ENABLE, LOW);
   stepper_X.begin(mspeed);
   stepper_Y.begin(mspeed);
@@ -44,14 +46,17 @@ void motor_act_fct() {
   }
   SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
   // weird error in controller? 
-  if(not(mposition1==0 or mposition2==0 or mposition3==0)){
+  if(not(mposition1==0 and mposition2==0 and mposition3==0)){
   controller.rotate(mposition1, mposition2, mposition3);}
   if (not isen) digitalWrite(ENABLE, HIGH);
   POSITION_MOTOR_X += mposition1;
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
 
-  jsonDocument.clear();
+Serial.println("memory");
+  Serial.println(jsonDocument.memoryUsage());
+
+
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;

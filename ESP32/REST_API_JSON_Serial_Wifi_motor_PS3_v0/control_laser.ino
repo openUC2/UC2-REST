@@ -1,6 +1,38 @@
 #ifdef IS_LASER
 
 
+void LASER_despeckle(int LASERdespeckle, int LASERid){
+    long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
+    Serial.println(laserwiggle);
+    Serial.println(LASERid);
+    if (LASERid == 1) {
+    #ifdef IS_ESP32
+    ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_1+laserwiggle);
+    #else
+        Serial.println("Turning on laser 1");
+        analogWrite(LASER_PIN_1, LASER_val_1+laserwiggle);
+    #endif
+    }
+    else if (LASERid == 2) {
+    #ifdef IS_ESP32
+    ledcWrite(PWM_CHANNEL_LASER_2, LASER_val_2+laserwiggle);
+    #else
+        Serial.println("Turning on laser 2");
+        analogWrite(LASER_PIN_2, LASER_val_2+laserwiggle);
+    #endif
+    }
+    else if (LASERid == 3) {
+    #ifdef IS_ESP32
+    ledcWrite(PWM_CHANNEL_LASER_3, LASER_val_3+laserwiggle);
+    #else
+        Serial.println("Turning on laser 3");
+        analogWrite(LASER_PIN_3, LASER_val_3+laserwiggle);
+    #endif
+    }    
+    delay(20);
+}
+
+
 // Custom function accessible by the API
 void LASER_act_fct() {
   // here you can do something
@@ -8,14 +40,17 @@ void LASER_act_fct() {
 
   int LASERid = jsonDocument["LASERid"];
   int LASERval = jsonDocument["LASERval"];
+  int LASERdespeckle = jsonDocument["LASERdespeckle"];
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
     Serial.print("LASERval "); Serial.println(LASERval);
+    Serial.print("LASERdespeckle "); Serial.println(LASERdespeckle);
   }
 
   if (LASERid == 1) {
     LASER_val_1 = LASERval;
+    LASER_despeckle_1 = LASERdespeckle;
     if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
@@ -26,6 +61,7 @@ void LASER_act_fct() {
   }
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
+    LASER_despeckle_2 = LASERdespeckle;
     if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_2);}
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
@@ -35,6 +71,7 @@ void LASER_act_fct() {
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
+    LASER_despeckle_3 = LASERdespeckle;
     if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_3);}
 #ifdef IS_ESP32
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);

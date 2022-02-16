@@ -10,12 +10,12 @@
   --
 
   turn on the laser:
-  {"task": "/laser_act", "LASERid":1, "LASERval":10000}
+  {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
   move the motor
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
-  {'task': '/motor_set', 'axis': 1, 'currentposition': 1} 
-  {'task': '/motor_get', 'axis': 1} 
+  {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
+  {'task': '/motor_get', 'axis': 1}
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
@@ -76,7 +76,15 @@
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
 
+
+int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
+
+/*
+    IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
+*/
+
+
 
 #ifdef IS_WIFI
 #include <WiFi.h>
@@ -89,7 +97,6 @@
 #endif
 
 #include <ArduinoJson.h>
-
 
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
@@ -180,8 +187,8 @@ void setup(void)
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
 
-int MOTOR_ACCEL = 5000;
-int MOTOR_DECEL = 5000;
+  int MOTOR_ACCEL = 5000;
+  int MOTOR_DECEL = 5000;
   Serial.println("Setting Up Motor X");
   stepper_X.begin(RPM);
   stepper_X.enable();
@@ -331,7 +338,7 @@ int MOTOR_DECEL = 5000;
 }
 
 
-char* task ="";
+char* task = "";
 
 void loop() {
 #ifdef IS_SERIAL
@@ -345,13 +352,13 @@ void loop() {
 
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
-    #ifdef IS_ARDUINO
+#ifdef IS_ARDUINO
     char* task = jsonDocument["task"];
-    #else
+#else
     String task_s = jsonDocument["task"];
     char task[50];
     task_s.toCharArray(task, 50);
-    #endif
+#endif
     //jsonDocument.garbageCollect(); // memory leak?
     /*if (task == "null") return;*/
     if (DEBUG) {
@@ -433,6 +440,17 @@ void loop() {
   }
 #endif
 
+
+// attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
+#ifdef IS_LASER
+    if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
+      LASER_despeckle(LASER_despeckle_1, 1);
+    if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
+      LASER_despeckle(LASER_despeckle_2, 2);
+    if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
+      LASER_despeckle(LASER_despeckle_3, 3);
+#endif
+
 #ifdef IS_PS3
   control_PS3();
 #endif
@@ -440,6 +458,8 @@ void loop() {
 #ifdef IS_WIFI && IS_ESP32
   server.handleClient();
 #endif
+
+  freeMemory();
 
 }
 
@@ -487,3 +507,25 @@ void setup_routing() {
   server.begin();
 }
 #endif
+
+
+
+
+
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
+}
