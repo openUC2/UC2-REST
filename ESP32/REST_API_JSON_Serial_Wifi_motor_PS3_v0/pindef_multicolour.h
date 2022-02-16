@@ -13,7 +13,7 @@
 //#define IS_DAC
 
 // analog out (e.g. Lenses)
-int analogout_PIN_1 = 22;
+int analogout_PIN_1 = 32;
 int analogout_PIN_2 = 24;
 int analogout_PIN_3 = 0;
 
@@ -21,8 +21,8 @@ int analogout_PIN_3 = 0;
 int STEP_X = 0;
 int STEP_Y = 23;
 int STEP_Z = 2;
-int DIR_X = 4;
-int DIR_Y = 4;
+int DIR_X = 0;
+int DIR_Y = 22;
 int DIR_Z = 4;
 int ENABLE = 5;
 

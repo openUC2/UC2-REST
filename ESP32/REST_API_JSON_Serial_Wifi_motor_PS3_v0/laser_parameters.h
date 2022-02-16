@@ -10,3 +10,8 @@ int pwm_max = (int)pow(2, pwm_resolution);
 int PWM_CHANNEL_LASER_1 = 0;
 int PWM_CHANNEL_LASER_2 = 1;
 int PWM_CHANNEL_LASER_3 = 2;
+
+// temperature dependent despeckeling?
+int LASER_despeckle_1 = 0;
+int LASER_despeckle_2 = 0;
+int LASER_despeckle_3 = 0;
