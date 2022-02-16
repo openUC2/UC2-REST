@@ -2,8 +2,14 @@
 /*
  * Important: Don't use any pins that are not "allowed" on the ESP (also not twice assigment!!)
  */
-
-#define IS_DAC // ESP32-only
+#define IS_ESP32
+#define IS_SERIAL
+//#define IS_WIFI
+#define IS_PS3 // ESP32-only
+#define IS_ANALOGOUT// ESP32-only
+#define IS_LASER
+#define IS_MOTOR
+#define IS_DAC
 
 // analog out (e.g. Lenses)
 int analogout_PIN_1 = 25;

@@ -1,5 +1,25 @@
 
- #include "state_parameters.h"
+#include "state_parameters.h"
+#ifdef ARDUINO_SERIAL
+#define IS_SERIAL
+#define IS_ARDUINO
+#endif
+
+#ifdef ESP32_SERIAL
+#define IS_SERIAL
+#define IS_ESP32
+#endif
+
+#ifdef ESP32_WIFI
+#define IS_WIFI
+#define IS_ESP32
+#endif
+
+#ifdef ESP32_SERIAL_WIFI
+#define IS_WIFI
+#define IS_SERIAL
+#define IS_ESP32
+#endif
  
  // Custom function accessible by the API
 void state_act_fct() {
@@ -11,6 +31,9 @@ void state_act_fct() {
 
 void state_set_fct() {
   // here you can set parameters
+
+  int isdebug = jsonDocument["isdebug"];
+  DEBUG = isdebug;
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 
