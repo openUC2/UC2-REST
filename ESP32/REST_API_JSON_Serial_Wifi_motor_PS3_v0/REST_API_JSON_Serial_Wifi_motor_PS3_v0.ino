@@ -29,8 +29,8 @@
 */
 //#include pindef_lightsheet
 //#include "pindef.h"
-#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
+//#include "pindef_multicolour.h"
+#include "pindef_STORM_Berlin.h"
 
 
 int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
