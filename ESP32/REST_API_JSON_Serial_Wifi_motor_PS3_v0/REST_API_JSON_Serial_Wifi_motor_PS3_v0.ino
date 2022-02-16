@@ -24,10 +24,54 @@
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
 */
+
+#define DEBUG 1
+// CASES:
+// 1 Arduino -> Serial only
+// 2 ESP32 -> Serial only
+// 3 ESP32 -> Wifi only
+// 4 ESP32 -> Wifi + Serial ?
+
+// load configuration
+//#define ARDUINO_SERIAL
+#define ESP32_SERIAL
+//#define ESP32_WIFI
+//#define ESP32_SERIAL_WIFI
+
+#ifdef ARDUINO_SERIAL
+#define IS_SERIAL
+#define IS_ARDUINO
+#endif
+
+#ifdef ESP32_SERIAL
+#define IS_SERIAL
+#define IS_ESP32
+#endif
+
+#ifdef ESP32_WIFI
+#define IS_WIFI
+#define IS_ESP32
+#endif
+
+#ifdef ESP32_SERIAL_WIFI
+#define IS_WIFI
+#define IS_SERIAL
+#define IS_ESP32
+#endif
+
+
+// load modules
+# ifdef IS_ESP32
+#define IS_PS3 // ESP32-only
+#define IS_ANALOGOUT// ESP32-only
+#endif
+#define IS_LASER
+#define IS_MOTOR
+
 /*
-    Pindefintion per Setup
-*/
-//#include pindef_lightsheet
+ *  Pindefintion per Setup
+ */
+//#include "pindef_lightsheet.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 #include "pindef_STORM_Berlin.h"
@@ -368,7 +412,7 @@ void loop() {
     if (strcmp(task, laser_set_endpoint) == 0)
       LASER_get_fct();
     if (strcmp(task, laser_get_endpoint) == 0)
-      LASER_set_fct();      
+      LASER_set_fct();
 #endif
 
 
