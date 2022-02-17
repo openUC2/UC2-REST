@@ -1,8 +1,8 @@
 #ifdef IS_MOTOR
-#include "SyncDriver.h"
+
 // Custom function accessible by the API
 void motor_act_fct() {
-  Serial.println("motor_act_fct");
+  if(DEBUG) Serial.println("motor_act_fct");
   int mspeed = jsonDocument["speed"];
   long mposition1 = jsonDocument["pos1"];
   long mposition2 = jsonDocument["pos2"];
@@ -33,7 +33,6 @@ void motor_act_fct() {
     Serial.print("isen "); Serial.println(isen);
   }
 
-
   digitalWrite(ENABLE, LOW);
   stepper_X.begin(mspeed);
   stepper_Y.begin(mspeed);
@@ -44,18 +43,16 @@ void motor_act_fct() {
     mposition2 = mposition2 - POSITION_MOTOR_Y;
     mposition3 = mposition3 - POSITION_MOTOR_Z;
   }
-  SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
-  // weird error in controller? 
-  if(not(mposition1==0 and mposition2==0 and mposition3==0)){
-  controller.rotate(mposition1, mposition2, mposition3);}
+
+  // weird error in controller?
+  if (not(mposition1 == 0 and mposition2 == 0 and mposition3 == 0)) {
+    controller.rotate(mposition1, mposition2, mposition3);
+  }
+
   if (not isen) digitalWrite(ENABLE, HIGH);
   POSITION_MOTOR_X += mposition1;
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
-
-Serial.println("memory");
-  Serial.println(jsonDocument.memoryUsage());
-
 
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
@@ -91,20 +88,27 @@ void motor_set_fct() {
     switch (axis) {
       case 1:
         POSITION_MOTOR_X = currentposition; //stepper_X.setCurrentPosition(currentposition);break;
+        break;
       case 2:
         POSITION_MOTOR_Y = currentposition; //stepper_Y.setCurrentPosition(currentposition);break;
+        break;
       case 3:
         POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
+        break;
+        
     }
   }
   if (maxspeed != 0) {
     switch (axis) {
       case 1:
-        stepper_X.begin(maxspeed); //stepper_X.setMaxSpeed(maxspeed);break;
+        stepper_X.begin(maxspeed); //stepper_X.setMaxSpeed(maxspeed);
+        break;
       case 2:
-        stepper_Y.begin(maxspeed); //stepper_Y.setMaxSpeed(maxspeed);break;
+        stepper_Y.begin(maxspeed); //stepper_Y.setMaxSpeed(maxspeed);
+        break;
       case 3:
-        stepper_Z.begin(maxspeed); //stepper_Z.setMaxSpeed(maxspeed);break;
+        stepper_Z.begin(maxspeed); //stepper_Z.setMaxSpeed(maxspeed);
+        break;
     }
   }
   if (pindir != 0 and pinstep != 0) {

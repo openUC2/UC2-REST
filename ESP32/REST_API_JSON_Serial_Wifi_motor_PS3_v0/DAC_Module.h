@@ -10,6 +10,7 @@
 #include "soc/sens_reg.h"
 #include "soc/rtc.h"
 
+
 #include "driver/dac.h"
 
 class DAC_Module {
@@ -24,5 +25,3 @@ class DAC_Module {
         void dac_scale_set(dac_channel_t channel, int scale);
         void dac_invert_set(dac_channel_t channel, int invert);
 };
-
-

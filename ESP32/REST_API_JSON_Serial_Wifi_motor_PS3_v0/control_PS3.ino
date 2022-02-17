@@ -20,12 +20,10 @@ static inline int8_t sgn(int val) {
 }
 
 void onConnect() {
-  Serial.println("PS3 Controller Connected.");
-  stepper_X.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
-  stepper_Y.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
-  stepper_Z.setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED);
-
-
+  if(DEBUG) Serial.println("PS3 Controller Connected.");
+  stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
+  stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
+  stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
 }
 
 void control_PS3() {
@@ -40,7 +38,7 @@ void control_PS3() {
       stick_ly = stick_ly - sgn(stick_ly) * offset_val;
       run_motor(sgn(stick_ly) * 5, stick_ly * 5, 1);
       stepper_1_on = true;
-      if (DEBUG) Serial.println("Motor 1: " + String(stick_ly));
+      if (DEBUG) if(DEBUG) Serial.println("Motor 1: " + String(stick_ly));
 
     }
     else {
@@ -62,7 +60,7 @@ void control_PS3() {
       stick_rx = stick_rx - sgn(stick_rx) * offset_val;
       run_motor(sgn(stick_rx) * 5, stick_rx * 5, 2);
       stepper_2_on = true;
-      if (DEBUG) Serial.println("Motor 2: " + String(stick_rx));
+      if (DEBUG) if(DEBUG) Serial.println("Motor 2: " + String(stick_rx));
     }
     else {
       if (stepper_2_on) {
@@ -81,7 +79,7 @@ void control_PS3() {
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
       run_motor(sgn(stick_ry) * 5, stick_ry * 5, 3);
       stepper_3_on = true;
-      if (DEBUG) Serial.println("Motor 3: " + String(stick_ry));
+      if (DEBUG) if(DEBUG) Serial.println("Motor 3: " + String(stick_ry));
     }
     else {
       if (stepper_3_on) {
@@ -96,16 +94,16 @@ void control_PS3() {
 
     if ( Ps3.data.button.down) {
       // fine focus +
-      run_motor(10, 10, 3);
+      run_motor(10,10,3);
       delay(100);
-      run_motor(0, 0, 3);
+      run_motor(0,0,3);
     }
     if ( Ps3.data.button.up) {
       // fine focus -
-      run_motor(-10, -10, 3);
+      run_motor(-10,-10,3);
       delay(100);
-      run_motor(0, 0, 3);
-    }
+run_motor(0,0,3);
+}
 
 
     //
@@ -123,77 +121,70 @@ void control_PS3() {
     //    }
     //
     //
-    //    /*
-    //       Keypad left
-    //    */
-    //    if ( Ps3.data.button.left) {
-    //      // fine lens -
-    //      lens_x -= 1;
-    //      delay(100);
-    //      run_lens_x(lens_x);
-    //    }
-    //    if ( Ps3.data.button.right) {
-    //      // fine lens +
-    //      lens_x += 1;
-    //      delay(100);
-    //      run_lens_x(lens_x);
-    //    }
-    //    if ( Ps3.data.button.start) {
-    //      // reset
-    //      lens_z = 0;
-    //      lens_x = 0;
-    //      run_lens_z(lens_z);
-    //      run_lens_x(lens_x);
-    //      strip.setPixelColor(0, strip.Color(0, 0, 0));
-    //      strip.show();
-    //      is_laser_red = false;
-    //      laserval = 0;
-    //      run_laser(0);
-    //    }
-    //
-    //    int offset_val_shoulder = 5;
-    //    if ( abs(Ps3.data.analog.button.r2) > offset_val_shoulder) {
-    //      // lens_x++ coarse
-    //      if ((lens_x + 1000 < pwm_max)) {
-    //        lens_x += 1000;
-    //        run_lens_x(lens_x);
-    //      }
-    //      Serial.println(lens_x);
-    //      delay(100);
-    //    }
-    //
-    //    if ( abs(Ps3.data.analog.button.l2) > offset_val_shoulder) {
-    //      // lens_x-- coarse
-    //      if ((lens_x - 1000 > 0)) {
-    //        lens_x -= 1000;
-    //        run_lens_x(lens_x);
-    //      }
-    //      Serial.println(lens_x);
-    //      delay(100);
-    //    }
-    //
-    //
-    //    if ( abs(Ps3.data.analog.button.r1) > offset_val_shoulder) {
-    //      // lens_x + semi coarse
-    //      if ((lens_x + 100 < pwm_max)) {
-    //        lens_x += 100;
-    //        run_lens_x(lens_x);
-    //        delay(100);
-    //      }
-    //    }
-    //    if ( abs(Ps3.data.analog.button.l1) > offset_val_shoulder) {
-    //      // lens_x - semi coarse
-    //      if ((lens_x - 100 > 0)) {
-    //        lens_x -= 100;
-    //        run_lens_x(lens_x);
-    //        delay(50);
-    //      }
-    //    }
-    //
-    //
+        /*
+           Keypad left
+        */
+        if ( Ps3.data.button.left) {
+          // fine lens -
+          analogout_val_1 -= 1;
+          delay(100);
+          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+        }
+        if ( Ps3.data.button.right) {
+          // fine lens +
+          analogout_val_1 += 1;
+          delay(100);
+          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+        }
+        if ( Ps3.data.button.start) {
+          // reset
+          analogout_val_1 = 0;
+          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+        }
+    
+        int offset_val_shoulder = 5;
+        if ( abs(Ps3.data.analog.button.r2) > offset_val_shoulder) {
+          // analogout_val_1++ coarse
+          if ((analogout_val_1 + 1000 < pwm_max)) {
+            analogout_val_1 += 1000;
+            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          }
+          if(DEBUG) Serial.println(analogout_val_1);
+          delay(100);
+        }
+    
+        if ( abs(Ps3.data.analog.button.l2) > offset_val_shoulder) {
+          // analogout_val_1-- coarse
+          if ((analogout_val_1 - 1000 > 0)) {
+            analogout_val_1 -= 1000;
+          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          }
+          if(DEBUG) Serial.println(analogout_val_1);
+          delay(100);
+        }
+    
+    
+        if ( abs(Ps3.data.analog.button.r1) > offset_val_shoulder) {
+          // analogout_val_1 + semi coarse
+          if ((analogout_val_1 + 100 < pwm_max)) {
+            analogout_val_1 += 100;
+            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+            delay(100);
+          }
+        }
+        if ( abs(Ps3.data.analog.button.l1) > offset_val_shoulder) {
+          // analogout_val_1 - semi coarse
+          if ((analogout_val_1 - 100 > 0)) {
+            analogout_val_1 -= 100;
+            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+            delay(50);
+          }
+        }
+    
+    
     //    if ( Ps3.data.button.circle ) {
     //      //if(not is_laser_red){
-    //      Serial.println("Laser on");
+    //      if(DEBUG) Serial.println("Laser on");
     //      is_laser_red = true;
     //      laserval += 200;
     //      run_laser(laserval);
@@ -204,7 +195,7 @@ void control_PS3() {
     //
     //    if ( Ps3.data.button.cross ) {
     //      if (is_laser_red) {
-    //        Serial.println("Laser off");
+    //        if(DEBUG) Serial.println("Laser off");
     //        is_laser_red = false;
     //        laserval = 0;
     //        run_laser(0);
@@ -214,7 +205,7 @@ void control_PS3() {
     //
     //    if ( Ps3.data.button.triangle) {
     //      if (not is_sofi) {
-    //        Serial.println("SOFI on");
+    //        if(DEBUG) Serial.println("SOFI on");
     //        is_sofi = true;
     //        glob_amplitude_sofi = 300;
     //      }
@@ -223,7 +214,7 @@ void control_PS3() {
     //    if ( Ps3.data.button.square ) {
     //      if (is_sofi) {
     //        is_sofi = false;
-    //        Serial.println("SOFI off");
+    //        if(DEBUG) Serial.println("SOFI off");
     //        glob_amplitude_sofi = 0;
     //      }
     //
@@ -236,8 +227,6 @@ void control_PS3() {
 
 
 void run_motor(int steps, int speed, int axis) {
-
-  digitalWrite(ENABLE, LOW);
   if (axis == 1) {
     stepper_X.begin(abs(speed));
     stepper_X.rotate(steps);
@@ -250,8 +239,11 @@ void run_motor(int steps, int speed, int axis) {
     stepper_Z.begin(abs(speed));
     stepper_Z.rotate(steps);
   }
-  digitalWrite(ENABLE, HIGH);
 }
+
+
+
+
 
 
 #endif

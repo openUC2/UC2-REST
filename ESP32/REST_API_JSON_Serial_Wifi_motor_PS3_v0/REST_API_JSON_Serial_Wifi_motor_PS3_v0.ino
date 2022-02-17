@@ -9,6 +9,10 @@
   {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
   --
 
+  {"task": "/state_set", "isdebug":0}
+  
+  
+
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
@@ -24,66 +28,22 @@
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
 */
-
-#define DEBUG 1
-// CASES:
-// 1 Arduino -> Serial only
-// 2 ESP32 -> Serial only
-// 3 ESP32 -> Wifi only
-// 4 ESP32 -> Wifi + Serial ?
-
-// load configuration
-//#define ARDUINO_SERIAL
-#define ESP32_SERIAL
-//#define ESP32_WIFI
-//#define ESP32_SERIAL_WIFI
-
-#ifdef ARDUINO_SERIAL
-#define IS_SERIAL
-#define IS_ARDUINO
-#endif
-
-#ifdef ESP32_SERIAL
-#define IS_SERIAL
-#define IS_ESP32
-#endif
-
-#ifdef ESP32_WIFI
-#define IS_WIFI
-#define IS_ESP32
-#endif
-
-#ifdef ESP32_SERIAL_WIFI
-#define IS_WIFI
-#define IS_SERIAL
-#define IS_ESP32
-#endif
-
-
-// load modules
-# ifdef IS_ESP32
-#define IS_PS3 // ESP32-only
-#define IS_ANALOGOUT// ESP32-only
-#endif
-#define IS_LASER
-#define IS_MOTOR
-
 /*
- *  Pindefintion per Setup
- */
-//#include "pindef_lightsheet.h"
+    Pindefintion per Setup
+*/
+//#include pindef_lightsheet
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 #include "pindef_STORM_Berlin.h"
+//#include "pindef_cellSTORM_cellphone.h"
 
 
-int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
-
 
 
 #ifdef IS_WIFI
@@ -101,8 +61,9 @@ int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during 
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
 // shhould not be more than 300 !!!
-//StaticJsonDocument<512> jsonDocument;
-DynamicJsonDocument jsonDocument(300);
+//StaticJsonDocument<300> jsonDocument;
+//char* content = malloc(300);
+DynamicJsonDocument jsonDocument(256);
 #else
 char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
@@ -128,10 +89,13 @@ DAC_Module *dac = new DAC_Module();
 */
 #ifdef IS_MOTOR
 #include "A4988.h"
+#include "SyncDriver.h"
 #include "motor_parameters.h"
+
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
+SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
 #endif
 
 #ifdef IS_LASER
@@ -344,12 +308,13 @@ void loop() {
 #ifdef IS_SERIAL
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
+    //free(Serial);
     if (error) {
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.f_str());
       return;
     }
-
+     Serial.flush();
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
 #ifdef IS_ARDUINO
@@ -412,7 +377,7 @@ void loop() {
     if (strcmp(task, laser_set_endpoint) == 0)
       LASER_get_fct();
     if (strcmp(task, laser_get_endpoint) == 0)
-      LASER_set_fct();
+      LASER_set_fct();      
 #endif
 
 
