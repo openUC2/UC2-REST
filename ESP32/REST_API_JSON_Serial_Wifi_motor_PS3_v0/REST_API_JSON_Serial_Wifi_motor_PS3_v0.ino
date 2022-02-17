@@ -71,7 +71,7 @@ DynamicJsonDocument jsonDocument(2048);
 String output;
 
 
-#ifdef IS_WIFI && IS_ESP32
+#ifdef IS_WIFI & IS_ESP32
 WebServer server(80);
 #endif
 
@@ -132,7 +132,7 @@ void setup(void)
   Serial.println("Start");
 
   // connect to wifi if necessary
-#ifdef IS_WIFI && IS_ESP32
+#ifdef IS_WIFI & IS_ESP32
   connectToWiFi();
   setup_routing();
 #endif
@@ -151,8 +151,8 @@ void setup(void)
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
 
-  int MOTOR_ACCEL = 5000;
-  int MOTOR_DECEL = 5000;
+  int MOTOR_ACCEL = 10000;
+  int MOTOR_DECEL = 10000;
   Serial.println("Setting Up Motor X");
   stepper_X.begin(RPM);
   stepper_X.enable();
@@ -420,7 +420,7 @@ void loop() {
   control_PS3();
 #endif
 
-#ifdef IS_WIFI && IS_ESP32
+#ifdef IS_WIFI & IS_ESP32
   server.handleClient();
 #endif
 
@@ -433,7 +433,7 @@ void loop() {
    Define Endpoints for HTTP REST API
 */
 
-#ifdef IS_WIFI && IS_ESP32
+#ifdef IS_WIFI & IS_ESP32
 void setup_routing() {
   // GET
   //  server.on("/temperature", getTemperature);
@@ -488,7 +488,7 @@ int freeMemory() {
   char top;
 #ifdef __arm__
   return &top - reinterpret_cast<char*>(sbrk(0));
-#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 & ARDUINO != 151)
   return &top - __brkval;
 #else  // __arm__
   return __brkval ? &top - __brkval : &top - __malloc_heap_start;
