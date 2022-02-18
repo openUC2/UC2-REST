@@ -1,20 +1,5 @@
-//#ifdef IS_ESP32
+#ifdef IS_ESP32
 // Based on https://github.com/krzychb/dac-cosine/blob/master/main/dac-cosine.c
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-
-
-#include "soc/rtc_io_reg.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
-#include "soc/rtc.h"
-
-#include "driver/dac.h"
-
 #include "DAC_Module.h"
 
 void DAC_Module::Stop(dac_channel_t channel) {
@@ -156,4 +141,4 @@ void DAC_Module::Setup(dac_channel_t channel, int clk_div, int frequency, int sc
     dac_output_enable(channel);
 
 }
-//#endif
+#endif

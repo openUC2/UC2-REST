@@ -4,12 +4,12 @@
  */
 #define IS_ARDUINO
 #define IS_SERIAL
-//#define IS_WIFI
-//#define IS_PS3 // ESP32-only
-//#define IS_ANALOGOUT// ESP32-only
 #define IS_LASER
 #define IS_MOTOR
 //#define IS_DAC
+//#define IS_WIFI
+//#define IS_PS3 // ESP32-only
+//#define IS_ANALOGOUT// ESP32-only
 
 
 // analog out (e.g. Lenses)
@@ -31,4 +31,4 @@ int LASER_PIN_1 = 9; // X-endstop
 int LASER_PIN_2 = 10;// Y-endstop
 int LASER_PIN_3 = 11;// Z-endstop
 
-String identifier_setup = "pindef_STORM_Berlin";
+const char* identifier_setup = "pindef_STORM_Berlin";

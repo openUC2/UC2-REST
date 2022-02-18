@@ -12,10 +12,14 @@
 static const bool ENABLE_JOYSTICK = true;
 constexpr int joystickSensitivity = 75; // for comparison with number in the range of 0-512
 
-int POSITION_MOTOR_X = 0;
-int POSITION_MOTOR_Y = 0;
-int POSITION_MOTOR_Z = 0;
+long POSITION_MOTOR_X = 0;
+long POSITION_MOTOR_Y = 0;
+long POSITION_MOTOR_Z = 0;
 
+// direction
+int SIGN_X = 1;
+int SIGN_Y = 1;
+int SIGN_Z = 1;
 
 // Motorized stage
 static const int FULLSTEPS_PER_REV_X = 200;

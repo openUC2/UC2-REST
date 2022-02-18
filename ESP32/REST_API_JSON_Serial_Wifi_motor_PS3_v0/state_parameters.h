@@ -1,4 +1,4 @@
-String identifier_name = "UC2_Feather";
-String identifier_id = "V0.1";
-String identifier_date = "2022-02-04";
-String identifier_author = "BD";
+const char*  identifier_name = "UC2_Feather";
+const char*  identifier_id = "V0.1";
+const char*  identifier_date = "2022-02-04";
+const char*  identifier_author = "BD";
