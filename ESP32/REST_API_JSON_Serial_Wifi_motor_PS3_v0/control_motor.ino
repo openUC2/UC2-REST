@@ -46,7 +46,7 @@ void motor_act_fct() {
 
   // weird error in controller?
   if (not(mposition1 == 0 and mposition2 == 0 and mposition3 == 0)) {
-    controller.rotate(mposition1, mposition2, mposition3);
+    controller.rotate(SIGN_X*mposition1, SIGN_Y*mposition2, SIGN_Z*mposition3);
   }
 
   if (not isen) digitalWrite(ENABLE, HIGH);
@@ -73,6 +73,8 @@ void motor_set_fct() {
   int pinstep = jsonDocument["pinstep"];
   int pindir = jsonDocument["pindir"];
   int isen = jsonDocument["isen"];
+  int sign = jsonDocument["sign"];
+  
 
   if (DEBUG) {
     Serial.print("currentposition "); Serial.println(currentposition);
@@ -82,6 +84,23 @@ void motor_set_fct() {
     Serial.print("pindir "); Serial.println(pindir);
     Serial.print("isen "); Serial.println(isen);
   }
+
+  if (sign != 0) {
+    if (DEBUG) Serial.print("sign "); Serial.println(sign);
+    switch (axis) {
+      case 1:
+        SIGN_X = sign;
+        break;
+      case 2:
+        SIGN_Y = sign;
+        break;
+      case 3:
+        SIGN_Z = sign;
+        break;
+        
+    }
+  }
+
 
   if (currentposition != 0) {
     if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
@@ -154,6 +173,7 @@ void motor_get_fct() {
   int mposition = 0;
   int pinstep = 0;
   int pindir = 0;
+  int sign = 0;
 
   switch (axis) {
     case 1:
@@ -163,22 +183,25 @@ void motor_get_fct() {
       mposition = POSITION_MOTOR_X;//stepper_X.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
+      sign = SIGN_X;
       break;
     case 2:
       if (DEBUG) Serial.println("AXIS 2");
       //mmaxspeed = stepper_Y.maxSpeed();
       //mspeed = stepper_Y.speed();
       mposition = POSITION_MOTOR_Y;//stepper_Y.currentPosition();
-      pinstep = STEP_X;
-      pindir = DIR_X;
+      pinstep = STEP_Y;
+      pindir = DIR_Y;
+      sign = SIGN_Y;
       break;
     case 3:
       if (DEBUG) Serial.println("AXIS 3");
       //mmaxspeed = stepper_Z.maxSpeed();
       //mspeed = stepper_Z.speed();
       mposition = POSITION_MOTOR_Z;//stepper_Z.currentPosition();
-      pinstep = STEP_X;
-      pindir = DIR_X;
+      pinstep = STEP_Z;
+      pindir = DIR_Z;
+      sign = SIGN_Z;
       break;
     default:
       break;
@@ -190,6 +213,7 @@ void motor_get_fct() {
   //jsonDocument["maxspeed"] = mmaxspeed;
   jsonDocument["pinstep"] = pinstep;
   jsonDocument["pindir"] = pindir;
+  jsonDocument["sign"] = sign;
 }
 
 
