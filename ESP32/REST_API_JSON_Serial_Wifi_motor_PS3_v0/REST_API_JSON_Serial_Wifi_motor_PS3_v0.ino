@@ -25,7 +25,6 @@
 
 */
 
-#define DEBUG 1
 // CASES:
 // 1 Arduino -> Serial only
 // 2 ESP32 -> Serial only
