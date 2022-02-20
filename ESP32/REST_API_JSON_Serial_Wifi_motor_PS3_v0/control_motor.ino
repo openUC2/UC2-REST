@@ -217,6 +217,57 @@ void motor_get_fct() {
 }
 
 
+void setup_motor(){
+  
+  /*
+     Motor related settings
+  */
+  Serial.println("Setting Up Motors");
+  pinMode(ENABLE, OUTPUT);
+  digitalWrite(ENABLE, LOW);
+
+  int MOTOR_ACCEL = 5000;
+  int MOTOR_DECEL = 5000;
+  Serial.println("Setting Up Motor X");
+  stepper_X.begin(RPM);
+  stepper_X.enable();
+  stepper_X.setMicrostep(1);
+  stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+  stepper_X.move(10);
+  stepper_X.move(-10);
+
+  Serial.println("Setting Up Motor Y");
+  stepper_Y.begin(RPM);
+  stepper_Y.enable();
+  stepper_Y.setMicrostep(1);
+  stepper_Y.setSpeedProfile(stepper_Y.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+  stepper_Y.move(10);
+  stepper_Y.move(-10);
+
+  Serial.println("Setting Up Motor Z");
+  stepper_Z.begin(RPM);
+  stepper_Z.enable();
+  stepper_Z.setMicrostep(1);
+  stepper_Z.setSpeedProfile(stepper_Z.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+  stepper_Z.move(10);
+  stepper_Z.move(-10);
+  digitalWrite(ENABLE, HIGH);
+
+  /*
+    stepper_X.setMaxSpeed(MAX_VELOCITY_X_mm * steps_per_mm_X);
+    stepper_Y.setMaxSpeed(MAX_VELOCITY_Y_mm * steps_per_mm_Y);
+    stepper_Z.setMaxSpeed(MAX_VELOCITY_Z_mm * steps_per_mm_Z);
+
+    stepper_X.setAcceleration(MAX_ACCELERATION_X_mm * steps_per_mm_X);
+    stepper_Y.setAcceleration(MAX_ACCELERATION_Y_mm * steps_per_mm_Y);
+    stepper_Z.setAcceleration(MAX_ACCELERATION_Z_mm * steps_per_mm_Z);
+
+    stepper_X.enableOutputs();
+    stepper_Y.enableOutputs();
+    stepper_Z.enableOutputs();
+  */
+}
+
 /*
 
 
