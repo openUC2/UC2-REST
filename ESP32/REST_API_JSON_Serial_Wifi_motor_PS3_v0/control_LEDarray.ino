@@ -33,17 +33,17 @@ void ledarr_set_fct() {
 
 
   if (jsonDocument["LED_ARRAY_PIN"] != 0) {
-    if (DEBUG) Serial.print("LED_ARRAY_PIN "); Serial.println(jsonDocument["LED_ARRAY_PIN"]);
+    //if (DEBUG) Serial.print("LED_ARRAY_PIN "); Serial.println(jsonDocument["LED_ARRAY_PIN"]);
     LED_ARRAY_PIN= jsonDocument["LED_ARRAY_PIN"];
   }
 
   if (jsonDocument["LED_N_X"] != 0) {
-    if (DEBUG) Serial.print("LED_N_X "); Serial.println(jsonDocument["LED_N_X"]);
+    //if (DEBUG) Serial.print("LED_N_X "); Serial.println(jsonDocument["LED_N_X"]);
     LED_N_X= jsonDocument["LED_N_X"];
   }
 
   if (jsonDocument["LED_N_Y"] != 0) {
-    if (DEBUG) Serial.print("LED_N_Y "); Serial.println(jsonDocument["LED_N_Y"]);
+    //if (DEBUG) Serial.print("LED_N_Y "); Serial.println(jsonDocument["LED_N_Y"]);
     LED_N_Y= jsonDocument["LED_N_Y"];
   }
 

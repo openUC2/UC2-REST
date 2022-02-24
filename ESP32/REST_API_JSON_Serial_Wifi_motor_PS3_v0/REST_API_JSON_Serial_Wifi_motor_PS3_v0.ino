@@ -37,7 +37,8 @@
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
 //#include "pindef_cellSTORM_cellphone.h"
-#include "pindef_cellSTORM.h"
+//#include "pindef_cellSTORM.h"
+#include "pindef_multicolour_borstel.h"
 
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
@@ -47,6 +48,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
 
+// For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
 
 #ifdef IS_WIFI
 #include <WiFi.h>
@@ -88,6 +90,9 @@ DAC_Module *dac = new DAC_Module();
 #include <Ps3Controller.h>
 #endif
 
+#ifdef IS_PS4
+#include <PS4Controller.h>
+#endif
 /*
    Register devices
 */
@@ -166,6 +171,18 @@ setup_motor();
   Serial.println("PS3 controler is set up.");
 #endif
 
+#ifdef IS_PS4
+  Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
+  //Ps4.attachOnConnect(onConnectPS4);
+  PS4.begin("1a:2b:3c:01:01:01");
+  Serial.println("PS4 controler is set up.");
+    stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
+  stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
+  stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
+#endif
+
+  
+  
 
 #ifdef IS_LASER
   Serial.println("Setting Up LASERs");
@@ -244,6 +261,9 @@ setup_motor();
 #endif
 #ifdef IS_PS3
   Serial.println("IS_PS3");
+#endif
+#ifdef IS_PS4
+  Serial.println("IS_PS4");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -403,6 +423,10 @@ void loop() {
 
 #ifdef IS_PS3
   control_PS3();
+#endif
+
+#ifdef IS_PS4
+control_PS4();
 #endif
 
 #ifdef IS_WIFI & IS_ESP32
