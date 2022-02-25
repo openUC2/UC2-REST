@@ -222,6 +222,7 @@ run_motor(0,0,3);
 
 
 void run_motor(int steps, int speed, int axis) {
+  digitalWrite(ENABLE, LOW);
   if (axis == 1) {
     stepper_X.begin(abs(speed));
     stepper_X.rotate(steps);
@@ -234,6 +235,7 @@ void run_motor(int steps, int speed, int axis) {
     stepper_Z.begin(abs(speed));
     stepper_Z.rotate(steps);
   }
+  digitalWrite(ENABLE, HIGH);
 }
 
 
