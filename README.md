@@ -37,9 +37,9 @@ Go to Tools -> Manage Libraries and add the following libraries (More informatio
 ```
 ArduinoJson (Benoit Blanchon)
 StepperDriver (by Laurentiu Badea)
+Adafruit NeoMatrix (Adafruit) and its dependency
 ```
 
-Install the necessary libraries for the LED Matrix: 
 
 
 ### PS3/PS4 controller
