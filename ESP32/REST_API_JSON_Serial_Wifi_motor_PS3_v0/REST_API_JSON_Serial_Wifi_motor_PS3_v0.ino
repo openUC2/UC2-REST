@@ -32,13 +32,15 @@
 /*
     Pindefintion per Setup
 */
-//#include pindef_lightsheet
+//#include "pindef_lightsheet.h"
+#include "pindef_lightsheet_arduino.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
 //#include "pindef_cellSTORM_cellphone.h"
 //#include "pindef_cellSTORM.h"
-#include "pindef_multicolour_borstel.h"
+//#include "pindef_multicolour_borstel.h"
+
 
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
@@ -60,7 +62,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "analogout_parameters.h"
 #endif
 
-#define IS_LEDARR
+
 
 #include <ArduinoJson.h>
 

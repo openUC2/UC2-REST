@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:uno",
+    "port": "/dev/tty.wchusbserial1440",
+    "sketch": "ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0/REST_API_JSON_Serial_Wifi_motor_PS3_v0.ino"
+}

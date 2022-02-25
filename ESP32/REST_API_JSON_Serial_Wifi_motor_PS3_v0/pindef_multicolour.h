@@ -11,6 +11,7 @@
 #define IS_LASER
 #define IS_MOTOR
 //#define IS_DAC
+#define IS_LEDARR
 
 // analog out (e.g. Lenses)
 int analogout_PIN_1 = 32;
