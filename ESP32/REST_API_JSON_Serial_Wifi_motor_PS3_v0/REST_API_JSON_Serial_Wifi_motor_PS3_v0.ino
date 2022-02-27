@@ -34,6 +34,7 @@
 */
 //#include "pindef_lightsheet.h"
 #include "pindef_lightsheet_arduino.h"
+//#include "pindef_ptychography.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
