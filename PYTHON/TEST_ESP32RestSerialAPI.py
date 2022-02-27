@@ -16,7 +16,7 @@ esp32 = ESP32Client(serialport=serialport)
 
 #%%
 for iaxis in range(3):
-    r = esp32.move_stepper(axis=2, steps=100, speed=100, is_absolute=False, is_blocking=True)
+    r = esp32.move_stepper((steps=(0, 100, 0), speed=100, is_absolute=False, is_blocking=True)
     print(r)
 
 #%%
@@ -32,7 +32,9 @@ print(r)
 r = esp32.set_galvo(dac_channel=1, frequency=1, offset=0, amplitude=0, clk_div=1000, timeout=1)
 print(r)
 
-asdf
+
+exit()
+
 #%%
 payload = {"task":"/motor_get", "axis":2}
 esp32.writeSerial(payload)
