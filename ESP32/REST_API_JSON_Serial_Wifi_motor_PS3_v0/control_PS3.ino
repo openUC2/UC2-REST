@@ -13,11 +13,7 @@ boolean stepper_1_running = false;
 boolean stepper_2_running = false;
 boolean stepper_3_running = false;
 
-static inline int8_t sgn(int val) {
-  if (val < 0) return -1;
-  if (val == 0) return 0;
-  return 1;
-}
+
 
 void onConnect() {
   if(DEBUG) Serial.println("PS3 Controller Connected.");

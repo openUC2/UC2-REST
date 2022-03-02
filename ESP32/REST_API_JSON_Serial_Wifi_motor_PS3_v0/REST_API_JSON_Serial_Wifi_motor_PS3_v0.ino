@@ -17,10 +17,14 @@
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
   move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1} 
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
+  {"task": "/motor_act", "isstop":1}  
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
+  {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_get', 'axis': 1}
+  
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
@@ -80,7 +84,7 @@ DynamicJsonDocument jsonDocument(2048);
 String output;
 
 
-#ifdef IS_WIFI & IS_ESP32
+#ifdef IS_WIFI
 WebServer server(80);
 #endif
 
@@ -107,7 +111,7 @@ DAC_Module *dac = new DAC_Module();
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
-SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
+//SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
 #endif
 
 #ifdef IS_LASER
@@ -146,9 +150,12 @@ void setup(void)
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start");
+  printInfo();
+
+  jsonDocument.clear();
 
   // connect to wifi if necessary
-#ifdef IS_WIFI & IS_ESP32
+#ifdef IS_WIFI
   connectToWiFi();
   setup_routing();
 #endif
@@ -295,7 +302,7 @@ setup_motor();
 #endif
 }
 
-
+//char *task = strdup(""); 
 char* task = "";
 
 void loop() {
@@ -432,12 +439,17 @@ void loop() {
 control_PS4();
 #endif
 
-#ifdef IS_WIFI & IS_ESP32
+#ifdef IS_WIFI
   server.handleClient();
 #endif
 
   freeMemory();
 
+#ifdef IS_MOTOR
+  if(not isblock and not isstop){
+    drive_motor_background();
+  }
+#endif
 }
 
 
@@ -445,7 +457,7 @@ control_PS4();
    Define Endpoints for HTTP REST API
 */
 
-#ifdef IS_WIFI & IS_ESP32
+#ifdef IS_WIFI
 void setup_routing() {
   // GET
   //  server.on("/temperature", getTemperature);

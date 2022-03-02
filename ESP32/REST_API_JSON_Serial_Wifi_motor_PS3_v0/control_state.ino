@@ -20,6 +20,12 @@
 #define IS_SERIAL
 #define IS_ESP32
 #endif
+
+static inline int8_t sgn(int val) {
+  if (val < 0) return -1;
+  if (val == 0) return 0;
+  return 1;
+}
  
  // Custom function accessible by the API
 void state_act_fct() {
@@ -50,7 +56,11 @@ void state_get_fct() {
   jsonDocument["identifier_setup"] = identifier_setup;
 }
 
-
+void printInfo(){
+  Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
+  Serial.println("https://github.com/openUC2/UC2-REST/");
+  Serial.println("A first try can be: \{\"task\": \"/state_get\"");
+}
 /*
    wrapper for HTTP requests
 */

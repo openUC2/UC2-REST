@@ -3,7 +3,7 @@
  */
 #define IS_ARDUINO
 #define IS_SERIAL
-#define IS_LASER
+//#define IS_LASER
 #define IS_MOTOR
 //#define IS_DAC
 //#define IS_WIFI
