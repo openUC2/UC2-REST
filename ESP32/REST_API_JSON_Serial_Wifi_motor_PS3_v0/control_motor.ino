@@ -109,13 +109,17 @@ void motor_act_fct() {
 
     if (DEBUG) Serial.println("Done with rotation");
     if (not isen) digitalWrite(ENABLE, HIGH);
-    POSITION_MOTOR_X += mposition1;
-    POSITION_MOTOR_Y += mposition2;
-    POSITION_MOTOR_Z += mposition3;
+
   }
   else {
     if (DEBUG) Serial.println("Start rotation in background");
   }
+
+  // TODO: not true for non-blocking!
+  POSITION_MOTOR_X += mposition1;
+  POSITION_MOTOR_Y += mposition2;
+  POSITION_MOTOR_Z += mposition3;
+
 
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
@@ -355,16 +359,18 @@ void drive_motor_background() {
   unsigned wait_time_y = stepper_Y.nextAction();
   unsigned wait_time_z = stepper_Z.nextAction();
 
-  if(not wait_time_x){
-    POSITION_MOTOR_X += sgn(mposition1);
-  }
-  if(not wait_time_y){
-    POSITION_MOTOR_Y += sgn(mposition2);
-  }
-  if(not wait_time_z){
-    POSITION_MOTOR_Z+= sgn(mposition3);
-  }
-  
+  /* TODO: reimplement!
+    if(not wait_time_x){
+      POSITION_MOTOR_X += sgn(mposition1);
+    }
+    if(not wait_time_y){
+      POSITION_MOTOR_Y += sgn(mposition2);
+    }
+    if(not wait_time_z){
+      POSITION_MOTOR_Z+= sgn(mposition3);
+    }
+  */
+
   if (not (wait_time_x & wait_time_y & wait_time_z)) {
     if (not isen) {
       digitalWrite(ENABLE, HIGH);
@@ -373,12 +379,9 @@ void drive_motor_background() {
   }
 }
 
+
 /*
-
-
    wrapper for HTTP requests
-
-
 */
 
 

@@ -76,9 +76,10 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 // shhould not be more than 300 !!!
 //StaticJsonDocument<300> jsonDocument;
 //char* content = malloc(300);
-DynamicJsonDocument jsonDocument(256);
+//DynamicJsonDocument jsonDocument(256);
+StaticJsonDocument<256> jsonDocument;
 #else
-char buffer[2500];
+//char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
 #endif
 String output;
@@ -323,7 +324,7 @@ void loop() {
 #else
     String task_s = jsonDocument["task"];
     char task[50];
-    task_s.toCharArray(task, 50);
+    task_s.toCharArray(task, 256);
 #endif
     //jsonDocument.garbageCollect(); // memory leak?
     /*if (task == "null") return;*/
