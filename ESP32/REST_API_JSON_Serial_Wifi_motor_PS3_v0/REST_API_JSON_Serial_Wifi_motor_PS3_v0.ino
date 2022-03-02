@@ -47,7 +47,6 @@
 //#include "pindef_multicolour_borstel.h"
 
 
-
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
@@ -67,8 +66,6 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "analogout_parameters.h"
 #endif
 
-
-
 #include <ArduinoJson.h>
 
 //Where the JSON for the current instruction lives
@@ -76,14 +73,11 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 // shhould not be more than 300 !!!
 //StaticJsonDocument<300> jsonDocument;
 //char* content = malloc(300);
-//DynamicJsonDocument jsonDocument(256);
-StaticJsonDocument<256> jsonDocument;
+DynamicJsonDocument jsonDocument(256);
+//StaticJsonDocument<256> jsonDocument;
 #else
-//char buffer[2500];
 DynamicJsonDocument jsonDocument(2048);
 #endif
-String output;
-
 
 #ifdef IS_WIFI
 WebServer server(80);
@@ -106,13 +100,11 @@ DAC_Module *dac = new DAC_Module();
 */
 #ifdef IS_MOTOR
 #include "A4988.h"
-#include "SyncDriver.h"
 #include "motor_parameters.h"
 
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
-//SyncDriver controller(stepper_X, stepper_Y, stepper_Z);
 #endif
 
 #ifdef IS_LASER
@@ -122,25 +114,42 @@ A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 /*
    Register functions
 */
-const char* laser_act_endpoint = "/laser_act";
-const char* laser_set_endpoint = "/laser_set";
-const char* laser_get_endpoint = "/laser_get";
-const char* motor_act_endpoint = "/motor_act";
-const char* motor_set_endpoint = "/motor_set";
-const char* motor_get_endpoint = "/motor_get";
-const char* dac_act_endpoint = "/dac_act";
-const char* dac_set_endpoint = "/dac_set";
-const char* dac_get_endpoint = "/dac_get";
+
+
+
 const char* state_act_endpoint = "/state_act";
 const char* state_set_endpoint = "/state_set";
 const char* state_get_endpoint = "/state_get";
+
+#ifdef IS_LASER
+const char* laser_act_endpoint = "/laser_act";
+const char* laser_set_endpoint = "/laser_set";
+const char* laser_get_endpoint = "/laser_get";
+#endif 
+
+#ifdef IS_MOTOR
+const char* motor_act_endpoint = "/motor_act";
+const char* motor_set_endpoint = "/motor_set";
+const char* motor_get_endpoint = "/motor_get";
+#endif 
+
+#ifdef IS_DAC
+const char* dac_act_endpoint = "/dac_act";
+const char* dac_set_endpoint = "/dac_set";
+const char* dac_get_endpoint = "/dac_get";
+#endif 
+
+#ifdef IS_ANALOGOUT
 const char* analogout_act_endpoint = "/analogout_act";
 const char* analogout_set_endpoint = "/analogout_set";
 const char* analogout_get_endpoint = "/analogout_get";
+#endif 
+
+#ifdef IS_LASER
 const char* ledarr_act_endpoint = "/ledarr_act";
 const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
-
+#endif
 
 
 /*
@@ -191,9 +200,7 @@ setup_motor();
   stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
   stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
 #endif
-
-  
-  
+ 
 
 #ifdef IS_LASER
   Serial.println("Setting Up LASERs");
@@ -304,7 +311,7 @@ setup_motor();
 }
 
 //char *task = strdup(""); 
-char* task = "";
+//char* task = "";
 
 void loop() {
 #ifdef IS_SERIAL
@@ -320,7 +327,8 @@ void loop() {
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
 #ifdef IS_ARDUINO
-    char* task = jsonDocument["task"];
+    const char* task = jsonDocument["task"].as<char*>();
+    //char* task = jsonDocument["task"];
 #else
     String task_s = jsonDocument["task"];
     char task[50];
@@ -444,13 +452,13 @@ control_PS4();
   server.handleClient();
 #endif
 
-  freeMemory();
-
+/*
 #ifdef IS_MOTOR
   if(not isblock and not isstop){
     drive_motor_background();
   }
 #endif
+*/
 }
 
 
@@ -507,25 +515,3 @@ void setup_routing() {
   server.begin();
 }
 #endif
-
-
-
-
-
-#ifdef __arm__
-// should use uinstd.h to define sbrk but Due causes a conflict
-extern "C" char* sbrk(int incr);
-#else  // __ARM__
-extern char *__brkval;
-#endif  // __arm__
-
-int freeMemory() {
-  char top;
-#ifdef __arm__
-  return &top - reinterpret_cast<char*>(sbrk(0));
-#elif defined(CORE_TEENSY) || (ARDUINO > 103 & ARDUINO != 151)
-  return &top - __brkval;
-#else  // __arm__
-  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
-#endif  // __arm__
-}

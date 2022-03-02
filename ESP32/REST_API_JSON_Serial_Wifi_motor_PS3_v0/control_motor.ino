@@ -120,7 +120,6 @@ void motor_act_fct() {
   POSITION_MOTOR_Y += mposition2;
   POSITION_MOTOR_Z += mposition3;
 
-
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;
