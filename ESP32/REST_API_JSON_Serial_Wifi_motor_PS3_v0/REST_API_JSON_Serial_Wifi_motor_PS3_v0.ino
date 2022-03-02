@@ -47,7 +47,7 @@
 //#include "pindef_multicolour_borstel.h"
 
 
-int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
 /*
@@ -452,13 +452,13 @@ control_PS4();
   server.handleClient();
 #endif
 
-/*
+
 #ifdef IS_MOTOR
   if(not isblock and not isstop){
     drive_motor_background();
   }
 #endif
-*/
+
 }
 
 
