@@ -370,7 +370,7 @@ void drive_motor_background() {
     }
   */
 
-  if (not (wait_time_x & wait_time_y & wait_time_z)) {
+  if (not(wait_time_x or wait_time_y or wait_time_z)) {
     if (not isen) {
       digitalWrite(ENABLE, HIGH);
       isblock = true;
