@@ -59,7 +59,7 @@ void state_get_fct() {
 void printInfo(){
   Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
   Serial.println("https://github.com/openUC2/UC2-REST/");
-  Serial.println("A first try can be: \{\"task\": \"/state_get\"");
+  //Serial.println("A first try can be: \{\"task\": \"/state_get\"");
 }
 /*
    wrapper for HTTP requests

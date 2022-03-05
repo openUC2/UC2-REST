@@ -37,13 +37,14 @@
     Pindefintion per Setup
 */
 //#include "pindef_lightsheet.h"
-#include "pindef_lightsheet_arduino.h"
+//#include "pindef_lightsheet_arduino.h"
 //#include "pindef_ptychography.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
 //#include "pindef_cellSTORM_cellphone.h"
 //#include "pindef_cellSTORM.h"
+#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 
 
@@ -81,6 +82,7 @@ DynamicJsonDocument jsonDocument(2048);
 
 #ifdef IS_WIFI
 WebServer server(80);
+char output[1000];
 #endif
 
 #ifdef IS_DAC
@@ -155,7 +157,7 @@ const char* ledarr_get_endpoint = "/ledarr_get";
 /*
    Setup
 */
-void setup(void)
+void setup()
 {
   // Start Serial
   Serial.begin(BAUDRATE);
@@ -168,6 +170,7 @@ void setup(void)
 #ifdef IS_WIFI
   connectToWiFi();
   setup_routing();
+    init_Spiffs();
 #endif
 
 
@@ -460,58 +463,3 @@ control_PS4();
 #endif
 
 }
-
-
-/*
-   Define Endpoints for HTTP REST API
-*/
-
-#ifdef IS_WIFI
-void setup_routing() {
-  // GET
-  //  server.on("/temperature", getTemperature);
-  //server.on("/env", getEnv);
-  // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
-
-  server.on(state_act_endpoint, HTTP_POST, state_act_fct_http);
-  server.on(state_get_endpoint, HTTP_POST, state_get_fct_http);
-  server.on(state_set_endpoint, HTTP_POST, state_set_fct_http);
-
-#ifdef IS_MOTOR
-  // POST
-  server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
-  server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
-  server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
-#endif
-
-#ifdef IS_DAC
-  server.on(dac_act_endpoint, HTTP_POST, dac_act_fct_http);
-  server.on(dac_get_endpoint, HTTP_POST, dac_get_fct_http);
-  server.on(dac_set_endpoint, HTTP_POST, dac_set_fct_http);
-#endif
-
-#ifdef IS_LASER
-  server.on(laser_act_endpoint, HTTP_POST, LASER_act_fct_http);
-  server.on(laser_get_endpoint, HTTP_POST, LASER_get_fct_http);
-  server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
-#endif
-
-#ifdef IS_ANALOGOUT
-  server.on(analogout_act_endpoint, HTTP_POST, analogout_act_fct_http);
-  server.on(analogout_get_endpoint, HTTP_POST, analogout_get_fct_http);
-  server.on(analogout_set_endpoint, HTTP_POST, analogout_set_fct_http);
-#endif
-
-#ifdef IS_LEDARR
-  server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
-  server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);
-  server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
-#endif
-
-
-
-
-  // start server
-  server.begin();
-}
-#endif
