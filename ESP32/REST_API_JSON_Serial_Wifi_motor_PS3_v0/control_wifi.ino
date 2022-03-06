@@ -113,71 +113,26 @@ void handleNotFound() {
 }
 
 
-void handleSwaggerJson() { //Handler for the body path
-    loadFromSPIFFS("/openapi.json");
+void handleSwaggerYaml() { //Handler for the body path
+    loadFromSPIFFS("/openapi.yaml");
 }
 
 void handleSwaggerUI() { //Handler for the body path 
     loadFromSPIFFS("/index.html");
 }
 
-
-void handlebackbone() { //Handler for the body path
-    loadFromSPIFFS("/backbone-min.js");
+    
+void handlestandalone() { 
+    loadFromSPIFFS("/swagger_standalone.js");
 }
 
-void handlehandlebars() { 
-    loadFromSPIFFS("/handlebars.min.js");
+void handleswaggerbundle() { 
+    loadFromSPIFFS("/swagger-ui-bundle.js");
 }
 
-void handlehighlight() { 
-    loadFromSPIFFS("/highlight.min.js");
+void handleswaggercss() { 
+    loadFromSPIFFS("/swagger-ui.css");
 }
-
-void handlethrobber() { 
-    loadFromSPIFFS("/images/throbber.gif");
-}
-
-void handlejquery() { 
-    loadFromSPIFFS("/jquery-1.8.0.min.js");
-}
-
-void handlejquerybbq() { 
-    loadFromSPIFFS("/jquery.ba-bbq.min.js");
-}
-
-void handlejson() { 
-    loadFromSPIFFS("/json.min.js");
-}
-
-void handlejsoneditor() { 
-    loadFromSPIFFS("/jsoneditor.min.js");
-}
-
-void handlelodash() { 
-    loadFromSPIFFS("/lodash.min.js");
-}
-
-void handlelogo_small() { 
-    loadFromSPIFFS("/logo_small.png");
-}
-
-void handlemarked() { 
-    loadFromSPIFFS("/marked.min.js");
-}
-
-void handlereset() { 
-    loadFromSPIFFS("/reset.min.css");
-}
-
-void handlescreen() { 
-    loadFromSPIFFS("/screen.css");
-}
-
-void handleswaggerui() { 
-    loadFromSPIFFS("/swagger-ui.min.js");
-}
-
 
 
 /*
@@ -196,9 +151,15 @@ void setup_routing() {
   server.on(state_set_endpoint, HTTP_POST, state_set_fct_http);
 
   // Website
-  server.on("/openapi.json", handleSwaggerJson);
+  server.on("/openapi.yaml", handleSwaggerYaml);
   server.on("/index.html", handleSwaggerUI);
-  server.on("/backbone-min.js", handlebackbone);
+  server.on("/swagger_standalone.js", handlestandalone);
+  server.on("/swagger-ui-bundle.js", handleswaggerbundle);
+  server.on("/swagger-ui.css", handleswaggercss);
+
+
+  /*
+   * server.on("/backbone-min.js", handlebackbone);
   server.on("/handlebars.min.js", handlehandlebars);
   server.on("/highlight.min.js", handlehighlight);
   server.on("/images/throbber.gif", handlethrobber);
@@ -212,11 +173,12 @@ void setup_routing() {
   server.on("/reset.min.css", handlereset);
   server.on("/screen.css", handlescreen);
   server.on("/swagger-ui.min.js", handleswaggerui);
+  */
 
 
 #ifdef IS_MOTOR
   // POST
-  server.on(motor_act_endpoint, HTTP_POST, x);
+  server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
 #endif

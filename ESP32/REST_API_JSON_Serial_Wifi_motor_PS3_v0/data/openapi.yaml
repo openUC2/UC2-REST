@@ -11,57 +11,71 @@ tags:
 paths:
   /motor_act:
     post:
-      tags:
+      tags: 
         - Motors
       summary: Endpoint for controlling the motor
       operationId: state_act_fct_http
-      parameters:
-        - name: speed
-          in: query
-          schema: {}
-        - name: pos1
-          in: query
-          schema: {}
-        - name: pos2
-          in: query
-          schema: {}
-        - name: pos3
-          in: query
-          schema: {}
-        - name: isabs
-          in: query
-          schema: {}
-        - name: isblock
-          in: query
-          schema: {}
-        - name: isen
-          in: query
-          schema: {}
+      description: Move the microscope in XYZ
+      requestBody:
+        description: Specify the place to move to (as a point) and the thing to move (combining motion target, mount, and model if necessary)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - speed
+                - pos1
+                - pos2
+                - pos3
+                - isabs
+                - isblock
+                - isen
+              properties:
+                speed:
+                  type: number
+                pos1:
+                  type: number
+                pos2:
+                  type: number
+                pos3:
+                  type: number
+                isabs:
+                  type: number
+                isblock:
+                  type: number
+                isen: 
+                  type: number
+            examples:
+              moveXYZ:
+                description: Move the microscope in xyz.
+                summary: Move in XYZ
+                value:
+                  speed: 1000
+                  pos1: 1000
+                  pos2: 2000
+                  pos3: 3000
+                  isabs: 1
+                  isblock: 0
+                  isen: 0
+                   
       responses:
         '200':
-          description: Current Position
+          description: Move successfully executed
           content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/act_motor'
+            application/json:
+              example:
+                message: 'Move copmlete. New position: (25, 25, 50)'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              example:
+                message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
+        
+
 components:
   schemas:
     act_motor:
       type: object
-      properties:
-        speed:
-          type: number
-        timestamp:
-          type: number
-        pos1:
-          type: number
-        pos2:
-          type: number
-        pos3:
-          type: number
-        isabs:
-          type: number
-        isblock:
-          type: number
-        isen:
-          type: number
+

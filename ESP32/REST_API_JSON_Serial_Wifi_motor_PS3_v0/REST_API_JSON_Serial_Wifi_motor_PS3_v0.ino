@@ -10,21 +10,21 @@
   --
 
   {"task": "/state_set", "isdebug":0}
-  
-  
+
+
 
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
   move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1} 
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
-  {"task": "/motor_act", "isstop":1}  
+  {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_get', 'axis': 1}
-  
+
 
   operate the analog out
   {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
@@ -127,25 +127,25 @@ const char* state_get_endpoint = "/state_get";
 const char* laser_act_endpoint = "/laser_act";
 const char* laser_set_endpoint = "/laser_set";
 const char* laser_get_endpoint = "/laser_get";
-#endif 
+#endif
 
 #ifdef IS_MOTOR
 const char* motor_act_endpoint = "/motor_act";
 const char* motor_set_endpoint = "/motor_set";
 const char* motor_get_endpoint = "/motor_get";
-#endif 
+#endif
 
 #ifdef IS_DAC
 const char* dac_act_endpoint = "/dac_act";
 const char* dac_set_endpoint = "/dac_set";
 const char* dac_get_endpoint = "/dac_get";
-#endif 
+#endif
 
 #ifdef IS_ANALOGOUT
 const char* analogout_act_endpoint = "/analogout_act";
 const char* analogout_set_endpoint = "/analogout_set";
 const char* analogout_get_endpoint = "/analogout_get";
-#endif 
+#endif
 
 #ifdef IS_LASER
 const char* ledarr_act_endpoint = "/ledarr_act";
@@ -170,7 +170,7 @@ void setup()
 #ifdef IS_WIFI
   connectToWiFi();
   setup_routing();
-    init_Spiffs();
+  init_Spiffs();
 #endif
 
 
@@ -184,7 +184,7 @@ void setup()
 #endif
 
 #ifdef IS_MOTOR
-setup_motor();
+  setup_motor();
 #endif
 
 #ifdef IS_PS3
@@ -199,11 +199,11 @@ setup_motor();
   //Ps4.attachOnConnect(onConnectPS4);
   PS4.begin("1a:2b:3c:01:01:01");
   Serial.println("PS4 controler is set up.");
-    stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
+  stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
   stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
   stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
 #endif
- 
+
 
 #ifdef IS_LASER
   Serial.println("Setting Up LASERs");
@@ -313,7 +313,7 @@ setup_motor();
 #endif
 }
 
-//char *task = strdup(""); 
+//char *task = strdup("");
 //char* task = "";
 
 void loop() {
@@ -326,7 +326,7 @@ void loop() {
       Serial.println(error.f_str());
       return;
     }
-     Serial.flush();
+    Serial.flush();
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
 #ifdef IS_ARDUINO
@@ -390,7 +390,7 @@ void loop() {
     if (strcmp(task, laser_set_endpoint) == 0)
       LASER_get_fct();
     if (strcmp(task, laser_get_endpoint) == 0)
-      LASER_set_fct();      
+      LASER_set_fct();
 #endif
 
 
@@ -409,7 +409,7 @@ void loop() {
 
 
     /*
-      Drive LED Matrix 
+      Drive LED Matrix
     */
 #ifdef IS_LEDARR
     if (strcmp(task, ledarr_act_endpoint) == 0)
@@ -433,14 +433,14 @@ void loop() {
 #endif
 
 
-// attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
+  // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-    if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-      LASER_despeckle(LASER_despeckle_1, 1);
-    if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-      LASER_despeckle(LASER_despeckle_2, 2);
-    if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-      LASER_despeckle(LASER_despeckle_3, 3);
+  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
+    LASER_despeckle(LASER_despeckle_1, 1);
+  if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
+    LASER_despeckle(LASER_despeckle_2, 2);
+  if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
+    LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
 #ifdef IS_PS3
@@ -448,7 +448,7 @@ void loop() {
 #endif
 
 #ifdef IS_PS4
-control_PS4();
+  control_PS4();
 #endif
 
 #ifdef IS_WIFI
@@ -457,7 +457,7 @@ control_PS4();
 
 
 #ifdef IS_MOTOR
-  if(not isblock and not isstop){
+  if (not isblock and not isstop) {
     drive_motor_background();
   }
 #endif
