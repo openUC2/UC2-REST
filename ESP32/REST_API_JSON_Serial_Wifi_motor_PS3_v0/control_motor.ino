@@ -388,6 +388,7 @@ void drive_motor_background() {
 void motor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
+  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
   motor_act_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
@@ -397,6 +398,7 @@ void motor_act_fct_http() {
 void motor_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
+  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
   motor_get_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
@@ -406,6 +408,7 @@ void motor_get_fct_http() {
 void motor_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
+  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
   motor_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);

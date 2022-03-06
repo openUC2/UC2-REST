@@ -1,0 +1,67 @@
+openapi: 3.0.1
+info:
+  title: IoT application
+  description: This is a sample server Petstore server.
+  version: 1.0.0
+servers:
+  - url: /
+tags:
+  - name: Temperature
+    description: Getting temperature measurements
+paths:
+  /motor_act:
+    post:
+      tags:
+        - Motors
+      summary: Endpoint for controlling the motor
+      operationId: state_act_fct_http
+      parameters:
+        - name: speed
+          in: query
+          schema: {}
+        - name: pos1
+          in: query
+          schema: {}
+        - name: pos2
+          in: query
+          schema: {}
+        - name: pos3
+          in: query
+          schema: {}
+        - name: isabs
+          in: query
+          schema: {}
+        - name: isblock
+          in: query
+          schema: {}
+        - name: isen
+          in: query
+          schema: {}
+      responses:
+        '200':
+          description: Current Position
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/act_motor'
+components:
+  schemas:
+    act_motor:
+      type: object
+      properties:
+        speed:
+          type: number
+        timestamp:
+          type: number
+        pos1:
+          type: number
+        pos2:
+          type: number
+        pos3:
+          type: number
+        isabs:
+          type: number
+        isblock:
+          type: number
+        isen:
+          type: number

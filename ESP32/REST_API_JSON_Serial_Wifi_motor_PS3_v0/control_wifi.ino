@@ -151,7 +151,7 @@ void handlejson() {
 }
 
 void handlejsoneditor() { 
-    loadFromSPIFFS("/jsoneditor.min.js",);
+    loadFromSPIFFS("/jsoneditor.min.js");
 }
 
 void handlelodash() { 
@@ -216,7 +216,7 @@ void setup_routing() {
 
 #ifdef IS_MOTOR
   // POST
-  server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
+  server.on(motor_act_endpoint, HTTP_POST, x);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
 #endif
