@@ -72,6 +72,109 @@ paths:
             application/json:
               example:
                 message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
+  /motor_set:
+    post:
+      tags: 
+        - Motors
+      summary: Endpoint for chhanging Motor settings
+      operationId: state_set_fct_http
+      description: Chhange motor settings 
+      requestBody:
+        description: Specify the place to move to (as a point) and the thing to move (combining motion target, mount, and model if necessary)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - axis
+              properties:
+                axis:
+                  type: number
+                maxspeed:
+                  type: number
+                currentposition:
+                  type: number
+                acceleration:
+                  type: number
+                pinstep:
+                  type: number
+                pindir:
+                  type: number
+                isen: 
+                  type: number
+                accel:
+                  type: number
+                deccel: 
+                  type: number                  
+            examples:
+              setX:
+                description: Set some parameters for the motor X
+                summary: Change settings X 
+                value:
+                  axis: 1
+                  maxspeed: 10000
+                  currentposition: 100
+                  acceleration: 1000
+                  pinstep: 2
+                  pindir: 3
+                  isen: 0
+                  accel: 1000
+                  deccel: 1000
+                   
+      responses:
+        '200':
+          description: Settings successfully updated
+          content:
+            application/json:
+              example:
+                message: 'Move copmlete. New position: (25, 25, 50)'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              example:
+                message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
+  /motor_get:
+    get:
+      tags: 
+        - Motors
+      summary: Endpoint for getting Motor settings
+      operationId: state_get_fct_http
+      description: Get motor settings 
+      requestBody:
+        description: Specify the place to move to (as a point) and the thing to move (combining motion target, mount, and model if necessary)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - axis
+              properties:
+                axis:
+                  type: number
+            examples:
+              getX:
+                description: Get some parameters for the motor X
+                summary: Get settings X 
+                value:
+                  axis: 1
+      responses:
+        '200':
+          description: Settings successfully updated
+          content:
+            application/json:
+              example:
+                message: 'Move copmlete. New position: (25, 25, 50)'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              example:
+                message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
+        
+        
         
 
 components:
