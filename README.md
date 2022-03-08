@@ -1,3 +1,8 @@
+
+<p align="left">
+<a href="#logo" name="logo"><img src="https://raw.githubusercontent.com/bionanoimaging/UC2-GIT/master/IMAGES/UC2_logo_text.png" width="400"></a>
+</p>
+
 # UC2 REST API
 
 This is the playground to start development of using UC2 modules using the HTTP REST API. 
@@ -67,6 +72,7 @@ The instructions on how to do this are base off what can be found [here](https:/
     1. In the Arduino IDE, navigate to `Sketch -> Include Library -> Add .ZIP Library`, then select the file you just downloaded 
 
 ### Pairing the PS4 Controller:
+
 When a PS4 controller is 'paired' to a PS4 console, it just means that it has stored the console's Bluetooth MAC address, which is the only device the controller will connect to. Usually, this pairing happens when you connect the controller to the PS4 console using a USB cable, and press the PS button. This initiates writing the console's MAC address to the controller.
 
 Therefore, if you want to connect your PS4 controller to the ESP32, you either need to figure out what the Bluetooth MAC address of your PS4 console is and set the ESP32's address to it, or change the MAC address stored in the PS4 controller.
@@ -74,6 +80,7 @@ Therefore, if you want to connect your PS4 controller to the ESP32, you either n
 Whichever path you choose, you might want a tool to read and/or write the currently paired MAC address from the PS4 controller. You can try using [sixaxispairer](https://github.com/user-none/sixaxispairer) for this purpose.
 
 If you opted to change the ESP32's MAC address, you'll need to include the ip address in the ```PS4.begin()``` function during within the ```setup()``` Arduino function like below where ```1a:2b:3c:01:01:01``` is the MAC address (**note that MAC address must be unicast**):
+
 ```
 void setup()
 {
@@ -85,14 +92,16 @@ void setup()
 
 
 
-
-
 ### Compile and Upload Arduino Firmware
 
 - Download this repository following this [link](https://github.com/openUC2/UC2-REST/archive/refs/heads/master.zip)
 - Go to the folder that contains the file `REST_API_JSON_Serial_Wifi_motor_PS3_v0.ino` in [.ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0](https://github.com/openUC2/UC2-REST/tree/master/ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0)
 - Select the board you want to install it to (e.g. Arduino or ESP32 from the Boardmanager) 
-- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab *REST_API_JSON_Serial_Wifi_motor_PS3_v0*)
+- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab 
+*REST_API_JSON_Serial_Wifi_motor_PS3_v0* )
+
+
+
 ```
  // CASES:
 // 1 Arduino -> Serial only
@@ -154,6 +163,12 @@ serialport = "COM3"
 - In case of an error, file an Issue here 
 
 
+## UC2 and ImSwitch
+
+The device adapter in [PYTHON/ESP32RestSerialAPI.py](PYTHON/ESP32RestSerialAPI.py) is integrated into the open-source control and visualization software ImSwitch. A customized fork for UC2 can be found [here](https://github.com/beniroquai/ImSwitch/tree/master/imswitch/). 
+
+In order to get it working, please follow the steps in the dedicated [README](https://github.com/beniroquai/ImSwitch/tree/master/imswitch/)
+
 ## API defintion
 
 This will come soon. 
@@ -170,3 +185,13 @@ In principle, every actuator/sensor should have three comonents:
 - DAC (e.g. function generator for Galvos)
 - Laser (e.g. TTL)
 - State (e.g. information from the board) 
+
+### Accessing the Swagger UI 
+
+This is an experimental feature. You can access the REST API from the Swagger UI in your browser by opening the browser and connect to the ESP32 presumingly both are in the same network. 
+
+<p align="center">
+<a href="#logo" name="logo"><img src="./IMAGES/Swagger1.png"></a>
+</p>
+
+
