@@ -1,5 +1,5 @@
 
-#include "state_parameters.h"
+#include "parameters_state.h"
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
 #define IS_ARDUINO
@@ -31,6 +31,13 @@ static inline int8_t sgn(int val) {
 void state_act_fct() {
   // here you can do something
   Serial.println("state_act_fct");
+
+    // assign default values to thhe variables
+  if (jsonDocument.containsKey("delay")) {
+    mspeed = jsonDocument["delay"];
+  }
+
+
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }

@@ -60,11 +60,11 @@ int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_WIFI
 #include <WiFi.h>
 #include <WebServer.h>
-#include "wifi_parameters.h"
+#include "parameters_wifi.h"
 #endif
 
 #ifdef IS_ANALOGOUT
-#include "analogout_parameters.h"
+#include "parameters_analogout.h"
 #endif
 
 #include <ArduinoJson.h>
@@ -102,7 +102,7 @@ DAC_Module *dac = new DAC_Module();
 */
 #ifdef IS_MOTOR
 #include "A4988.h"
-#include "motor_parameters.h"
+#include "parameters_motort.h"
 
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
@@ -110,7 +110,7 @@ A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 #endif
 
 #ifdef IS_LASER
-#include "LASER_parameters.h"
+#include "parameters_laser.h"
 #endif
 
 /*

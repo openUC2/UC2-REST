@@ -11,11 +11,11 @@
 #define IS_MOTOR
 //#define IS_DAC
 
-//const char *mSSID = "Blynk"; //"BenMur"; //
-//const char *mPWD = "12345678"; // "MurBen3128";//
+const char *mSSID = "Blynk"; //"BenMur"; //
+const char *mPWD = "12345678"; // "MurBen3128";//
 
-const char *mSSID = "ATTNVezUEM";
-const char *mPWD = "t8bfmze5a#id";
+//const char *mSSID = "ATTNVezUEM";
+//const char *mPWD = "t8bfmze5a#id";
 
 
 String identifier_setup = "cellSTORM"; 
