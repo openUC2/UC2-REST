@@ -28,10 +28,10 @@
 
 
   operate the analog out
-  {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
+  {"task": "/analog_act", "analogid": 1, "analogval":1000}
 
  operate the digital out
-  {"task": "/digitalout_act", "digitalid": 1, "digitalval":1}
+  {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
@@ -44,13 +44,14 @@
   move motor, wait, take picture cam 1/2, wait, move motor..
   {
   "task": "multitable",
-  "task_n": 5,
+  "task_n": 9,
+  "repeats_n": 5,
   "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
   "1": {"task": "/state_act", "delay": 1000},
-  "2": {"task": "/digitalout_act", "digitalid": 1, "digitalval":1},
-  "3": {"task": "/digitalout_act", "digitalid": 1, "digitalval":0},
-  "4": {"task": "/digitalout_act", "digitalid": 2, "digitalval":1},
-  "5": {"task": "/digitalout_act", "digitalid": 2, "digitalval":0},
+  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
+  "3": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
+  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
+  "5": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
   "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
   "7": {"task": "/state_act", "delay": 1000},
   "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
@@ -76,7 +77,7 @@
 //#include "pindef_multicolour_borstel.h"
 
 
-int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
 /*
@@ -91,11 +92,11 @@ int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during 
 #include "parameters_wifi.h"
 #endif
 
-#ifdef IS_ANALOGOUT
-#include "parameters_analogout.h"
+#ifdef IS_ANALOG
+#include "parameters_analog.h"
 #endif
-#ifdef IS_DIGITALOUT
-#include "parameters_digitalout.h"
+#ifdef IS_DIGITAL
+#include "parameters_digital.h"
 #endif
 
 #include <ArduinoJson.h>
@@ -172,16 +173,16 @@ const char* dac_set_endpoint = "/dac_set";
 const char* dac_get_endpoint = "/dac_get";
 #endif
 
-#ifdef IS_ANALOGOUT
-const char* analogout_act_endpoint = "/analogout_act";
-const char* analogout_set_endpoint = "/analogout_set";
-const char* analogout_get_endpoint = "/analogout_get";
+#ifdef IS_ANALOG
+const char* analog_act_endpoint = "/analog_act";
+const char* analog_set_endpoint = "/analog_set";
+const char* analog_get_endpoint = "/analog_get";
 #endif
 
-#ifdef IS_DIGITALOUT
-const char* digitalout_act_endpoint = "/digitalout_act";
-const char* digitalout_set_endpoint = "/digitalout_set";
-const char* digitalout_get_endpoint = "/digitalout_get";
+#ifdef IS_DIGITAL
+const char* digital_act_endpoint = "/digital_act";
+const char* digital_set_endpoint = "/digital_set";
+const char* digital_get_endpoint = "/digital_get";
 #endif
 
 #ifdef IS_LASER
@@ -292,29 +293,29 @@ void setup()
 #endif
 
 
-#ifdef IS_ANALOGOUT
-  Serial.println("Setting Up ANALOGOUT");
+#ifdef IS_ANALOG
+  Serial.println("Setting Up analog");
   /* setup the PWM ports and reset them to 0*/
-  ledcSetup(PWM_CHANNEL_analogout_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analogout_PIN_1, PWM_CHANNEL_analogout_1);
-  ledcWrite(PWM_CHANNEL_analogout_1, 0);
+  ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
+  ledcWrite(PWM_CHANNEL_analog_1, 0);
 
-  ledcSetup(PWM_CHANNEL_analogout_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analogout_PIN_2, PWM_CHANNEL_analogout_2);
-  ledcWrite(PWM_CHANNEL_analogout_2, 0);
+  ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
+  ledcWrite(PWM_CHANNEL_analog_2, 0);
 #endif
 
-#ifdef IS_DIGITALANALOGOUT
-  Serial.println("Setting Up DIGITALOUT");
+#ifdef IS_DIGITALanalog
+  Serial.println("Setting Up digital");
   /* setup the output nodes and reset them to 0*/
-  pinMode(digitalout_PIN_1, OUTPUT);
-  digitalWrite(digitalout_PIN_1, LOW);
+  pinMode(digital_PIN_1, OUTPUT);
+  digitalWrite(digital_PIN_1, LOW);
 
-  pinMode(digitalout_PIN_2, OUTPUT);
-  digitalWrite(digitalout_PIN_2, LOW);
+  pinMode(digital_PIN_2, OUTPUT);
+  digitalWrite(digital_PIN_2, LOW);
 
-  pinMode(digitalout_PIN_3, OUTPUT);
-  digitalWrite(digitalout_PIN_3, LOW);
+  pinMode(digital_PIN_3, OUTPUT);
+  digitalWrite(digital_PIN_3, LOW);
 
 #endif
 
@@ -353,15 +354,15 @@ void setup()
   Serial.println(laser_get_endpoint);
   Serial.println(laser_set_endpoint);
 #endif
-#ifdef IS_ANALOGOUT
-  Serial.println(analogout_act_endpoint);
-  Serial.println(analogout_get_endpoint);
-  Serial.println(analogout_set_endpoint);
+#ifdef IS_ANALOG
+  Serial.println(analog_act_endpoint);
+  Serial.println(analog_get_endpoint);
+  Serial.println(analog_set_endpoint);
 #endif
 #ifdef IS_DIGITALGOUT
-  Serial.println(digitalout_act_endpoint);
-  Serial.println(digitalout_get_endpoint);
-  Serial.println(digitalout_set_endpoint);
+  Serial.println(digital_act_endpoint);
+  Serial.println(digital_get_endpoint);
+  Serial.println(digital_set_endpoint);
 #endif
 #ifdef IS_LEDARR
   Serial.println(ledarr_act_endpoint);
@@ -499,28 +500,28 @@ void jsonProcessor(char task[]) {
 
 
   /*
-    Drive Analogout
+    Drive analog
   */
-#ifdef IS_ANALOGOUT
-  if (strcmp(task, analogout_act_endpoint) == 0)
-    analogout_act_fct();
-  if (strcmp(task, analogout_set_endpoint) == 0)
-    analogout_set_fct();
-  if (strcmp(task, analogout_get_endpoint) == 0)
-    analogout_get_fct();
+#ifdef IS_ANALOG
+  if (strcmp(task, analog_act_endpoint) == 0)
+    analog_act_fct();
+  if (strcmp(task, analog_set_endpoint) == 0)
+    analog_set_fct();
+  if (strcmp(task, analog_get_endpoint) == 0)
+    analog_get_fct();
 #endif
 
 
   /*
-    Drive Digitalout
+    Drive digital
   */
-#ifdef IS_DIGITALOUT
-  if (strcmp(task, digitalout_act_endpoint) == 0)
-    digitalout_act_fct();
-  if (strcmp(task, digitalout_set_endpoint) == 0)
-    digitalout_set_fct();
-  if (strcmp(task, digitalout_get_endpoint) == 0)
-    digitalout_get_fct();
+#ifdef IS_DIGITAL
+  if (strcmp(task, digital_act_endpoint) == 0)
+    digital_act_fct();
+  if (strcmp(task, digital_set_endpoint) == 0)
+    digital_set_fct();
+  if (strcmp(task, digital_get_endpoint) == 0)
+    digital_get_fct();
 #endif
 
 
@@ -556,11 +557,15 @@ void tableProcessor() {
 
   // 2. now we need to extract the indidvidual tasks
   int N_tasks = tmpJsonDoc["task_n"];
+  int N_repeats = tmpJsonDoc["repeats_n"];
 
-  Serial.println("Ntasks");
+  Serial.println("N_tasks");
   Serial.println(N_tasks);
+  Serial.println("N_repeats");
+  Serial.println(N_repeats);
 
- 
+
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
   for (int itask = 0; itask < N_tasks; itask++) {
   char json_string[256];  
     // Hacky, but should work
@@ -582,6 +587,7 @@ void tableProcessor() {
     
     jsonProcessor(task);
 
+  }
   }
   tmpJsonDoc.clear();
 

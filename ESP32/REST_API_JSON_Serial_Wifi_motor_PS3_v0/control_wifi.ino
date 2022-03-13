@@ -195,16 +195,16 @@ void setup_routing() {
   server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
 #endif
 
-#ifdef IS_ANALOGOUT
-  server.on(analogout_act_endpoint, HTTP_POST, analogout_act_fct_http);
-  server.on(analogout_get_endpoint, HTTP_POST, analogout_get_fct_http);
-  server.on(analogout_set_endpoint, HTTP_POST, analogout_set_fct_http);
+#ifdef IS_ANALOG
+  server.on(analog_act_endpoint, HTTP_POST, analog_act_fct_http);
+  server.on(analog_get_endpoint, HTTP_POST, analog_get_fct_http);
+  server.on(analog_set_endpoint, HTTP_POST, analog_set_fct_http);
 #endif
 
-#ifdef IS_DIGITALOUT
-  server.on(digitalout_act_endpoint, HTTP_POST, digitalout_act_fct_http);
-  server.on(digitalout_get_endpoint, HTTP_POST, digitalout_get_fct_http);
-  server.on(digitalout_set_endpoint, HTTP_POST, digitalout_set_fct_http);
+#ifdef IS_DIGITAL
+  server.on(digital_act_endpoint, HTTP_POST, digital_act_fct_http);
+  server.on(digital_get_endpoint, HTTP_POST, digital_get_fct_http);
+  server.on(digital_set_endpoint, HTTP_POST, digital_set_fct_http);
 #endif
 
 #ifdef IS_LEDARR

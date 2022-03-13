@@ -1,57 +1,57 @@
-#ifdef IS_DIGITALOUT
+#ifdef IS_DIGITAL
 
 // Custom function accessible by the API
-void digitalout_act_fct() {
+void digital_act_fct() {
   // here you can do something
-  Serial.println("digitalout_act_fct");
+  Serial.println("digital_act_fct");
 
-  int digitaloutid = jsonDocument["digitaloutid"];
-  int digitaloutval = jsonDocument["digitaloutval"];
+  int digitalid = jsonDocument["digitalid"];
+  int digitalval = jsonDocument["digitalval"];
 
   if (DEBUG) {
-    Serial.print("digitaloutid "); Serial.println(digitaloutid);
-    Serial.print("digitaloutval "); Serial.println(digitaloutval);
+    Serial.print("digitalid "); Serial.println(digitalid);
+    Serial.print("digitalval "); Serial.println(digitalval);
   }
 
-  if (digitaloutid == 1) {
-    digitalout_val_1 = digitaloutval;
-    digitalWrite(digitalout_PIN_1, digitalout_val_1);
+  if (digitalid == 1) {
+    digital_val_1 = digitalval;
+    digitalWrite(digital_PIN_1, digital_val_1);
   }
-  else if (digitaloutid == 2) {
-    digitalout_val_2 = digitaloutval;
-    digitalWrite(digitalout_PIN_3, digitalout_val_2);
+  else if (digitalid == 2) {
+    digital_val_2 = digitalval;
+    digitalWrite(digital_PIN_3, digital_val_2);
   }
-  else if (digitaloutid == 3) {
-    digitalout_val_3 = digitaloutval;
-    digitalWrite(digitalout_PIN_3, digitalout_val_3);
+  else if (digitalid == 3) {
+    digital_val_3 = digitalval;
+    digitalWrite(digital_PIN_3, digital_val_3);
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
 
-void digitalout_set_fct() {
+void digital_set_fct() {
   // here you can set parameters
-  int digitaloutid = jsonDocument["digitaloutid"];
-  int digitaloutpin = jsonDocument["digitaloutpin"];
+  int digitalid = jsonDocument["digitalid"];
+  int digitalpin = jsonDocument["digitalpin"];
 
-  if (DEBUG) Serial.print("digitaloutid "); Serial.println(digitaloutid);
-  if (DEBUG) Serial.print("digitaloutpin "); Serial.println(digitaloutpin);
+  if (DEBUG) Serial.print("digitalid "); Serial.println(digitalid);
+  if (DEBUG) Serial.print("digitalpin "); Serial.println(digitalpin);
 
-  if (digitaloutid != NULL and digitaloutpin != NULL) {
-    if (digitaloutid == 1) {
-      digitalout_PIN_1 = digitaloutpin;
-      pinMode(digitalout_PIN_1, OUTPUT);
-      digitalWrite(digitalout_PIN_1, LOW);
+  if (digitalid != NULL and digitalpin != NULL) {
+    if (digitalid == 1) {
+      digital_PIN_1 = digitalpin;
+      pinMode(digital_PIN_1, OUTPUT);
+      digitalWrite(digital_PIN_1, LOW);
     }
-    else if (digitaloutid == 2) {
-      digitalout_PIN_2 = digitaloutpin;
-      pinMode(digitalout_PIN_2, OUTPUT);
-      digitalWrite(digitalout_PIN_2, LOW);
+    else if (digitalid == 2) {
+      digital_PIN_2 = digitalpin;
+      pinMode(digital_PIN_2, OUTPUT);
+      digitalWrite(digital_PIN_2, LOW);
     }
-    else if (digitaloutid == 3) {
-      digitalout_PIN_3 = digitaloutpin;
-      pinMode(digitalout_PIN_3, OUTPUT);
-      digitalWrite(digitalout_PIN_3, LOW);
+    else if (digitalid == 3) {
+      digital_PIN_3 = digitalpin;
+      pinMode(digital_PIN_3, OUTPUT);
+      digitalWrite(digital_PIN_3, LOW);
   }
 }
 
@@ -61,34 +61,34 @@ jsonDocument["return"] = 1;
 }
 
 // Custom function accessible by the API
-void digitalout_get_fct() {
+void digital_get_fct() {
   // GET SOME PARAMETERS HERE
-  int digitaloutid = jsonDocument["digitaloutid"];
-  int digitaloutpin = 0;
-  int digitaloutval = 0;
+  int digitalid = jsonDocument["digitalid"];
+  int digitalpin = 0;
+  int digitalval = 0;
 
-  if (digitaloutid == 1) {
-    if (DEBUG) Serial.println("digitalout 1");
-    digitaloutpin = digitalout_PIN_1;
-    digitaloutval = digitalout_val_1;
+  if (digitalid == 1) {
+    if (DEBUG) Serial.println("digital 1");
+    digitalpin = digital_PIN_1;
+    digitalval = digital_val_1;
   }
-  else if (digitaloutid == 2) {
+  else if (digitalid == 2) {
     if (DEBUG) Serial.println("AXIS 2");
-    if (DEBUG) Serial.println("digitalout 2");
-    digitaloutpin = digitalout_PIN_2;
-    digitaloutval = digitalout_val_2;
+    if (DEBUG) Serial.println("digital 2");
+    digitalpin = digital_PIN_2;
+    digitalval = digital_val_2;
   }
-  else if (digitaloutid == 3) {
+  else if (digitalid == 3) {
     if (DEBUG) Serial.println("AXIS 3");
-    if (DEBUG) Serial.println("digitalout 1");
-    digitaloutpin = digitalout_PIN_3;
-    digitaloutval = digitalout_val_3;
+    if (DEBUG) Serial.println("digital 1");
+    digitalpin = digital_PIN_3;
+    digitalval = digital_val_3;
   }
 
   jsonDocument.clear();
-  jsonDocument["digitaloutid"] = digitaloutid;
-  jsonDocument["digitaloutval"] = digitaloutval;
-  jsonDocument["digitaloutpin"] = digitaloutpin;
+  jsonDocument["digitalid"] = digitalid;
+  jsonDocument["digitalval"] = digitalval;
+  jsonDocument["digitalpin"] = digitalpin;
 }
 
 
@@ -96,28 +96,28 @@ void digitalout_get_fct() {
   wrapper for HTTP requests
 */
 #ifdef IS_WIFI
-void digitalout_act_fct_http() {
+void digital_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  digitalout_act_fct();
+  digital_act_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void digitalout_get_fct_http() {
+void digital_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  digitalout_get_fct();
+  digital_get_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void digitalout_set_fct_http() {
+void digital_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-  digitalout_set_fct();
+  digital_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }

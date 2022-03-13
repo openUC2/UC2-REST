@@ -122,57 +122,57 @@ run_motor(0,0,3);
         */
         if ( Ps3.data.button.left) {
           // fine lens -
-          analogout_val_1 -= 1;
+          analog_val_1 -= 1;
           delay(100);
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
         if ( Ps3.data.button.right) {
           // fine lens +
-          analogout_val_1 += 1;
+          analog_val_1 += 1;
           delay(100);
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
         if ( Ps3.data.button.start) {
           // reset
-          analogout_val_1 = 0;
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          analog_val_1 = 0;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
     
         int offset_val_shoulder = 5;
         if ( abs(Ps3.data.analog.button.r2) > offset_val_shoulder) {
-          // analogout_val_1++ coarse
-          if ((analogout_val_1 + 1000 < pwm_max)) {
-            analogout_val_1 += 1000;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1++ coarse
+          if ((analog_val_1 + 1000 < pwm_max)) {
+            analog_val_1 += 1000;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
           }
-          if(DEBUG) Serial.println(analogout_val_1);
+          if(DEBUG) Serial.println(analog_val_1);
           delay(100);
         }
     
         if ( abs(Ps3.data.analog.button.l2) > offset_val_shoulder) {
-          // analogout_val_1-- coarse
-          if ((analogout_val_1 - 1000 > 0)) {
-            analogout_val_1 -= 1000;
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1-- coarse
+          if ((analog_val_1 - 1000 > 0)) {
+            analog_val_1 -= 1000;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
           }
-          if(DEBUG) Serial.println(analogout_val_1);
+          if(DEBUG) Serial.println(analog_val_1);
           delay(100);
         }
     
     
         if ( abs(Ps3.data.analog.button.r1) > offset_val_shoulder) {
-          // analogout_val_1 + semi coarse
-          if ((analogout_val_1 + 100 < pwm_max)) {
-            analogout_val_1 += 100;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1 + semi coarse
+          if ((analog_val_1 + 100 < pwm_max)) {
+            analog_val_1 += 100;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
             delay(100);
           }
         }
         if ( abs(Ps3.data.analog.button.l1) > offset_val_shoulder) {
-          // analogout_val_1 - semi coarse
-          if ((analogout_val_1 - 100 > 0)) {
-            analogout_val_1 -= 100;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1 - semi coarse
+          if ((analog_val_1 - 100 > 0)) {
+            analog_val_1 -= 100;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
             delay(50);
           }
         }

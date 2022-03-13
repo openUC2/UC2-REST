@@ -17,14 +17,14 @@ int pwm_resolution = 15;
 int pwm_frequency = 80000;//19000; //12000
 int pwm_max = (int)pow(2, pwm_resolution);
 
-int analogout_val_1 = 0;
-int analogout_val_2 = 0;
-int analogout_val_3 = 0;
-int analogout_VIBRATE = 0;
+int analog_val_1 = 0;
+int analog_val_2 = 0;
+int analog_val_3 = 0;
+int analog_VIBRATE = 0;
 
-int analogout_SOFI_1 = 0;
-int analogout_SOFI_2 = 0;
+int analog_SOFI_1 = 0;
+int analog_SOFI_2 = 0;
 
-int PWM_CHANNEL_analogout_1 = 4;
-int PWM_CHANNEL_analogout_2 = 5;
-int PWM_CHANNEL_analogout_3 = 6;
+int PWM_CHANNEL_analog_1 = 4;
+int PWM_CHANNEL_analog_2 = 5;
+int PWM_CHANNEL_analog_3 = 6;

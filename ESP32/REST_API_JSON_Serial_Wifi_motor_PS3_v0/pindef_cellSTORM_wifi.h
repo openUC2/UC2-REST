@@ -6,10 +6,10 @@
 #define IS_SERIAL
 //#define IS_WIFI
 //#define IS_PS3 // ESP32-only
-//#define IS_ANALOGOUT// ESP32-only
-//#define IS_LASER
+//#define IS_ANALOG// ESP32-only
+#define IS_LASER
 #define IS_MOTOR
-#define IS_DIGITALOUT
+#define IS_DIGITAL
 //#define IS_DAC
 
 const char *mSSID = "Blynk"; //"BenMur"; //
@@ -22,9 +22,9 @@ const char *mPWD = "12345678"; // "MurBen3128";//
 String identifier_setup = "cellSTORM"; 
 
 // analog out (e.g. Lenses)
-int analogout_PIN_1 = 25;
-int analogout_PIN_2 = 26;
-int analogout_PIN_3 = 0;
+int analog_PIN_1 = 25;
+int analog_PIN_2 = 26;
+int analog_PIN_3 = 0;
 
 // Definition cellSTORM
 int STEP_X = 21;
@@ -41,6 +41,6 @@ int LASER_PIN_2 = 0;
 int LASER_PIN_3 = 0;
 
 // digital out (e.g. camera trigger)
-int digitalout_PIN_1 = 12; 
-int digitalout_PIN_2 = 13; 
-int digitalout_PIN_3 = 0; 
+int digital_PIN_1 = 12; 
+int digital_PIN_2 = 13; 
+int digital_PIN_3 = 0; 
