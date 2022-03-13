@@ -4,9 +4,9 @@
  */
 
 // analog out (e.g. Lenses)
-int analogout_PIN_1 = 21;
-int analogout_PIN_2 = 22;
-int analogout_PIN_3 = 0;
+int analog_PIN_1 = 21;
+int analog_PIN_2 = 22;
+int analog_PIN_3 = 0;
 
 // Stepper 
 #ifdef IS_ARDUINO

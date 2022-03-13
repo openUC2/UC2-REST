@@ -7,16 +7,16 @@
 #define IS_SERIAL
 //#define IS_WIFI
 #define IS_PS3 // ESP32-only
-#define IS_ANALOGOUT// ESP32-only
+#define IS_ANALOG// ESP32-only
 #define IS_LASER
 #define IS_MOTOR
 //#define IS_DAC
 #define IS_LEDARR
 
 // analog out (e.g. Lenses)
-int analogout_PIN_1 = 32;
-int analogout_PIN_2 = 24;
-int analogout_PIN_3 = 0;
+int analog_PIN_1 = 32;
+int analog_PIN_2 = 24;
+int analog_PIN_3 = 0;
 
 // Motor pins - multicolour fluorescence
 int STEP_X = 0;

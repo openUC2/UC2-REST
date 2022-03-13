@@ -19,6 +19,7 @@
   move the motor
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
+  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1}
   {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
@@ -27,12 +28,40 @@
 
 
   operate the analog out
-  {"task": "/analogout_act", "analogoutid": 1, "analogoutval":1000}
+  {"task": "/analog_act", "analogid": 1, "analogval":1000}
+
+ operate the digital out
+  {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
+
+  // attempt to have fast triggering
+
+  We want to send a table of tasks:
+
+  move motor, wait, take picture cam 1/2, wait, move motor..
+  {
+  "task": "multitable",
+  "task_n": 9,
+  "repeats_n": 5,
+  "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
+  "1": {"task": "/state_act", "delay": 1000},
+  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
+  "3": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
+  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
+  "5": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
+  "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
+  "7": {"task": "/state_act", "delay": 1000},
+  "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
+  }
+
+
 */
+
+
+
 /*
     Pindefintion per Setup
 */
@@ -48,7 +77,7 @@
 //#include "pindef_multicolour_borstel.h"
 
 
-int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
 /*
@@ -60,11 +89,14 @@ int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_WIFI
 #include <WiFi.h>
 #include <WebServer.h>
-#include "wifi_parameters.h"
+#include "parameters_wifi.h"
 #endif
 
-#ifdef IS_ANALOGOUT
-#include "analogout_parameters.h"
+#ifdef IS_ANALOG
+#include "parameters_analog.h"
+#endif
+#ifdef IS_DIGITAL
+#include "parameters_digital.h"
 #endif
 
 #include <ArduinoJson.h>
@@ -102,7 +134,7 @@ DAC_Module *dac = new DAC_Module();
 */
 #ifdef IS_MOTOR
 #include "A4988.h"
-#include "motor_parameters.h"
+#include "parameters_motor.h"
 
 A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
 A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
@@ -110,7 +142,7 @@ A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 #endif
 
 #ifdef IS_LASER
-#include "LASER_parameters.h"
+#include "parameters_laser.h"
 #endif
 
 /*
@@ -141,10 +173,16 @@ const char* dac_set_endpoint = "/dac_set";
 const char* dac_get_endpoint = "/dac_get";
 #endif
 
-#ifdef IS_ANALOGOUT
-const char* analogout_act_endpoint = "/analogout_act";
-const char* analogout_set_endpoint = "/analogout_set";
-const char* analogout_get_endpoint = "/analogout_get";
+#ifdef IS_ANALOG
+const char* analog_act_endpoint = "/analog_act";
+const char* analog_set_endpoint = "/analog_set";
+const char* analog_get_endpoint = "/analog_get";
+#endif
+
+#ifdef IS_DIGITAL
+const char* digital_act_endpoint = "/digital_act";
+const char* digital_set_endpoint = "/digital_set";
+const char* digital_get_endpoint = "/digital_get";
 #endif
 
 #ifdef IS_LASER
@@ -154,8 +192,9 @@ const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
 
-/*
+/* --------------------------------------------
    Setup
+  --------------------------------------------
 */
 void setup()
 {
@@ -254,16 +293,30 @@ void setup()
 #endif
 
 
-#ifdef IS_ANALOGOUT
-  Serial.println("Setting Up ANALOGOUT");
+#ifdef IS_ANALOG
+  Serial.println("Setting Up analog");
   /* setup the PWM ports and reset them to 0*/
-  ledcSetup(PWM_CHANNEL_analogout_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analogout_PIN_1, PWM_CHANNEL_analogout_1);
-  ledcWrite(PWM_CHANNEL_analogout_1, 0);
+  ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
+  ledcWrite(PWM_CHANNEL_analog_1, 0);
 
-  ledcSetup(PWM_CHANNEL_analogout_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analogout_PIN_2, PWM_CHANNEL_analogout_2);
-  ledcWrite(PWM_CHANNEL_analogout_2, 0);
+  ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
+  ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
+  ledcWrite(PWM_CHANNEL_analog_2, 0);
+#endif
+
+#ifdef IS_DIGITALanalog
+  Serial.println("Setting Up digital");
+  /* setup the output nodes and reset them to 0*/
+  pinMode(digital_PIN_1, OUTPUT);
+  digitalWrite(digital_PIN_1, LOW);
+
+  pinMode(digital_PIN_2, OUTPUT);
+  digitalWrite(digital_PIN_2, LOW);
+
+  pinMode(digital_PIN_3, OUTPUT);
+  digitalWrite(digital_PIN_3, LOW);
+
 #endif
 
 
@@ -301,10 +354,15 @@ void setup()
   Serial.println(laser_get_endpoint);
   Serial.println(laser_set_endpoint);
 #endif
-#ifdef IS_ANALOGOUT
-  Serial.println(analogout_act_endpoint);
-  Serial.println(analogout_get_endpoint);
-  Serial.println(analogout_set_endpoint);
+#ifdef IS_ANALOG
+  Serial.println(analog_act_endpoint);
+  Serial.println(analog_get_endpoint);
+  Serial.println(analog_set_endpoint);
+#endif
+#ifdef IS_DIGITALGOUT
+  Serial.println(digital_act_endpoint);
+  Serial.println(digital_get_endpoint);
+  Serial.println(digital_set_endpoint);
 #endif
 #ifdef IS_LEDARR
   Serial.println(ledarr_act_endpoint);
@@ -337,6 +395,7 @@ void loop() {
     char task[50];
     task_s.toCharArray(task, 256);
 #endif
+
     //jsonDocument.garbageCollect(); // memory leak?
     /*if (task == "null") return;*/
     if (DEBUG) {
@@ -344,122 +403,192 @@ void loop() {
       Serial.println(task);
     }
 
-    /*
-        Return state
-    */
-    if (strcmp(task, state_act_endpoint) == 0)
-      state_act_fct();
-    if (strcmp(task, state_set_endpoint) == 0)
-      state_set_fct();
-    if (strcmp(task, state_get_endpoint) == 0)
-      state_get_fct();
+    if (strcmp(task, "multitable") == 0) {
+      tableProcessor();
+    }
+    else {
+      // Process individual tasks
+      jsonProcessor(task);
+    }
 
-    /*
-      Drive Motors
-    */
-#ifdef IS_MOTOR
-    if (strcmp(task, motor_act_endpoint) == 0) {
-      motor_act_fct();
-    }
-    if (strcmp(task, motor_set_endpoint) == 0) {
-      motor_set_fct();
-    }
-    if (strcmp(task, motor_get_endpoint) == 0) {
-      motor_get_fct();
-    }
 #endif
 
-    /*
-      Drive DAC
-    */
-#ifdef IS_DAC
-    if (strcmp(task, dac_act_endpoint) == 0)
-      dac_act_fct();
-    if (strcmp(task, dac_set_endpoint) == 0)
-      dac_set_fct();
-    if (strcmp(task, dac_get_endpoint) == 0)
-      dac_get_fct();
-#endif
 
-    /*
-      Drive Laser
-    */
+    // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-    if (strcmp(task, laser_act_endpoint) == 0)
-      LASER_act_fct();
-    if (strcmp(task, laser_set_endpoint) == 0)
-      LASER_get_fct();
-    if (strcmp(task, laser_get_endpoint) == 0)
-      LASER_set_fct();
-#endif
-
-
-    /*
-      Drive Analogout
-    */
-#ifdef IS_ANALOGOUT
-    if (strcmp(task, analogout_act_endpoint) == 0)
-      analogout_act_fct();
-    if (strcmp(task, analogout_set_endpoint) == 0)
-      analogout_set_fct();
-    if (strcmp(task, analogout_get_endpoint) == 0)
-      analogout_get_fct();
-#endif
-
-
-
-    /*
-      Drive LED Matrix
-    */
-#ifdef IS_LEDARR
-    if (strcmp(task, ledarr_act_endpoint) == 0)
-      ledarr_act_fct();
-    if (strcmp(task, ledarr_set_endpoint) == 0)
-      ledarr_set_fct();
-    if (strcmp(task, ledarr_get_endpoint) == 0)
-      ledarr_get_fct();
-#endif
-
-
-    // Send JSON information back
-    Serial.println("++");
-    serializeJson(jsonDocument, Serial);
-    Serial.println();
-    Serial.println("--");
-    jsonDocument.clear();
-    jsonDocument.garbageCollect();
-
-  }
-#endif
-
-
-  // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
-#ifdef IS_LASER
-  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-    LASER_despeckle(LASER_despeckle_1, 1);
-  if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-    LASER_despeckle(LASER_despeckle_2, 2);
-  if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-    LASER_despeckle(LASER_despeckle_3, 3);
+    if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
+      LASER_despeckle(LASER_despeckle_1, 1);
+    if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
+      LASER_despeckle(LASER_despeckle_2, 2);
+    if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
+      LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
 #ifdef IS_PS3
-  control_PS3();
+    control_PS3();
 #endif
 
 #ifdef IS_PS4
-  control_PS4();
+    control_PS4();
 #endif
 
 #ifdef IS_WIFI
-  server.handleClient();
+    server.handleClient();
 #endif
 
 
 #ifdef IS_MOTOR
-  if (not isblock and not isstop) {
-    drive_motor_background();
+    if (not isblock and not isstop) {
+      drive_motor_background();
+    }
+#endif
+
+  }
+}
+
+void jsonProcessor(char task[]) {
+
+
+  /*
+      Return state
+  */
+  if (strcmp(task, state_act_endpoint) == 0)
+    state_act_fct();
+  if (strcmp(task, state_set_endpoint) == 0)
+    state_set_fct();
+  if (strcmp(task, state_get_endpoint) == 0)
+    state_get_fct();
+
+  /*
+    Drive Motors
+  */
+#ifdef IS_MOTOR
+  if (strcmp(task, motor_act_endpoint) == 0) {
+    motor_act_fct();
+  }
+  if (strcmp(task, motor_set_endpoint) == 0) {
+    motor_set_fct();
+  }
+  if (strcmp(task, motor_get_endpoint) == 0) {
+    motor_get_fct();
   }
 #endif
+
+  /*
+    Drive DAC
+  */
+#ifdef IS_DAC
+  if (strcmp(task, dac_act_endpoint) == 0)
+    dac_act_fct();
+  if (strcmp(task, dac_set_endpoint) == 0)
+    dac_set_fct();
+  if (strcmp(task, dac_get_endpoint) == 0)
+    dac_get_fct();
+#endif
+
+  /*
+    Drive Laser
+  */
+#ifdef IS_LASER
+  if (strcmp(task, laser_act_endpoint) == 0)
+    LASER_act_fct();
+  if (strcmp(task, laser_set_endpoint) == 0)
+    LASER_get_fct();
+  if (strcmp(task, laser_get_endpoint) == 0)
+    LASER_set_fct();
+#endif
+
+
+  /*
+    Drive analog
+  */
+#ifdef IS_ANALOG
+  if (strcmp(task, analog_act_endpoint) == 0)
+    analog_act_fct();
+  if (strcmp(task, analog_set_endpoint) == 0)
+    analog_set_fct();
+  if (strcmp(task, analog_get_endpoint) == 0)
+    analog_get_fct();
+#endif
+
+
+  /*
+    Drive digital
+  */
+#ifdef IS_DIGITAL
+  if (strcmp(task, digital_act_endpoint) == 0)
+    digital_act_fct();
+  if (strcmp(task, digital_set_endpoint) == 0)
+    digital_set_fct();
+  if (strcmp(task, digital_get_endpoint) == 0)
+    digital_get_fct();
+#endif
+
+
+  /*
+    Drive LED Matrix
+  */
+#ifdef IS_LEDARR
+  if (strcmp(task, ledarr_act_endpoint) == 0)
+    ledarr_act_fct();
+  if (strcmp(task, ledarr_set_endpoint) == 0)
+    ledarr_set_fct();
+  if (strcmp(task, ledarr_get_endpoint) == 0)
+    ledarr_get_fct();
+#endif
+
+
+  // Send JSON information back
+  Serial.println("++");
+  serializeJson(jsonDocument, Serial);
+  Serial.println();
+  Serial.println("--");
+  jsonDocument.clear();
+  jsonDocument.garbageCollect();
+
+}
+
+
+void tableProcessor() {
+
+  // 1. Copy the table
+  DynamicJsonDocument tmpJsonDoc = jsonDocument;
+  jsonDocument.clear();
+
+  // 2. now we need to extract the indidvidual tasks
+  int N_tasks = tmpJsonDoc["task_n"];
+  int N_repeats = tmpJsonDoc["repeats_n"];
+
+  Serial.println("N_tasks");
+  Serial.println(N_tasks);
+  Serial.println("N_repeats");
+  Serial.println(N_repeats);
+
+
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
+  for (int itask = 0; itask < N_tasks; itask++) {
+  char json_string[256];  
+    // Hacky, but should work
+    Serial.println(itask);
+    serializeJson(tmpJsonDoc[String(itask)], json_string);
+    Serial.println(json_string);
+    deserializeJson(jsonDocument,json_string);
+
+    String task_s = jsonDocument["task"];
+    char task[50];
+    task_s.toCharArray(task, 256);
+
+    //jsonDocument.garbageCollect(); // memory leak?
+    /*if (task == "null") return;*/
+    if (DEBUG) {
+      Serial.print("TASK: ");
+      Serial.println(task);
+    }
+    
+    jsonProcessor(task);
+
+  }
+  }
+  tmpJsonDoc.clear();
 
 }

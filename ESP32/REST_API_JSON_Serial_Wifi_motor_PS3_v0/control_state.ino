@@ -1,5 +1,5 @@
 
-#include "state_parameters.h"
+#include "parameters_state.h"
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
 #define IS_ARDUINO
@@ -30,7 +30,16 @@ static inline int8_t sgn(int val) {
  // Custom function accessible by the API
 void state_act_fct() {
   // here you can do something
-  Serial.println("state_act_fct");
+  if (DEBUG) Serial.println("state_act_fct");
+
+  // assign default values to thhe variables
+  if (jsonDocument.containsKey("delay")) {
+    int mdelayms = jsonDocument["delay"];
+    delay(mdelayms);
+  }
+
+
+
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
@@ -57,8 +66,8 @@ void state_get_fct() {
 }
 
 void printInfo(){
-  Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
-  Serial.println("https://github.com/openUC2/UC2-REST/");
+  if (DEBUG) Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
+  if (DEBUG) Serial.println("https://github.com/openUC2/UC2-REST/");
   //Serial.println("A first try can be: \{\"task\": \"/state_get\"");
 }
 /*

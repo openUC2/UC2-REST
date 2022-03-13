@@ -121,57 +121,57 @@ run_motor(0,0,3);
         */
         if ( PS4.Left()) {
           // fine lens -
-          analogout_val_1 -= 1;
+          analog_val_1 -= 1;
           delay(100);
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
         if ( PS4.Right()) {
           // fine lens +
-          analogout_val_1 += 1;
+          analog_val_1 += 1;
           delay(100);
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
         if ( PS4.Share()) {
           // reset
-          analogout_val_1 = 0;
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          analog_val_1 = 0;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
         }
     
         int offset_val_shoulder = 5;
         if ( PS4.R2()) {
-          // analogout_val_1++ coarse
-          if ((analogout_val_1 + 1000 < pwm_max)) {
-            analogout_val_1 += 1000;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1++ coarse
+          if ((analog_val_1 + 1000 < pwm_max)) {
+            analog_val_1 += 1000;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
           }
-          if(DEBUG) Serial.println(analogout_val_1);
+          if(DEBUG) Serial.println(analog_val_1);
           delay(100);
         }
     
         if ( PS4.L2()) {
-          // analogout_val_1-- coarse
-          if ((analogout_val_1 - 1000 > 0)) {
-            analogout_val_1 -= 1000;
-          ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1-- coarse
+          if ((analog_val_1 - 1000 > 0)) {
+            analog_val_1 -= 1000;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
           }
-          if(DEBUG) Serial.println(analogout_val_1);
+          if(DEBUG) Serial.println(analog_val_1);
           delay(100);
         }
     
     
         if (PS4.R1()) {
-          // analogout_val_1 + semi coarse
-          if ((analogout_val_1 + 100 < pwm_max)) {
-            analogout_val_1 += 100;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1 + semi coarse
+          if ((analog_val_1 + 100 < pwm_max)) {
+            analog_val_1 += 100;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
             delay(100);
           }
         }
         if ( PS4.L1()) {
-          // analogout_val_1 - semi coarse
-          if ((analogout_val_1 - 100 > 0)) {
-            analogout_val_1 -= 100;
-            ledcWrite(PWM_CHANNEL_analogout_1, analogout_val_1);
+          // analog_val_1 - semi coarse
+          if ((analog_val_1 - 100 > 0)) {
+            analog_val_1 -= 100;
+            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
             delay(50);
           }
         }

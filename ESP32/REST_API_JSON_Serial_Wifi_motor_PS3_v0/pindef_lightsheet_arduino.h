@@ -8,12 +8,12 @@
 //#define IS_DAC
 //#define IS_WIFI
 //#define IS_PS3 // ESP32-only
-//#define IS_ANALOGOUT// ESP32-only
+//#define IS_ANALOG// ESP32-only
 
 // analog out (e.g. Lenses)
-int analogout_PIN_1 = 21;
-int analogout_PIN_2 = 22;
-int analogout_PIN_3 = 0;
+int analog_PIN_1 = 21;
+int analog_PIN_2 = 22;
+int analog_PIN_3 = 0;
 
 // Stepper Motor pins
 int STEP_X = 2;
