@@ -37,14 +37,14 @@
     Pindefintion per Setup
 */
 //#include "pindef_lightsheet.h"
-//#include "pindef_lightsheet_arduino.h"
+#include "pindef_lightsheet_arduino.h"
 //#include "pindef_ptychography.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
 //#include "pindef_STORM_Berlin.h"
 //#include "pindef_cellSTORM_cellphone.h"
 //#include "pindef_cellSTORM.h"
-#include "pindef_cellSTORM_wifi.h"
+//#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 
 
