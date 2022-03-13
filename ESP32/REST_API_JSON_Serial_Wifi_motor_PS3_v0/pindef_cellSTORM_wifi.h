@@ -4,7 +4,7 @@
  */
 #define IS_ESP32
 #define IS_SERIAL
-#define IS_WIFI
+//#define IS_WIFI
 //#define IS_PS3 // ESP32-only
 //#define IS_ANALOGOUT// ESP32-only
 //#define IS_LASER
