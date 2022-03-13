@@ -76,8 +76,11 @@
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 
-
-int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+#ifdef IS_ARDUINO
+int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+#else
+int DEBUG = 1;
+#endif
 #define BAUDRATE 115200
 
 /*
@@ -403,6 +406,10 @@ void loop() {
       Serial.println(task);
     }
 
+
+    #ifdef IS_ARDUINO
+      jsonProcessor(task);
+    #else
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
     }
@@ -410,6 +417,7 @@ void loop() {
       // Process individual tasks
       jsonProcessor(task);
     }
+    #endif
 
 #endif
 
@@ -446,9 +454,12 @@ void loop() {
   }
 }
 
+
+#ifdef IS_ARDUINO
+void jsonProcessor(char* task ){
+#else
 void jsonProcessor(char task[]) {
-
-
+#endif
   /*
       Return state
   */
