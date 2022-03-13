@@ -9,6 +9,7 @@
 //#define IS_ANALOGOUT// ESP32-only
 //#define IS_LASER
 #define IS_MOTOR
+#define IS_DIGITALOUT
 //#define IS_DAC
 
 const char *mSSID = "Blynk"; //"BenMur"; //
@@ -38,3 +39,8 @@ int ENABLE = 19;
 int LASER_PIN_1 = 27;
 int LASER_PIN_2 = 0;
 int LASER_PIN_3 = 0;
+
+// digital out (e.g. camera trigger)
+int digitalout_PIN_1 = 12; 
+int digitalout_PIN_2 = 13; 
+int digitalout_PIN_3 = 0; 

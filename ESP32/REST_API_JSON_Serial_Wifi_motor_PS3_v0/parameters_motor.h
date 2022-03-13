@@ -9,7 +9,9 @@
 
 
 // global variables for the motor
-long mspeed = 1000;
+long mspeed1 = 1000;
+long mspeed2 = 1000;
+long mspeed3 = 1000;
 long mposition1 = 0;
 long mposition2 = 0;
 long mposition3 = 0;

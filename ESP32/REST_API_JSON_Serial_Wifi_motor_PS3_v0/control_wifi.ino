@@ -201,6 +201,12 @@ void setup_routing() {
   server.on(analogout_set_endpoint, HTTP_POST, analogout_set_fct_http);
 #endif
 
+#ifdef IS_DIGITALOUT
+  server.on(digitalout_act_endpoint, HTTP_POST, digitalout_act_fct_http);
+  server.on(digitalout_get_endpoint, HTTP_POST, digitalout_get_fct_http);
+  server.on(digitalout_set_endpoint, HTTP_POST, digitalout_set_fct_http);
+#endif
+
 #ifdef IS_LEDARR
   server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
   server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);

@@ -4,11 +4,29 @@
 void motor_act_fct() {
   if (DEBUG) Serial.println("motor_act_fct");
 
-  // assign default values to thhe variables
-  if (jsonDocument.containsKey("speed")) {
-    mspeed = jsonDocument["speed"];
-  }
 
+  // assign default values to thhe variables
+ 
+  if (jsonDocument.containsKey("speed1")) {
+    mspeed1 = jsonDocument["speed1"];
+  }
+  else if (jsonDocument.containsKey("speed")) {
+    mspeed1 = jsonDocument["speed"];
+  }
+  if (jsonDocument.containsKey("speed2")) {
+    mspeed2 = jsonDocument["speed2"];
+  }
+  else if (jsonDocument.containsKey("speed")) {
+    mspeed2 = jsonDocument["speed"];
+  }
+    if (jsonDocument.containsKey("speed3")) {
+    mspeed3 = jsonDocument["speed3"];
+  }
+  else if (jsonDocument.containsKey("speed")) {
+    mspeed3 = jsonDocument["speed"];
+  }
+  
+  
   if (jsonDocument.containsKey("pos1")) {
     mposition1 = jsonDocument["pos1"];
   }
@@ -60,7 +78,9 @@ void motor_act_fct() {
   jsonDocument.clear();
 
   if (DEBUG) {
-    Serial.print("speed "); Serial.println(mspeed);
+    Serial.print("speed1 "); Serial.println(mspeed1);
+    Serial.print("speed2 "); Serial.println(mspeed2);
+    Serial.print("speed3 "); Serial.println(mspeed3);
     Serial.print("position1 "); Serial.println(mposition1);
     Serial.print("position2 "); Serial.println(mposition2);
     Serial.print("position3 "); Serial.println(mposition3);
@@ -77,9 +97,9 @@ void motor_act_fct() {
   }
 
   digitalWrite(ENABLE, LOW);
-  stepper_X.begin(mspeed);
-  stepper_Y.begin(mspeed);
-  stepper_Z.begin(mspeed);
+  stepper_X.begin(mspeed1);
+  stepper_Y.begin(mspeed2);
+  stepper_Z.begin(mspeed3);
 
   if (isabs) {
     mposition1 = mposition1 - POSITION_MOTOR_X;
