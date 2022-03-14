@@ -30,7 +30,7 @@
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
 
- operate the digital out
+  operate the digital out
   {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
@@ -404,9 +404,9 @@ void loop() {
     }
 
 
-    #ifdef IS_ARDUINO
-      jsonProcessor(task);
-    #else
+#ifdef IS_ARDUINO
+    jsonProcessor(task);
+#else
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
     }
@@ -414,7 +414,7 @@ void loop() {
       // Process individual tasks
       jsonProcessor(task);
     }
-    #endif
+#endif
 
 #endif
 
@@ -443,18 +443,17 @@ void loop() {
 
   }
 
-  #ifdef IS_MOTOR
-    if (not isblock and not isstop) {
-      Serial.println(not isblock and not isstop);
-      drive_motor_background();
-    }
+#ifdef IS_MOTOR
+  if (not isblock and not isstop) {
+    drive_motor_background();
+  }
 #endif
 
 }
 
 
 #ifdef IS_ARDUINO
-void jsonProcessor(char* task ){
+void jsonProcessor(char* task ) {
 #else
 void jsonProcessor(char task[]) {
 #endif
@@ -574,29 +573,29 @@ void tableProcessor() {
   Serial.println(N_repeats);
 
 
-  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
-  for (int itask = 0; itask < N_tasks; itask++) {
-  char json_string[256];  
-    // Hacky, but should work
-    Serial.println(itask);
-    serializeJson(tmpJsonDoc[String(itask)], json_string);
-    Serial.println(json_string);
-    deserializeJson(jsonDocument,json_string);
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++) {
+    for (int itask = 0; itask < N_tasks; itask++) {
+      char json_string[256];
+      // Hacky, but should work
+      Serial.println(itask);
+      serializeJson(tmpJsonDoc[String(itask)], json_string);
+      Serial.println(json_string);
+      deserializeJson(jsonDocument, json_string);
 
-    String task_s = jsonDocument["task"];
-    char task[50];
-    task_s.toCharArray(task, 256);
+      String task_s = jsonDocument["task"];
+      char task[50];
+      task_s.toCharArray(task, 256);
 
-    //jsonDocument.garbageCollect(); // memory leak?
-    /*if (task == "null") return;*/
-    if (DEBUG) {
-      Serial.print("TASK: ");
-      Serial.println(task);
+      //jsonDocument.garbageCollect(); // memory leak?
+      /*if (task == "null") return;*/
+      if (DEBUG) {
+        Serial.print("TASK: ");
+        Serial.println(task);
+      }
+
+      jsonProcessor(task);
+
     }
-    
-    jsonProcessor(task);
-
-  }
   }
   tmpJsonDoc.clear();
 
