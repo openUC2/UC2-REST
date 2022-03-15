@@ -232,6 +232,7 @@ void setup()
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attachOnConnect(onConnect);
+  Ps3.attachOnDisconnect(onDisConnect);
   Ps3.begin("01:02:03:04:05:06");
   Serial.println("PS3 controler is set up.");
 #endif
@@ -429,6 +430,8 @@ void loop() {
       LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
+  }
+  
 #ifdef IS_PS3
     control_PS3();
 #endif
@@ -441,7 +444,6 @@ void loop() {
     server.handleClient();
 #endif
 
-  }
 
 #ifdef IS_MOTOR
   if (not isblock and not isstop) {

@@ -7,6 +7,7 @@
 #define MS3 0
 #define RPM 120
 
+bool is_accel = false;
 
 // global variables for the motor
 long mspeed1 = 1000;

@@ -355,10 +355,18 @@ void setup_motor() {
 
 bool drive_motor_background() {
 
+  if (is_accel){
   stepper_X.run();
   stepper_Y.run();
   stepper_Z.run();
-
+  }
+  else{
+    // run at constant speed
+  stepper_X.runSpeed();
+  stepper_Y.runSpeed();
+  stepper_Z.runSpeed();    
+  }
+  
   if (not stepper_X.isRunning() and not stepper_Y.isRunning() and not stepper_Z.isRunning()) {
     if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
