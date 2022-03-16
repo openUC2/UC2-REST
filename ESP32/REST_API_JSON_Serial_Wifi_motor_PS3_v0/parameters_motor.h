@@ -8,16 +8,20 @@
 #define RPM 120
 
 bool is_accel = false;
+bool isforever = false;
 
 // global variables for the motor
+long mspeed0 = 1000;
 long mspeed1 = 1000;
 long mspeed2 = 1000;
 long mspeed3 = 1000;
+long mposition0 = 0;
 long mposition1 = 0;
 long mposition2 = 0;
 long mposition3 = 0;
 boolean isstop = 0;
 
+long POSITION_MOTOR_A = 0;
 long POSITION_MOTOR_X = 0;
 long POSITION_MOTOR_Y = 0;
 long POSITION_MOTOR_Z = 0;
@@ -30,6 +34,7 @@ int isblock = true;
 int isen = false;
 
 // direction
+int SIGN_A = 1;
 int SIGN_X = 1;
 int SIGN_Y = 1;
 int SIGN_Z = 1;
@@ -38,9 +43,11 @@ static const int FULLSTEPS_PER_REV_X = 200;
 static const int FULLSTEPS_PER_REV_Y = 200;
 static const int FULLSTEPS_PER_REV_Z = 200;
 
+long MAX_VELOCITY_A = 10000;
 long MAX_VELOCITY_X = 10000;
 long MAX_VELOCITY_Y = 10000;
 long MAX_VELOCITY_Z = 10000;
+long MAX_ACCELERATION_A = 10000;
 long MAX_ACCELERATION_X = 10000;
 long MAX_ACCELERATION_Y = 10000;
 long MAX_ACCELERATION_Z = 10000;

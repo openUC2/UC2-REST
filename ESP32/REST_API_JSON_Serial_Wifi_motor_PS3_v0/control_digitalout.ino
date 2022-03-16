@@ -8,6 +8,7 @@ void digital_act_fct() {
   int digitalid = jsonDocument["digitalid"];
   int digitalval = jsonDocument["digitalval"];
 
+
   if (DEBUG) {
     Serial.print("digitalid "); Serial.println(digitalid);
     Serial.print("digitalval "); Serial.println(digitalval);
@@ -15,15 +16,42 @@ void digital_act_fct() {
 
   if (digitalid == 1) {
     digital_val_1 = digitalval;
-    digitalWrite(digital_PIN_1, digital_val_1);
+    if (digitalval == -1) {
+      // perform trigger
+      digitalWrite(digital_PIN_1, HIGH);
+      delay(20);
+      digitalWrite(digital_PIN_1, LOW);
+    }
+    else {
+      digitalWrite(digital_PIN_1, digital_val_1);
+      Serial.print("digital_PIN "); Serial.println(digital_PIN_1);
+    }
   }
   else if (digitalid == 2) {
     digital_val_2 = digitalval;
-    digitalWrite(digital_PIN_3, digital_val_2);
+    if (digitalval == -1) {
+      // perform trigger
+      digitalWrite(digital_PIN_2, HIGH);
+      delay(20);
+      digitalWrite(digital_PIN_2, LOW);
+    }
+    else {
+      digitalWrite(digital_PIN_2, digital_val_2);
+      Serial.print("digital_PIN "); Serial.println(digital_PIN_2);
+    }
   }
   else if (digitalid == 3) {
     digital_val_3 = digitalval;
-    digitalWrite(digital_PIN_3, digital_val_3);
+    if (digitalval == -1) {
+      // perform trigger
+      digitalWrite(digital_PIN_3, HIGH);
+      delay(20);
+      digitalWrite(digital_PIN_3, LOW);
+    }
+    else {
+      digitalWrite(digital_PIN_3, digital_val_3);
+      Serial.print("digital_PIN "); Serial.println(digital_PIN_3);
+    }
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
@@ -52,11 +80,11 @@ void digital_set_fct() {
       digital_PIN_3 = digitalpin;
       pinMode(digital_PIN_3, OUTPUT);
       digitalWrite(digital_PIN_3, LOW);
+    }
   }
-}
 
-jsonDocument.clear();
-jsonDocument["return"] = 1;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 
 }
 
@@ -91,7 +119,26 @@ void digital_get_fct() {
   jsonDocument["digitalpin"] = digitalpin;
 }
 
+void setupDigital() {
+  Serial.println("Setting Up digital");
+  /* setup the output nodes and reset them to 0*/
+  pinMode(digital_PIN_1, OUTPUT);
 
+  digitalWrite(digital_PIN_1, HIGH);
+  delay(50);
+  digitalWrite(digital_PIN_1, LOW);
+
+  pinMode(digital_PIN_2, OUTPUT);
+  digitalWrite(digital_PIN_2, HIGH);
+  delay(50);
+  digitalWrite(digital_PIN_2, LOW);
+
+  pinMode(digital_PIN_3, OUTPUT);
+  digitalWrite(digital_PIN_3, HIGH);
+  delay(50);
+  digitalWrite(digital_PIN_3, LOW);
+
+}
 /*
   wrapper for HTTP requests
 */

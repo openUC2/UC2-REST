@@ -17,9 +17,11 @@ int analog_PIN_2 = 0;
 int analog_PIN_3 = 0;
 
 // Stepper Motor pins
+int STEP_A = 0;
 int STEP_X = 18;
 int STEP_Y = 19;
 int STEP_Z = 23;
+int DIR_A = 0; // on wemos mini 35 does not work
 int DIR_X = 2; // on wemos mini 35 does not work
 int DIR_Y = 33;
 int DIR_Z = 4; // on wemos mini 34 does not work

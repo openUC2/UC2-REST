@@ -14,11 +14,19 @@ boolean stepper_2_running = false;
 boolean stepper_3_running = false;
 
 
+bool ps3_is_enabled = false;
+int ps3_last_enabled_triggered = -1;
+int ps3_timeout_active = 0;
+int ps3_timeout_inactive = 0;
+int ps3_timeout = 2000; // wait 5 seconds between actions before motors switch off again
 
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   is_accel = false;
-  digitalWrite(ENABLE, LOW);
+  ps3_timeout_active = millis();
+  ps3_timeout_inactive = millis();
+  ps3_is_enabled = false;
+  digitalWrite(ENABLE, HIGH);
 }
 void onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
@@ -34,6 +42,7 @@ void control_PS3() {
     /*
        ANALOG LEFT
     */
+
     if ( abs(Ps3.data.analog.stick.ly) > offset_val) {
       // move_z
       stick_ly = Ps3.data.analog.stick.ly;
@@ -46,7 +55,6 @@ void control_PS3() {
         stepper_1_on = false;
         stick_ly = 0;
         run_motor(0, 0, 1); // switch motor off;
-        
       }
     }
 
@@ -220,6 +228,13 @@ void control_PS3() {
     //
     //    }
 
+    ps3_timeout_inactive = millis();; 
+
+    if ((ps3_timeout_inactive-ps3_timeout_active)>ps3_timeout){
+      // prevent overheating
+      ps3_is_enabled = false;
+      digitalWrite(ENABLE, HIGH);
+    }
   }
 }
 
@@ -228,7 +243,11 @@ void control_PS3() {
 
 void run_motor(int steps, int speed, int axis) {
 
-  speed = speed * 10;
+  if (not ps3_is_enabled){
+    ps3_is_enabled=true;
+    digitalWrite(ENABLE, LOW);
+  }
+    speed = speed * 10;
 //  if (DEBUG) Serial.println("Motor "+String(axis)+" , steps: " + String(steps) + ", speed:" + String(speed));
 
 //    for (int istep = 0; istep < steps; istep++) {
@@ -244,6 +263,8 @@ void run_motor(int steps, int speed, int axis) {
       stepper_Z.setSpeed(speed);
       stepper_Z.runSpeed();
     }
+    ps3_timeout_active = millis(); 
+
 }
 
 

@@ -20,6 +20,11 @@
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
   {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1}
+  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "isforever":1, "isblock":0}
+  {"task": "/motor_act", "isstop":1}
+  {"task": "/motor_act", "isenable":0}
+  
+  
   {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
@@ -46,17 +51,28 @@
   "task": "multitable",
   "task_n": 9,
   "repeats_n": 5,
-  "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
-  "1": {"task": "/state_act", "delay": 1000},
-  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
-  "3": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
-  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
-  "5": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
-  "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
-  "7": {"task": "/state_act", "delay": 1000},
-  "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
+  "0": {"task": "/motor_act", "speed1":0, "speed2":50, "speed2":5000, "pos1":0, "pos2":-1000, "pos3":100000, "isabs":0, "isblock":0, "isen":0},
+  "1": {"task": "/state_act", "delay": 100},
+  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
+  "3": {"task": "/digital_act", "digitalid": 2, "digitalval":-1},
+  "4": {"task": "/state_act", "delay": 100}
   }
 
+
+
+// trigger camera at a rate of 20hz
+
+  {"task": "/motor_act", "speed1":0,"speed2":0,"speed3":5000, "isforever":1, "isblock":0}
+  {"task": "/state_act", "delay": 1000}
+  {
+  "task": "multitable",
+  "task_n": 2,
+  "repeats_n": 100,
+  "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
+  "1": {"task": "/state_act", "delay": 50}
+  }
+  {"task": "/motor_act", "isstop":1}
+  {"task": "/motor_act", "isenable":0}
 
 */
 
@@ -139,6 +155,7 @@ DAC_Module *dac = new DAC_Module();
 #ifdef IS_MOTOR
 #include <AccelStepper.h>
 #include "parameters_motor.h"
+AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
@@ -306,18 +323,8 @@ void setup()
   ledcWrite(PWM_CHANNEL_analog_2, 0);
 #endif
 
-#ifdef IS_DIGITALanalog
-  Serial.println("Setting Up digital");
-  /* setup the output nodes and reset them to 0*/
-  pinMode(digital_PIN_1, OUTPUT);
-  digitalWrite(digital_PIN_1, LOW);
-
-  pinMode(digital_PIN_2, OUTPUT);
-  digitalWrite(digital_PIN_2, LOW);
-
-  pinMode(digital_PIN_3, OUTPUT);
-  digitalWrite(digital_PIN_3, LOW);
-
+#ifdef IS_DIGITAL
+setupDigital();
 #endif
 
 
