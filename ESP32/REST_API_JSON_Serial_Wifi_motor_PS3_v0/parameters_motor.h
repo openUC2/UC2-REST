@@ -7,7 +7,7 @@
 #define MS3 0
 #define RPM 120
 
-bool is_accel = false;
+bool isaccel = false;
 bool isforever = false;
 
 // global variables for the motor
@@ -47,7 +47,7 @@ long MAX_VELOCITY_A = 10000;
 long MAX_VELOCITY_X = 10000;
 long MAX_VELOCITY_Y = 10000;
 long MAX_VELOCITY_Z = 10000;
-long MAX_ACCELERATION_A = 10000;
-long MAX_ACCELERATION_X = 10000;
-long MAX_ACCELERATION_Y = 10000;
-long MAX_ACCELERATION_Z = 10000;
+long MAX_ACCELERATION_A = 100000;
+long MAX_ACCELERATION_X = 100000;
+long MAX_ACCELERATION_Y = 100000;
+long MAX_ACCELERATION_Z = 100000;

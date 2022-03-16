@@ -62,17 +62,18 @@
 
 // trigger camera at a rate of 20hz
 
-  {"task": "/motor_act", "speed1":0,"speed2":0,"speed3":5000, "isforever":1, "isblock":0}
-  {"task": "/state_act", "delay": 1000}
+  {"task": "/state_set", "isdebug":0}
+  {"task": "/state_act", "delay": 100}
   {
   "task": "multitable",
   "task_n": 2,
   "repeats_n": 100,
   "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
-  "1": {"task": "/state_act", "delay": 50}
+  "1": {"task": "/motor_act", "speed0":0,"speed1":0,"speed2":1000,"speed3":5000, "pos2":-10, "pos3":300, "isblock":1}
   }
   {"task": "/motor_act", "isstop":1}
   {"task": "/motor_act", "isenable":0}
+  {"task": "/state_set", "isdebug":1}
 
 */
 

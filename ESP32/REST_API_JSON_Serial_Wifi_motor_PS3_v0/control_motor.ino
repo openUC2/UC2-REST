@@ -31,7 +31,6 @@ void motor_act_fct() {
     mspeed3 = jsonDocument["speed"];
   }
 
-
   if (jsonDocument.containsKey("pos0")) {
     mposition0 = jsonDocument["pos0"];
   }
@@ -73,18 +72,26 @@ void motor_act_fct() {
     isblock = 1;
   }
 
-  if (jsonDocument.containsKey("stop")) {
-    isstop = jsonDocument["stop"];
+  if (jsonDocument.containsKey("isstop")) {
+    isstop = jsonDocument["isstop"];
   }
   else {
     isstop = 0;
+  }
+
+  if (jsonDocument.containsKey("isaccel")) {
+
+    isaccel = jsonDocument["isaccel"];
+  }
+  else {
+    isaccel = 0;
   }
 
   if (jsonDocument.containsKey("isen")) {
     isen = jsonDocument["isen"];
   }
   else {
-    isen = 1;
+    isen = 0;
   }
 
   if (jsonDocument.containsKey("isforever")) {
@@ -94,6 +101,8 @@ void motor_act_fct() {
     isforever = 0;
   }
 
+  if (isforever)
+    isblock = 0;
 
   jsonDocument.clear();
 
@@ -110,20 +119,31 @@ void motor_act_fct() {
     Serial.print("isblock "); Serial.println(isblock);
     Serial.print("isen "); Serial.println(isen);
     Serial.print("isstop "); Serial.println(isstop);
-    Serial.print("isforever "); Serial.println("isforever");
+    Serial.print("isaccel "); Serial.println(isaccel);
+    Serial.print("isforever "); Serial.println(isforever);
   }
 
   if (isstop) {
-    stepper_Y.stop();
+    stepper_A.stop();
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
-    isblock=1;
-    isforever=0;
+    isblock = 1;
+    isforever = 0;
+    digitalWrite(ENABLE, HIGH);
+
+    POSITION_MOTOR_A = stepper_A.currentPosition();
+    POSITION_MOTOR_X = stepper_X.currentPosition();
+    POSITION_MOTOR_Y = stepper_Y.currentPosition();
+    POSITION_MOTOR_Z = stepper_Z.currentPosition();
+
+    jsonDocument["POSA"] = POSITION_MOTOR_A;
+    jsonDocument["POSX"] = POSITION_MOTOR_X;
+    jsonDocument["POSY"] = POSITION_MOTOR_Y;
+    jsonDocument["POSZ"] = POSITION_MOTOR_Z;
+    return;
   }
 
-  if (isforever)
-    isblock=0;
 
   digitalWrite(ENABLE, LOW);
   stepper_A.setSpeed(mspeed0);
@@ -364,20 +384,17 @@ void setup_motor() {
   pinMode(ENABLE, OUTPUT);
   digitalWrite(ENABLE, LOW);
   Serial.println("Setting Up Motor A,X,Y,Z");
-  stepper_A.setMaxSpeed(MAX_VELOCITY_A);
+  //stepper_A.setMaxSpeed(MAX_VELOCITY_A);
   stepper_X.setMaxSpeed(MAX_VELOCITY_X);
   stepper_Y.setMaxSpeed(MAX_VELOCITY_Y);
   stepper_Z.setMaxSpeed(MAX_VELOCITY_Z);
-  stepper_X.setAcceleration(MAX_ACCELERATION_A);
+  //stepper_X.setAcceleration(MAX_ACCELERATION_A);
   stepper_X.setAcceleration(MAX_ACCELERATION_X);
   stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
   stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
-  stepper_A.enableOutputs();  
   stepper_X.enableOutputs();
   stepper_Y.enableOutputs();
   stepper_Z.enableOutputs();
-  stepper_A.runToNewPosition(-100);
-  stepper_A.runToNewPosition(100);
   stepper_X.runToNewPosition(-100);
   stepper_X.runToNewPosition(100);
   stepper_Y.runToNewPosition(-100);
@@ -399,16 +416,24 @@ bool drive_motor_background() {
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();
-    }
+  }
   else {
     // run at constant speed
-    stepper_A.run();    
-    stepper_X.run();
-    stepper_Y.run();
-    stepper_Z.run();
+    if (isaccel) {
+      stepper_A.run();
+      stepper_X.run();
+      stepper_Y.run();
+      stepper_Z.run();
+    }
+    else {
+      stepper_A.runSpeedToPosition();
+      stepper_X.runSpeedToPosition();
+      stepper_Y.runSpeedToPosition();
+      stepper_Z.runSpeedToPosition();
+    }
   }
-
-  if (not stepper_X.isRunning() and not stepper_Y.isRunning() and not stepper_Z.isRunning() and not isforever) {
+// is running wont work here!
+  if ((stepper_X.distanceToGo()==0) and (stepper_Y.distanceToGo()==0) and (stepper_Z.distanceToGo() ==0 )and not isforever) {
     if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
       digitalWrite(ENABLE, HIGH);

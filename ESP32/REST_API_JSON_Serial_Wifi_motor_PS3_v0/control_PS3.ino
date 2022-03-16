@@ -22,7 +22,6 @@ int ps3_timeout = 2000; // wait 5 seconds between actions before motors switch o
 
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
-  is_accel = false;
   ps3_timeout_active = millis();
   ps3_timeout_inactive = millis();
   ps3_is_enabled = false;
@@ -30,7 +29,6 @@ void onConnect() {
 }
 void onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
-  is_accel = true;
   
   digitalWrite(ENABLE, HIGH);
   
