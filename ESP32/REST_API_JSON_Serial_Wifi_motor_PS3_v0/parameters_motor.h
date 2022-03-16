@@ -1,3 +1,6 @@
+#ifdef IS_ESP32
+#include "esp _task_wdt.h"
+#endif 
 
 // for stepper.h
 #define MOTOR_STEPS 200
@@ -32,6 +35,7 @@ int MOTOR_DECEL = 5000;
 int isabs = true;
 int isblock = true;
 int isen = false;
+int IS_MOTOR_RUNNING_BACKGROUND = 0;
 
 // direction
 int SIGN_A = 1;

@@ -1,5 +1,7 @@
 #ifdef IS_MOTOR
 
+
+
 // Custom function accessible by the API
 void motor_act_fct() {
   if (DEBUG) Serial.println("motor_act_fct");
@@ -141,6 +143,7 @@ void motor_act_fct() {
     jsonDocument["POSX"] = POSITION_MOTOR_X;
     jsonDocument["POSY"] = POSITION_MOTOR_Y;
     jsonDocument["POSZ"] = POSITION_MOTOR_Z;
+    IS_MOTOR_RUNNING_BACKGROUND = 0;
     return;
   }
 
@@ -176,6 +179,20 @@ void motor_act_fct() {
   }
   else {
     if (DEBUG) Serial.println("Start rotation in background");
+    IS_MOTOR_RUNNING_BACKGROUND = 1;
+#ifdef IS_ESP32
+    // assign a task for the motor so that it runs when we need it
+    Serial.println("Initiate SStart runStepperTask");
+    xTaskCreatePinnedToCore(
+      drive_motor_background_task,            // Task function.
+      "drive_motor_background_task",           // String with name of task.
+      10000,                   // Stack size in words.
+      NULL,      // Parameter passed as input of the task
+      1,                         // Priority of the task.
+      NULL,                     // Task handle.
+      0);                       // core #
+#endif
+
   }
 
   // TODO: not true for non-blocking!
@@ -408,6 +425,13 @@ void setup_motor() {
 }
 
 
+void drive_motor_background_task(void *parameter) {
+ disableCore0WDT();
+  while (!drive_motor_background()) {
+  }
+   vTaskDelete(NULL);
+}
+
 bool drive_motor_background() {
 
   if (isforever) {
@@ -432,16 +456,18 @@ bool drive_motor_background() {
       stepper_Z.runSpeedToPosition();
     }
   }
-// is running wont work here!
-  if ((stepper_X.distanceToGo()==0) and (stepper_Y.distanceToGo()==0) and (stepper_Z.distanceToGo() ==0 )and not isforever) {
+  // is running wont work here!
+  if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
     if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
       digitalWrite(ENABLE, HIGH);
     }
     isblock = true;
+    IS_MOTOR_RUNNING_BACKGROUND = 1;
 
     return true;
   }
+
   else {
     if (isblock) return false;
   }

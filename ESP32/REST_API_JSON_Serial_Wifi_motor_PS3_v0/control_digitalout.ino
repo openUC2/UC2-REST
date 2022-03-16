@@ -7,7 +7,7 @@ void digital_act_fct() {
 
   int digitalid = jsonDocument["digitalid"];
   int digitalval = jsonDocument["digitalval"];
-
+  int triggerdelay=10;
 
   if (DEBUG) {
     Serial.print("digitalid "); Serial.println(digitalid);
@@ -19,7 +19,7 @@ void digital_act_fct() {
     if (digitalval == -1) {
       // perform trigger
       digitalWrite(digital_PIN_1, HIGH);
-      delay(20);
+      delay(triggerdelay);
       digitalWrite(digital_PIN_1, LOW);
     }
     else {
@@ -32,7 +32,7 @@ void digital_act_fct() {
     if (digitalval == -1) {
       // perform trigger
       digitalWrite(digital_PIN_2, HIGH);
-      delay(20);
+      delay(triggerdelay);
       digitalWrite(digital_PIN_2, LOW);
     }
     else {
@@ -45,7 +45,7 @@ void digital_act_fct() {
     if (digitalval == -1) {
       // perform trigger
       digitalWrite(digital_PIN_3, HIGH);
-      delay(20);
+      delay(triggerdelay);
       digitalWrite(digital_PIN_3, LOW);
     }
     else {

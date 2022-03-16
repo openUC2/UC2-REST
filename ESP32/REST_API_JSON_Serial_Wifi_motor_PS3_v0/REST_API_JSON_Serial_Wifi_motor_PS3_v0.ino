@@ -20,11 +20,11 @@
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
   {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1}
-  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "isforever":1, "isblock":0}
+  {"task": "/motor_act", "speed1":0,"speed2":0,"speed3":5000, "isforever":1}
   {"task": "/motor_act", "isstop":1}
   {"task": "/motor_act", "isenable":0}
-  
-  
+
+
   {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
@@ -60,7 +60,7 @@
 
 
 
-// trigger camera at a rate of 20hz
+  // trigger camera at a rate of 20hz
 
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_act", "delay": 100}
@@ -69,7 +69,7 @@
   "task_n": 2,
   "repeats_n": 100,
   "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
-  "1": {"task": "/motor_act", "speed0":0,"speed1":0,"speed2":1000,"speed3":5000, "pos2":-10, "pos3":300, "isblock":1}
+  "1": {"task": "/state_act", "delay": 80}
   }
   {"task": "/motor_act", "isstop":1}
   {"task": "/motor_act", "isenable":0}
@@ -289,6 +289,10 @@ void setup()
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
+
+
+
+
 #else
   pinMode(LASER_PIN_1, OUTPUT);
   analogWrite(LASER_PIN_1, 100); delay(500);
@@ -325,7 +329,7 @@ void setup()
 #endif
 
 #ifdef IS_DIGITAL
-setupDigital();
+  setupDigital();
 #endif
 
 
@@ -378,6 +382,8 @@ setupDigital();
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
 #endif
+
+
 }
 
 //char *task = strdup("");
@@ -439,25 +445,26 @@ void loop() {
 #endif
 
   }
-  
+
 #ifdef IS_PS3
-    control_PS3();
+  control_PS3();
 #endif
 
 #ifdef IS_PS4
-    control_PS4();
+  control_PS4();
 #endif
 
 #ifdef IS_WIFI
-    server.handleClient();
+  server.handleClient();
 #endif
 
-
-#ifdef IS_MOTOR
-  if (not isblock and not isstop) {
-    drive_motor_background();
-  }
-#endif
+  /*
+    #ifdef IS_MOTOR
+    if (not isblock and not isstop) {
+      drive_motor_background();
+    }
+    #endif
+  */
 
 }
 
@@ -490,79 +497,80 @@ void jsonProcessor(char task[]) {
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
   }
+
 #endif
 
-  /*
-    Drive DAC
-  */
+/*
+  Drive DAC
+*/
 #ifdef IS_DAC
-  if (strcmp(task, dac_act_endpoint) == 0)
-    dac_act_fct();
-  if (strcmp(task, dac_set_endpoint) == 0)
-    dac_set_fct();
-  if (strcmp(task, dac_get_endpoint) == 0)
-    dac_get_fct();
+if (strcmp(task, dac_act_endpoint) == 0)
+  dac_act_fct();
+if (strcmp(task, dac_set_endpoint) == 0)
+  dac_set_fct();
+if (strcmp(task, dac_get_endpoint) == 0)
+  dac_get_fct();
 #endif
 
-  /*
-    Drive Laser
-  */
+/*
+  Drive Laser
+*/
 #ifdef IS_LASER
-  if (strcmp(task, laser_act_endpoint) == 0)
-    LASER_act_fct();
-  if (strcmp(task, laser_set_endpoint) == 0)
-    LASER_get_fct();
-  if (strcmp(task, laser_get_endpoint) == 0)
-    LASER_set_fct();
+if (strcmp(task, laser_act_endpoint) == 0)
+  LASER_act_fct();
+if (strcmp(task, laser_set_endpoint) == 0)
+  LASER_get_fct();
+if (strcmp(task, laser_get_endpoint) == 0)
+  LASER_set_fct();
 #endif
 
 
-  /*
-    Drive analog
-  */
+/*
+  Drive analog
+*/
 #ifdef IS_ANALOG
-  if (strcmp(task, analog_act_endpoint) == 0)
-    analog_act_fct();
-  if (strcmp(task, analog_set_endpoint) == 0)
-    analog_set_fct();
-  if (strcmp(task, analog_get_endpoint) == 0)
-    analog_get_fct();
+if (strcmp(task, analog_act_endpoint) == 0)
+  analog_act_fct();
+if (strcmp(task, analog_set_endpoint) == 0)
+  analog_set_fct();
+if (strcmp(task, analog_get_endpoint) == 0)
+  analog_get_fct();
 #endif
 
 
-  /*
-    Drive digital
-  */
+/*
+  Drive digital
+*/
 #ifdef IS_DIGITAL
-  if (strcmp(task, digital_act_endpoint) == 0)
-    digital_act_fct();
-  if (strcmp(task, digital_set_endpoint) == 0)
-    digital_set_fct();
-  if (strcmp(task, digital_get_endpoint) == 0)
-    digital_get_fct();
+if (strcmp(task, digital_act_endpoint) == 0)
+  digital_act_fct();
+if (strcmp(task, digital_set_endpoint) == 0)
+  digital_set_fct();
+if (strcmp(task, digital_get_endpoint) == 0)
+  digital_get_fct();
 #endif
 
 
-  /*
-    Drive LED Matrix
-  */
+/*
+  Drive LED Matrix
+*/
 #ifdef IS_LEDARR
-  if (strcmp(task, ledarr_act_endpoint) == 0)
-    ledarr_act_fct();
-  if (strcmp(task, ledarr_set_endpoint) == 0)
-    ledarr_set_fct();
-  if (strcmp(task, ledarr_get_endpoint) == 0)
-    ledarr_get_fct();
+if (strcmp(task, ledarr_act_endpoint) == 0)
+  ledarr_act_fct();
+if (strcmp(task, ledarr_set_endpoint) == 0)
+  ledarr_set_fct();
+if (strcmp(task, ledarr_get_endpoint) == 0)
+  ledarr_get_fct();
 #endif
 
 
-  // Send JSON information back
-  Serial.println("++");
-  serializeJson(jsonDocument, Serial);
-  Serial.println();
-  Serial.println("--");
-  jsonDocument.clear();
-  jsonDocument.garbageCollect();
+// Send JSON information back
+Serial.println("++");
+serializeJson(jsonDocument, Serial);
+Serial.println();
+Serial.println("--");
+jsonDocument.clear();
+jsonDocument.garbageCollect();
 
 }
 
