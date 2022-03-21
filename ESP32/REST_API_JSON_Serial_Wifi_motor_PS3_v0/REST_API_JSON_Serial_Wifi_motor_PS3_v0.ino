@@ -51,7 +51,7 @@
   "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
   "3": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
   "4": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
-  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},  
+  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
   "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
   "7": {"task": "/state_act", "delay": 100},
   "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
@@ -67,6 +67,7 @@
 */
 //#include "pindef_lightsheet.h"
 //#include "pindef_lightsheet_arduino.h"
+#include "pindef_lightsheet_esp_tomo.h"
 //#include "pindef_ptychography.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
@@ -76,8 +77,11 @@
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 #include "pindef_cncshield_esp.h"
-
-int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+#ifdef IS_ARDUINO
+int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
+#else
+int DEBUG = 1;
+#endif
 #define BAUDRATE 115200
 
 /*
@@ -403,6 +407,10 @@ void loop() {
       Serial.println(task);
     }
 
+
+    #ifdef IS_ARDUINO
+      jsonProcessor(task);
+    #else
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
     }
@@ -410,6 +418,7 @@ void loop() {
       // Process individual tasks
       jsonProcessor(task);
     }
+    #endif
 
 #endif
 
@@ -446,9 +455,12 @@ void loop() {
   }
 }
 
+
+#ifdef IS_ARDUINO
+void jsonProcessor(char* task ){
+#else
 void jsonProcessor(char task[]) {
-
-
+#endif
   /*
       Return state
   */
@@ -567,7 +579,7 @@ void tableProcessor() {
 
   for (int irepeats = 0; irepeats < N_repeats; irepeats++){
   for (int itask = 0; itask < N_tasks; itask++) {
-  char json_string[256];  
+  char json_string[256];
     // Hacky, but should work
     Serial.println(itask);
     serializeJson(tmpJsonDoc[String(itask)], json_string);
@@ -584,7 +596,7 @@ void tableProcessor() {
       Serial.print("TASK: ");
       Serial.println(task);
     }
-    
+
     jsonProcessor(task);
 
   }

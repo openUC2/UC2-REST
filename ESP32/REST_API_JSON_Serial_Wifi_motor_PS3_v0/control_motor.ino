@@ -346,8 +346,8 @@ void setup_motor() {
   stepper_X.setMicrostep(1);
   //stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
-  stepper_X.move(10);
-  stepper_X.move(-10);
+  stepper_X.move(100);
+  stepper_X.move(-100);
 
   Serial.println("Setting Up Motor Y");
   stepper_Y.begin(RPM);
@@ -355,8 +355,8 @@ void setup_motor() {
   stepper_Y.setMicrostep(1);
   //stepper_Y.setSpeedProfile(stepper_Y.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
-  stepper_Y.move(10);
-  stepper_Y.move(-10);
+  stepper_Y.move(100);
+  stepper_Y.move(-100);
 
   Serial.println("Setting Up Motor Z");
   stepper_Z.begin(RPM);
@@ -364,8 +364,8 @@ void setup_motor() {
   stepper_Z.setMicrostep(1);
   //stepper_Z.setSpeedProfile(stepper_Z.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
   stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
-  stepper_Z.move(10);
-  stepper_Z.move(-10);
+  stepper_Z.move(100);
+  stepper_Z.move(-100);
   digitalWrite(ENABLE, HIGH);
 
 }
