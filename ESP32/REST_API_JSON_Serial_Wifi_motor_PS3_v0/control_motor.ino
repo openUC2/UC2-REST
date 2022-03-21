@@ -6,7 +6,6 @@ void motor_act_fct() {
 
 
   // assign default values to thhe variables
- 
   if (jsonDocument.containsKey("speed1")) {
     mspeed1 = jsonDocument["speed1"];
   }

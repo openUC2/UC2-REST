@@ -47,13 +47,13 @@
   "task_n": 9,
   "repeats_n": 5,
   "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
-  "1": {"task": "/state_act", "delay": 1000},
+  "1": {"task": "/state_act", "delay": 100},
   "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
-  "3": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
-  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
-  "5": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
+  "3": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
+  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
+  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},  
   "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
-  "7": {"task": "/state_act", "delay": 1000},
+  "7": {"task": "/state_act", "delay": 100},
   "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
   }
 
@@ -73,9 +73,9 @@
 //#include "pindef_STORM_Berlin.h"
 //#include "pindef_cellSTORM_cellphone.h"
 //#include "pindef_cellSTORM.h"
-#include "pindef_cellSTORM_wifi.h"
+//#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
-
+#include "pindef_cncshield_esp.h"
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -185,7 +185,7 @@ const char* digital_set_endpoint = "/digital_set";
 const char* digital_get_endpoint = "/digital_get";
 #endif
 
-#ifdef IS_LASER
+#ifdef IS_LEDARR
 const char* ledarr_act_endpoint = "/ledarr_act";
 const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
