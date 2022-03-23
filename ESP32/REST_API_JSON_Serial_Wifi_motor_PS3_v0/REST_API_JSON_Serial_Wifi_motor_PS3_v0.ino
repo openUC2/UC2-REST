@@ -20,11 +20,6 @@
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
   {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1}
-  {"task": "/motor_act", "speed1":0,"speed2":0,"speed3":5000, "isforever":1}
-  {"task": "/motor_act", "isstop":1}
-  {"task": "/motor_act", "isenable":0}
-
-
   {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
@@ -35,12 +30,17 @@
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
 
-  operate the digital out
+ operate the digital out
   {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
 
+
+  operate ledmatrix
+  // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
+  {"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
+  {"task": "/ledarr_act","LEDArrMode": "full", "red":0, "green": 0, "blue":0}
 
   // attempt to have fast triggering
 
@@ -51,29 +51,17 @@
   "task": "multitable",
   "task_n": 9,
   "repeats_n": 5,
-  "0": {"task": "/motor_act", "speed1":0, "speed2":50, "speed2":5000, "pos1":0, "pos2":-1000, "pos3":100000, "isabs":0, "isblock":0, "isen":0},
+  "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
   "1": {"task": "/state_act", "delay": 100},
-  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
-  "3": {"task": "/digital_act", "digitalid": 2, "digitalval":-1},
-  "4": {"task": "/state_act", "delay": 100}
+  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
+  "3": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
+  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
+  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},  
+  "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
+  "7": {"task": "/state_act", "delay": 100},
+  "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
   }
 
-
-
-  // trigger camera at a rate of 20hz
-
-  {"task": "/state_set", "isdebug":0}
-  {"task": "/state_act", "delay": 100}
-  {
-  "task": "multitable",
-  "task_n": 2,
-  "repeats_n": 100,
-  "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
-  "1": {"task": "/state_act", "delay": 80}
-  }
-  {"task": "/motor_act", "isstop":1}
-  {"task": "/motor_act", "isenable":0}
-  {"task": "/state_set", "isdebug":1}
 
 */
 
@@ -84,7 +72,6 @@
 */
 //#include "pindef_lightsheet.h"
 //#include "pindef_lightsheet_arduino.h"
-#include "pindef_lightsheet_esp_tomo.h"
 //#include "pindef_ptychography.h"
 //#include "pindef.h"
 //#include "pindef_multicolour.h"
@@ -94,11 +81,8 @@
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 #include "pindef_cncshield_esp.h"
-#ifdef IS_ARDUINO
-int DEBUG = 0; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
-#else
-int DEBUG = 1;
-#endif
+
+int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
 /*
@@ -154,12 +138,15 @@ DAC_Module *dac = new DAC_Module();
    Register devices
 */
 #ifdef IS_MOTOR
-#include <AccelStepper.h>
+#include "A4988.h"
 #include "parameters_motor.h"
-AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+
+
+// creating motor objjjects
+A4988 stepper_Y(FULLSTEPS_PER_REV_A, DIR_A, STEP_A, SLEEP, MS1, MS2, MS3);
+A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
+A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
+A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
 #endif
 
 #ifdef IS_LASER
@@ -250,7 +237,6 @@ void setup()
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attachOnConnect(onConnect);
-  Ps3.attachOnDisconnect(onDisConnect);
   Ps3.begin("01:02:03:04:05:06");
   Serial.println("PS3 controler is set up.");
 #endif
@@ -260,6 +246,9 @@ void setup()
   //Ps4.attachOnConnect(onConnectPS4);
   PS4.begin("1a:2b:3c:01:01:01");
   Serial.println("PS4 controler is set up.");
+  stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
+  stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
+  stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
 #endif
 
 
@@ -289,10 +278,6 @@ void setup()
   ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
-
-
-
-
 #else
   pinMode(LASER_PIN_1, OUTPUT);
   analogWrite(LASER_PIN_1, 100); delay(500);
@@ -328,8 +313,18 @@ void setup()
   ledcWrite(PWM_CHANNEL_analog_2, 0);
 #endif
 
-#ifdef IS_DIGITAL
-  setupDigital();
+#ifdef IS_DIGITALanalog
+  Serial.println("Setting Up digital");
+  /* setup the output nodes and reset them to 0*/
+  pinMode(digital_PIN_1, OUTPUT);
+  digitalWrite(digital_PIN_1, LOW);
+
+  pinMode(digital_PIN_2, OUTPUT);
+  digitalWrite(digital_PIN_2, LOW);
+
+  pinMode(digital_PIN_3, OUTPUT);
+  digitalWrite(digital_PIN_3, LOW);
+
 #endif
 
 
@@ -382,8 +377,6 @@ void setup()
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
 #endif
-
-
 }
 
 //char *task = strdup("");
@@ -418,10 +411,6 @@ void loop() {
       Serial.println(task);
     }
 
-
-#ifdef IS_ARDUINO
-    jsonProcessor(task);
-#else
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
     }
@@ -429,7 +418,6 @@ void loop() {
       // Process individual tasks
       jsonProcessor(task);
     }
-#endif
 
 #endif
 
@@ -444,36 +432,31 @@ void loop() {
       LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
-  }
-
 #ifdef IS_PS3
-  control_PS3();
+    control_PS3();
 #endif
 
 #ifdef IS_PS4
-  control_PS4();
+    control_PS4();
 #endif
 
 #ifdef IS_WIFI
-  server.handleClient();
+    server.handleClient();
 #endif
 
-  /*
-    #ifdef IS_MOTOR
+
+#ifdef IS_MOTOR
     if (not isblock and not isstop) {
       drive_motor_background();
     }
-    #endif
-  */
+#endif
 
+  }
 }
 
-
-#ifdef IS_ARDUINO
-void jsonProcessor(char* task ) {
-#else
 void jsonProcessor(char task[]) {
-#endif
+
+
   /*
       Return state
   */
@@ -497,80 +480,79 @@ void jsonProcessor(char task[]) {
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
   }
-
 #endif
 
-/*
-  Drive DAC
-*/
+  /*
+    Drive DAC
+  */
 #ifdef IS_DAC
-if (strcmp(task, dac_act_endpoint) == 0)
-  dac_act_fct();
-if (strcmp(task, dac_set_endpoint) == 0)
-  dac_set_fct();
-if (strcmp(task, dac_get_endpoint) == 0)
-  dac_get_fct();
+  if (strcmp(task, dac_act_endpoint) == 0)
+    dac_act_fct();
+  if (strcmp(task, dac_set_endpoint) == 0)
+    dac_set_fct();
+  if (strcmp(task, dac_get_endpoint) == 0)
+    dac_get_fct();
 #endif
 
-/*
-  Drive Laser
-*/
+  /*
+    Drive Laser
+  */
 #ifdef IS_LASER
-if (strcmp(task, laser_act_endpoint) == 0)
-  LASER_act_fct();
-if (strcmp(task, laser_set_endpoint) == 0)
-  LASER_get_fct();
-if (strcmp(task, laser_get_endpoint) == 0)
-  LASER_set_fct();
+  if (strcmp(task, laser_act_endpoint) == 0)
+    LASER_act_fct();
+  if (strcmp(task, laser_set_endpoint) == 0)
+    LASER_get_fct();
+  if (strcmp(task, laser_get_endpoint) == 0)
+    LASER_set_fct();
 #endif
 
 
-/*
-  Drive analog
-*/
+  /*
+    Drive analog
+  */
 #ifdef IS_ANALOG
-if (strcmp(task, analog_act_endpoint) == 0)
-  analog_act_fct();
-if (strcmp(task, analog_set_endpoint) == 0)
-  analog_set_fct();
-if (strcmp(task, analog_get_endpoint) == 0)
-  analog_get_fct();
+  if (strcmp(task, analog_act_endpoint) == 0)
+    analog_act_fct();
+  if (strcmp(task, analog_set_endpoint) == 0)
+    analog_set_fct();
+  if (strcmp(task, analog_get_endpoint) == 0)
+    analog_get_fct();
 #endif
 
 
-/*
-  Drive digital
-*/
+  /*
+    Drive digital
+  */
 #ifdef IS_DIGITAL
-if (strcmp(task, digital_act_endpoint) == 0)
-  digital_act_fct();
-if (strcmp(task, digital_set_endpoint) == 0)
-  digital_set_fct();
-if (strcmp(task, digital_get_endpoint) == 0)
-  digital_get_fct();
+  if (strcmp(task, digital_act_endpoint) == 0)
+    digital_act_fct();
+  if (strcmp(task, digital_set_endpoint) == 0)
+    digital_set_fct();
+  if (strcmp(task, digital_get_endpoint) == 0)
+    digital_get_fct();
 #endif
 
 
-/*
-  Drive LED Matrix
-*/
+  /*
+    Drive LED Matrix
+  */
 #ifdef IS_LEDARR
-if (strcmp(task, ledarr_act_endpoint) == 0)
-  ledarr_act_fct();
-if (strcmp(task, ledarr_set_endpoint) == 0)
-  ledarr_set_fct();
-if (strcmp(task, ledarr_get_endpoint) == 0)
-  ledarr_get_fct();
+  if (strcmp(task, ledarr_act_endpoint) == 0)
+    ledarr_act_fct();
+  if (strcmp(task, ledarr_set_endpoint) == 0)
+    ledarr_set_fct();
+  if (strcmp(task, ledarr_get_endpoint) == 0)
+    ledarr_get_fct();
 #endif
 
 
-// Send JSON information back
-Serial.println("++");
-serializeJson(jsonDocument, Serial);
-Serial.println();
-Serial.println("--");
-jsonDocument.clear();
-jsonDocument.garbageCollect();
+  // Send JSON information back
+  Serial.println("++");
+  serializeJson(jsonDocument, Serial);
+  Serial.println();
+  Serial.println("--");
+  jsonDocument.clear();
+  jsonDocument.garbageCollect();
 
 }
 
@@ -591,29 +573,29 @@ void tableProcessor() {
   Serial.println(N_repeats);
 
 
-  for (int irepeats = 0; irepeats < N_repeats; irepeats++) {
-    for (int itask = 0; itask < N_tasks; itask++) {
-      char json_string[256];
-      // Hacky, but should work
-      Serial.println(itask);
-      serializeJson(tmpJsonDoc[String(itask)], json_string);
-      Serial.println(json_string);
-      deserializeJson(jsonDocument, json_string);
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
+  for (int itask = 0; itask < N_tasks; itask++) {
+  char json_string[256];  
+    // Hacky, but should work
+    Serial.println(itask);
+    serializeJson(tmpJsonDoc[String(itask)], json_string);
+    Serial.println(json_string);
+    deserializeJson(jsonDocument,json_string);
 
-      String task_s = jsonDocument["task"];
-      char task[50];
-      task_s.toCharArray(task, 256);
+    String task_s = jsonDocument["task"];
+    char task[50];
+    task_s.toCharArray(task, 256);
 
-      //jsonDocument.garbageCollect(); // memory leak?
-      /*if (task == "null") return;*/
-      if (DEBUG) {
-        Serial.print("TASK: ");
-        Serial.println(task);
-      }
-
-      jsonProcessor(task);
-
+    //jsonDocument.garbageCollect(); // memory leak?
+    /*if (task == "null") return;*/
+    if (DEBUG) {
+      Serial.print("TASK: ");
+      Serial.println(task);
     }
+    
+    jsonProcessor(task);
+
+  }
   }
   tmpJsonDoc.clear();
 

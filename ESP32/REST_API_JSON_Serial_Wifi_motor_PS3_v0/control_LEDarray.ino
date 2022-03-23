@@ -11,7 +11,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
 // Custom function accessible by the API
 void ledarr_act_fct() {
 
-//{"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
+
   // here you can do something
   if (DEBUG) Serial.println("ledarr_act_fct");
 
@@ -19,7 +19,7 @@ void ledarr_act_fct() {
 
   // individual pattern gets adressed
   if (strcmp(LEDArrMode, "array")==0) {
-    if (DEBUG) Serial.println("array");
+    if (DEBUG) Serial.println("pattern");
     int arraySize = LED_N_X * LED_N_Y;
     if (jsonDocument.containsKey("arraySize")) {
       arraySize = jsonDocument["arraySize"];
