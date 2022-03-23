@@ -97,7 +97,8 @@
 //#include "pindef_cellSTORM.h"
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
-#include "pindef_cncshield_esp.h"
+//#include "pindef_cncshield_esp.h"
+#include "pindef_lightsheet_tomo_galvo.h"
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -139,6 +140,7 @@ WebServer server(80);
 char output[1000];
 #endif
 
+
 #ifdef IS_DAC
 #include "DAC_Module.h"
 DAC_Module *dac = new DAC_Module();
@@ -155,15 +157,12 @@ DAC_Module *dac = new DAC_Module();
    Register devices
 */
 #ifdef IS_MOTOR
-#include "A4988.h"
+#include <AccelStepper.h>
 #include "parameters_motor.h"
-
-
-// creating motor objjjects
-A4988 stepper_Y(FULLSTEPS_PER_REV_A, DIR_A, STEP_A, SLEEP, MS1, MS2, MS3);
-A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3);
-A4988 stepper_Y(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3);
-A4988 stepper_Z(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3);
+AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
+AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
+AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 #endif
 
 #ifdef IS_LASER
@@ -254,6 +253,7 @@ void setup()
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attachOnConnect(onConnect);
+  Ps3.attachOnDisconnect(onDisConnect);
   Ps3.begin("01:02:03:04:05:06");
   Serial.println("PS3 controler is set up.");
 #endif
@@ -263,9 +263,6 @@ void setup()
   //Ps4.attachOnConnect(onConnectPS4);
   PS4.begin("1a:2b:3c:01:01:01");
   Serial.println("PS4 controler is set up.");
-  stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
-  stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
-  stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
 #endif
 
 
@@ -330,18 +327,8 @@ void setup()
   ledcWrite(PWM_CHANNEL_analog_2, 0);
 #endif
 
-#ifdef IS_DIGITALanalog
-  Serial.println("Setting Up digital");
-  /* setup the output nodes and reset them to 0*/
-  pinMode(digital_PIN_1, OUTPUT);
-  digitalWrite(digital_PIN_1, LOW);
-
-  pinMode(digital_PIN_2, OUTPUT);
-  digitalWrite(digital_PIN_2, LOW);
-
-  pinMode(digital_PIN_3, OUTPUT);
-  digitalWrite(digital_PIN_3, LOW);
-
+#ifdef IS_DIGITAL
+  setupDigital();
 #endif
 
 

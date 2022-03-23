@@ -42,7 +42,7 @@ int SIGN_A = 1;
 int SIGN_X = 1;
 int SIGN_Y = 1;
 int SIGN_Z = 1;
-
+static const int FULLSTEPS_PER_REV_A = 200;
 static const int FULLSTEPS_PER_REV_X = 200;
 static const int FULLSTEPS_PER_REV_Y = 200;
 static const int FULLSTEPS_PER_REV_Z = 200;
