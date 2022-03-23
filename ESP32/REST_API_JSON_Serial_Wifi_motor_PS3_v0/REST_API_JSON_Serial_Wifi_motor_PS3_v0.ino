@@ -56,12 +56,29 @@
   "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
   "3": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
   "4": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
-  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},  
+  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
   "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
   "7": {"task": "/state_act", "delay": 100},
   "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
   }
 
+
+
+  // trigger camera at a rate of 20hz
+
+  {"task": "/motor_act", "speed0":0, "speed1":0,"speed2":40,"speed3":9000, "isforever":1, "isaccel":1}
+  {"task": "/state_set", "isdebug":0}
+  {"task": "/state_act", "delay": 100}
+  {
+  "task": "multitable",
+  "task_n": 2,
+  "repeats_n": 200,
+  "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
+  "1": {"task": "/state_act", "delay": 50}
+  }
+  {"task": "/motor_act", "isstop":1}
+  {"task": "/motor_act", "isenable":0}
+  {"task": "/state_set", "isdebug":1}
 
 */
 
@@ -575,7 +592,7 @@ void tableProcessor() {
 
   for (int irepeats = 0; irepeats < N_repeats; irepeats++){
   for (int itask = 0; itask < N_tasks; itask++) {
-  char json_string[256];  
+  char json_string[256];
     // Hacky, but should work
     Serial.println(itask);
     serializeJson(tmpJsonDoc[String(itask)], json_string);
@@ -592,7 +609,7 @@ void tableProcessor() {
       Serial.print("TASK: ");
       Serial.println(task);
     }
-    
+
     jsonProcessor(task);
 
   }
