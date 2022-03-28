@@ -11,7 +11,6 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
 // Custom function accessible by the API
 void ledarr_act_fct() {
 
-
   // here you can do something
   if (DEBUG) Serial.println("ledarr_act_fct");
 
@@ -121,11 +120,11 @@ void setup_matrix() {
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(255);
-  matrix.fillScreen(255);
+  matrix.fillScreen((255,255,255));
   matrix.show();
-  delay(1000);
-  matrix.fillScreen(0);
-  matrix.show();
+  //delay(1000);
+  //matrix.fillScreen(0);
+  //matrix.show();
 }
 
 

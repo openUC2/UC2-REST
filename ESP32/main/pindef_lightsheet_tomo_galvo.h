@@ -10,6 +10,7 @@
 //#define IS_WIFI
 #define IS_PS3 // ESP32-only
 //#define IS_ANALOG// ESP32-only
+#define IS_LEDARR
 
 
 // GALVos are always connected to 25/26 
@@ -30,6 +31,9 @@ int DIR_X = 2; // on wemos mini 35 does not work
 int DIR_Y = 33;
 int DIR_Z = 4; // on wemos mini 34 does not work
 int ENABLE = 5;
+
+// ledarray
+int LED_ARRAY_PIN = 32; 
 
 // digital out (e.g. camera trigger)
 int digital_PIN_1 = 22; 

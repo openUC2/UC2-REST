@@ -255,6 +255,9 @@ void setup()
   Ps3.attachOnConnect(onConnect);
   Ps3.attachOnDisconnect(onDisConnect);
   Ps3.begin("01:02:03:04:05:06");
+  Serial.println("01:02:03:04:05:06");
+  //String address = Ps3.getAddress(); // have arbitrary address?
+  //Serial.println(address);
   Serial.println("PS3 controler is set up.");
 #endif
 
