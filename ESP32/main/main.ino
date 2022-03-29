@@ -142,7 +142,7 @@ char output[1000];
 #endif
 
 // ensure motors switch off when PS3 controller is operating them
-bool override_overheating = false
+bool override_overheating = false;
 
 
 #ifdef IS_DAC
@@ -318,8 +318,6 @@ void setup()
   //Setup(dac_channel, clk_div, frequency, scale, phase, invert);
   dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
   dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
-  //delay(1000);
-  //dac->Stop(DAC_CHANNEL_1);
 #endif
 
 

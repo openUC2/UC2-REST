@@ -47,6 +47,7 @@ bool control_PS3(bool override_overheating) {
       speed_y =  stick_ly * 5;
       stepper_1_on = true;
       override_overheating = false;
+      ps3_timeout_active = millis();
     }
     else {
       if (stepper_1_on) {
@@ -65,6 +66,7 @@ bool control_PS3(bool override_overheating) {
       speed_z = stick_rx * 5;
       stepper_2_on = true;
       override_overheating = false;
+      ps3_timeout_active = millis();
     }
     else {
       if (stepper_2_on) {
@@ -84,6 +86,7 @@ bool control_PS3(bool override_overheating) {
       speed_x = stick_ry * 5;
       stepper_3_on = true;
       override_overheating = false;
+      ps3_timeout_active = millis();
     }
     else {
       if (stepper_3_on) {
@@ -182,6 +185,7 @@ bool control_PS3(bool override_overheating) {
       // prevent overheating
       ps3_is_enabled = false;
       digitalWrite(ENABLE, HIGH);
+      if(DEBUG) Serial.println("Disabling motors due to overheating");
     }
   }
   return override_overheating;
@@ -205,10 +209,6 @@ void run_motor(int speed1, int speed2, int speed3) {
 
   stepper_Z.setSpeed(speed3 * 10);
   stepper_Z.runSpeed();
-
-  ps3_timeout_active = millis();
-
-  
 }
 
 

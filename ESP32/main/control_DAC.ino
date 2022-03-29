@@ -41,12 +41,12 @@ void dac_act_fct() {
   }
 
   if (dac_is_running)
-    if(frequency==0){
-      dac_is_running=false;
+    if (frequency == 0) {
+      dac_is_running = false;
       dac->Stop(dac_channel);
       dacWrite(dac_channel, offset);
     }
-    else{
+    else {
       dac->Stop(dac_channel);
       dac->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
       dac_is_running = true;
@@ -100,7 +100,7 @@ void dac_get_fct() {
 */
 
 
-#ifdef IS_WIFI 
+#ifdef IS_WIFI
 void dac_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
