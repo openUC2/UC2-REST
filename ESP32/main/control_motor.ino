@@ -405,7 +405,7 @@ void setup_motor() {
   stepper_X.setMaxSpeed(MAX_VELOCITY_X);
   stepper_Y.setMaxSpeed(MAX_VELOCITY_Y);
   stepper_Z.setMaxSpeed(MAX_VELOCITY_Z);
-  //stepper_X.setAcceleration(MAX_ACCELERATION_A);
+  //stepper_A.setAcceleration(MAX_ACCELERATION_A);
   stepper_X.setAcceleration(MAX_ACCELERATION_X);
   stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
   stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
@@ -437,7 +437,7 @@ bool drive_motor_background() {
   // this function is called during every loop cycle
   if (isforever) {
     // run forever
-    stepper_A.runSpeed();
+    //stepper_A.runSpeed();
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();
@@ -445,21 +445,19 @@ bool drive_motor_background() {
   else {
     // run at constant speed
     if (isaccel) {
-      // acceleratin/deccellation
-      stepper_A.run();
+      //stepper_A.run();
       stepper_X.run();
       stepper_Y.run();
       stepper_Z.run();
     }
     else {
-      // abrupt start/stop
-      stepper_A.runSpeedToPosition();
+      //stepper_A.runSpeedToPosition();
       stepper_X.runSpeedToPosition();
       stepper_Y.runSpeedToPosition();
       stepper_Z.runSpeedToPosition();
     }
   }
-  
+
   // PROBLEM; is running wont work here!
   if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
     if (DEBUG) Serial.println("Shutting down motor motion");

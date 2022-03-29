@@ -29,7 +29,7 @@ void onConnect() {
   ps3_timeout_active = millis();
   ps3_timeout_inactive = millis();
   ps3_is_enabled = false;
-  digitalWrite(ENABLE, HIGH);
+  digitalWrite(ENABLE, LOW);
 }
 void onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
