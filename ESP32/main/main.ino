@@ -99,7 +99,8 @@ amplitude: 0,1,2,3
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 //#include "pindef_cncshield_esp.h"
-#include "pindef_lightsheet_tomo_galvo.h"
+//#include "pindef_lightsheet_tomo_galvo.h"
+#include "pindef_lightsheet_tomo_galvo_espwemos.h"
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
