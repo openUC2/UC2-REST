@@ -113,7 +113,7 @@ void motor_act_fct() {
     Serial.print("speed1 "); Serial.println(mspeed1);
     Serial.print("speed2 "); Serial.println(mspeed2);
     Serial.print("speed3 "); Serial.println(mspeed3);
-    Serial.print("position1 "); Serial.println(mposition0);
+    Serial.print("position0 "); Serial.println(mposition0);
     Serial.print("position1 "); Serial.println(mposition1);
     Serial.print("position2 "); Serial.println(mposition2);
     Serial.print("position3 "); Serial.println(mposition3);
@@ -126,13 +126,14 @@ void motor_act_fct() {
   }
 
   if (isstop) {
+    // Immediately stop the motor
     stepper_A.stop();
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
     isblock = 1;
     isforever = 0;
-    digitalWrite(ENABLE, HIGH);
+    setEnableMotor(false);
 
     POSITION_MOTOR_A = stepper_A.currentPosition();
     POSITION_MOTOR_X = stepper_X.currentPosition();
@@ -143,12 +144,11 @@ void motor_act_fct() {
     jsonDocument["POSX"] = POSITION_MOTOR_X;
     jsonDocument["POSY"] = POSITION_MOTOR_Y;
     jsonDocument["POSZ"] = POSITION_MOTOR_Z;
-    IS_MOTOR_RUNNING_BACKGROUND = 0;
     return;
   }
 
-
-  digitalWrite(ENABLE, LOW);
+  // prepare motor to run
+  setEnableMotor(true);
   stepper_A.setSpeed(mspeed0);
   stepper_A.setMaxSpeed(mspeed0);
   stepper_X.setSpeed(mspeed1);
@@ -159,12 +159,14 @@ void motor_act_fct() {
   stepper_Z.setMaxSpeed(mspeed3);
 
   if (isabs) {
+    // absolute position coordinates
     stepper_A.moveTo(SIGN_A * mposition0);
     stepper_X.moveTo(SIGN_X * mposition1);
     stepper_Y.moveTo(SIGN_Y * mposition2);
     stepper_Z.moveTo(SIGN_Z * mposition3);
   }
   else {
+    // relative position coordinates
     stepper_A.move(SIGN_A * mposition0);
     stepper_X.move(SIGN_X * mposition1);
     stepper_Y.move(SIGN_Y * mposition2);
@@ -172,28 +174,15 @@ void motor_act_fct() {
   }
 
   if (isblock) {
-    if (DEBUG) Serial.println("Start rotation");
+    // let the motor run and only return once the motor arrive at destination position
+    if (DEBUG) Serial.println("Start rotation in blocking mode");
     while (!drive_motor_background()) {
     }
     if (DEBUG) Serial.println("Done with rotation");
   }
   else {
     if (DEBUG) Serial.println("Start rotation in background");
-    IS_MOTOR_RUNNING_BACKGROUND = 1;
-#ifdef IS_ESP32
-    // assign a task for the motor so that it runs when we need it
-    Serial.println("Initiate SStart runStepperTask");
-    xTaskCreatePinnedToCore(
-      drive_motor_background_task,            // Task function.
-      "drive_motor_background_task",           // String with name of task.
-      10000,                   // Stack size in words.
-      NULL,      // Parameter passed as input of the task
-      1,                         // Priority of the task.
-      NULL,                     // Task handle.
-      0);                       // core #
-#endif
-
-  }
+    }
 
   // TODO: not true for non-blocking!
   POSITION_MOTOR_A = stepper_A.currentPosition();
@@ -205,6 +194,15 @@ void motor_act_fct() {
   jsonDocument["POSX"] = POSITION_MOTOR_X;
   jsonDocument["POSY"] = POSITION_MOTOR_Y;
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;
+}
+
+void setEnableMotor(bool enable){
+  digitalWrite(ENABLE, !enable);
+  motor_enable = enable;
+}
+
+bool getEnableMotor(){
+  return motor_enable;
 }
 
 void motor_set_fct() {
@@ -399,7 +397,7 @@ void setup_motor() {
   */
   Serial.println("Setting Up Motors");
   pinMode(ENABLE, OUTPUT);
-  digitalWrite(ENABLE, LOW);
+  setEnableMotor(true);
   Serial.println("Setting Up Motor A,X,Y,Z");
   //stepper_A.setMaxSpeed(MAX_VELOCITY_A);
   stepper_X.setMaxSpeed(MAX_VELOCITY_X);
@@ -421,16 +419,10 @@ void setup_motor() {
   stepper_X.setCurrentPosition(0);
   stepper_Y.setCurrentPosition(0);
   stepper_Z.setCurrentPosition(0);
-  digitalWrite(ENABLE, HIGH);
+  setEnableMotor(false);
 }
 
 
-void drive_motor_background_task(void *parameter) {
- disableCore0WDT();
-  while (!drive_motor_background()) {
-  }
-   vTaskDelete(NULL);
-}
 
 bool drive_motor_background() {
 
@@ -462,14 +454,11 @@ bool drive_motor_background() {
   if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
     if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
-      digitalWrite(ENABLE, HIGH);
+      setEnableMotor(false);
     }
     isblock = true;
-    IS_MOTOR_RUNNING_BACKGROUND = 1;
-
     return true;
   }
-
   else {
     if (isblock) return false;
   }

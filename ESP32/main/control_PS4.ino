@@ -41,7 +41,7 @@ void control_PS4() {
         stepper_1_on = false;
         stick_ly = 0;
         run_motor(0, 0, 1); // switch motor off;
-        digitalWrite(ENABLE, HIGH);
+        setEnableMotor(false);
       }
     }
 
@@ -63,7 +63,7 @@ void control_PS4() {
         stick_rx = 0;
         stepper_2_running = false;
         run_motor(0, 0, 2); // switch motor off;
-        digitalWrite(ENABLE, HIGH);
+        setEnableMotor(false);
       }
     }
 
@@ -82,7 +82,7 @@ void control_PS4() {
         stick_ly = 0;
         stepper_3_running = false;
         run_motor(0, 0, 3); // switch motor off;
-        digitalWrite(ENABLE, HIGH);
+        setEnableMotor(false);
       }
     }
 
@@ -222,7 +222,7 @@ run_motor(0,0,3);
 
 
 void run_motor(int steps, int speed, int axis) {
-  digitalWrite(ENABLE, LOW);
+  setEnableMotor(true);
   if (axis == 1) {
     stepper_X.begin(abs(speed));
     stepper_X.rotate(steps);
@@ -235,7 +235,7 @@ void run_motor(int steps, int speed, int axis) {
     stepper_Z.begin(abs(speed));
     stepper_Z.rotate(steps);
   }
-  digitalWrite(ENABLE, HIGH);
+  setEnableMotor(false);
 }
 
 

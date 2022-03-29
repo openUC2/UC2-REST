@@ -12,6 +12,7 @@
 
 bool isaccel = false;
 bool isforever = false;
+bool motor_enable = false;
 
 // global variables for the motor
 long mspeed0 = 1000;
@@ -35,7 +36,6 @@ int MOTOR_DECEL = 5000;
 int isabs = true;
 int isblock = true;
 int isen = false;
-int IS_MOTOR_RUNNING_BACKGROUND = 0;
 
 // direction
 int SIGN_A = 1;
@@ -47,10 +47,10 @@ static const int FULLSTEPS_PER_REV_X = 200;
 static const int FULLSTEPS_PER_REV_Y = 200;
 static const int FULLSTEPS_PER_REV_Z = 200;
 
-long MAX_VELOCITY_A = 10000;
-long MAX_VELOCITY_X = 10000;
-long MAX_VELOCITY_Y = 10000;
-long MAX_VELOCITY_Z = 10000;
+long MAX_VELOCITY_A = 20000;
+long MAX_VELOCITY_X = 20000;
+long MAX_VELOCITY_Y = 20000;
+long MAX_VELOCITY_Z = 20000;
 long MAX_ACCELERATION_A = 100000;
 long MAX_ACCELERATION_X = 100000;
 long MAX_ACCELERATION_Y = 100000;

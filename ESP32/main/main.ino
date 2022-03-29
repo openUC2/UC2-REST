@@ -420,7 +420,6 @@ void loop() {
       Serial.print("TASK: ");
       Serial.println(task);
     }
-    override_overheating = true;
 
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
@@ -445,7 +444,7 @@ void loop() {
 #endif
 
 #ifdef IS_PS3
-    override_overheating = control_PS3(override_overheating); // if controller is operating motors, overheating protection is enabled
+   control_PS3(); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_PS4
@@ -458,7 +457,7 @@ void loop() {
 
 
 #ifdef IS_MOTOR
-    if (not isblock and not isstop) {
+    if ((not isblock or isforever ) and not isstop) {
       drive_motor_background();
     }
 #endif

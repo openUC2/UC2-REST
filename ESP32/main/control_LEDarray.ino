@@ -27,7 +27,6 @@ void ledarr_act_fct() {
       int red = jsonDocument["red"][i];  //Implicit cast
       int green = jsonDocument["green"][i];  //Implicit cast
       int blue = jsonDocument["blue"][i];  //Implicit cast
-      if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
       int ix = i % LED_N_X;
       int iy = i / LED_N_Y;
       set_led_RGB(ix, iy, red, green, blue);
