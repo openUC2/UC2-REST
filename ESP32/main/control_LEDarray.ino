@@ -120,7 +120,7 @@ void setup_matrix() {
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(255);
-  matrix.fillScreen((255,255,255));
+  matrix.fillScreen(matrix.Color(255,255,255));
   matrix.show();
   //delay(1000);
   //matrix.fillScreen(0);

@@ -20,6 +20,10 @@ int ps3_timeout_active = 0;
 int ps3_timeout_inactive = 0;
 int ps3_timeout = 2000; // wait 5 seconds between actions before motors switch off again
 
+int speed_x = 0;
+int speed_y = 0;
+int speed_z = 0;
+
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   ps3_timeout_active = millis();
@@ -29,102 +33,80 @@ void onConnect() {
 }
 void onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
-  
   digitalWrite(ENABLE, HIGH);
-  
 }
 
-void control_PS3() {
+bool control_PS3(bool override_overheating) {
   if (Ps3.isConnected()) {
 
-    /*
-       ANALOG LEFT
-    */
-
+    // Y-Direction
     if ( abs(Ps3.data.analog.stick.ly) > offset_val) {
       // move_z
       stick_ly = Ps3.data.analog.stick.ly;
       stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-      run_motor(sgn(stick_ly) * 5, stick_ly * 5, 1);
+      speed_y =  stick_ly * 5;
       stepper_1_on = true;
+      override_overheating = false;
     }
     else {
       if (stepper_1_on) {
         stepper_1_on = false;
         stick_ly = 0;
-        run_motor(0, 0, 1); // switch motor off;
+        speed_y = 0;
       }
     }
 
-    /*
-       ANALOG right
-    */
-    if ( (abs(Ps3.data.analog.stick.rx) > offset_val) and not stepper_3_running) {
+    // Z-Direction
+    if ( (abs(Ps3.data.analog.stick.rx) > offset_val)) {
       // move_x
       stepper_2_running = true;
       stick_rx = Ps3.data.analog.stick.rx;
       stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-      run_motor(sgn(stick_rx) * 5, stick_rx * 5, 2);
+      speed_z = stick_rx * 5;
       stepper_2_on = true;
+      override_overheating = false;
     }
     else {
       if (stepper_2_on) {
         stepper_2_on = false;
         stick_rx = 0;
         stepper_2_running = false;
-        run_motor(0, 0, 2); // switch motor off;
-        
+        speed_z = 0; // switch motor off;
       }
     }
 
-    if ( (abs(Ps3.data.analog.stick.ry) > offset_val) and not stepper_2_running) {
+    // X-direction
+    if ( (abs(Ps3.data.analog.stick.ry) > offset_val)) {
       // move_y
       stick_ry = Ps3.data.analog.stick.ry;
       stepper_3_running = true;
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-      run_motor(sgn(stick_ry) * 5, stick_ry * 5, 3);
+      speed_x = stick_ry * 5;
       stepper_3_on = true;
+      override_overheating = false;
     }
     else {
       if (stepper_3_on) {
         stepper_3_on = false;
         stick_ly = 0;
         stepper_3_running = false;
-        run_motor(0, 0, 3); // switch motor off;
-        
+        speed_x = 0; // switch motor off;
       }
     }
 
-
+    // fine control for Z using buttons
     if ( Ps3.data.button.down) {
       // fine focus +
-      run_motor(10, 10, 3);
+      run_motor(0,0,10);
       delay(100);
-      run_motor(0, 0, 3);
     }
     if ( Ps3.data.button.up) {
       // fine focus -
-      run_motor(-10, -10, 3);
+      run_motor(0,0,-10);
       delay(100);
-      run_motor(0, 0, 3);
+      
     }
 
-
-    //
-    //    if ( abs(Ps3.data.analog.stick.lx) > offset_val) {
-    //      // LED Stip
-    //      stick_lx = Ps3.data.analog.stick.lx;
-    //      //stick_lx = stick_lx + sgn(stick_lx) * offset_val;
-    //      if ((colour_led += sgn(stick_lx) * 5) > 0 and (colour_led += sgn(stick_lx) * 5) < 255)
-    //        colour_led += sgn(stick_lx) * 5;
-    //      if (colour_led < 0)
-    //        colour_led = 0;
-    //      strip.setPixelColor(0, strip.Color(colour_led, colour_led, colour_led));
-    //      strip.show();
-    //      delay(100);
-    //    }
-    //
-    //
 
 #ifdef IS_ANALOG
     /*
@@ -186,7 +168,71 @@ void control_PS3() {
         delay(50);
       }
     }
+
+    
 #endif
+
+
+    // run all motors simultaneously
+    run_motor(speed_x, speed_y, speed_z);
+
+    ps3_timeout_inactive = millis();;
+
+    if (!override_overheating and ((ps3_timeout_inactive - ps3_timeout_active) > ps3_timeout)) {
+      // prevent overheating
+      ps3_is_enabled = false;
+      digitalWrite(ENABLE, HIGH);
+    }
+  }
+  return override_overheating;
+}
+
+
+
+
+void run_motor(int speed1, int speed2, int speed3) {
+
+   // move all motors simultaneously by one step
+  if (not ps3_is_enabled) {
+    ps3_is_enabled = true;
+    digitalWrite(ENABLE, LOW);
+  }
+  stepper_X.setSpeed(speed1 * 10);
+  stepper_X.runSpeed();
+
+  stepper_Y.setSpeed(speed2 * 10);
+  stepper_Y.runSpeed();
+
+  stepper_Z.setSpeed(speed3 * 10);
+  stepper_Z.runSpeed();
+
+  ps3_timeout_active = millis();
+
+  
+}
+
+
+
+/* unused for now
+ *  
+ */
+
+ 
+    //
+    //    if ( abs(Ps3.data.analog.stick.lx) > offset_val) {
+    //      // LED Stip
+    //      stick_lx = Ps3.data.analog.stick.lx;
+    //      //stick_lx = stick_lx + sgn(stick_lx) * offset_val;
+    //      if ((colour_led += sgn(stick_lx) * 5) > 0 and (colour_led += sgn(stick_lx) * 5) < 255)
+    //        colour_led += sgn(stick_lx) * 5;
+    //      if (colour_led < 0)
+    //        colour_led = 0;
+    //      strip.setPixelColor(0, strip.Color(colour_led, colour_led, colour_led));
+    //      strip.show();
+    //      delay(100);
+    //    }
+    //
+    //
 
     //    if ( Ps3.data.button.circle ) {
     //      //if(not is_laser_red){
@@ -225,49 +271,6 @@ void control_PS3() {
     //      }
     //
     //    }
-
-    ps3_timeout_inactive = millis();; 
-
-    if ((ps3_timeout_inactive-ps3_timeout_active)>ps3_timeout){
-      // prevent overheating
-      ps3_is_enabled = false;
-      digitalWrite(ENABLE, HIGH);
-    }
-  }
-}
-
-
-
-
-void run_motor(int steps, int speed, int axis) {
-
-  if (not ps3_is_enabled){
-    ps3_is_enabled=true;
-    digitalWrite(ENABLE, LOW);
-  }
-    speed = speed * 10;
-//  if (DEBUG) Serial.println("Motor "+String(axis)+" , steps: " + String(steps) + ", speed:" + String(speed));
-
-//    for (int istep = 0; istep < steps; istep++) {
-    if (axis == 1) {
-      stepper_X.setSpeed(speed);
-      stepper_X.runSpeed();
-    }
-    else if (axis == 2) {
-      stepper_Y.setSpeed(speed);
-      stepper_Y.runSpeed();
-    }
-    else if (axis == 3) {
-      stepper_Z.setSpeed(speed);
-      stepper_Z.runSpeed();
-    }
-    ps3_timeout_active = millis(); 
-
-}
-
-
-
-
 
 
 #endif

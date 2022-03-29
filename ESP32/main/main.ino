@@ -140,6 +140,9 @@ WebServer server(80);
 char output[1000];
 #endif
 
+// ensure motors switch off when PS3 controller is operating them
+bool override_overheating = false
+
 
 #ifdef IS_DAC
 #include "DAC_Module.h"
@@ -417,6 +420,7 @@ void loop() {
       Serial.print("TASK: ");
       Serial.println(task);
     }
+    override_overheating = true;
 
     if (strcmp(task, "multitable") == 0) {
       tableProcessor();
@@ -440,7 +444,7 @@ void loop() {
 #endif
 
 #ifdef IS_PS3
-    control_PS3();
+    override_overheating = control_PS3(override_overheating); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_PS4

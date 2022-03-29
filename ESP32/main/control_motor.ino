@@ -434,6 +434,7 @@ void drive_motor_background_task(void *parameter) {
 
 bool drive_motor_background() {
 
+  // this function is called during every loop cycle
   if (isforever) {
     // run forever
     stepper_A.runSpeed();
@@ -444,19 +445,22 @@ bool drive_motor_background() {
   else {
     // run at constant speed
     if (isaccel) {
+      // acceleratin/deccellation
       stepper_A.run();
       stepper_X.run();
       stepper_Y.run();
       stepper_Z.run();
     }
     else {
+      // abrupt start/stop
       stepper_A.runSpeedToPosition();
       stepper_X.runSpeedToPosition();
       stepper_Y.runSpeedToPosition();
       stepper_Z.runSpeedToPosition();
     }
   }
-  // is running wont work here!
+  
+  // PROBLEM; is running wont work here!
   if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
     if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
@@ -471,6 +475,7 @@ bool drive_motor_background() {
   else {
     if (isblock) return false;
   }
+  return false; //never reached, but keeps compiler happy?
 }
 
 
