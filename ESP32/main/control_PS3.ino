@@ -9,6 +9,8 @@ int speed_x = 0;
 int speed_y = 0;
 int speed_z = 0;
 
+int speedfactor = 2;
+
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   setEnableMotor(true);
@@ -155,12 +157,12 @@ void control_PS3() {
 void run_motor(int speed_x, int speed_y, int speed_z) {
 
   // move all motors simultaneously by one step
-  stepper_X.setSpeed(speed_x * 10);
-  stepper_X.setMaxSpeed(speed_x * 10);
-  stepper_Y.setSpeed(speed_y * 10);
-  stepper_Y.setMaxSpeed(speed_y * 10);
-  stepper_Z.setSpeed(speed_z * 10);
-  stepper_Z.setMaxSpeed(speed_z * 10);
+  stepper_X.setSpeed(speed_x * speedfactor);
+  stepper_X.setMaxSpeed(speed_x * speedfactor);
+  stepper_Y.setSpeed(speed_y * speedfactor);
+  stepper_Y.setMaxSpeed(speed_y * speedfactor);
+  stepper_Z.setSpeed(speed_z * speedfactor);
+  stepper_Z.setMaxSpeed(speed_z * speedfactor);
   isforever = true;
   isblock = false;
 }
