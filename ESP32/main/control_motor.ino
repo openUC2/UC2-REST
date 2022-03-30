@@ -150,13 +150,9 @@ void motor_act_fct() {
   // prepare motor to run
   setEnableMotor(true);
   stepper_A.setSpeed(mspeed0);
-  stepper_A.setMaxSpeed(mspeed0);
   stepper_X.setSpeed(mspeed1);
-  stepper_X.setMaxSpeed(mspeed1);
   stepper_Y.setSpeed(mspeed2);
-  stepper_Y.setMaxSpeed(mspeed2);
   stepper_Z.setSpeed(mspeed3);
-  stepper_Z.setMaxSpeed(mspeed3);
 
   if (isabs) {
     // absolute position coordinates
