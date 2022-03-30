@@ -1,16 +1,5 @@
-#ifdef IS_DAC
 
-
-// DAC-specific parameters
-dac_channel_t dac_channel = DAC_CHANNEL_1;
-uint32_t clk_div = 0;
-uint32_t scale = 0;
-uint32_t invert = 2;
-uint32_t phase = 0;
-uint32_t frequency = 1000;
-
-boolean dac_is_running = false;
-
+#if defined(IS_DAC) || defined(IS_DAC_FAKE)
 
 // Custom function accessible by the API
 void dac_act_fct() {
@@ -40,6 +29,8 @@ void dac_act_fct() {
     Serial.print("offset "); Serial.println(offset);
   }
 
+  #ifdef IS_DAC
+
   if (dac_is_running)
     if (frequency == 0) {
       dac_is_running = false;
@@ -56,6 +47,7 @@ void dac_act_fct() {
     if (offset != NULL)
       dac->dac_offset_set(dac_channel, offset);
   }
+  #endif
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
@@ -129,3 +121,17 @@ void dac_set_fct_http() {
 }
 #endif
 #endif
+
+
+
+
+void drive_galvo(void * parameter){
+  while(true){ // infinite loop
+    digitalWrite(dac_fake_1, HIGH);
+    digitalWrite(dac_fake_2, HIGH);
+    vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(dac_fake_1, LOW);
+    digitalWrite(dac_fake_2, LOW);
+    vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
+   }
+}

@@ -1,5 +1,5 @@
 #ifdef IS_PS3
-int offset_val = 30;
+int offset_val = 5;
 int stick_ly = 0;
 int stick_lx = 0;
 int stick_rx = 0;

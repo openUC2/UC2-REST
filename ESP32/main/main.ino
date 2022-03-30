@@ -126,6 +126,11 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 
 #include <ArduinoJson.h>
 
+#if defined(IS_DAC) || defined(IS_DAC_FAKE)
+#include "parameters_dac.h"
+uint32_t frequency = 1000;
+#endif
+
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
 // shhould not be more than 300 !!!
@@ -147,7 +152,6 @@ bool override_overheating = false;
 
 
 #ifdef IS_DAC
-#include "DAC_Module.h"
 DAC_Module *dac = new DAC_Module();
 #endif
 
@@ -387,6 +391,21 @@ void setup()
   Serial.println(ledarr_act_endpoint);
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
+#endif
+
+
+#ifdef IS_DAC_FAKE 
+  pinMode(dac_fake_1, OUTPUT);
+  pinMode(dac_fake_2, OUTPUT);
+  frequency=1;
+  xTaskCreate(
+    drive_galvo,    // Function that should be called
+    "drive_galvo",   // Name of the task (for debugging)
+    1000,            // Stack size (bytes)
+    NULL,            // Parameter to pass
+    1,               // Task priority
+    NULL             // Task handle
+  );
 #endif
 }
 
