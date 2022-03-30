@@ -79,7 +79,7 @@ amplitude: 0,1,2,3
   }
   {"task": "/motor_act", "isstop":1}
   {"task": "/motor_act", "isenable":0}
-  {"task": "/state_set", "isdebug":1}
+  {"task": "/s-tate_set", "isdebug":1}
 
 */
 
@@ -87,7 +87,7 @@ amplitude: 0,1,2,3
 
 /*
     Pindefintion per Setup
-*/
+
 //#include "pindef_lightsheet.h"
 //#include "pindef_lightsheet_arduino.h"
 //#include "pindef_ptychography.h"
@@ -99,7 +99,7 @@ amplitude: 0,1,2,3
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 //#include "pindef_cncshield_esp.h"
-//#include "pindef_lightsheet_tomo_galvo.h"
+//1#include "pindef_lightsheet_tomo_galvo.h"
 #include "pindef_lightsheet_tomo_galvo_espwemos.h"
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
