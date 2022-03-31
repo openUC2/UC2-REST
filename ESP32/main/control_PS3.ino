@@ -1,5 +1,5 @@
 #ifdef IS_PS3
-int offset_val = 5;
+int offset_val = 20; // make sure you do not accidentally turn on two directions at the same time
 int stick_ly = 0;
 int stick_lx = 0;
 int stick_rx = 0;
@@ -8,6 +8,8 @@ int stick_ry = 0;
 int speed_x = 0;
 int speed_y = 0;
 int speed_z = 0;
+
+int global_speed = 2; // multiplier for the speed 
 
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
@@ -155,12 +157,12 @@ void control_PS3() {
 void run_motor(int speed_x, int speed_y, int speed_z) {
 
   // move all motors simultaneously by one step
-  stepper_X.setSpeed(speed_x * 10);
-  stepper_X.setMaxSpeed(speed_x * 10);
-  stepper_Y.setSpeed(speed_y * 10);
-  stepper_Y.setMaxSpeed(speed_y * 10);
-  stepper_Z.setSpeed(speed_z * 10);
-  stepper_Z.setMaxSpeed(speed_z * 10);
+  stepper_X.setSpeed(speed_x * global_speed);
+  stepper_X.setMaxSpeed(speed_x * global_speed);
+  stepper_Y.setSpeed(speed_y * global_speed);
+  stepper_Y.setMaxSpeed(speed_y * global_speed);
+  stepper_Z.setSpeed(speed_z * global_speed);
+  stepper_Z.setMaxSpeed(speed_z * global_speed);
   isforever = true;
   isblock = false;
 }
