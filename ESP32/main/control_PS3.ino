@@ -9,7 +9,7 @@ int speed_x = 0;
 int speed_y = 0;
 int speed_z = 0;
 
-int global_speed = 2; // multiplier for the speed 
+int global_speed = 2; // multiplier for the speed
 
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
