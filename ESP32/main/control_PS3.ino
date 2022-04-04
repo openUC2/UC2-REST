@@ -158,13 +158,9 @@ void run_motor(int speed_x, int speed_y, int speed_z) {
 
   // move all motors simultaneously by one step
   stepper_X.setSpeed(speed_x * global_speed);
-  stepper_X.setMaxSpeed(speed_x * global_speed);
   stepper_Y.setSpeed(speed_y * global_speed);
-  stepper_Y.setMaxSpeed(speed_y * global_speed);
   stepper_Z.setSpeed(speed_z * global_speed);
-  stepper_Z.setMaxSpeed(speed_z * global_speed);
   isforever = true;
-  isblock = false;
 }
 
 

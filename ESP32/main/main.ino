@@ -17,9 +17,9 @@
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
   move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1}
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1} // move in the background
-  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":0, "isen":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isen":1}
+  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isen":1} // move in the background
+  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1,  "isen":1}
   {"task": "/motor_act", "isstop":1}
   {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
@@ -478,7 +478,7 @@ void loop() {
 
 
 #ifdef IS_MOTOR
-    if ((not isblock or isforever ) and not isstop) {
+    if (not isstop) {
       drive_motor_background();
     }
 #endif
