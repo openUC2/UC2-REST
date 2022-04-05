@@ -427,15 +427,13 @@ bool drive_motor_background() {
 
   // PROBLEM; is running wont work here!
   if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
-    if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
       setEnableMotor(false);
     }
+    isactive=false;
     return true;
   }
-  else {
-    return false;
-  }
+  isactive = true;
   return false; //never reached, but keeps compiler happy?
 }
 

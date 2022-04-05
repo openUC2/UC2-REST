@@ -126,7 +126,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #endif
 
 #include <ArduinoJson.h>
-
+#include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
 #include "parameters_dac.h"
 uint32_t frequency = 1000;
@@ -262,6 +262,7 @@ void setup()
 
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
+  Ps3.attach(onAttach);
   Ps3.attachOnConnect(onConnect);
   Ps3.attachOnDisconnect(onDisConnect);
   Ps3.begin("01:02:03:04:05:06");
@@ -479,6 +480,7 @@ void loop() {
 
 #ifdef IS_MOTOR
     if (not isstop) {
+      isactive=true;
       drive_motor_background();
     }
 #endif

@@ -35,6 +35,7 @@ int MOTOR_DECEL = 5000;
   
 int isabs = true;
 int isen = false;
+bool isactive = false;
 
 // direction
 int SIGN_A = 1;
