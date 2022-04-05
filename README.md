@@ -100,7 +100,7 @@ void setup()
 ### Compile and Upload Arduino Firmware
 
 - Download this repository following this [link](https://github.com/openUC2/UC2-REST/archive/refs/heads/master.zip)
-- Go to the folder that contains the file `REST_API_JSON_Serial_Wifi_motor_PS3_v0.ino` in [.ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0](https://github.com/openUC2/UC2-REST/tree/master/ESP32/REST_API_JSON_Serial_Wifi_motor_PS3_v0)
+- Go to the folder that contains the file `main.ino` in [.ESP32/main](https://github.com/openUC2/UC2-REST/tree/master/ESP32/main)
 - Select the board you want to install it to (e.g. Arduino or ESP32 from the Boardmanager) 
 - *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab 
 *REST_API_JSON_Serial_Wifi_motor_PS3_v0* )
