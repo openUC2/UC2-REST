@@ -100,9 +100,9 @@ amplitude: 0,1,2,3
 //#include "pindef_multicolour_borstel.h"
 //#include "pindef_cncshield_esp.h"
 //1#include "pindef_lightsheet_tomo_galvo.h"
-*/
 #include "pindef_lightsheet_tomo_galvo_espwemos.h"
-
+*/
+#include "pindef_incubator_microscope_zonly_matrix.h"
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
