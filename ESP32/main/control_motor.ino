@@ -67,13 +67,6 @@ void motor_act_fct() {
     isabs = 0;
   }
 
-  if (jsonDocument.containsKey("isblock")) {
-    isblock = jsonDocument["isblock"];
-  }
-  else {
-    isblock = 1;
-  }
-
   if (jsonDocument.containsKey("isstop")) {
     isstop = jsonDocument["isstop"];
   }
@@ -103,9 +96,6 @@ void motor_act_fct() {
     isforever = 0;
   }
 
-  if (isforever)
-    isblock = 0;
-
   jsonDocument.clear();
 
   if (DEBUG) {
@@ -118,7 +108,6 @@ void motor_act_fct() {
     Serial.print("position2 "); Serial.println(mposition2);
     Serial.print("position3 "); Serial.println(mposition3);
     Serial.print("isabs "); Serial.println(isabs);
-    Serial.print("isblock "); Serial.println(isblock);
     Serial.print("isen "); Serial.println(isen);
     Serial.print("isstop "); Serial.println(isstop);
     Serial.print("isaccel "); Serial.println(isaccel);
@@ -131,7 +120,6 @@ void motor_act_fct() {
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
-    isblock = 1;
     isforever = 0;
     setEnableMotor(false);
 
@@ -169,16 +157,7 @@ void motor_act_fct() {
     stepper_Z.move(SIGN_Z * mposition3);
   }
 
-  if (isblock) {
-    // let the motor run and only return once the motor arrive at destination position
-    if (DEBUG) Serial.println("Start rotation in blocking mode");
-    while (!drive_motor_background()) {
-    }
-    if (DEBUG) Serial.println("Done with rotation");
-  }
-  else {
-    if (DEBUG) Serial.println("Start rotation in background");
-    }
+  if (DEBUG) Serial.println("Start rotation in background");
 
   // TODO: not true for non-blocking!
   POSITION_MOTOR_A = stepper_A.currentPosition();
@@ -448,16 +427,13 @@ bool drive_motor_background() {
 
   // PROBLEM; is running wont work here!
   if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
-    if (DEBUG) Serial.println("Shutting down motor motion");
     if (not isen) {
       setEnableMotor(false);
     }
-    isblock = true;
+    isactive=false;
     return true;
   }
-  else {
-    if (isblock) return false;
-  }
+  isactive = true;
   return false; //never reached, but keeps compiler happy?
 }
 

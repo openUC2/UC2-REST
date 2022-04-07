@@ -1,5 +1,3 @@
-
-#include "parameters_state.h"
 #ifdef ARDUINO_SERIAL
 #define IS_SERIAL
 #define IS_ARDUINO

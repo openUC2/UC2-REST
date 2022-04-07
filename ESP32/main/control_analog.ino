@@ -31,13 +31,26 @@ void analog_act_fct() {
 
 void analog_set_fct() {
   // here you can set parameters
-  int analogid = jsonDocument["analogid"];
-  int analogpin = jsonDocument["analogpin"];
+  
+  if (jsonDocument.containsKey("analogid")) {
+    int analogid = jsonDocument["analogid"];
+  }
+  else{
+    int analogid = 0;
+  }
+
+  if (jsonDocument.containsKey("analogpin")) {
+    int analogpin = jsonDocument["analogpin"];
+  }
+  else{
+    int analogpin = 0;
+  }
 
   if (DEBUG) Serial.print("analogid "); Serial.println(analogid);
   if (DEBUG) Serial.print("analogpin "); Serial.println(analogpin);
 
-  if (analogid != NULL and analogpin != NULL) {
+
+
     if (analogid == 1) {
       analog_PIN_1 = analogpin;
       pinMode(analog_PIN_1, OUTPUT);
@@ -70,7 +83,7 @@ void analog_set_fct() {
       ledcAttachPin(analog_PIN_3, PWM_CHANNEL_analog_3);
       ledcWrite(PWM_CHANNEL_analog_3, 0);
 #endif
-  }
+
 }
 
 jsonDocument.clear();

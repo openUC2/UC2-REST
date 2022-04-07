@@ -7,17 +7,44 @@ void dac_act_fct() {
 
   Serial.println("dac_act_fct");
 
+  // apply default parameters
+  // DAC Channel
+  dac_channel = DAC_CHANNEL_1;
+  if (jsonDocument.containsKey("dac_channel")) {
+    dac_channel = jsonDocument["dac_channel"];
+  }
+
+  // DAC Frequency
+  frequency = 1000;
+  if (jsonDocument.containsKey("frequency")) {
+    frequency = jsonDocument["frequency"];
+  }
+
+  // DAC offset
+  int offset = 0;
+  if (jsonDocument.containsKey("offset")) {
+    int offset = jsonDocument["offset"];
+  }
+
+  // DAC amplitude
+  int amplitude = 0;
+  if (jsonDocument.containsKey("amplitude")) {
+    int amplitude = jsonDocument["amplitude"];
+  }
+
+  // DAC clk_div
+  int clk_div = 0;
+  if (jsonDocument.containsKey("clk_div")) {
+    int clk_div = jsonDocument["clk_div"];
+  }
+  
   if (jsonDocument["dac_channel"] == 1)
     dac_channel = DAC_CHANNEL_1;
   else if (jsonDocument["dac_channel"] == 2)
     dac_channel = DAC_CHANNEL_2;
-  frequency = jsonDocument["frequency"];
-  int offset = jsonDocument["offset"];
-  int amplitude = jsonDocument["amplitude"];
-  clk_div = jsonDocument["clk_div"];
 
   //Scale output of a DAC channel using two bit pattern:
-  if (amplitude == 0 or amplitude == NULL) scale = 0;
+  if (amplitude == 0) scale = 0;
   else if (amplitude == 1) scale = 01;
   else if (amplitude == 2) scale = 10;
   else if (amplitude == 3) scale = 11;
@@ -44,7 +71,6 @@ void dac_act_fct() {
     }
   else {
     dac->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
-    if (offset != NULL)
       dac->dac_offset_set(dac_channel, offset);
   }
   #endif
