@@ -443,7 +443,9 @@ void loop() {
       Serial.println(task);
     }
 
+    // do the processing based on the incoming stream
     if (strcmp(task, "multitable") == 0) {
+      // multiple tasks
       tableProcessor();
     }
     else {
