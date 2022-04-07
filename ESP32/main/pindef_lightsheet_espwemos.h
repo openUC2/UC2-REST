@@ -44,4 +44,4 @@ int digital_PIN_1 = 35; //  Cycle Start/Resume
 int digital_PIN_2 = 35; //not used/reserved
 int digital_PIN_3 = 39; //not used/reserved
 
-const char* identifier_setup = "pindef_lightsheet_tomo_galvo_espwemos";
+const char* identifier_setup = "pindef_lightsheet_espwemos";
