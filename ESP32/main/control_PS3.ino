@@ -1,7 +1,7 @@
 #ifdef IS_PS3
 #include "parameters_ps3.h"
 
-
+bool IS_PS3_CONTROLER_LEDARRAY = false;
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   IS_PS3_CONTROLER_ACTIVE = true;
@@ -26,6 +26,13 @@ void activate_PS3() {
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PS3_CONTROLER_ACTIVE);
     setEnableMotor(IS_PS3_CONTROLER_ACTIVE);
+    delay(1000); //Debounce?
+  }
+  if (Ps3.event.button_down.cross) {
+    IS_PS3_CONTROLER_LEDARRAY = !IS_PS3_CONTROLER_LEDARRAY;
+    if (DEBUG) Serial.print("Turning LED Matrix to: ");
+    if (DEBUG) Serial.println(IS_PS3_CONTROLER_LEDARRAY);
+    set_all(255*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
 }

@@ -25,7 +25,8 @@
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_get', 'axis': 1}
-
+  {"task": "/motor_act", "speed":30, "pos1":400, "pos2":0, "pos3":0, "isabs":0, "isblock":0, "isen":1}
+  
 
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
@@ -443,7 +444,9 @@ void loop() {
       Serial.println(task);
     }
 
+    // do the processing based on the incoming stream
     if (strcmp(task, "multitable") == 0) {
+      // multiple tasks
       tableProcessor();
     }
     else {
