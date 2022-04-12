@@ -1,4 +1,4 @@
-motor_act_fct#ifdef IS_MOTOR
+#ifdef IS_MOTOR
 
 
 
@@ -75,7 +75,6 @@ void motor_act_fct() {
   }
 
   if (jsonDocument.containsKey("isaccel")) {
-
     isaccel = jsonDocument["isaccel"];
   }
   else {
@@ -116,14 +115,14 @@ void motor_act_fct() {
 
   if (isstop) {
     // Immediately stop the motor
-    stepper_A.stop();
+    //stepper_A.stop();
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
     isforever = 0;
     setEnableMotor(false);
 
-    POSITION_MOTOR_A = stepper_A.currentPosition();
+    //POSITION_MOTOR_A = stepper_A.currentPosition();
     POSITION_MOTOR_X = stepper_X.currentPosition();
     POSITION_MOTOR_Y = stepper_Y.currentPosition();
     POSITION_MOTOR_Z = stepper_Z.currentPosition();
@@ -137,21 +136,28 @@ void motor_act_fct() {
 
   // prepare motor to run
   setEnableMotor(true);
-  stepper_A.setSpeed(mspeed0);
+  //stepper_A.setSpeed(mspeed0);
   stepper_X.setSpeed(mspeed1);
   stepper_Y.setSpeed(mspeed2);
   stepper_Z.setSpeed(mspeed3);
+  //stepper_A.setMaxSpeed(mspeed0);
+  stepper_X.setMaxSpeed(mspeed1);
+  stepper_Y.setMaxSpeed(mspeed2);
+  stepper_Z.setMaxSpeed(mspeed3);
+
+  Serial.print("Speed: ");
+  Serial.println(stepper_X.speed());
 
   if (isabs) {
     // absolute position coordinates
-    stepper_A.moveTo(SIGN_A * mposition0);
+    //stepper_A.moveTo(SIGN_A * mposition0);
     stepper_X.moveTo(SIGN_X * mposition1);
     stepper_Y.moveTo(SIGN_Y * mposition2);
     stepper_Z.moveTo(SIGN_Z * mposition3);
   }
   else {
     // relative position coordinates
-    stepper_A.move(SIGN_A * mposition0);
+    //stepper_A.move(SIGN_A * mposition0);
     stepper_X.move(SIGN_X * mposition1);
     stepper_Y.move(SIGN_Y * mposition2);
     stepper_Z.move(SIGN_Z * mposition3);
@@ -159,8 +165,7 @@ void motor_act_fct() {
 
   if (DEBUG) Serial.println("Start rotation in background");
 
-  // TODO: not true for non-blocking!
-  POSITION_MOTOR_A = stepper_A.currentPosition();
+  //POSITION_MOTOR_A = stepper_A.currentPosition();
   POSITION_MOTOR_X = stepper_X.currentPosition();
   POSITION_MOTOR_Y = stepper_Y.currentPosition();
   POSITION_MOTOR_Z = stepper_Z.currentPosition();
@@ -405,6 +410,12 @@ bool drive_motor_background() {
   if (isforever) {
     // run forever
     //stepper_A.runSpeed();
+    // is this a bug? Otherwise the speed won't be set properly - seems like it is accelerating eventhough it shouldnt
+    //stepper_A.setSpeed(mspeed0);
+    //stepper_X.setSpeed(mspeed1);
+    //stepper_Y.setSpeed(mspeed2);
+    //stepper_Z.setSpeed(mspeed3);
+
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();

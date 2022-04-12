@@ -146,8 +146,6 @@ void dac_set_fct_http() {
   server.send(200, "application/json", output);
 }
 #endif
-#endif
-
 
 
 
@@ -161,3 +159,6 @@ void drive_galvo(void * parameter){
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }
+
+
+#endif

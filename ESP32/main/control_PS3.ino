@@ -38,12 +38,7 @@ void activate_PS3() {
 }
 
 void control_PS3() {
-  if (Ps3.isConnected()) {
-
-
-    // Action based on input parameters
-
-    if (IS_PS3_CONTROLER_ACTIVE) {
+  if (Ps3.isConnected() and IS_PS3_CONTROLER_ACTIVE) {
       // Y-Direction
       if ( abs(Ps3.data.analog.stick.ly) > offset_val) {
         // move_z
@@ -176,7 +171,7 @@ void control_PS3() {
         isforever = false;
       }
     }
-  }
+  
 }
 
 

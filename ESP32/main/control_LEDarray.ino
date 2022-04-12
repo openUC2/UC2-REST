@@ -14,7 +14,7 @@ void ledarr_act_fct() {
   // here you can do something
   if (DEBUG) Serial.println("ledarr_act_fct");
 
-  const char* LEDArrMode = jsonDocument["LEDArrMode"]; // "array", "individual", "full", "off", "left", "right", "top", "bottom",
+  const char* LEDArrMode = jsonDocument["LEDArrMode"]; // "array", "individual", "full", "single", "off", "left", "right", "top", "bottom",
 
   // individual pattern gets adressed
   if (strcmp(LEDArrMode, "array")==0) {
@@ -32,7 +32,18 @@ void ledarr_act_fct() {
       set_led_RGB(ix, iy, red, green, blue);
     }
   }
-
+  // only if a single led will be updated, all others stay the same
+  else if (strcmp(LEDArrMode, "single")==0) {
+    if (DEBUG) Serial.println("individual");
+      int indexled = jsonDocument["indexled"];
+      int red = jsonDocument["red"];  //Implicit cast
+      int green = jsonDocument["green"];  //Implicit cast
+      int blue = jsonDocument["blue"];  //Implicit cast
+      if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
+      int ix = indexled % LED_N_X;
+      int iy = indexled / LED_N_Y;
+      set_led_RGB(ix, iy, red, green, blue);
+  }
   // only few leds will be updated, all others stay the same
   else if (strcmp(LEDArrMode, "individual")==0) {
     if (DEBUG) Serial.println("individual");

@@ -18,6 +18,8 @@ This provides a simple client to control all kinds of actions.
 
 # Installation
 
+***IMPORTANT: USE THE ESP-IDF version 1.0.6 - >=2.0 has issues with the PS3 controller!***
+
 ### Install Arduino IDE
 
 - Download the Arduino IDE 1.8.1 from [here](https://www.arduino.cc/en/software/OldSoftwareReleases)

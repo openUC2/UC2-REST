@@ -43,6 +43,7 @@ amplitude: 0,1,2,3
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
   {"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
   {"task": "/ledarr_act","LEDArrMode": "full", "red":0, "green": 0, "blue":0}
+  {'red': 193, 'green': 193, 'blue': 193, 'indexled': 27, 'Nleds': 1, 'LEDArrMode': 'individual', 'task': '/ledarr_act'}
 
   // attempt to have fast triggering
 
@@ -88,6 +89,7 @@ amplitude: 0,1,2,3
 
 /*
     Pindefintion per Setup
+*/
 
 //#include "pindef_lightsheet.h"
 //#include "pindef_lightsheet_arduino.h"
@@ -100,9 +102,10 @@ amplitude: 0,1,2,3
 //#include "pindef_cellSTORM_wifi.h"
 //#include "pindef_multicolour_borstel.h"
 //#include "pindef_cncshield_esp.h"
-//1#include "pindef_lightsheet_tomo_galvo.h"
-*/
+//#include "pindef_lightsheet_tomo_galvo.h"
 #include "pindef_lightsheet_tomo_galvo_espwemos.h"
+//#include "pindef_lightsheet_espwemos.h"
+
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -170,7 +173,7 @@ DAC_Module *dac = new DAC_Module();
 #ifdef IS_MOTOR
 #include <AccelStepper.h>
 #include "parameters_motor.h"
-AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
+//AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
