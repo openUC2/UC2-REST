@@ -26,7 +26,7 @@
   {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
   {'task': '/motor_get', 'axis': 1}
   {"task": "/motor_act", "speed":30, "pos1":400, "pos2":0, "pos3":0, "isabs":0, "isblock":0, "isen":1}
-  
+
 
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
@@ -400,7 +400,7 @@ void setup()
 #endif
 
 
-#ifdef IS_DAC_FAKE 
+#ifdef IS_DAC_FAKE
   pinMode(dac_fake_1, OUTPUT);
   pinMode(dac_fake_2, OUTPUT);
   frequency=1;

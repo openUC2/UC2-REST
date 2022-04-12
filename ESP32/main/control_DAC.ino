@@ -37,7 +37,7 @@ void dac_act_fct() {
   if (jsonDocument.containsKey("clk_div")) {
     int clk_div = jsonDocument["clk_div"];
   }
-  
+
   if (jsonDocument["dac_channel"] == 1)
     dac_channel = DAC_CHANNEL_1;
   else if (jsonDocument["dac_channel"] == 2)
@@ -159,6 +159,4 @@ void drive_galvo(void * parameter){
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }
-
-
 #endif
