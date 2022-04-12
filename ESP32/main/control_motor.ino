@@ -78,7 +78,7 @@ void motor_act_fct() {
     isaccel = jsonDocument["isaccel"];
   }
   else {
-    isaccel = 0;
+    isaccel = 1;
   }
 
   if (jsonDocument.containsKey("isen")) {
@@ -412,10 +412,13 @@ bool drive_motor_background() {
     //stepper_A.runSpeed();
     // is this a bug? Otherwise the speed won't be set properly - seems like it is accelerating eventhough it shouldnt
     //stepper_A.setSpeed(mspeed0);
-    //stepper_X.setSpeed(mspeed1);
-    //stepper_Y.setSpeed(mspeed2);
-    //stepper_Z.setSpeed(mspeed3);
-
+    stepper_X.setSpeed(mspeed1);
+    stepper_Y.setSpeed(mspeed2);
+    stepper_Z.setSpeed(mspeed3);
+    stepper_X.setMaxSpeed(mspeed1);
+    stepper_Y.setMaxSpeed(mspeed2);
+    stepper_Z.setMaxSpeed(mspeed3);
+    
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();
