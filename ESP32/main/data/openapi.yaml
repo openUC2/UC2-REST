@@ -11,7 +11,7 @@ tags:
 paths:
   /motor_act:
     post:
-      tags: 
+      tags:
         - Motors
       summary: Endpoint for controlling the motor
       operationId: state_act_fct_http
@@ -44,7 +44,7 @@ paths:
                   type: number
                 isblock:
                   type: number
-                isen: 
+                isen:
                   type: number
             examples:
               moveXYZ:
@@ -58,7 +58,7 @@ paths:
                   isabs: 1
                   isblock: 0
                   isen: 0
-                   
+
       responses:
         '200':
           description: Move successfully executed
@@ -74,11 +74,11 @@ paths:
                 message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
   /motor_set:
     post:
-      tags: 
+      tags:
         - Motors
       summary: Endpoint for chhanging Motor settings
       operationId: state_set_fct_http
-      description: Chhange motor settings 
+      description: Chhange motor settings
       requestBody:
         description: Specify the place to move to (as a point) and the thing to move (combining motion target, mount, and model if necessary)
         required: true
@@ -101,16 +101,16 @@ paths:
                   type: number
                 pindir:
                   type: number
-                isen: 
+                isen:
                   type: number
                 accel:
                   type: number
-                deccel: 
-                  type: number                  
+                deccel:
+                  type: number
             examples:
               setX:
                 description: Set some parameters for the motor X
-                summary: Change settings X 
+                summary: Change settings X
                 value:
                   axis: 1
                   maxspeed: 10000
@@ -121,7 +121,7 @@ paths:
                   isen: 0
                   accel: 1000
                   deccel: 1000
-                   
+
       responses:
         '200':
           description: Settings successfully updated
@@ -137,11 +137,11 @@ paths:
                 message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
   /motor_get:
     get:
-      tags: 
+      tags:
         - Motors
       summary: Endpoint for getting Motor settings
       operationId: state_get_fct_http
-      description: Get motor settings 
+      description: Get motor settings
       requestBody:
         description: Specify the place to move to (as a point) and the thing to move (combining motion target, mount, and model if necessary)
         required: true
@@ -157,7 +157,7 @@ paths:
             examples:
               getX:
                 description: Get some parameters for the motor X
-                summary: Get settings X 
+                summary: Get settings X
                 value:
                   axis: 1
       responses:
@@ -173,12 +173,69 @@ paths:
             application/json:
               example:
                 message: 'Invalid target key: ''robot'' (target must be one of ''mount'' or ''pipette'')'
-        
-        
-        
+  /ledarray_act:
+    post:
+      tags:
+        - ledarray
+      summary: Endpoint for controlling the ledarray
+      operationId: state_act_fct_http
+      description: Manipulate the microscopes LED matrix
+      requestBody:
+        description: Coming soon
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - LEDArrMode
+                - arraySize
+                - red
+                - green
+                - blue
+                - indexled
+                - Nleds
+              properties:
+                LEDArrMode:
+                  type: string
+                arraySize:
+                  type: number
+                red:
+                  type: number
+                green:
+                  type: number
+                blue:
+                  type: number
+                indexled:
+                  type: number
+                Nleds:
+                  type: number
+            examples:
+              singleLED:
+                description: Turn on single LED
+                summary: -
+                value:
+                  LEDArrMode: "single"
+                  indexled: 45
+                  red: 22
+                  green: 55
+                  blue: 1
 
+      responses:
+        '200':
+          description: LED successfully manipulated
+          content:
+            application/json:
+              example:
+                message: 'Done'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              example:
+                message: ''
+        
 components:
   schemas:
     act_motor:
       type: object
-

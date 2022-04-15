@@ -415,6 +415,7 @@ bool drive_motor_background() {
     stepper_X.setSpeed(mspeed1);
     stepper_Y.setSpeed(mspeed2);
     stepper_Z.setSpeed(mspeed3);
+    // we have to at least set this. It will be recomputed or something?! 
     stepper_X.setMaxSpeed(mspeed1);
     stepper_Y.setMaxSpeed(mspeed2);
     stepper_Z.setMaxSpeed(mspeed3);

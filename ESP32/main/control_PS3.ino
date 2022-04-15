@@ -32,7 +32,7 @@ void activate_PS3() {
     IS_PS3_CONTROLER_LEDARRAY = !IS_PS3_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to: ");
     if (DEBUG) Serial.println(IS_PS3_CONTROLER_LEDARRAY);
-    set_all(255*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY);
+    set_all(0*IS_PS3_CONTROLER_LEDARRAY,0*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
 }
@@ -44,13 +44,13 @@ void control_PS3() {
         // move_z
         stick_ly = Ps3.data.analog.stick.ly;
         stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-        speed_y =  stick_ly * 5;
+        mspeed2 =  stick_ly * 5 * global_speed;
         if (not getEnableMotor())
           setEnableMotor(true);
       }
-      else if (speed_y != 0) {
-        speed_y = 0;
-        stepper_Y.setSpeed(speed_y); // set motor off only once to not affect other modes
+      else if (mspeed2 != 0) {
+        mspeed2 = 0;
+        stepper_Y.setSpeed(mspeed2); // set motor off only once to not affect other modes
       }
 
       // Z-Direction
@@ -58,13 +58,13 @@ void control_PS3() {
         // move_x
         stick_rx = Ps3.data.analog.stick.rx;
         stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-        speed_z = stick_rx * 5;
+        mspeed3  = stick_rx * 5 * global_speed;
         if (not getEnableMotor())
           setEnableMotor(true);
       }
-      else if (speed_z != 0) {
-        speed_z = 0;
-        stepper_Z.setSpeed(speed_z); // set motor off only once to not affect other modes
+      else if (mspeed3 != 0) {
+        mspeed3 = 0;
+        stepper_Z.setSpeed(mspeed3); // set motor off only once to not affect other modes
       }
 
       // X-direction
@@ -72,13 +72,13 @@ void control_PS3() {
         // move_y
         stick_ry = Ps3.data.analog.stick.ry;
         stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-        speed_x = stick_ry * 5;
+        mspeed1 = stick_ry * 5 * global_speed;
         if (not getEnableMotor())
           setEnableMotor(true);
       }
-      else if (speed_x != 0) {
-        speed_x = 0;
-        stepper_X.setSpeed(speed_x); // set motor off only once to not affect other modes
+      else if (mspeed1 != 0) {
+        mspeed1 = 0;
+        stepper_X.setSpeed(mspeed1); // set motor off only once to not affect other modes
       }
 
       /*
@@ -160,11 +160,11 @@ void control_PS3() {
 #endif
 
       // run all motors simultaneously
-      stepper_X.setSpeed(speed_x * global_speed);
-      stepper_Y.setSpeed(speed_y * global_speed);
-      stepper_Z.setSpeed(speed_z * global_speed);
+      stepper_X.setSpeed(mspeed1);
+      stepper_Y.setSpeed(mspeed2);
+      stepper_Z.setSpeed(mspeed3);
 
-      if (speed_x or speed_y or speed_z) {
+      if (mspeed1 or mspeed2 or mspeed3) {
         isforever = true;
       }
       else {
