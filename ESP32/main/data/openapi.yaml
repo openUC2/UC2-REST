@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
-  title: IoT application
-  description: This is a sample server Petstore server.
+  title: UC2 REST-API
+  description: This is a summary of controllable UC2 modules.
   version: 1.0.0
 servers:
   - url: /
@@ -213,7 +213,7 @@ paths:
             examples:
               singleLED:
                 description: Turn on single LED
-                summary: -
+                summary: "To be entered"
                 value:
                   LEDArrMode: "single"
                   indexled: 45

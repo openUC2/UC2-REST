@@ -11,7 +11,8 @@
 
   {"task": "/state_set", "isdebug":0}
 
-
+  retrieve sensor value 
+  {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
 
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
@@ -129,6 +130,11 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "parameters_digital.h"
 #endif
 
+#ifdef IS_READSENSOR
+//#include "parameters_readsensor.h"
+
+#endif
+
 #include <ArduinoJson.h>
 #include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
@@ -187,8 +193,6 @@ AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
    Register functions
 */
 
-
-
 const char* state_act_endpoint = "/state_act";
 const char* state_set_endpoint = "/state_set";
 const char* state_get_endpoint = "/state_get";
@@ -227,6 +231,13 @@ const char* digital_get_endpoint = "/digital_get";
 const char* ledarr_act_endpoint = "/ledarr_act";
 const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
+#endif
+
+
+#ifdef IS_READSENSOR
+const char* readsensor_act_endpoint = "/readsensor_act";
+const char* readsensor_set_endpoint = "/readsensor_set";
+const char* readsensor_get_endpoint = "/readsensor_get";
 #endif
 
 
@@ -413,6 +424,14 @@ void setup()
     NULL             // Task handle
   );
 #endif
+
+
+#ifdef IS_READSENSOR
+setup_sensors();
+Serial.println(readsensor_act_endpoint);
+Serial.println(readsensor_set_endpoint);
+Serial.println(readsensor_get_endpoint);
+#endif
 }
 
 //char *task = strdup("");
@@ -490,6 +509,7 @@ void loop() {
       drive_motor_background();
     }
 #endif
+
 
 }
 
@@ -585,6 +605,19 @@ void jsonProcessor(char task[]) {
 #endif
 
 
+  /*
+  Read the sensor
+  */
+ #ifdef IS_READSENSOR
+    if (strcmp(task, readsensor_act_endpoint) == 0)
+    readsensor_act_fct();
+  if (strcmp(task, readsensor_set_endpoint) == 0)
+    readsensor_set_fct();
+  if (strcmp(task, readsensor_get_endpoint) == 0)
+    readsensor_get_fct();
+  #endif
+
+  
   // Send JSON information back
   Serial.println("++");
   serializeJson(jsonDocument, Serial);
@@ -592,6 +625,7 @@ void jsonProcessor(char task[]) {
   Serial.println("--");
   jsonDocument.clear();
   jsonDocument.garbageCollect();
+
 
 }
 

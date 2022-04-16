@@ -176,139 +176,158 @@ void motor_act_fct() {
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;
 }
 
-void setEnableMotor(bool enable){
+void setEnableMotor(bool enable) {
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
 }
 
-bool getEnableMotor(){
+bool getEnableMotor() {
   return motor_enable;
 }
 
 void motor_set_fct() {
-  int axis = jsonDocument["axis"];
 
-  if (DEBUG) {
-    Serial.print("axis "); Serial.println(axis);
+
+  // default value handling
+  int axis = -1;
+  if (jsonDocument.containsKey("axis")) {
+    int axis = jsonDocument["axis"];
   }
 
-  int currentposition = jsonDocument["currentposition"];
-  int maxspeed = jsonDocument["maxspeed"];
-  int acceleration = jsonDocument["acceleration"];
-  int pinstep = jsonDocument["pinstep"];
-  int pindir = jsonDocument["pindir"];
-  int isen = jsonDocument["isen"];
-  int sign = jsonDocument["sign"];
-  int accel = jsonDocument["accel"];
-  int deccel = jsonDocument["deccel"];
+  int currentposition = NULL;
+  if (jsonDocument.containsKey("currentposition")) {
+    int currentposition = jsonDocument["currentposition"];
+  }
 
+  int maxspeed = NULL;
+  if (jsonDocument.containsKey("maxspeed")) {
+    int maxspeed = jsonDocument["maxspeed"];
+  }
 
+  int accel = NULL;
+  if (jsonDocument.containsKey("accel")) {
+    int accel = jsonDocument["accel"];
+  }
+
+  int pinstep = -1;
+  if (jsonDocument.containsKey("pinstep")) {
+    int pinstep = jsonDocument["pinstep"];
+  }
+
+  int pindir = -1;
+  if (jsonDocument.containsKey("pindir")) {
+    int pindir = jsonDocument["pindir"];
+  }
+
+  int isen = -1;
+  if (jsonDocument.containsKey("isen")) {
+    int isen = jsonDocument["isen"];
+  }
+
+  int sign = NULL;
+  if (jsonDocument.containsKey("sign")) {
+    int sign = jsonDocument["sign"];
+  }
+
+  // DEBUG printing
   if (DEBUG) {
+    Serial.print("axis "); Serial.println(axis);
     Serial.print("currentposition "); Serial.println(currentposition);
     Serial.print("maxspeed "); Serial.println(maxspeed);
-    Serial.print("acceleration "); Serial.println(acceleration);
     Serial.print("pinstep "); Serial.println(pinstep);
     Serial.print("pindir "); Serial.println(pindir);
     Serial.print("isen "); Serial.println(isen);
     Serial.print("accel "); Serial.println(accel);
-    Serial.print("deccel "); Serial.println(deccel);
+    Serial.print("isen: "); Serial.println(isen);
   }
 
-  /*
-    if (acceleration != 0) {
-      if (accel != 0) {
-        MOTOR_ACCEL = accel;
-      }
-      if (deccel != 0) {
-        MOTOR_DECEL = 5000;
-      }
-      if (accel > 0 and deccel > 0) {
-        if (DEBUG) Serial.println("Setting Up Linear speed accelearation");
-        stepper_X.setSpeedProfile(stepper_X.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-        stepper_Y.setSpeedProfile(stepper_Y.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-        stepper_Z.setSpeedProfile(stepper_Z.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
-      }
-      else {
-        if (DEBUG) Serial.println("Setting Up constant speed accelearation");
-        stepper_X.setSpeedProfile(stepper_X.CONSTANT_SPEED);
-        stepper_Y.setSpeedProfile(stepper_Y.CONSTANT_SPEED);
-        stepper_Z.setSpeedProfile(stepper_Z.CONSTANT_SPEED);
-      }
+
+  if (accel >=0) {
+    if (DEBUG) Serial.print("accel "); Serial.println(accel);
+    switch (axis) {
+      case 1:
+        MAX_ACCELERATION_X = accel;
+        stepper_X.setAcceleration(MAX_ACCELERATION_X);
+        break;
+      case 2:
+        MAX_ACCELERATION_Y = accel;
+        stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
+        break;
+      case 3:
+        MAX_ACCELERATION_Z = accel;
+        stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
+        break;
     }
+  }
 
-
-
-    if (sign != 0) {
-      if (DEBUG) Serial.print("sign "); Serial.println(sign);
-      switch (axis) {
-        case 1:
-          SIGN_X = sign;
-          break;
-        case 2:
-          SIGN_Y = sign;
-          break;
-        case 3:
-          SIGN_Z = sign;
-          break;
-
-      }
+  if (sign != NULL) {
+    if (DEBUG) Serial.print("sign "); Serial.println(sign);
+    switch (axis) {
+      case 1:
+        SIGN_X = sign;
+        break;
+      case 2:
+        SIGN_Y = sign;
+        break;
+      case 3:
+        SIGN_Z = sign;
+        break;
     }
+  }
 
 
-    if (currentposition != 0) {
-      if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
-      switch (axis) {
-        case 1:
-          POSITION_MOTOR_X = currentposition; //stepper_X.setCurrentPosition(currentposition);break;
-          break;
-        case 2:
-          POSITION_MOTOR_Y = currentposition; //stepper_Y.setCurrentPosition(currentposition);break;
-          break;
-        case 3:
-          POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
-          break;
+  if (currentposition != NULL) {
+    if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
+    switch (axis) {
+      case 1:
+        POSITION_MOTOR_X = currentposition; //stepper_X.setCurrentPosition(currentposition);break;
+        break;
+      case 2:
+        POSITION_MOTOR_Y = currentposition; //stepper_Y.setCurrentPosition(currentposition);break;
+        break;
+      case 3:
+        POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
+        break;
+    }
+  }
+  if (maxspeed != 0) {
+    switch (axis) {
+      case 1:
+        stepper_X.setMaxSpeed(maxspeed);
+        break;
+      case 2:
+        stepper_Y.setMaxSpeed(maxspeed);
+        break;
+      case 3:
+        stepper_Z.setMaxSpeed(maxspeed); 
+        break;
+    }
+  }
+  if (pindir != 0 and pinstep != 0) {
+    if (axis == 1) {
+      STEP_X = pinstep;
+      DIR_X = pindir;
+      //A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3); //stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+    }
+    else if (axis == 2) {
+      STEP_Y = pinstep;
+      DIR_Y = pindir;
+      //A4988 stepper_X(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3); //stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
+    }
+    else if (axis == 3) {
+      STEP_Z = pinstep;
+      DIR_Z = pindir;
+      //A4988 stepper_X(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3); //stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+    }
+  }
 
-      }
-    }
-    if (maxspeed != 0) {
-      switch (axis) {
-        case 1:
-          stepper_X.begin(maxspeed); //stepper_X.setMaxSpeed(maxspeed);
-          break;
-        case 2:
-          stepper_Y.begin(maxspeed); //stepper_Y.setMaxSpeed(maxspeed);
-          break;
-        case 3:
-          stepper_Z.begin(maxspeed); //stepper_Z.setMaxSpeed(maxspeed);
-          break;
-      }
-    }
-    if (pindir != 0 and pinstep != 0) {
-      if (axis == 1) {
-        STEP_X = pinstep;
-        DIR_X = pindir;
-        A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3); //stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-      }
-      else if (axis == 2) {
-        STEP_Y = pinstep;
-        DIR_Y = pindir;
-        A4988 stepper_X(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3); //stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-      }
-      else if (axis == 3) {
-        STEP_Z = pinstep;
-        DIR_Z = pindir;
-        A4988 stepper_X(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3); //stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
-      }
-    }
-
-    //if (DEBUG) Serial.print("isen "); Serial.println(isen);
-    if (isen != 0 and isen) {
-      digitalWrite(ENABLE, 0);
-    }
-    else if (isen != 0 and not isen) {
-      digitalWrite(ENABLE, 1);
-    }
-  */
+  //if (DEBUG) Serial.print("isen "); Serial.println(isen);
+  if (isen != 0 and isen) {
+    digitalWrite(ENABLE, 0);
+  }
+  else if (isen != 0 and not isen) {
+    digitalWrite(ENABLE, 1);
+  }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
@@ -415,11 +434,11 @@ bool drive_motor_background() {
     stepper_X.setSpeed(mspeed1);
     stepper_Y.setSpeed(mspeed2);
     stepper_Z.setSpeed(mspeed3);
-    // we have to at least set this. It will be recomputed or something?! 
+    // we have to at least set this. It will be recomputed or something?!
     stepper_X.setMaxSpeed(mspeed1);
     stepper_Y.setMaxSpeed(mspeed2);
     stepper_Z.setMaxSpeed(mspeed3);
-    
+
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();
@@ -445,7 +464,7 @@ bool drive_motor_background() {
     if (not isen) {
       setEnableMotor(false);
     }
-    isactive=false;
+    isactive = false;
     return true;
   }
   isactive = true;

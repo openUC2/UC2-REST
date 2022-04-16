@@ -12,8 +12,13 @@
 #define IS_PS3 // ESP32-only
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
+#define IS_READSENSOR
 
-
+// for reading analog input values
+int ADC_pin_0 = 34;
+int ADC_pin_1 = 0;
+int ADC_pin_2 = 0;
+int N_sensor_avg = 100;
 
 // analog out (e.g. Lenses)
 int analog_PIN_1 = 0;
