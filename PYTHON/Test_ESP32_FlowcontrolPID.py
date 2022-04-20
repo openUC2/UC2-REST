@@ -68,20 +68,25 @@ def returnControlValue(setPoint=1, sensorValue=1, Kp=1, Ki=1, Kd=1):
     errorRunSum = errorRunSum + error
     previousError = error
     
-    print(f"P{cP}, I{cI}, D{cD}, errorRunSum{errorRunSum}, previousError{previousError}, stepperOut{stepperOut}, PID{PID}")
+    #print(f"P{cP}, I{cI}, D{cD}, errorRunSum{errorRunSum}, previousError{previousError}, stepperOut{stepperOut}, PID{PID}")
     
     return stepperOut
 
 def start_measurement_thread():
     measurement_thread = threading.Thread(target=measurement_grabber, args=())
     measurement_thread.start()
+    measurement_thread.join()
+    ESP32.move_forever(speed=(0,0,0), is_stop=False, timeout=1)
 
 def measurement_grabber():
-    while(is_measure):
+    while(True):
+        if not is_measure:
+            print("Stopping")
+            break
         try:
             currentMeasurement = ESP32.read_sensor(sensorID=0, NAvg=10)+550
             if currentMeasurement is not None:
-                print(currentMeasurement)
+                #print(currentMeasurement)
 
                 motorValue = returnControlValue(setPoint, currentMeasurement, Kp, Ki, Kd)
                 ESP32.move_forever(speed=(motorValue,0,0), is_stop=False, timeout=1)
@@ -91,10 +96,11 @@ def measurement_grabber():
             print(e)
         
         # update plot
+        '''
         plt.plot(np.array(allMeasurements)[:,0])
         plt.plot(np.array(allMeasurements)[:,1])
         plt.show()
-
+        '''
 
 ESP32 = ESP32Client(serialport="unknown")
 
