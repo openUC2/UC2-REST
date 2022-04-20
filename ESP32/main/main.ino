@@ -13,6 +13,10 @@
 
   retrieve sensor value 
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
+  {"task": "/readsensor_get", "readsensorID":0}
+  {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
+
+
 
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}

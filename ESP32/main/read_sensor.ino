@@ -24,16 +24,20 @@ void readsensor_act_fct() {
       break;
   }
 
-  int sensorValueAvg = 0;
-  for (int imeas; imeas < N_sensor_avg; imeas++) {
+  float sensorValueAvg = 0;
+  for (int imeas=0; imeas < N_sensor_avg; imeas++) {
     sensorValueAvg += analogRead(sensorpin);
   }
   float returnValue = (float)sensorValueAvg / (float)N_sensor_avg;
 
   jsonDocument.clear();
   jsonDocument["sensorValue"] = returnValue;
+  jsonDocument["sensorpin"] = sensorpin;
+  jsonDocument["N_sensor_avg"] = N_sensor_avg;
 
 }
+
+
 
 void readsensor_set_fct() {
   if (DEBUG) Serial.println("readsensor_set_fct");
@@ -59,6 +63,8 @@ void readsensor_set_fct() {
   jsonDocument["readsensorPIN"] = readsensorPIN;
   jsonDocument["readsensorID"] = readsensorID;
 }
+
+
 
 // Custom function accessible by the API
 void readsensor_get_fct() {
