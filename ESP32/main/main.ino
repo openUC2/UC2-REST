@@ -18,23 +18,16 @@
 
   setup PID controller
   {"task": "/PID_act", "PIDactive":1, "target": 500}
+  {"task": "/PID_act", "PIDactive":1, "Kp":100, "Ki":10, "Kd":1, "target": 500}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
 
-  if (jsonDocument.containsKey("PID"))
-    PID_active = (int)jsonDocument["PIDactive"];
-  if (jsonDocument.containsKey("Kp"))
-    PID_Kp = (int)jsonDocument["Kp"];
-  if (jsonDocument.containsKey("Ki"))
-    PID_Ki = (int)jsonDocument["Ki"];
-  if (jsonDocument.containsKey("Kd"))
-    PID_Kd = (int)jsonDocument["Kd"];
-  if (jsonDocument.containsKey("target"))
-    PID_target = (int)jsonDocument["target"];
-  if (jsonDocument.containsKey("PID_updaterate"))
-    PID_updaterate = (int)jsonDocument["PID_updaterate"];
 
-    
+Kp
+Ki
+Kd
+
+
 
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}

@@ -7,17 +7,16 @@ void PID_act_fct() {
   if (DEBUG) Serial.println("PID_act_fct");
 
 
-
   if (jsonDocument.containsKey("PIDactive"))
     PID_active = (int)jsonDocument["PIDactive"];
   if (jsonDocument.containsKey("Kp"))
-    PID_Kp = (int)jsonDocument["Kp"];
+    PID_Kp = jsonDocument["Kp"];
   if (jsonDocument.containsKey("Ki"))
-    PID_Ki = (int)jsonDocument["Ki"];
+    PID_Ki = jsonDocument["Ki"];
   if (jsonDocument.containsKey("Kd"))
-    PID_Kd = (int)jsonDocument["Kd"];
+    PID_Kd = jsonDocument["Kd"];
   if (jsonDocument.containsKey("target"))
-    PID_target = (int)jsonDocument["target"];
+    PID_target = jsonDocument["target"];
   if (jsonDocument.containsKey("PID_updaterate"))
     PID_updaterate = (int)jsonDocument["PID_updaterate"];
 
@@ -51,6 +50,7 @@ void PID_background() {
   setEnableMotor(true);
   stepper_X.setSpeed(mspeed1);
   stepper_X.setMaxSpeed(mspeed1);
+
 }
 
 
