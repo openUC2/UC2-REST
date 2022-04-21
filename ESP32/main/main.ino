@@ -16,7 +16,25 @@
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
 
+  setup PID controller
+  {"task": "/PID_act", "PIDactive":1, "target": 500}
+  {"task": "/readsensor_get", "readsensorID":0}
+  {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
 
+  if (jsonDocument.containsKey("PID"))
+    PID_active = (int)jsonDocument["PIDactive"];
+  if (jsonDocument.containsKey("Kp"))
+    PID_Kp = (int)jsonDocument["Kp"];
+  if (jsonDocument.containsKey("Ki"))
+    PID_Ki = (int)jsonDocument["Ki"];
+  if (jsonDocument.containsKey("Kd"))
+    PID_Kd = (int)jsonDocument["Kd"];
+  if (jsonDocument.containsKey("target"))
+    PID_target = (int)jsonDocument["target"];
+  if (jsonDocument.containsKey("PID_updaterate"))
+    PID_updaterate = (int)jsonDocument["PID_updaterate"];
+
+    
 
   turn on the laser:
   {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
@@ -136,7 +154,10 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 
 #ifdef IS_READSENSOR
 //#include "parameters_readsensor.h"
+#endif
 
+#ifdef IS_PID
+#include "parameters_PID.h"
 #endif
 
 #include <ArduinoJson.h>
@@ -244,6 +265,11 @@ const char* readsensor_set_endpoint = "/readsensor_set";
 const char* readsensor_get_endpoint = "/readsensor_get";
 #endif
 
+#ifdef IS_PID
+const char* PID_act_endpoint = "/PID_act";
+const char* PID_set_endpoint = "/PID_set";
+const char* PID_get_endpoint = "/PID_get";
+#endif
 
 /* --------------------------------------------
    Setup
@@ -251,6 +277,9 @@ const char* readsensor_get_endpoint = "/readsensor_get";
 */
 void setup()
 {
+  // for any timing related puposes..
+  startMillis = millis();
+
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start");
@@ -436,12 +465,22 @@ Serial.println(readsensor_act_endpoint);
 Serial.println(readsensor_set_endpoint);
 Serial.println(readsensor_get_endpoint);
 #endif
+
+#ifdef IS_PID
+setup_PID();
+Serial.println(PID_act_endpoint);
+Serial.println(PID_set_endpoint);
+Serial.println(PID_get_endpoint);
+#endif
 }
 
 //char *task = strdup("");
 //char* task = "";
 
 void loop() {
+  // for any timing-related purposes
+  currentMillis = millis(); 
+
 #ifdef IS_SERIAL
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
@@ -513,6 +552,13 @@ void loop() {
       drive_motor_background();
     }
 #endif
+
+#ifdef IS_PID
+if (PID_active and (currentMillis - startMillis >= PID_updaterate)){
+  PID_background();
+  startMillis = millis();
+}
+#endif 
 
 
 }
@@ -619,6 +665,18 @@ void jsonProcessor(char task[]) {
     readsensor_set_fct();
   if (strcmp(task, readsensor_get_endpoint) == 0)
     readsensor_get_fct();
+  #endif
+
+  /*
+  Control PID controller
+  */
+ #ifdef IS_PID
+    if (strcmp(task, PID_act_endpoint) == 0)
+    PID_act_fct();
+  if (strcmp(task, PID_set_endpoint) == 0)
+    PID_set_fct();
+  if (strcmp(task, PID_get_endpoint) == 0)
+    PID_get_fct();
   #endif
 
   

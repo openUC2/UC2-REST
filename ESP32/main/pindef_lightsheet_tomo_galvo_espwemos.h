@@ -13,6 +13,7 @@
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
 #define IS_READSENSOR
+#define IS_PID
 
 // for reading analog input values
 int ADC_pin_0 = 34;

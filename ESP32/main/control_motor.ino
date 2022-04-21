@@ -145,9 +145,8 @@ void motor_act_fct() {
   stepper_Y.setMaxSpeed(mspeed2);
   stepper_Z.setMaxSpeed(mspeed3);
 
-  Serial.print("Speed: ");
-  Serial.println(stepper_X.speed());
 
+  if(not isforever){
   if (isabs) {
     // absolute position coordinates
     //stepper_A.moveTo(SIGN_A * mposition0);
@@ -162,7 +161,8 @@ void motor_act_fct() {
     stepper_Y.move(SIGN_Y * mposition2);
     stepper_Z.move(SIGN_Z * mposition3);
   }
-
+  }
+  
   if (DEBUG) Serial.println("Start rotation in background");
 
   //POSITION_MOTOR_A = stepper_A.currentPosition();
