@@ -340,18 +340,18 @@ void motor_get_fct() {
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
 
-  //int mmaxspeed = 0;
-  //int mspeed = 0;
+  int mmaxspeed = 0;
   int mposition = 0;
   int pinstep = 0;
   int pindir = 0;
   int sign = 0;
+  int mspeed =0;
 
   switch (axis) {
     case 1:
       if (DEBUG) Serial.println("AXIS 1");
-      //mmaxspeed = stepper_X.maxSpeed();
-      //mspeed = stepper_X.speed();
+      mmaxspeed = stepper_X.maxSpeed();
+      mspeed = stepper_X.speed();
       mposition = POSITION_MOTOR_X;//stepper_X.currentPosition();
       pinstep = STEP_X;
       pindir = DIR_X;
@@ -359,8 +359,8 @@ void motor_get_fct() {
       break;
     case 2:
       if (DEBUG) Serial.println("AXIS 2");
-      //mmaxspeed = stepper_Y.maxSpeed();
-      //mspeed = stepper_Y.speed();
+      mmaxspeed = stepper_Y.maxSpeed();
+      mspeed = stepper_Y.speed();
       mposition = POSITION_MOTOR_Y;//stepper_Y.currentPosition();
       pinstep = STEP_Y;
       pindir = DIR_Y;
@@ -368,8 +368,8 @@ void motor_get_fct() {
       break;
     case 3:
       if (DEBUG) Serial.println("AXIS 3");
-      //mmaxspeed = stepper_Z.maxSpeed();
-      //mspeed = stepper_Z.speed();
+      mmaxspeed = stepper_Z.maxSpeed();
+      mspeed = stepper_Z.speed();
       mposition = POSITION_MOTOR_Z;//stepper_Z.currentPosition();
       pinstep = STEP_Z;
       pindir = DIR_Z;
@@ -381,8 +381,8 @@ void motor_get_fct() {
 
   jsonDocument.clear();
   jsonDocument["position"] = mposition;
-  //jsonDocument["speed"] = mspeed;
-  //jsonDocument["maxspeed"] = mmaxspeed;
+  jsonDocument["speed"] = mspeed;
+  jsonDocument["maxspeed"] = mmaxspeed;
   jsonDocument["pinstep"] = pinstep;
   jsonDocument["pindir"] = pindir;
   jsonDocument["sign"] = sign;

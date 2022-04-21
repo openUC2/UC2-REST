@@ -126,7 +126,8 @@ amplitude: 0,1,2,3
 //#include "pindef_multicolour_borstel.h"
 //#include "pindef_cncshield_esp.h"
 //#include "pindef_lightsheet_tomo_galvo.h"
-#include "pindef_lightsheet_tomo_galvo_espwemos.h"
+//#include "pindef_lightsheet_tomo_galvo_espwemos.h"
+#include "pindef_lightsheet_tomo_PID_espwemos.h"
 //#include "pindef_lightsheet_espwemos.h"
 
 

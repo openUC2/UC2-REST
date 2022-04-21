@@ -21,62 +21,65 @@ void PID_act_fct() {
   if (jsonDocument.containsKey("PID_updaterate"))
     PID_updaterate = (int)jsonDocument["PID_updaterate"];
 
-    
+
 
   jsonDocument.clear();
   jsonDocument["Kp"] = PID_Kp;
   jsonDocument["Ki"] = PID_Ki;
-  jsonDocument["Kd"] = PID_Kd;  
-  jsonDocument["PID_updaterate"] = PID_updaterate;  
+  jsonDocument["Kd"] = PID_Kd;
+  jsonDocument["PID_updaterate"] = PID_updaterate;
   jsonDocument["PID"] = PID_active;
-  jsonDocument["target"] = PID_target;  
+  jsonDocument["target"] = PID_target;
 
 }
 
-void PID_background(){
+void PID_background() {
   // hardcoded for now:
-    int N_sensor_avg = 50;  
+  int N_sensor_avg = 50;
   int sensorpin = ADC_pin_0;
 
-    // get rid of noise?
+  // get rid of noise?
   float sensorValueAvg = 0;
-  for (int imeas=0; imeas < N_sensor_avg; imeas++) {
+  for (int imeas = 0; imeas < N_sensor_avg; imeas++) {
     sensorValueAvg += analogRead(sensorpin);
   }
 
   sensorValueAvg = (float)sensorValueAvg / (float)N_sensor_avg;
-  float motorValue = returnControlValue(PID_target, sensorValueAvg, PID_Kp, PID_Ki, PID_Kd);
-    isforever = 1; // run motor at certain speed 
-    stepper_X.setSpeed(mspeed1);
-    stepper_X.setMaxSpeed(mspeed1);
-    }
-    
-
-float returnControlValue(float controlTarget, float sensorValue,float Kp, float Ki, float Kd){
-        float sensorOffset=0.;
-        float maxError = 1.;
-        float error = (controlTarget - (sensorValue-sensorOffset)) / maxError;
-        float cP = Kp * error;
-        float cI = Ki * errorRunSum;
-        float cD = Kd * (error - previousError);
-        float PID = cP+cI+cD;
-        float stepperOut = PID;
-
-        if (stepperOut > stepperMaxValue){
-            stepperOut = stepperMaxValue;
-            }
-            
-        if (stepperOut < -stepperMaxValue){
-            stepperOut = -stepperMaxValue;
-            }
-            
-        errorRunSum = errorRunSum + error;
-        previousError = error;
-        
-        if(DEBUG) Serial.println("P: "+String(cP)+" I: "+String(cI)+" D: "+String(cD)+" errorRunSum: "+String(errorRunSum)+" previousError: "+String(previousError)+"stepperOut"+String(stepperOut)+" PID: "+String(PID));
-        return stepperOut;
+  long motorValue = returnControlValue(PID_target, sensorValueAvg, PID_Kp, PID_Ki, PID_Kd);
+  isforever = 1; // run motor at certain speed
+  mspeed1 = motorValue;
+  setEnableMotor(true);
+  stepper_X.setSpeed(mspeed1);
+  stepper_X.setMaxSpeed(mspeed1);
 }
-    
+
+
+long returnControlValue(float controlTarget, float sensorValue, float Kp, float Ki, float Kd) {
+  float sensorOffset = 0.;
+  float maxError = 1.;
+  float error = (controlTarget - (sensorValue - sensorOffset)) / maxError;
+  float cP = Kp * error;
+  float cI = Ki * errorRunSum;
+  float cD = Kd * (error - previousError);
+  float PID = cP + cI + cD;
+  long stepperOut = (long)PID;
+
+  if (stepperOut > stepperMaxValue) {
+    stepperOut = stepperMaxValue;
+  }
+
+  if (stepperOut < -stepperMaxValue) {
+    stepperOut = -stepperMaxValue;
+  }
+ 
+
+  errorRunSum = errorRunSum + error;
+  previousError = error;
+
+  if (DEBUG) Serial.println("sensorValue: " + String(sensorValue) + ", P: " + String(cP) + ", I: " + String(cI) + ", D: " + String(cD) + ", errorRunSum: " + String(errorRunSum) + ", previousError: " + String(previousError) + ", stepperOut: " + String(stepperOut));
+  return stepperOut;
+}
+
 
 
 void PID_set_fct() {
@@ -108,7 +111,7 @@ void PID_set_fct() {
 
 // Custom function accessible by the API
 void PID_get_fct() {
-if (DEBUG) Serial.println("PID_get_fct");
+  if (DEBUG) Serial.println("PID_get_fct");
   int PIDID = (int)jsonDocument["PIDID"];
   int PIDPIN = 0;
   switch (PIDID) {
@@ -130,8 +133,8 @@ if (DEBUG) Serial.println("PID_get_fct");
 }
 
 
-void setup_PID(){
-  if(DEBUG) Serial.println("Setting up sensors...");
+void setup_PID() {
+  if (DEBUG) Serial.println("Setting up sensors...");
 }
 
 
