@@ -20,6 +20,14 @@ void PID_act_fct() {
   if (jsonDocument.containsKey("PID_updaterate"))
     PID_updaterate = (int)jsonDocument["PID_updaterate"];
 
+  if (not PID_active) {
+    // force shutdown the motor
+    mspeed1 = 0;
+    stepper_X.setSpeed(mspeed1);
+    stepper_X.setMaxSpeed(mspeed1);
+    stepper_X.runSpeed();
+  }
+
 
 
   jsonDocument.clear();
@@ -71,7 +79,7 @@ long returnControlValue(float controlTarget, float sensorValue, float Kp, float 
   if (stepperOut < -stepperMaxValue) {
     stepperOut = -stepperMaxValue;
   }
- 
+
 
   errorRunSum = errorRunSum + error;
   previousError = error;

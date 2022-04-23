@@ -18,14 +18,9 @@
 
   setup PID controller
   {"task": "/PID_act", "PIDactive":1, "target": 500}
-  {"task": "/PID_act", "PIDactive":1, "Kp":100, "Ki":10, "Kd":1, "target": 500}
+  {"task": "/PID_act", "PIDactive":1, "Kp":5, "Ki":.1, "Kd":.1, "target": 500, "PID_updaterate":200}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
-
-
-Kp
-Ki
-Kd
 
 
 
