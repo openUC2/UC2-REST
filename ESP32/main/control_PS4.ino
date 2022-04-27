@@ -1,246 +1,246 @@
 #ifdef IS_PS4
-#include <PS4Controller.h>
+#include "parameters_PS4.h"
 
-int offset_val = 30;
-int stick_ly = 0;
-int stick_lx = 0;
-int stick_rx = 0;
-int stick_ry = 0;
-
-boolean stepper_1_on = false;
-boolean stepper_2_on = false;
-boolean stepper_3_on = false;
-
-boolean stepper_1_running = false;
-boolean stepper_2_running = false;
-boolean stepper_3_running = false;
-
-static inline int8_t sgn(int val) {
-  if (val < 0) return -1;
-  if (val == 0) return 0;
-  return 1;
-}
-
-void control_PS4() {
-  if (PS4.isConnected()) {
-
-    /*
-       ANALOG LEFT
-    */
-    if ( abs(PS4.LStickY()) > offset_val) {
-      // move_z
-      stick_ly = PS4.LStickY();
-      stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-      run_motor(sgn(stick_ly) * 5, stick_ly * 5, 1);
-      stepper_1_on = true;
-      if (DEBUG) if(DEBUG) Serial.println("Motor 1: " + String(stick_ly));
-
-    }
-    else {
-      if (stepper_1_on) {
-        stepper_1_on = false;
-        stick_ly = 0;
-        run_motor(0, 0, 1); // switch motor off;
-        setEnableMotor(false);
-      }
-    }
-
-    /*
-       ANALOG right
-    */
-    if ( (abs(PS4.RStickX()) > offset_val) and not stepper_3_running) {
-      // move_x
-      stepper_2_running = true;
-      stick_rx = PS4.RStickX();
-      stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-      run_motor(sgn(stick_rx) * 5, stick_rx * 5, 2);
-      stepper_2_on = true;
-      if (DEBUG) if(DEBUG) Serial.println("Motor 2: " + String(stick_rx));
-    }
-    else {
-      if (stepper_2_on) {
-        stepper_2_on = false;
-        stick_rx = 0;
-        stepper_2_running = false;
-        run_motor(0, 0, 2); // switch motor off;
-        setEnableMotor(false);
-      }
-    }
-
-    if ( (abs(PS4.RStickY()) > offset_val) and not stepper_2_running) {
-      // move_y
-      stick_ry = PS4.RStickY();
-      stepper_3_running = true;
-      stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-      run_motor(sgn(stick_ry) * 5, stick_ry * 5, 3);
-      stepper_3_on = true;
-      if (DEBUG) if(DEBUG) Serial.println("Motor 3: " + String(stick_ry));
-    }
-    else {
-      if (stepper_3_on) {
-        stepper_3_on = false;
-        stick_ly = 0;
-        stepper_3_running = false;
-        run_motor(0, 0, 3); // switch motor off;
-        setEnableMotor(false);
-      }
-    }
-
-
-    if (PS4.Down()) {
-      // fine focus +
-      run_motor(10,10,3);
-      delay(100);
-      run_motor(0,0,3);
-    }
-    if ( PS4.Up()) {
-      // fine focus -
-      run_motor(-10,-10,3);
-      delay(100);
-run_motor(0,0,3);
-}
-
-
-    //
-    //    if ( abs(Ps3.data.analog.stick.lx) > offset_val) {
-    //      // LED Stip
-    //      stick_lx = Ps3.data.analog.stick.lx;
-    //      //stick_lx = stick_lx + sgn(stick_lx) * offset_val;
-    //      if ((colour_led += sgn(stick_lx) * 5) > 0 and (colour_led += sgn(stick_lx) * 5) < 255)
-    //        colour_led += sgn(stick_lx) * 5;
-    //      if (colour_led < 0)
-    //        colour_led = 0;
-    //      strip.setPixelColor(0, strip.Color(colour_led, colour_led, colour_led));
-    //      strip.show();
-    //      delay(100);
-    //    }
-    //
-    //
-        /*
-           Keypad left
-        */
-        if ( PS4.Left()) {
-          // fine lens -
-          analog_val_1 -= 1;
-          delay(100);
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-        }
-        if ( PS4.Right()) {
-          // fine lens +
-          analog_val_1 += 1;
-          delay(100);
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-        }
-        if ( PS4.Share()) {
-          // reset
-          analog_val_1 = 0;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-        }
-    
-        int offset_val_shoulder = 5;
-        if ( PS4.R2()) {
-          // analog_val_1++ coarse
-          if ((analog_val_1 + 1000 < pwm_max)) {
-            analog_val_1 += 1000;
-            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-          }
-          if(DEBUG) Serial.println(analog_val_1);
-          delay(100);
-        }
-    
-        if ( PS4.L2()) {
-          // analog_val_1-- coarse
-          if ((analog_val_1 - 1000 > 0)) {
-            analog_val_1 -= 1000;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-          }
-          if(DEBUG) Serial.println(analog_val_1);
-          delay(100);
-        }
-    
-    
-        if (PS4.R1()) {
-          // analog_val_1 + semi coarse
-          if ((analog_val_1 + 100 < pwm_max)) {
-            analog_val_1 += 100;
-            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-            delay(100);
-          }
-        }
-        if ( PS4.L1()) {
-          // analog_val_1 - semi coarse
-          if ((analog_val_1 - 100 > 0)) {
-            analog_val_1 -= 100;
-            ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
-            delay(50);
-          }
-        }
-    
-    
-    //    if ( Ps3.data.button.circle ) {
-    //      //if(not is_laser_red){
-    //      if(DEBUG) Serial.println("Laser on");
-    //      is_laser_red = true;
-    //      laserval += 200;
-    //      run_laser(laserval);
-    //      delay(100);
-    //      //}
-    //
-    //    }
-    //
-    //    if ( Ps3.data.button.cross ) {
-    //      if (is_laser_red) {
-    //        if(DEBUG) Serial.println("Laser off");
-    //        is_laser_red = false;
-    //        laserval = 0;
-    //        run_laser(0);
-    //      }
-    //
-    //    }
-    //
-    //    if ( Ps3.data.button.triangle) {
-    //      if (not is_sofi) {
-    //        if(DEBUG) Serial.println("SOFI on");
-    //        is_sofi = true;
-    //        glob_amplitude_sofi = 300;
-    //      }
-    //    }
-    //
-    //    if ( Ps3.data.button.square ) {
-    //      if (is_sofi) {
-    //        is_sofi = false;
-    //        if(DEBUG) Serial.println("SOFI off");
-    //        glob_amplitude_sofi = 0;
-    //      }
-    //
-    //    }
-
-  }
-}
-
-
-
-
-void run_motor(int steps, int speed, int axis) {
+bool IS_PS4_CONTROLER_LEDARRAY = false;
+void onConnect() {
+  if (DEBUG) Serial.println("PS4 Controller Connected.");
+  IS_PS4_CONTROLER_ACTIVE = true;
   setEnableMotor(true);
-  if (axis == 1) {
-    stepper_X.begin(abs(speed));
-    stepper_X.rotate(steps);
-  }
-  else if (axis == 2) {
-    stepper_Y.begin(abs(speed));
-    stepper_Y.rotate(steps);
-  }
-  else if (axis == 3) {
-    stepper_Z.begin(abs(speed));
-    stepper_Z.rotate(steps);
-  }
+
+      if (PS4.Charging())
+    {
+        Serial.println("The controller is charging");
+    }
+
+    Serial.printf("Battery Level : %d\n", PS4.Battery());
+    Serial.println();
+}
+
+void onAttach() {
+  PS4.attach(activate_PS4);
+}
+
+
+void onDisConnect() {
+  if (DEBUG) Serial.println("PS4 Controller Connected.");
   setEnableMotor(false);
 }
 
 
+void activate_PS4() {
+  // callback for events
+  if (PS4.event.button_down.share) {
+    IS_PS4_CONTROLER_ACTIVE = !IS_PS4_CONTROLER_ACTIVE;
+    if (DEBUG) Serial.print("Setting manual mode to: ");
+    if (DEBUG) Serial.println(IS_PS4_CONTROLER_ACTIVE);
+    setEnableMotor(IS_PS4_CONTROLER_ACTIVE);
+    delay(1000); //Debounce?
+  }
+  if (PS4.event.button_down.cross) {
+    IS_PS4_CONTROLER_LEDARRAY = !IS_PS4_CONTROLER_LEDARRAY;
+    if (DEBUG) Serial.print("Turning LED Matrix to: ");
+    if (DEBUG) Serial.println(IS_PS4_CONTROLER_LEDARRAY);
+    set_all(0*IS_PS4_CONTROLER_LEDARRAY,0*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
+    delay(1000); //Debounce?
+  }
+}
+
+void control_PS4() {
+  if (PS4.isConnected() and IS_PS4_CONTROLER_ACTIVE) {
+      // Y-Direction
+      if ( abs(PS4.data.analog.stick.ly) > offset_val) {
+        // move_z
+        stick_ly = PS4.data.analog.stick.ly;
+        stick_ly = stick_ly - sgn(stick_ly) * offset_val;
+        mspeed2 =  stick_ly * 5 * global_speed;
+        if (not getEnableMotor())
+          setEnableMotor(true);
+      }
+      else if (mspeed2 != 0) {
+        mspeed2 = 0;
+        stepper_Y.setSpeed(mspeed2); // set motor off only once to not affect other modes
+      }
+
+      // Z-Direction
+      if ( (abs(PS4.data.analog.stick.rx) > offset_val)) {
+        // move_x
+        stick_rx = PS4.data.analog.stick.rx;
+        stick_rx = stick_rx - sgn(stick_rx) * offset_val;
+        mspeed3  = stick_rx * 5 * global_speed;
+        if (not getEnableMotor())
+          setEnableMotor(true);
+      }
+      else if (mspeed3 != 0) {
+        mspeed3 = 0;
+        stepper_Z.setSpeed(mspeed3); // set motor off only once to not affect other modes
+      }
+
+      // X-direction
+      if ( (abs(PS4.data.analog.stick.ry) > offset_val)) {
+        // move_y
+        stick_ry = PS4.data.analog.stick.ry;
+        stick_ry = stick_ry - sgn(stick_ry) * offset_val;
+        mspeed1 = stick_ry * 5 * global_speed;
+        if (not getEnableMotor())
+          setEnableMotor(true);
+      }
+      else if (mspeed1 != 0) {
+        mspeed1 = 0;
+        stepper_X.setSpeed(mspeed1); // set motor off only once to not affect other modes
+      }
+
+      /*
+          // fine control for Z using buttons
+          if ( PS4.data.button.down) {
+            // fine focus +
+            //run_motor(0, 0, 10);
+            delay(100);
+          }
+          if ( PS4.data.button.up) {
+            // fine focus -
+            //run_motor(0, 0, -10);
+            delay(100);
+          }
+      */
 
 
+#ifdef IS_ANALOG
+      /*
+         Keypad left
+      */
+      if ( PS4.data.button.left) {
+        // fine lens -
+        analog_val_1 -= 1;
+        delay(100);
+        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+      }
+      if ( PS4.data.button.right) {
+        // fine lens +
+        analog_val_1 += 1;
+        delay(100);
+        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+      }
+      if ( PS4.data.button.start) {
+        // reset
+        analog_val_1 = 0;
+        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+      }
+
+      int offset_val_shoulder = 5;
+      if ( abs(PS4.data.analog.button.r2) > offset_val_shoulder) {
+        // analog_val_1++ coarse
+        if ((analog_val_1 + 1000 < pwm_max)) {
+          analog_val_1 += 1000;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        }
+        if (DEBUG) Serial.println(analog_val_1);
+        delay(100);
+      }
+
+      if ( abs(PS4.data.analog.button.l2) > offset_val_shoulder) {
+        // analog_val_1-- coarse
+        if ((analog_val_1 - 1000 > 0)) {
+          analog_val_1 -= 1000;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        }
+        if (DEBUG) Serial.println(analog_val_1);
+        delay(100);
+      }
+
+
+      if ( abs(PS4.data.analog.button.r1) > offset_val_shoulder) {
+        // analog_val_1 + semi coarse
+        if ((analog_val_1 + 100 < pwm_max)) {
+          analog_val_1 += 100;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          delay(100);
+        }
+      }
+      if ( abs(PS4.data.analog.button.l1) > offset_val_shoulder) {
+        // analog_val_1 - semi coarse
+        if ((analog_val_1 - 100 > 0)) {
+          analog_val_1 -= 100;
+          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          delay(50);
+        }
+      }
+
+#endif
+
+      // run all motors simultaneously
+      stepper_X.setSpeed(mspeed1);
+      stepper_Y.setSpeed(mspeed2);
+      stepper_Z.setSpeed(mspeed3);
+
+      if (mspeed1 or mspeed2 or mspeed3) {
+        isforever = true;
+      }
+      else {
+        isforever = false;
+      }
+    }
+  
+}
+
+
+/* unused for now
+
+*/
+
+
+//
+//    if ( abs(PS4.data.analog.stick.lx) > offset_val) {
+//      // LED Stip
+//      stick_lx = PS4.data.analog.stick.lx;
+//      //stick_lx = stick_lx + sgn(stick_lx) * offset_val;
+//      if ((colour_led += sgn(stick_lx) * 5) > 0 and (colour_led += sgn(stick_lx) * 5) < 255)
+//        colour_led += sgn(stick_lx) * 5;
+//      if (colour_led < 0)
+//        colour_led = 0;
+//      strip.setPixelColor(0, strip.Color(colour_led, colour_led, colour_led));
+//      strip.show();
+//      delay(100);
+//    }
+//
+//
+
+//    if ( PS4.data.button.circle ) {
+//      //if(not is_laser_red){
+//      if(DEBUG) Serial.println("Laser on");
+//      is_laser_red = true;
+//      laserval += 200;
+//      run_laser(laserval);
+//      delay(100);
+//      //}
+//
+//    }
+//
+//    if ( PS4.data.button.cross ) {
+//      if (is_laser_red) {
+//        if(DEBUG) Serial.println("Laser off");
+//        is_laser_red = false;
+//        laserval = 0;
+//        run_laser(0);
+//      }
+//
+//    }
+//
+//    if ( PS4.data.button.triangle) {
+//      if (not is_sofi) {
+//        if(DEBUG) Serial.println("SOFI on");
+//        is_sofi = true;
+//        glob_amplitude_sofi = 300;
+//      }
+//    }
+//
+//    if ( PS4.data.button.square ) {
+//      if (is_sofi) {
+//        is_sofi = false;
+//        if(DEBUG) Serial.println("SOFI off");
+//        glob_amplitude_sofi = 0;
+//      }
+//
+//    }
 
 
 #endif

@@ -115,7 +115,8 @@ amplitude: 0,1,2,3
 //#include "pindef_cncshield_esp.h"
 //#include "pindef_lightsheet_tomo_galvo.h"
 //#include "pindef_lightsheet_tomo_galvo_espwemos.h"
-#include "pindef_lightsheet_tomo_PID_espwemos.h"
+//#include "pindef_lightsheet_tomo_PID_espwemos.h"
+#include "pindef_xyz_stagescan_ps4.h"
 //#include "pindef_lightsheet_espwemos.h"
 
 
@@ -302,8 +303,9 @@ void setup()
   Ps3.attach(onAttach);
   Ps3.attachOnConnect(onConnect);
   Ps3.attachOnDisconnect(onDisConnect);
-  Ps3.begin("01:02:03:04:05:06");
-  Serial.println("01:02:03:04:05:06");
+  const char* = "01:02:03:04:05:06";
+  Ps3.begin(PS3_MACADDESS);
+  Serial.println(PS3_MACADDESS);
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
@@ -311,8 +313,12 @@ void setup()
 
 #ifdef IS_PS4
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  //Ps4.attachOnConnect(onConnectPS4);
-  PS4.begin("1a:2b:3c:01:01:01");
+  PS4.attach(onAttach);
+  PS4.begin("01:02:03:04:05:06");
+  PS4.attachOnConnect(onConnect);
+  PS4.attachOnDisconnect(onDisConnect);
+  const char*  PS4_MACADDESS = "01:02:03:04:05:06";
+  Serial.println(PS4_MACADDESS);
   Serial.println("PS4 controler is set up.");
 #endif
 
