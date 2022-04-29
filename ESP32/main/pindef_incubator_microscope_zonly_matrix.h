@@ -9,7 +9,7 @@
 //#define IS_DAC
 //#define IS_DAC_FAKE
 //#define IS_WIFI
-//#define IS_PS3 // ESP32-only
+#define IS_PS4 // ESP32-only
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
 
@@ -17,26 +17,24 @@
 int analog_PIN_1 = 0;
 int analog_PIN_2 = 0;
 int analog_PIN_3 = 0;
-
-//step is 26 and dir is 25, en is 27. 5 is for led.
 // Stepper Motor pins
 int STEP_A = 0;
-int STEP_X = 0;
-int STEP_Y = 0;
-int STEP_Z = 26;
+int STEP_X = 26;
+int STEP_Y = 25;
+int STEP_Z = 17;
 int DIR_A = 0;
-int DIR_X = 0;
-int DIR_Y = 0;
-int DIR_Z = 25;
-int ENABLE = 27;
+int DIR_X = 16;
+int DIR_Y = 27;
+int DIR_Z = 14;
+int ENABLE = 12;
 
 
 // GALVos are always connected to 25/26 
-int dac_fake_1 = 0; // RESET-ABORT just toggles between 1 and 0
-int dac_fake_2 = 0; // Coolant
+int dac_fake_1 = 2; // RESET-ABORT just toggles between 1 and 0
+int dac_fake_2 = 34; // Coolant
 
 // ledarray
-int LED_ARRAY_PIN = 5; // FEED HOLD 
+int LED_ARRAY_PIN = 4; // FEED HOLD 
 
 // digital out (e.g. camera trigger)
 int digital_PIN_1 = 35; //  Cycle Start/Resume

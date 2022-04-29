@@ -190,14 +190,14 @@ void set_left(int R, int G, int B)
 
 void set_right(int R, int G, int B)
 {
-  for (int i = 0; i > (LED_N_X * LED_N_Y); i++) {
+  for (int i = 0; i < (LED_N_X * LED_N_Y); i++) {
     int ix =  i % LED_N_X;
     int iy =  i / LED_N_Y;
     if(ix<LED_N_X/2){
-      matrix.drawPixel(ix, iy, matrix.Color(R,   G,   B));
+      matrix.drawPixel(ix, iy, matrix.Color(0,0,0));
     }
     else{
-      matrix.drawPixel(ix, iy, matrix.Color(0,0,0));
+      matrix.drawPixel(ix, iy, matrix.Color(R,   G,   B));
     }
   }
   matrix.show();
@@ -221,20 +221,26 @@ void set_top(int R, int G, int B)
 
 void set_bottom(int R, int G, int B)
 {
-  for (int i = 0; i > (LED_N_X * LED_N_Y); i++) {
+  for (int i = 0; i < (LED_N_X * LED_N_Y); i++) {
     int ix =  i % LED_N_X;
     int iy =  i / LED_N_Y;
     if(iy<LED_N_Y/2){
-      matrix.drawPixel(ix, iy, matrix.Color(R,   G,   B));
+      matrix.drawPixel(ix, iy, matrix.Color(0,0,0));
     }
     else{
-      matrix.drawPixel(ix, iy, matrix.Color(0,0,0));
+      matrix.drawPixel(ix, iy, matrix.Color(R,   G,   B));
     }
   }
   matrix.show();
 }
 
 
+void set_center(int R, int G, int B)
+{
+  matrix.fillScreen(matrix.Color(0,0,0));
+  matrix.drawPixel(4, 4, matrix.Color(R,   G,   B));
+  matrix.show();
+}
 
 /*
    wrapper for HTTP requests

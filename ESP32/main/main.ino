@@ -54,7 +54,11 @@ amplitude: 0,1,2,3
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
   {"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
   {"task": "/ledarr_act","LEDArrMode": "full", "red":0, "green": 0, "blue":0}
-  {'red': 193, 'green': 193, 'blue': 193, 'indexled': 27, 'Nleds': 1, 'LEDArrMode': 'individual', 'task': '/ledarr_act'}
+  {'red': 193, 'green': 193, 'blue': 193, 'indexled': 27, 'Nleds': 1, 'LEDArrMode': 'single', 'task': '/ledarr_act'}
+  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'left', 'task': '/ledarr_act'}
+  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'right', 'task': '/ledarr_act'}
+  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
+  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
 
   // attempt to have fast triggering
 
@@ -116,7 +120,8 @@ amplitude: 0,1,2,3
 //#include "pindef_lightsheet_tomo_galvo.h"
 //#include "pindef_lightsheet_tomo_galvo_espwemos.h"
 //#include "pindef_lightsheet_tomo_PID_espwemos.h"
-#include "pindef_xyz_stagescan_ps4.h"
+//#include "pindef_xyz_stagescan_ps4.h"
+#include "pindef_incubator_microscope_zonly_matrix.h"
 //#include "pindef_lightsheet_espwemos.h"
 
 

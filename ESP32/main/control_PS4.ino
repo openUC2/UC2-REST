@@ -38,9 +38,16 @@ void activate_PS4() {
   }
   if (PS4.event.button_down.cross) {
     IS_PS4_CONTROLER_LEDARRAY = !IS_PS4_CONTROLER_LEDARRAY;
-    if (DEBUG) Serial.print("Turning LED Matrix to: ");
+    if (DEBUG) Serial.print("Turning LED Matrix to (cross): ");
     if (DEBUG) Serial.println(IS_PS4_CONTROLER_LEDARRAY);
-    set_all(0*IS_PS4_CONTROLER_LEDARRAY,0*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
+    set_all(255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
+    delay(1000); //Debounce?
+  }
+  if (PS4.event.button_down.circle) {
+    IS_PS4_CONTROLER_LEDARRAY = !IS_PS4_CONTROLER_LEDARRAY;
+    if (DEBUG) Serial.print("Turning LED Matrix to (circle): ");
+    if (DEBUG) Serial.println(IS_PS4_CONTROLER_LEDARRAY);
+    set_center(255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
 }
