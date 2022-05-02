@@ -40,7 +40,7 @@ https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com
 ### Install the required libraries
 
 
-Clone the following repository and copy the libraries inside the Arduino library folder: [https://github.com/beniroquai/BenesArduinoLibraries](https://github.com/beniroquai/BenesArduinoLibraries)
+***BEST PRACTICE:*** Clone the following repository and copy the libraries inside the Arduino library folder: [https://github.com/beniroquai/BenesArduinoLibraries](https://github.com/beniroquai/BenesArduinoLibraries)
 
 *Alternatively:*
 
