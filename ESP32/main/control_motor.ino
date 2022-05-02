@@ -177,8 +177,13 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
+  if(DEBUG) Serial.println("Disabling motors...");
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
+  digitalWrite(STEP_X_1, LOW);
+  digitalWrite(STEP_X_2, LOW);
+  digitalWrite(STEP_X_3, LOW);
+  digitalWrite(STEP_X_4, LOW);
 }
 
 bool getEnableMotor() {

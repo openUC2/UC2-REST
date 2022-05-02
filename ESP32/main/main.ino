@@ -121,7 +121,8 @@ amplitude: 0,1,2,3
 //#include "pindef_lightsheet_tomo_galvo_espwemos.h"
 //#include "pindef_lightsheet_tomo_PID_espwemos.h"
 //#include "pindef_xyz_stagescan_ps4.h"
-#include "pindef_incubator_microscope_zonly_matrix.h"
+//#include "pindef_incubator_microscope_zonly_matrix.h"
+#include "pindef_incubator_microscope_zonly_matrix_fullbox_NL.h"
 //#include "pindef_lightsheet_espwemos.h"
 
 
@@ -170,7 +171,7 @@ uint32_t frequency = 1000;
 DynamicJsonDocument jsonDocument(256);
 //StaticJsonDocument<256> jsonDocument;
 #else
-DynamicJsonDocument jsonDocument(2048);
+DynamicJsonDocument jsonDocument(4096); // need to be large for led array
 #endif
 
 #ifdef IS_WIFI
@@ -200,7 +201,8 @@ DAC_Module *dac = new DAC_Module();
 #include <AccelStepper.h>
 #include "parameters_motor.h"
 //AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+//AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
+AccelStepper stepper_X(AccelStepper::FULL4WIRE, STEP_X_1, STEP_X_2, STEP_X_3, STEP_X_4);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 #endif
