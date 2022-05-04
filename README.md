@@ -10,6 +10,7 @@ This is the playground to start development of using UC2 modules using the HTTP 
 ## ESP32
 
 This folder contains all the code for handling actuators and sensors through HTTP requests.
+Please use the release versio of the Arduino code and flash it on your ESP32 wemos D1 R32. You can find the [RELEASE here](https://github.com/openUC2/UC2-REST/releases/tag/ESP32_WEMOS_D1_R32)
 
 ## PYTHON
 
