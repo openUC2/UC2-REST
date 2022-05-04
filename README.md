@@ -5,15 +5,73 @@
 
 # UC2 REST API
 
-This is the playground to start development of using UC2 modules using the HTTP REST API. 
+This is the playground to start development of using UC2 modules using the HTTP REST API.
 
 ## ESP32
 
-This folder contains all the code for handling actuators and sensors through HTTP requests. 
+This folder contains all the code for handling actuators and sensors through HTTP requests.
 
 ## PYTHON
 
-This provides a simple client to control all kinds of actions.
+We provide a simple [ESP32Client.py](./PYTHON/ESP32Client.py) that can be used to control the ESP32 microcontroler. We have a Jupyter-notebook based tutorial that can help you through the process.
+
+In order to run it, clone this repository/download it and do:
+```
+conda activate $YOURENVIRONMENT$
+cd PYTHON
+jupyter notebook
+pip install numpy requests python-opencv
+pip install socket tempfile pyserial
+```
+
+The tutorial can be found [here](./PYTHON/UC2_REST_Tutorial_v0.ipynb).
+
+### General Usage
+
+```py
+from ESP32Client import ESP32Client  
+ESP32 = ESP32Client(serialport="unknown")
+
+# move and measure
+print("Current position: "+ str(ESP32.get_position(axis=1)))
+ESP32.move_x(steps=1000, speed=1000, is_blocking=True, is_absolute=True, is_enabled=True)
+
+# set a funny pattern
+import numpy as np
+
+Nx=8
+Ny=8
+led_pattern = np.abs(np.int8(np.random.randn(3,Nx*Ny)*255))
+ESP32.send_LEDMatrix_array(led_pattern, timeout=1)
+```
+
+## Hardware
+
+It is the easiest to use the ESP32 WEMOS D1 R32 (Arduino compatible) board in combination with the CNC shield v3:
+
+<p align="center">
+<a href="#logo" name="logo"><img src="./IMAGES/CNCShieldV3.jpeg" width="400"></a>
+</p>
+
+<p align="center">
+<a href="#logo" name="logo"><img src="./IMAGES/ESP32_D1_R32.jpeg"width="400"></a>
+</p>
+
+
+## Tutorials
+
+We provide two tutorials that help you installing the software:
+
+<p align="left">
+<a href="https://youtu.be/9doTdo5SW2E" name="logo"><img src="./IMAGES/YouTubeUC2RestSetup.png" width="600"></a>
+</p>
+
+
+as well as connecting the hardware:
+
+<p align="left">
+<a href="https://youtu.be/v8Xx2iVbDck" name="logo"><img src="./IMAGES/YouTubeRestWire.png" width="600"></a>
+</p>
 
 
 # Installation
@@ -56,10 +114,10 @@ Adafruit NeoMatrix (Adafruit) and its dependency
 
 ### PS3/PS4 controller
 
-This code enables a rudimentary integration of the PS3/PS4 controller. For this you need to know/modify the controller's MAC address. 
+This code enables a rudimentary integration of the PS3/PS4 controller. For this you need to know/modify the controller's MAC address.
 
 Add the corresponding libraries from here:
-- [PS3 controller](https://github.com/jvpernis/esp32-ps3) from the Arduino library manager 
+- [PS3 controller](https://github.com/jvpernis/esp32-ps3) from the Arduino library manager
 - [PS4 controller (modified)](https://github.com/beniroquai/PS4-esp32/)
 
 Please follow the tutorial [here](https://github.com/aed3/PS4-esp32/edit/master/README.md) (similar for PS3)
@@ -76,7 +134,7 @@ The instructions on how to do this are base off what can be found [here](https:/
 1. To install this library into your Arduino IDE:
     1. Click on the "Code" button in the top right of this page
     1. Select "Download Zip" (It's always a good idea to look through the code on this page first to make sure you know what you're downloading)
-    1. In the Arduino IDE, navigate to `Sketch -> Include Library -> Add .ZIP Library`, then select the file you just downloaded 
+    1. In the Arduino IDE, navigate to `Sketch -> Include Library -> Add .ZIP Library`, then select the file you just downloaded
 
 ### Pairing the PS4 Controller:
 
@@ -103,8 +161,8 @@ void setup()
 
 - Download this repository following this [link](https://github.com/openUC2/UC2-REST/archive/refs/heads/master.zip)
 - Go to the folder that contains the file `main.ino` in [.ESP32/main](https://github.com/openUC2/UC2-REST/tree/master/ESP32/main)
-- Select the board you want to install it to (e.g. Arduino or ESP32 from the Boardmanager) 
-- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab 
+- Select the board you want to install it to (e.g. Arduino or ESP32 from the Boardmanager)
+- *Optional* adapt some settings (e.g. adding modules, selecting the communication channel like Wifi / Serial) by commenting/outcommenting the following lines (you can find it under the tab
 *REST_API_JSON_Serial_Wifi_motor_PS3_v0* )
 
 
@@ -158,7 +216,7 @@ void setup()
 - Navigate to the folder [PYTHON](https://github.com/openUC2/UC2-REST/tree/master/PYTHON)
 - Install the following dependencies via `pip`:
 ```pip install requests python-opencv```
-- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py) 
+- Open the file [TEST_ESP32RestSerialAPI.py](https://github.com/openUC2/UC2-REST/blob/master/PYTHON/TEST_ESP32RestSerialAPI.py)
 - Adapt the `serialport`:
 ```
 serialport = "/dev/cu.SLAB_USBtoUART"
@@ -167,18 +225,18 @@ serialport = "/dev/cu.wchusbserial1430"
 serialport = "COM3"
 ```
 - Execute script in Python and check result
-- In case of an error, file an Issue here 
+- In case of an error, file an Issue here
 
 
 ## UC2 and ImSwitch
 
-The device adapter in [PYTHON/ESP32RestSerialAPI.py](PYTHON/ESP32RestSerialAPI.py) is integrated into the open-source control and visualization software ImSwitch. A customized fork for UC2 can be found [here](https://github.com/beniroquai/ImSwitch/tree/master/imswitch/). 
+The device adapter in [PYTHON/ESP32RestSerialAPI.py](PYTHON/ESP32RestSerialAPI.py) is integrated into the open-source control and visualization software ImSwitch. A customized fork for UC2 can be found [here](https://github.com/beniroquai/ImSwitch/tree/master/imswitch/).
 
 In order to get it working, please follow the steps in the dedicated [README](https://github.com/beniroquai/ImSwitch/tree/master/imswitch/)
 
 ## API defintion
 
-This will come soon. 
+This will come soon.
 In principle, every actuator/sensor should have three comonents:
 
 - `*_act` => *action* -> do something
@@ -191,14 +249,18 @@ In principle, every actuator/sensor should have three comonents:
 - Analog Out (e.g. PWM)
 - DAC (e.g. function generator for Galvos)
 - Laser (e.g. TTL)
-- State (e.g. information from the board) 
+- State (e.g. information from the board)
 
-### Accessing the Swagger UI 
+### Accessing the Swagger UI
 
-This is an experimental feature. You can access the REST API from the Swagger UI in your browser by opening the browser and connect to the ESP32 presumingly both are in the same network. 
+This is an experimental feature. You can access the REST API from the Swagger UI in your browser by opening the browser and connect to the ESP32 presumingly both are in the same network.
 
 <p align="center">
 <a href="#logo" name="logo"><img src="./IMAGES/Swagger1.png"></a>
 </p>
 
 
+## TODO's
+
+- create pip package
+- add testing files
