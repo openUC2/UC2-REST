@@ -1,35 +1,18 @@
 #ifdef IS_LASER
 
 
-void LASER_despeckle(int LASERdespeckle, int LASERid){
-    long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
-    Serial.println(laserwiggle);
-    Serial.println(LASERid);
-    if (LASERid == 1) {
-    #ifdef IS_ESP32
-    ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_1+laserwiggle);
-    #else
-        Serial.println("Turning on laser 1");
-        analogWrite(LASER_PIN_1, LASER_val_1+laserwiggle);
-    #endif
-    }
-    else if (LASERid == 2) {
-    #ifdef IS_ESP32
-    ledcWrite(PWM_CHANNEL_LASER_2, LASER_val_2+laserwiggle);
-    #else
-        Serial.println("Turning on laser 2");
-        analogWrite(LASER_PIN_2, LASER_val_2+laserwiggle);
-    #endif
-    }
-    else if (LASERid == 3) {
-    #ifdef IS_ESP32
-    ledcWrite(PWM_CHANNEL_LASER_3, LASER_val_3+laserwiggle);
-    #else
-        Serial.println("Turning on laser 3");
-        analogWrite(LASER_PIN_3, LASER_val_3+laserwiggle);
-    #endif
-    }    
-    delay(20);
+void LASER_despeckle(int LASERdespeckle, int LASERid) {
+  long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
+  Serial.println(laserwiggle);
+  Serial.println(LASERid);
+  if (LASERid == 1)
+    ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_1 + laserwiggle);
+  if (LASERid == 2)
+    ledcWrite(PWM_CHANNEL_LASER_2, LASER_val_2 + laserwiggle);
+  else if (LASERid == 3)
+    ledcWrite(PWM_CHANNEL_LASER_3, LASER_val_3 + laserwiggle);
+
+delay(20);
 }
 
 
@@ -51,33 +34,29 @@ void LASER_act_fct() {
   if (LASERid == 1) {
     LASER_val_1 = LASERval;
     LASER_despeckle_1 = LASERdespeckle;
-    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_1);}
-#ifdef IS_ESP32
+    if (DEBUG) {
+      Serial.print("LaserPIN ");
+      Serial.println(LASER_PIN_1);
+    }
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
-#else
-    Serial.println("Turning on laser 1");
-    analogWrite(LASER_PIN_1, LASERval);
-#endif
   }
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
     LASER_despeckle_2 = LASERdespeckle;
-    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_2);}
-#ifdef IS_ESP32
+    if (DEBUG) {
+      Serial.print("LaserPIN ");
+      Serial.println(LASER_PIN_2);
+    }
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
-#else
-    analogWrite(LASER_PIN_2, LASERval);
-#endif
   }
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
     LASER_despeckle_3 = LASERdespeckle;
-    if (DEBUG) {Serial.print("LaserPIN "); Serial.println(LASER_PIN_3);}
-#ifdef IS_ESP32
+    if (DEBUG) {
+      Serial.print("LaserPIN ");
+      Serial.println(LASER_PIN_3);
+    }
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
-#else
-    analogWrite(LASER_PIN_3, LASERval);
-#endif
   }
 
   jsonDocument.clear();
@@ -97,39 +76,33 @@ void LASER_set_fct() {
       LASER_PIN_1 = LASERpin;
       pinMode(LASER_PIN_1, OUTPUT);
       digitalWrite(LASER_PIN_1, LOW);
-#ifdef IS_ESP32
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
       ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
       ledcWrite(PWM_CHANNEL_LASER_1, 0);
-#endif
     }
     else if (LASERid == 2) {
       LASER_PIN_2 = LASERpin;
       pinMode(LASER_PIN_2, OUTPUT);
       digitalWrite(LASER_PIN_2, LOW);
-#ifdef IS_ESP32
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
       ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
       ledcWrite(PWM_CHANNEL_LASER_2, 0);
-#endif
     }
     else if (LASERid == 3) {
       LASER_PIN_3 = LASERpin;
       pinMode(LASER_PIN_3, OUTPUT);
       digitalWrite(LASER_PIN_3, LOW);
-#ifdef IS_ESP32
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
       ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
       ledcWrite(PWM_CHANNEL_LASER_3, 0);
-#endif
+    }
   }
-}
 
-jsonDocument.clear();
-jsonDocument["return"] = 1;
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
 }
 
 // Custom function accessible by the API
@@ -163,6 +136,36 @@ void LASER_get_fct() {
   jsonDocument["LASERpin"] = LASERpin;
 }
 
+void setup_laser() {
+  Serial.println("Setting Up LASERs");
+
+  // switch of the LASER directly
+  pinMode(LASER_PIN_1, OUTPUT);
+  pinMode(LASER_PIN_2, OUTPUT);
+  pinMode(LASER_PIN_3, OUTPUT);
+  digitalWrite(LASER_PIN_1, LOW);
+  digitalWrite(LASER_PIN_2, LOW);
+  digitalWrite(LASER_PIN_3, LOW);
+
+  /* setup the PWM ports and reset them to 0*/
+  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
+  ledcWrite(PWM_CHANNEL_LASER_1, 10000);
+  delay(500);
+  ledcWrite(PWM_CHANNEL_LASER_1, 0);
+
+  ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
+  ledcWrite(PWM_CHANNEL_LASER_2, 10000);
+  delay(500);
+  ledcWrite(PWM_CHANNEL_LASER_2, 0);
+
+  ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
+  ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
+  ledcWrite(PWM_CHANNEL_LASER_3, 10000);
+  delay(500);
+  ledcWrite(PWM_CHANNEL_LASER_3, 0);
+}
 
 /*
   wrapper for HTTP requests

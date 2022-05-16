@@ -11,7 +11,7 @@
 
   {"task": "/state_set", "isdebug":0}
 
-  retrieve sensor value 
+  retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
@@ -42,12 +42,12 @@
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
 
- operate the digital out
+  operate the digital out
   {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
-amplitude: 0,1,2,3
+  amplitude: 0,1,2,3
 
 
   operate ledmatrix
@@ -61,7 +61,7 @@ amplitude: 0,1,2,3
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
 
 
-{
+  {
   "red": [
     0,
     0,
@@ -263,7 +263,7 @@ amplitude: 0,1,2,3
   "arraySize": 64,
   "LEDArrMode": "array",
   "task": "/ledarr_act"
-}
+  }
   // attempt to have fast triggering
 
   We want to send a table of tasks:
@@ -323,11 +323,11 @@ amplitude: 0,1,2,3
 //#include "pindef_cncshield_esp.h"
 //#include "pindef_lightsheet_tomo_galvo.h"
 //#include "pindef_lightsheet_tomo_galvo_espwemos.h"
-//#include "pindef_lightsheet_tomo_PID_espwemos.h"
+//#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
 //#include "pindef_xyz_stagescan_ps4.h"
-#include "pindef_incubator_microscope_zonly_matrix.h"
-//#include "pindef_lightsheet_espwemos.h"
-
+//#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop 
+//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
+#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -512,8 +512,8 @@ void setup()
   Ps3.attach(onAttach);
   Ps3.attachOnConnect(onConnect);
   Ps3.attachOnDisconnect(onDisConnect);
-  const char* = "01:02:03:04:05:06";
-  Ps3.begin(PS3_MACADDESS);
+  const char* PS3_MACADDESS = "01:02:03:04:05:06";
+  Ps3.begin("01:02:03:04:05:06");
   Serial.println(PS3_MACADDESS);
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
@@ -533,43 +533,7 @@ void setup()
 
 
 #ifdef IS_LASER
-  Serial.println("Setting Up LASERs");
-  // switch of the LASER directly
-  pinMode(LASER_PIN_1, OUTPUT);
-  pinMode(LASER_PIN_2, OUTPUT);
-  pinMode(LASER_PIN_3, OUTPUT);
-  digitalWrite(LASER_PIN_1, LOW);
-  digitalWrite(LASER_PIN_2, LOW);
-  digitalWrite(LASER_PIN_3, LOW);
-
-#ifdef IS_ESP32
-  /* setup the PWM ports and reset them to 0*/
-  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
-  ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_1, 0);
-
-  ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
-  ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_2, 0);
-
-  ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
-  ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_3, 0);
-#else
-  pinMode(LASER_PIN_1, OUTPUT);
-  analogWrite(LASER_PIN_1, 100); delay(500);
-  analogWrite(LASER_PIN_1, 0);
-  pinMode(LASER_PIN_2, OUTPUT);
-  analogWrite(LASER_PIN_2, 100); delay(500);
-  analogWrite(LASER_PIN_2, 0);
-  pinMode(LASER_PIN_3, OUTPUT);
-  analogWrite(LASER_PIN_3, 100); delay(500);
-  analogWrite(LASER_PIN_3, 0);
-
-#endif
+  setup_laser();
 #endif
 
 #ifdef IS_DAC
@@ -651,7 +615,7 @@ void setup()
 #ifdef IS_DAC_FAKE
   pinMode(dac_fake_1, OUTPUT);
   pinMode(dac_fake_2, OUTPUT);
-  frequency=1;
+  frequency = 1;
   xTaskCreate(
     drive_galvo,    // Function that should be called
     "drive_galvo",   // Name of the task (for debugging)
@@ -664,17 +628,17 @@ void setup()
 
 
 #ifdef IS_READSENSOR
-setup_sensors();
-Serial.println(readsensor_act_endpoint);
-Serial.println(readsensor_set_endpoint);
-Serial.println(readsensor_get_endpoint);
+  setup_sensors();
+  Serial.println(readsensor_act_endpoint);
+  Serial.println(readsensor_set_endpoint);
+  Serial.println(readsensor_get_endpoint);
 #endif
 
 #ifdef IS_PID
-setup_PID();
-Serial.println(PID_act_endpoint);
-Serial.println(PID_set_endpoint);
-Serial.println(PID_get_endpoint);
+  setup_PID();
+  Serial.println(PID_act_endpoint);
+  Serial.println(PID_set_endpoint);
+  Serial.println(PID_get_endpoint);
 #endif
 }
 
@@ -683,7 +647,7 @@ Serial.println(PID_get_endpoint);
 
 void loop() {
   // for any timing-related purposes
-  currentMillis = millis(); 
+  currentMillis = millis();
 
 #ifdef IS_SERIAL
   if (Serial.available()) {
@@ -727,42 +691,42 @@ void loop() {
 #endif
 
 
-    // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
+  // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-    if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-      LASER_despeckle(LASER_despeckle_1, 1);
-    if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-      LASER_despeckle(LASER_despeckle_2, 2);
-    if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-      LASER_despeckle(LASER_despeckle_3, 3);
+  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
+    LASER_despeckle(LASER_despeckle_1, 1);
+  if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
+    LASER_despeckle(LASER_despeckle_2, 2);
+  if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
+    LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
 #ifdef IS_PS3
-   control_PS3(); // if controller is operating motors, overheating protection is enabled
+  control_PS3(); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_PS4
-    control_PS4();
+  control_PS4();
 #endif
 
 #ifdef IS_WIFI
-    server.handleClient();
+  server.handleClient();
 #endif
 
 
 #ifdef IS_MOTOR
-    if (not isstop) {
-      isactive=true;
-      drive_motor_background();
-    }
+  if (not isstop) {
+    isactive = true;
+    drive_motor_background();
+  }
 #endif
 
 #ifdef IS_PID
-if (PID_active and (currentMillis - startMillis >= PID_updaterate)){
-  PID_background();
-  startMillis = millis();
-}
-#endif 
+  if (PID_active and (currentMillis - startMillis >= PID_updaterate)) {
+    PID_background();
+    startMillis = millis();
+  }
+#endif
 
 
 }
@@ -860,30 +824,30 @@ void jsonProcessor(char task[]) {
 
 
   /*
-  Read the sensor
+    Read the sensor
   */
- #ifdef IS_READSENSOR
-    if (strcmp(task, readsensor_act_endpoint) == 0)
+#ifdef IS_READSENSOR
+  if (strcmp(task, readsensor_act_endpoint) == 0)
     readsensor_act_fct();
   if (strcmp(task, readsensor_set_endpoint) == 0)
     readsensor_set_fct();
   if (strcmp(task, readsensor_get_endpoint) == 0)
     readsensor_get_fct();
-  #endif
+#endif
 
   /*
-  Control PID controller
+    Control PID controller
   */
- #ifdef IS_PID
-    if (strcmp(task, PID_act_endpoint) == 0)
+#ifdef IS_PID
+  if (strcmp(task, PID_act_endpoint) == 0)
     PID_act_fct();
   if (strcmp(task, PID_set_endpoint) == 0)
     PID_set_fct();
   if (strcmp(task, PID_get_endpoint) == 0)
     PID_get_fct();
-  #endif
+#endif
 
-  
+
   // Send JSON information back
   Serial.println("++");
   serializeJson(jsonDocument, Serial);
@@ -912,29 +876,29 @@ void tableProcessor() {
   Serial.println(N_repeats);
 
 
-  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
-  for (int itask = 0; itask < N_tasks; itask++) {
-  char json_string[256];
-    // Hacky, but should work
-    Serial.println(itask);
-    serializeJson(tmpJsonDoc[String(itask)], json_string);
-    Serial.println(json_string);
-    deserializeJson(jsonDocument,json_string);
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++) {
+    for (int itask = 0; itask < N_tasks; itask++) {
+      char json_string[256];
+      // Hacky, but should work
+      Serial.println(itask);
+      serializeJson(tmpJsonDoc[String(itask)], json_string);
+      Serial.println(json_string);
+      deserializeJson(jsonDocument, json_string);
 
-    String task_s = jsonDocument["task"];
-    char task[50];
-    task_s.toCharArray(task, 256);
+      String task_s = jsonDocument["task"];
+      char task[50];
+      task_s.toCharArray(task, 256);
 
-    //jsonDocument.garbageCollect(); // memory leak?
-    /*if (task == "null") return;*/
-    if (DEBUG) {
-      Serial.print("TASK: ");
-      Serial.println(task);
+      //jsonDocument.garbageCollect(); // memory leak?
+      /*if (task == "null") return;*/
+      if (DEBUG) {
+        Serial.print("TASK: ");
+        Serial.println(task);
+      }
+
+      jsonProcessor(task);
+
     }
-
-    jsonProcessor(task);
-
-  }
   }
   tmpJsonDoc.clear();
 

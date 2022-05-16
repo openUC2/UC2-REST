@@ -12,7 +12,7 @@
 //#define IS_DAC
 //#define IS_DAC_FAKE
 //#define IS_WIFI
-#define IS_PS3 // ESP32-only
+#define IS_PS4 // ESP32-only
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
 
@@ -50,4 +50,4 @@ int digital_PIN_1 = 0; //  Cycle Start/Resume
 int digital_PIN_2 = 0; //not used/reserved
 int digital_PIN_3 = 0; //not used/reserved
 
-const char* identifier_setup = "pindef_lightsheet_espwemos";
+const char* identifier_setup = "pindef_multicolour_fluorescence_wemos_borstel";
