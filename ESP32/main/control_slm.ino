@@ -52,7 +52,7 @@ void slm_act_fct() {
     int startX = jsonDocument["startX"];
     int startY = jsonDocument["startY"];
     int endX = jsonDocument["endX"];
-    int enxY = jsonDocument["enxY"];
+    int endY = jsonDocument["enxY"];
 
     for (int ix = startX; startX < endX; ix++) {
       for (int iy = startY; startY < endY; iy++) {
