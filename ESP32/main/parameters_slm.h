@@ -2,6 +2,10 @@
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 #include <SPI.h>
 
+
+// Return the minimum of two values a and b
+#define minimum(a,b)     (((a) < (b)) ? (a) : (b))
+
 #define TFT_RST 4
 #define TFT_DC 2 //A0
 #define TFT_CS 15 //CS
@@ -9,7 +13,7 @@
 #define TFT_CLK 18 //SCK
 
 
-
+/*
 #define ST7735_DRIVER      // Definieren Sie weitere Parameter für diese Anzeige
 #define ST7735_REDTAB
 #define TFT_MISO 19
@@ -28,3 +32,4 @@
 #define SPI_FREQUENCY  27000000 // Actually sets it to 26.67MHz = 80/3
 #define SPI_READ_FREQUENCY  20000000
 #define SPI_TOUCH_FREQUENCY  2500000
+*/

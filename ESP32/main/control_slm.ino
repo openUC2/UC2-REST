@@ -1,4 +1,4 @@
-#ifdef IS_slm
+#ifdef IS_SLM
 
 #include "parameters_slm.h"
 
@@ -38,7 +38,7 @@ void slm_act_fct() {
     if (jsonDocument.containsKey("color")) {
       color = jsonDocument["color"];
     }
-    tft.fillCircle(x, y, radius, color);
+    
   }
 
   if (strcmp(slmMode, "clear") == 0) {
@@ -136,7 +136,12 @@ void slm_set_fct_http() {
 }
 #endif
 
-
+void setup_slm() {
+  tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
+  tft.fillScreen(ST77XX_WHITE);
+  delay(500);
+  tft.fillScreen(ST77XX_BLACK);
+}
 
 /*
    Auxilary functions
