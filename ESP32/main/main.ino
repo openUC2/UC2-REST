@@ -326,8 +326,8 @@
 //#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
 //#include "pindef_xyz_stagescan_ps4.h"
 //#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop 
-//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
-#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
+#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
+//#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -358,6 +358,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_PID
 #include "parameters_PID.h"
 #endif
+
 
 #include <ArduinoJson.h>
 #include "parameters_state.h"
@@ -409,6 +410,10 @@ AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 #endif
 
+#ifdef IS_SLM
+#include "parameters_slm.h"
+#endif
+
 #ifdef IS_LASER
 #include "parameters_laser.h"
 #endif
@@ -457,6 +462,11 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
+#ifdef IS_SLM
+const char* slm_act_endpoint = "/slm_act";
+const char* slm_set_endpoint = "/slm_set";
+const char* slm_get_endpoint = "/slm_get";
+#endif
 
 #ifdef IS_READSENSOR
 const char* readsensor_act_endpoint = "/readsensor_act";
@@ -476,6 +486,11 @@ const char* PID_get_endpoint = "/PID_get";
 */
 void setup()
 {
+  /*
+   * SETTING UP DEVICES
+   */
+
+   
   // for any timing related puposes..
   startMillis = millis();
 
@@ -498,6 +513,9 @@ void setup()
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);
 
+#ifdef IS_SLM
+  setup_slm();
+#endif
 
 #ifdef IS_LEDARR
   setup_matrix();
@@ -560,7 +578,6 @@ void setup()
   setupDigital();
 #endif
 
-
   // list modules
 #ifdef IS_SERIAL
   Serial.println("IS_SERIAL");
@@ -579,6 +596,9 @@ void setup()
 #endif
 #ifdef IS_PS4
   Serial.println("IS_PS4");
+#endif
+#ifdef IS_SLM
+  Serial.println("IS_SLM");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -599,6 +619,11 @@ void setup()
   Serial.println(analog_act_endpoint);
   Serial.println(analog_get_endpoint);
   Serial.println(analog_set_endpoint);
+#endif
+#ifdef IS_ANALOG
+  Serial.println(slm_act_endpoint);
+  Serial.println(slm_get_endpoint);
+  Serial.println(slm_set_endpoint);
 #endif
 #ifdef IS_DIGITALGOUT
   Serial.println(digital_act_endpoint);
@@ -690,6 +715,9 @@ void loop() {
   }
 #endif
 
+/*
+ * continous control during loop
+ */
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
@@ -756,6 +784,22 @@ void jsonProcessor(char task[]) {
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
+  }
+#endif
+
+
+  /*
+    Operate SLM
+  */
+#ifdef IS_SLM
+  if (strcmp(task, slm_act_endpoint) == 0) {
+    slm_act_fct();
+  }
+  if (strcmp(task, slm_set_endpoint) == 0) {
+    slm_set_fct();
+  }
+  if (strcmp(task, slm_get_endpoint) == 0) {
+    slm_get_fct();
   }
 #endif
 
