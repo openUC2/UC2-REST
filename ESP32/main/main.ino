@@ -51,8 +51,8 @@
 
   # SLM display
   {"task": "/slm_act","slmMode": "ring", "posX":100, "posY": 100, "radius":100, "color": 10000}
-
-
+  {"task": "/slm_act","slmMode": "full", "color": 10000}
+  {"task": "/slm_act","slmMode": "clear"}
 
   operate ledmatrix
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
@@ -381,7 +381,11 @@ uint32_t frequency = 1000;
 DynamicJsonDocument jsonDocument(256);
 //StaticJsonDocument<256> jsonDocument;
 #else
+#ifdef IS_SLM
+DynamicJsonDocument jsonDocument(32784);
+#else
 DynamicJsonDocument jsonDocument(4096);
+#endif
 #endif
 
 #ifdef IS_WIFI

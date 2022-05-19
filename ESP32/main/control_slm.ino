@@ -19,7 +19,7 @@ void slm_act_fct() {
 
   // individual pattern gets adressed
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
-  if (strcmp(slmMode, "ring") == 0) {
+  if (strcmp(slmMode, "circle") == 0) {
     if (DEBUG) Serial.println("circle");
     int posX = 0;
     int posY = 0;
@@ -42,12 +42,12 @@ void slm_act_fct() {
     
   }
 
-  if (strcmp(slmMode, "clear") == 0) {
+  if (strcmp(slmMode, "full") == 0) {
     if (DEBUG) Serial.println("clear");
     uint16_t color = jsonDocument["color"];
     tft.fillScreen(color);
   }
-  if (strcmp(slmMode, "full") == 0) {
+  if (strcmp(slmMode, "clear") == 0) {
     if (DEBUG) Serial.println("full");
     tft.fillScreen(ST77XX_BLACK);
   }
@@ -58,11 +58,12 @@ void slm_act_fct() {
     int startX = jsonDocument["startX"];
     int startY = jsonDocument["startY"];
     int endX = jsonDocument["endX"];
-    int endY = jsonDocument["enxY"];
+    int endY = jsonDocument["endY"];
 
-    for (int ix = startX; startX < endX; ix++) {
-      for (int iy = startY; startY < endY; iy++) {
-        uint16_t color = jsonDocument["color"][ix+iy];  //Implicit cast
+    for (int ix = startX; ix < endX; ix++) {
+      for (int iy = startY; iy < endY; iy++) {
+        uint16_t color = jsonDocument["color"][ix*(endX-startX)+iy];  //Implicit cast
+        Serial.println(color);
         tft.drawPixel(iy, ix, color);
       }
     }
