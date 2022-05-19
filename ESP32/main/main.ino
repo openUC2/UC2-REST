@@ -49,6 +49,10 @@
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
   amplitude: 0,1,2,3
 
+  # SLM display
+  {"task": "/slm_act","slmMode": "ring", "posX":100, "posY": 100, "radius":100, "color": 10000}
+
+
 
   operate ledmatrix
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
@@ -59,6 +63,7 @@
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'right', 'task': '/ledarr_act'}
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
+  
 
 
   {
@@ -601,6 +606,9 @@ void setup()
 #ifdef IS_SLM
   Serial.println("IS_SLM");
 #endif
+#ifdef IS_LEDARR
+  Serial.println("IS_LEDARR");
+#endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
   Serial.println(dac_get_endpoint);
@@ -621,7 +629,7 @@ void setup()
   Serial.println(analog_get_endpoint);
   Serial.println(analog_set_endpoint);
 #endif
-#ifdef IS_ANALOG
+#ifdef IS_SLM
   Serial.println(slm_act_endpoint);
   Serial.println(slm_get_endpoint);
   Serial.println(slm_set_endpoint);

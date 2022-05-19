@@ -6,11 +6,14 @@
 // Return the minimum of two values a and b
 #define minimum(a,b)     (((a) < (b)) ? (a) : (b))
 
+/*
+//default values
 #define TFT_RST 4
 #define TFT_DC 2 //A0
 #define TFT_CS 15 //CS
 #define TFT_MOSI 23 //SDA
 #define TFT_CLK 18 //SCK
+ */
 
 
 /*

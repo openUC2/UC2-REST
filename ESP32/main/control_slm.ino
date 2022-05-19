@@ -38,11 +38,17 @@ void slm_act_fct() {
     if (jsonDocument.containsKey("color")) {
       color = jsonDocument["color"];
     }
+    tft.fillCircle(posX, posY, radius, color);
     
   }
 
   if (strcmp(slmMode, "clear") == 0) {
     if (DEBUG) Serial.println("clear");
+    uint16_t color = jsonDocument["color"];
+    tft.fillScreen(color);
+  }
+  if (strcmp(slmMode, "full") == 0) {
+    if (DEBUG) Serial.println("full");
     tft.fillScreen(ST77XX_BLACK);
   }
   // only if a single led will be updated, all others stay the same
@@ -137,10 +143,12 @@ void slm_set_fct_http() {
 #endif
 
 void setup_slm() {
+  if(DEBUG) Serial.println("Initializing SLM");
   tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
   tft.fillScreen(ST77XX_WHITE);
   delay(500);
   tft.fillScreen(ST77XX_BLACK);
+  if(DEBUG) Serial.println("Done Initializing SLM");
 }
 
 /*
