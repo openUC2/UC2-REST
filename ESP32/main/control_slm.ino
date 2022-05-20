@@ -87,11 +87,13 @@ void slm_act_fct() {
     int endX = jsonDocument["endX"];
     int endY = jsonDocument["endY"];
 
-    for (int ix = startX; ix < endX; ix++) {
-      for (int iy = startY; iy < endY; iy++) {
-        uint16_t color = jsonDocument["color"][ix*(endX-startX)+iy];  //Implicit cast
+    int nX = endX-startX;
+    int nY = endY-startY;
+    for (int ix = 0; ix < nX; ix++) {
+      for (int iy = 0; iy < nY; iy++) {
+        uint16_t color = jsonDocument["color"][ix*(nX)+iy];  //Implicit cast
         Serial.println(color);
-        tft.drawPixel(iy, ix, color);
+        tft.drawPixel(iy+nY, ix+nX, color);
       }
     }
   }
