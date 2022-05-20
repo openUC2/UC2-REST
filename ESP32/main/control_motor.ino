@@ -162,7 +162,7 @@ void motor_act_fct() {
     stepper_Z.move(SIGN_Z * mposition3);
   }
   }
-  
+
   if (DEBUG) Serial.println("Start rotation in background");
 
   //POSITION_MOTOR_A = stepper_A.currentPosition();
@@ -177,13 +177,8 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
-  if(DEBUG) Serial.println("Disabling motors...");
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
-  digitalWrite(STEP_X_1, LOW);
-  digitalWrite(STEP_X_2, LOW);
-  digitalWrite(STEP_X_3, LOW);
-  digitalWrite(STEP_X_4, LOW);
 }
 
 bool getEnableMotor() {
@@ -304,7 +299,7 @@ void motor_set_fct() {
         stepper_Y.setMaxSpeed(maxspeed);
         break;
       case 3:
-        stepper_Z.setMaxSpeed(maxspeed); 
+        stepper_Z.setMaxSpeed(maxspeed);
         break;
     }
   }
@@ -357,7 +352,8 @@ void motor_get_fct() {
       if (DEBUG) Serial.println("AXIS 1");
       mmaxspeed = stepper_X.maxSpeed();
       mspeed = stepper_X.speed();
-      mposition = POSITION_MOTOR_X;//stepper_X.currentPosition();
+      POSITION_MOTOR_X = stepper_X.currentPosition();
+      mposition = POSITION_MOTOR_X;
       pinstep = STEP_X;
       pindir = DIR_X;
       sign = SIGN_X;
@@ -366,7 +362,8 @@ void motor_get_fct() {
       if (DEBUG) Serial.println("AXIS 2");
       mmaxspeed = stepper_Y.maxSpeed();
       mspeed = stepper_Y.speed();
-      mposition = POSITION_MOTOR_Y;//stepper_Y.currentPosition();
+      POSITION_MOTOR_Y = stepper_Y.currentPosition();
+      mposition = POSITION_MOTOR_Y;
       pinstep = STEP_Y;
       pindir = DIR_Y;
       sign = SIGN_Y;
@@ -375,7 +372,8 @@ void motor_get_fct() {
       if (DEBUG) Serial.println("AXIS 3");
       mmaxspeed = stepper_Z.maxSpeed();
       mspeed = stepper_Z.speed();
-      mposition = POSITION_MOTOR_Z;//stepper_Z.currentPosition();
+      POSITION_MOTOR_Z = stepper_Z.currentPosition();
+      mposition = POSITION_MOTOR_Z;
       pinstep = STEP_Z;
       pindir = DIR_Z;
       sign = SIGN_Z;
@@ -429,6 +427,11 @@ void setup_motor() {
 
 
 bool drive_motor_background() {
+
+  // update motor positions
+  POSITION_MOTOR_X = stepper_X.currentPosition();
+  POSITION_MOTOR_Y = stepper_Y.currentPosition();
+  POSITION_MOTOR_Z = stepper_Z.currentPosition();
 
   // this function is called during every loop cycle
   if (isforever) {

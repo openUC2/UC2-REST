@@ -11,7 +11,7 @@
 
   {"task": "/state_set", "isdebug":0}
 
-  retrieve sensor value 
+  retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
@@ -42,13 +42,17 @@
   operate the analog out
   {"task": "/analog_act", "analogid": 1, "analogval":1000}
 
- operate the digital out
+  operate the digital out
   {"task": "/digital_act", "digitalid": 1, "digitalval":1}
 
   operate the dac (e.g. lightsheet)
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
-amplitude: 0,1,2,3
+  amplitude: 0,1,2,3
 
+  # SLM display
+  {"task": "/slm_act","slmMode": "ring", "posX":100, "posY": 100, "radius":100, "color": 10000}
+  {"task": "/slm_act","slmMode": "full", "color": 10000}
+  {"task": "/slm_act","slmMode": "clear"}
 
   operate ledmatrix
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
@@ -60,6 +64,211 @@ amplitude: 0,1,2,3
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
 
+
+
+  {
+  "red": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "green": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "blue": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    244,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "arraySize": 64,
+  "LEDArrMode": "array",
+  "task": "/ledarr_act"
+  }
   // attempt to have fast triggering
 
   We want to send a table of tasks:
@@ -106,25 +315,9 @@ amplitude: 0,1,2,3
     Pindefintion per Setup
 */
 
-//#include "pindef_lightsheet.h"
-//#include "pindef_lightsheet_arduino.h"
-//#include "pindef_ptychography.h"
-//#include "pindef.h"
-//#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
-//#include "pindef_cellSTORM_cellphone.h"
-//#include "pindef_cellSTORM.h"
-//#include "pindef_cellSTORM_wifi.h"
-//#include "pindef_multicolour_borstel.h"
-//#include "pindef_cncshield_esp.h"
-//#include "pindef_lightsheet_tomo_galvo.h"
-//#include "pindef_lightsheet_tomo_galvo_espwemos.h"
-//#include "pindef_lightsheet_tomo_PID_espwemos.h"
-//#include "pindef_xyz_stagescan_ps4.h"
-//#include "pindef_incubator_microscope_zonly_matrix.h"
-#include "pindef_incubator_microscope_zonly_matrix_fullbox_NL.h"
-//#include "pindef_lightsheet_espwemos.h"
 
+//#include "pindef_incubator_microscope_zonly_matrix_fullbox_NL.h"
+#include "pindef_incubator_microscope_zonly_matrix_fullbox_NL_Eindhoven.h"
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -156,6 +349,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "parameters_PID.h"
 #endif
 
+
 #include <ArduinoJson.h>
 #include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
@@ -171,7 +365,11 @@ uint32_t frequency = 1000;
 DynamicJsonDocument jsonDocument(256);
 //StaticJsonDocument<256> jsonDocument;
 #else
-DynamicJsonDocument jsonDocument(4096); // need to be large for led array
+#ifdef IS_SLM
+DynamicJsonDocument jsonDocument(32784);
+#else
+DynamicJsonDocument jsonDocument(4096);
+#endif
 #endif
 
 #ifdef IS_WIFI
@@ -205,6 +403,10 @@ DAC_Module *dac = new DAC_Module();
 AccelStepper stepper_X(AccelStepper::FULL4WIRE, STEP_X_1, STEP_X_2, STEP_X_3, STEP_X_4);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+#endif
+
+#ifdef IS_SLM
+#include "parameters_slm.h"
 #endif
 
 #ifdef IS_LASER
@@ -255,6 +457,11 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
+#ifdef IS_SLM
+const char* slm_act_endpoint = "/slm_act";
+const char* slm_set_endpoint = "/slm_set";
+const char* slm_get_endpoint = "/slm_get";
+#endif
 
 #ifdef IS_READSENSOR
 const char* readsensor_act_endpoint = "/readsensor_act";
@@ -274,6 +481,11 @@ const char* PID_get_endpoint = "/PID_get";
 */
 void setup()
 {
+  /*
+   * SETTING UP DEVICES
+   */
+
+
   // for any timing related puposes..
   startMillis = millis();
 
@@ -296,6 +508,9 @@ void setup()
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);
 
+#ifdef IS_SLM
+  setup_slm();
+#endif
 
 #ifdef IS_LEDARR
   setup_matrix();
@@ -310,8 +525,8 @@ void setup()
   Ps3.attach(onAttach);
   Ps3.attachOnConnect(onConnect);
   Ps3.attachOnDisconnect(onDisConnect);
-  const char* = "01:02:03:04:05:06";
-  Ps3.begin(PS3_MACADDESS);
+  const char* PS3_MACADDESS = "01:02:03:04:05:06";
+  Ps3.begin("01:02:03:04:05:06");
   Serial.println(PS3_MACADDESS);
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
@@ -331,43 +546,7 @@ void setup()
 
 
 #ifdef IS_LASER
-  Serial.println("Setting Up LASERs");
-  // switch of the LASER directly
-  pinMode(LASER_PIN_1, OUTPUT);
-  pinMode(LASER_PIN_2, OUTPUT);
-  pinMode(LASER_PIN_3, OUTPUT);
-  digitalWrite(LASER_PIN_1, LOW);
-  digitalWrite(LASER_PIN_2, LOW);
-  digitalWrite(LASER_PIN_3, LOW);
-
-#ifdef IS_ESP32
-  /* setup the PWM ports and reset them to 0*/
-  ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
-  ledcWrite(PWM_CHANNEL_LASER_1, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_1, 0);
-
-  ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
-  ledcWrite(PWM_CHANNEL_LASER_2, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_2, 0);
-
-  ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
-  ledcWrite(PWM_CHANNEL_LASER_3, 10000); delay(500);
-  ledcWrite(PWM_CHANNEL_LASER_3, 0);
-#else
-  pinMode(LASER_PIN_1, OUTPUT);
-  analogWrite(LASER_PIN_1, 100); delay(500);
-  analogWrite(LASER_PIN_1, 0);
-  pinMode(LASER_PIN_2, OUTPUT);
-  analogWrite(LASER_PIN_2, 100); delay(500);
-  analogWrite(LASER_PIN_2, 0);
-  pinMode(LASER_PIN_3, OUTPUT);
-  analogWrite(LASER_PIN_3, 100); delay(500);
-  analogWrite(LASER_PIN_3, 0);
-
-#endif
+  setup_laser();
 #endif
 
 #ifdef IS_DAC
@@ -394,7 +573,6 @@ void setup()
   setupDigital();
 #endif
 
-
   // list modules
 #ifdef IS_SERIAL
   Serial.println("IS_SERIAL");
@@ -413,6 +591,12 @@ void setup()
 #endif
 #ifdef IS_PS4
   Serial.println("IS_PS4");
+#endif
+#ifdef IS_SLM
+  Serial.println("IS_SLM");
+#endif
+#ifdef IS_LEDARR
+  Serial.println("IS_LEDARR");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -434,6 +618,11 @@ void setup()
   Serial.println(analog_get_endpoint);
   Serial.println(analog_set_endpoint);
 #endif
+#ifdef IS_SLM
+  Serial.println(slm_act_endpoint);
+  Serial.println(slm_get_endpoint);
+  Serial.println(slm_set_endpoint);
+#endif
 #ifdef IS_DIGITALGOUT
   Serial.println(digital_act_endpoint);
   Serial.println(digital_get_endpoint);
@@ -449,7 +638,7 @@ void setup()
 #ifdef IS_DAC_FAKE
   pinMode(dac_fake_1, OUTPUT);
   pinMode(dac_fake_2, OUTPUT);
-  frequency=1;
+  frequency = 1;
   xTaskCreate(
     drive_galvo,    // Function that should be called
     "drive_galvo",   // Name of the task (for debugging)
@@ -462,17 +651,17 @@ void setup()
 
 
 #ifdef IS_READSENSOR
-setup_sensors();
-Serial.println(readsensor_act_endpoint);
-Serial.println(readsensor_set_endpoint);
-Serial.println(readsensor_get_endpoint);
+  setup_sensors();
+  Serial.println(readsensor_act_endpoint);
+  Serial.println(readsensor_set_endpoint);
+  Serial.println(readsensor_get_endpoint);
 #endif
 
 #ifdef IS_PID
-setup_PID();
-Serial.println(PID_act_endpoint);
-Serial.println(PID_set_endpoint);
-Serial.println(PID_get_endpoint);
+  setup_PID();
+  Serial.println(PID_act_endpoint);
+  Serial.println(PID_set_endpoint);
+  Serial.println(PID_get_endpoint);
 #endif
 }
 
@@ -481,7 +670,7 @@ Serial.println(PID_get_endpoint);
 
 void loop() {
   // for any timing-related purposes
-  currentMillis = millis(); 
+  currentMillis = millis();
 
 #ifdef IS_SERIAL
   if (Serial.available()) {
@@ -524,43 +713,46 @@ void loop() {
   }
 #endif
 
+/*
+ * continous control during loop
+ */
 
-    // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
+  // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-    if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-      LASER_despeckle(LASER_despeckle_1, 1);
-    if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-      LASER_despeckle(LASER_despeckle_2, 2);
-    if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-      LASER_despeckle(LASER_despeckle_3, 3);
+  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
+    LASER_despeckle(LASER_despeckle_1, 1);
+  if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
+    LASER_despeckle(LASER_despeckle_2, 2);
+  if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
+    LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
 #ifdef IS_PS3
-   control_PS3(); // if controller is operating motors, overheating protection is enabled
+  control_PS3(); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_PS4
-    control_PS4();
+  control_PS4();
 #endif
 
 #ifdef IS_WIFI
-    server.handleClient();
+  server.handleClient();
 #endif
 
 
 #ifdef IS_MOTOR
-    if (not isstop) {
-      isactive=true;
-      drive_motor_background();
-    }
+  if (not isstop) {
+    isactive = true;
+    drive_motor_background();
+  }
 #endif
 
 #ifdef IS_PID
-if (PID_active and (currentMillis - startMillis >= PID_updaterate)){
-  PID_background();
-  startMillis = millis();
-}
-#endif 
+  if (PID_active and (currentMillis - startMillis >= PID_updaterate)) {
+    PID_background();
+    startMillis = millis();
+  }
+#endif
 
 
 }
@@ -590,6 +782,22 @@ void jsonProcessor(char task[]) {
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
+  }
+#endif
+
+
+  /*
+    Operate SLM
+  */
+#ifdef IS_SLM
+  if (strcmp(task, slm_act_endpoint) == 0) {
+    slm_act_fct();
+  }
+  if (strcmp(task, slm_set_endpoint) == 0) {
+    slm_set_fct();
+  }
+  if (strcmp(task, slm_get_endpoint) == 0) {
+    slm_get_fct();
   }
 #endif
 
@@ -658,30 +866,30 @@ void jsonProcessor(char task[]) {
 
 
   /*
-  Read the sensor
+    Read the sensor
   */
- #ifdef IS_READSENSOR
-    if (strcmp(task, readsensor_act_endpoint) == 0)
+#ifdef IS_READSENSOR
+  if (strcmp(task, readsensor_act_endpoint) == 0)
     readsensor_act_fct();
   if (strcmp(task, readsensor_set_endpoint) == 0)
     readsensor_set_fct();
   if (strcmp(task, readsensor_get_endpoint) == 0)
     readsensor_get_fct();
-  #endif
+#endif
 
   /*
-  Control PID controller
+    Control PID controller
   */
- #ifdef IS_PID
-    if (strcmp(task, PID_act_endpoint) == 0)
+#ifdef IS_PID
+  if (strcmp(task, PID_act_endpoint) == 0)
     PID_act_fct();
   if (strcmp(task, PID_set_endpoint) == 0)
     PID_set_fct();
   if (strcmp(task, PID_get_endpoint) == 0)
     PID_get_fct();
-  #endif
+#endif
 
-  
+
   // Send JSON information back
   Serial.println("++");
   serializeJson(jsonDocument, Serial);
@@ -710,29 +918,29 @@ void tableProcessor() {
   Serial.println(N_repeats);
 
 
-  for (int irepeats = 0; irepeats < N_repeats; irepeats++){
-  for (int itask = 0; itask < N_tasks; itask++) {
-  char json_string[256];
-    // Hacky, but should work
-    Serial.println(itask);
-    serializeJson(tmpJsonDoc[String(itask)], json_string);
-    Serial.println(json_string);
-    deserializeJson(jsonDocument,json_string);
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++) {
+    for (int itask = 0; itask < N_tasks; itask++) {
+      char json_string[256];
+      // Hacky, but should work
+      Serial.println(itask);
+      serializeJson(tmpJsonDoc[String(itask)], json_string);
+      Serial.println(json_string);
+      deserializeJson(jsonDocument, json_string);
 
-    String task_s = jsonDocument["task"];
-    char task[50];
-    task_s.toCharArray(task, 256);
+      String task_s = jsonDocument["task"];
+      char task[50];
+      task_s.toCharArray(task, 256);
 
-    //jsonDocument.garbageCollect(); // memory leak?
-    /*if (task == "null") return;*/
-    if (DEBUG) {
-      Serial.print("TASK: ");
-      Serial.println(task);
+      //jsonDocument.garbageCollect(); // memory leak?
+      /*if (task == "null") return;*/
+      if (DEBUG) {
+        Serial.print("TASK: ");
+        Serial.println(task);
+      }
+
+      jsonProcessor(task);
+
     }
-
-    jsonProcessor(task);
-
-  }
   }
   tmpJsonDoc.clear();
 

@@ -41,7 +41,7 @@ void ledarr_act_fct() {
       int red = jsonDocument["red"];  //Implicit cast
       int green = jsonDocument["green"];  //Implicit cast
       int blue = jsonDocument["blue"];  //Implicit cast
-      if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
+      //if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
       int ix = indexled % LED_N_X;
       int iy = indexled / LED_N_Y;
       set_led_RGB(ix, iy, red, green, blue);
@@ -56,7 +56,7 @@ void ledarr_act_fct() {
       int red = jsonDocument["red"][indexled];  //Implicit cast
       int green = jsonDocument["green"][indexled];  //Implicit cast
       int blue = jsonDocument["blue"][indexled];  //Implicit cast
-      if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
+      //if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
       int ix = indexled % LED_N_X;
       int iy = indexled / LED_N_Y;
       set_led_RGB(ix, iy, red, green, blue);
@@ -168,7 +168,7 @@ void set_all(int R, int G, int B)
     int ix =  i % LED_N_X;
     int iy =  i / LED_N_Y;
     matrix.drawPixel(ix, iy, matrix.Color(R,   G,   B));
-  if (DEBUG) Serial.print(R); Serial.print(G); Serial.println(B);
+  //if (DEBUG) Serial.print(R); Serial.print(G); Serial.println(B);
   }
   matrix.show();
 }
