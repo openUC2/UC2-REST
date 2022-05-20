@@ -41,14 +41,41 @@ void slm_act_fct() {
     tft.fillCircle(posX, posY, radius, color);
     
   }
+  // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
+  if (strcmp(slmMode, "rect") == 0) {
+    if (DEBUG) Serial.println("rect");
+    int posX = 0;
+    int posY = 0;
+    int nX = 0;
+    int nY = 0;
+    uint16_t color = 0;
+
+    if (jsonDocument.containsKey("posX")) {
+      posX = jsonDocument["posX"];
+    }
+    if (jsonDocument.containsKey("posY")) {
+      posY = jsonDocument["posY"];
+    }
+    if (jsonDocument.containsKey("nX")) {
+      nX = jsonDocument["nX"];
+    }
+    if (jsonDocument.containsKey("nY")) {
+      nY = jsonDocument["nY"];
+    }
+    if (jsonDocument.containsKey("color")) {
+      color = jsonDocument["color"];
+    }
+    tft.drawRect(posX, posY, nX, nY, color);
+    
+  }
 
   if (strcmp(slmMode, "full") == 0) {
-    if (DEBUG) Serial.println("clear");
+    if (DEBUG) Serial.println("full");
     uint16_t color = jsonDocument["color"];
     tft.fillScreen(color);
   }
   if (strcmp(slmMode, "clear") == 0) {
-    if (DEBUG) Serial.println("full");
+    if (DEBUG) Serial.println("clear");
     tft.fillScreen(ST77XX_BLACK);
   }
   // only if a single led will be updated, all others stay the same
