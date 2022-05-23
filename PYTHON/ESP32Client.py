@@ -358,11 +358,13 @@ class ESP32Client(object):
 
         self.move_filter(steps=steps, speed=speed*self.microsteppingfactor_filter, is_blocking=is_blocking)
 
+
     def move_filter(self, steps=100, speed=200,timeout=250,is_blocking=False, axis=2):
         steps_xyz = (0,steps,0)
         r = self.move_stepper(steps=steps_xyz, speed=speed, timeout=1, is_blocking=is_blocking)
         return r
     
+
     
     '''
     LOW-LEVEL FUNCTIONS
@@ -424,7 +426,6 @@ class ESP32Client(object):
         endY = startY+image.shape[1]
        
         payload = {
-            "task": path,
             "color": image[:].flatten().tolist(),
             "startX":startX,
             "startY":startY,
@@ -557,6 +558,18 @@ class ESP32Client(object):
     ##############################################################################################################################
     '''
 
+    def isBusy(self, timeout=1):
+        path = "/state_act"
+        payload = {
+            "task":path,
+            "active": 1
+        }
+        r = self.post_json(path, payload, timeout=timeout)
+        try:
+            return r["active"]
+        except:
+            return r
+        
     def move_forever(self, speed=(0,0,0), is_stop=False, timeout=1):
         path = "/motor_act"
         payload = {
@@ -616,6 +629,12 @@ class ESP32Client(object):
         self.is_driving = True
         r = self.post_json(path, payload, timeout=timeout)
         self.is_driving = False
+        
+        # wait until job has been done
+        if is_blocking:
+            while self.isBusy:
+                time.sleep(0.1)
+                
         return r
     
     
@@ -867,34 +886,3 @@ class ESP32Client(object):
             files = {'media': open(iName, 'rb')}
             if self.is_connected:
                 requests.post(self.base_uri + path, files=files)
-
-    def switch_filter(self, laserid=1, timeout=20, is_filter_init=None, speed=250, is_blocking=True):
-
-        # switch off all lasers first!
-        self.set_laser(1, 0)
-        self.set_laser(2, 0)
-        self.set_laser(3, 0)
-
-        if is_filter_init is not None:
-            self.is_filter_init = is_filter_init
-
-        if not self.is_filter_init:
-            self.move_filter(steps=self.filter_pos_init, speed=speed*self.microsteppingfactor_filter, is_blocking=is_blocking)
-            self.is_filter_init = True
-            self.filter_position = 0
-
-        # measured in steps from zero position
-
-        steps = 0
-        if laserid==1:
-            steps = self.filter_pos_1 - self.filter_position
-            self.filter_position = self.filter_pos_1
-        if laserid==2:
-            steps = self.filter_pos_2 - self.filter_position
-            self.filter_position = self.filter_pos_2
-        if laserid==3:
-            steps = self.filter_pos_3 - self.filter_position
-            self.filter_position = self.filter_pos_3
-
-        self.move_filter(steps=steps, speed=speed*self.microsteppingfactor_filter, is_blocking=is_blocking)
-
