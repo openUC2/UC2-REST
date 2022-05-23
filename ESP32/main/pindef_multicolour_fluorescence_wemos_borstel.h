@@ -12,7 +12,7 @@
 //#define IS_DAC
 //#define IS_DAC_FAKE
 //#define IS_WIFI
-#define IS_PS4 // ESP32-only
+#define IS_PS3 // ESP32-only
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
 
