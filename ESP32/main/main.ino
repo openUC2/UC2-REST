@@ -10,6 +10,8 @@
   --
 
   {"task": "/state_set", "isdebug":0}
+  {"task": "/state_get", "active":1}
+
 
   retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
@@ -49,6 +51,10 @@
   {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
   amplitude: 0,1,2,3
 
+  # SLM display
+  {"task": "/slm_act","slmMode": "ring", "posX":100, "posY": 100, "radius":100, "color": 10000}
+  {"task": "/slm_act","slmMode": "full", "color": 10000}
+  {"task": "/slm_act","slmMode": "clear"}
 
   operate ledmatrix
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
@@ -61,209 +67,8 @@
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
 
 
-  {
-  "red": [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  ],
-  "green": [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  ],
-  "blue": [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    244,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  ],
-  "arraySize": 64,
-  "LEDArrMode": "array",
-  "task": "/ledarr_act"
-  }
+  {   "red": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "green": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "blue": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "arraySize": 64,   "LEDArrMode": "array",   "task": "/ledarr_act"   }
+
   // attempt to have fast triggering
 
   We want to send a table of tasks:
@@ -325,9 +130,10 @@
 //#include "pindef_lightsheet_tomo_galvo_espwemos.h"
 //#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
 //#include "pindef_xyz_stagescan_ps4.h"
-//#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop 
+//#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop
 #include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
+//#include "pindef_slm.h" // - for the slm / TFT
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
@@ -359,6 +165,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "parameters_PID.h"
 #endif
 
+
 #include <ArduinoJson.h>
 #include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
@@ -374,7 +181,11 @@ uint32_t frequency = 1000;
 DynamicJsonDocument jsonDocument(256);
 //StaticJsonDocument<256> jsonDocument;
 #else
+#ifdef IS_SLM
+DynamicJsonDocument jsonDocument(32784);
+#else
 DynamicJsonDocument jsonDocument(4096);
+#endif
 #endif
 
 #ifdef IS_WIFI
@@ -407,6 +218,10 @@ DAC_Module *dac = new DAC_Module();
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+#endif
+
+#ifdef IS_SLM
+#include "parameters_slm.h"
 #endif
 
 #ifdef IS_LASER
@@ -457,6 +272,11 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
+#ifdef IS_SLM
+const char* slm_act_endpoint = "/slm_act";
+const char* slm_set_endpoint = "/slm_set";
+const char* slm_get_endpoint = "/slm_get";
+#endif
 
 #ifdef IS_READSENSOR
 const char* readsensor_act_endpoint = "/readsensor_act";
@@ -476,6 +296,11 @@ const char* PID_get_endpoint = "/PID_get";
 */
 void setup()
 {
+  /*
+   * SETTING UP DEVICES
+   */
+
+
   // for any timing related puposes..
   startMillis = millis();
 
@@ -498,6 +323,9 @@ void setup()
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);
 
+#ifdef IS_SLM
+  setup_slm();
+#endif
 
 #ifdef IS_LEDARR
   setup_matrix();
@@ -560,7 +388,6 @@ void setup()
   setupDigital();
 #endif
 
-
   // list modules
 #ifdef IS_SERIAL
   Serial.println("IS_SERIAL");
@@ -579,6 +406,12 @@ void setup()
 #endif
 #ifdef IS_PS4
   Serial.println("IS_PS4");
+#endif
+#ifdef IS_SLM
+  Serial.println("IS_SLM");
+#endif
+#ifdef IS_LEDARR
+  Serial.println("IS_LEDARR");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -599,6 +432,11 @@ void setup()
   Serial.println(analog_act_endpoint);
   Serial.println(analog_get_endpoint);
   Serial.println(analog_set_endpoint);
+#endif
+#ifdef IS_SLM
+  Serial.println(slm_act_endpoint);
+  Serial.println(slm_get_endpoint);
+  Serial.println(slm_set_endpoint);
 #endif
 #ifdef IS_DIGITALGOUT
   Serial.println(digital_act_endpoint);
@@ -690,6 +528,9 @@ void loop() {
   }
 #endif
 
+/*
+ * continous control during loop
+ */
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
@@ -756,6 +597,22 @@ void jsonProcessor(char task[]) {
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
+  }
+#endif
+
+
+  /*
+    Operate SLM
+  */
+#ifdef IS_SLM
+  if (strcmp(task, slm_act_endpoint) == 0) {
+    slm_act_fct();
+  }
+  if (strcmp(task, slm_set_endpoint) == 0) {
+    slm_set_fct();
+  }
+  if (strcmp(task, slm_get_endpoint) == 0) {
+    slm_get_fct();
   }
 #endif
 
@@ -862,6 +719,7 @@ void jsonProcessor(char task[]) {
 
 void tableProcessor() {
 
+  isactive = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -902,4 +760,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
+  isactive = false;
 }

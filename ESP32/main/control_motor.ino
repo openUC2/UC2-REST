@@ -177,6 +177,7 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
+  isactive = enable;
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
 }
