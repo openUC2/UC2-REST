@@ -50,6 +50,38 @@ void activate_PS4() {
     set_center(255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
+  // LASER
+  if (PS4.event.button_down.triangle) {
+    if (DEBUG) Serial.print("Turning on LAser 10000");
+    ledcWrite(PWM_CHANNEL_LASER_1, 10000);
+    delay(100); //Debounce?
+  }
+  if (PS4.event.button_down.square) {
+    if (DEBUG) Serial.print("Turning off LAser ");
+    ledcWrite(PWM_CHANNEL_LASER_1, 0);
+    delay(100); //Debounce?
+    }
+
+// FOCUS
+  if (PS4.event.button_down.up) {
+    if (not getEnableMotor())
+      setEnableMotor(true);
+    POSITION_MOTOR_X = stepper_X.currentPosition();
+    stepper_X.move(POSITION_MOTOR_X+2);
+    delay(100); //Debounce?
+  }
+  if (PS4.event.button_down.down) {
+        if (not getEnableMotor())
+      setEnableMotor(true);
+    POSITION_MOTOR_X = stepper_X.currentPosition();
+    stepper_X.move(POSITION_MOTOR_X-2);
+    delay(100); //Debounce?
+  }
+
+
+
+
+  
 }
 
 void control_PS4() {

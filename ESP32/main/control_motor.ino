@@ -145,7 +145,6 @@ void motor_act_fct() {
   stepper_Y.setMaxSpeed(mspeed2);
   stepper_Z.setMaxSpeed(mspeed3);
 
-
   if(not isforever){
   if (isabs) {
     // absolute position coordinates
