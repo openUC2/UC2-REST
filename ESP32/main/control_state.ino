@@ -38,6 +38,11 @@ void state_act_fct() {
   if (jsonDocument.containsKey("isactive")) {
     isactive = jsonDocument["isactive"];
   }
+  if (jsonDocument.containsKey("pscontroller")) {
+    IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
+  }
+
+
 
 
   jsonDocument.clear();
@@ -58,10 +63,12 @@ void state_set_fct() {
 void state_get_fct() {
   // GET SOME PARAMETERS HERE
   if (jsonDocument.containsKey("active")) {
-    int mdelayms = jsonDocument["delay"];
     jsonDocument.clear();
     jsonDocument["active"] = isactive; // returns state of function that takes longer to finalize (e.g. motor)
-    delay(mdelayms);
+  }
+  if (jsonDocument.containsKey("pscontroller")) {
+    jsonDocument.clear();
+    jsonDocument["pscontroller"] = IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
   }
   else {
     jsonDocument.clear();

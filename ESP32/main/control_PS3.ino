@@ -4,7 +4,7 @@
 bool IS_PS3_CONTROLER_LEDARRAY = false;
 void onConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
-  IS_PS3_CONTROLER_ACTIVE = true;
+  IS_PSCONTROLER_ACTIVE = true;
   setEnableMotor(true);
 }
 
@@ -22,10 +22,10 @@ void onDisConnect() {
 void activate_PS3() {
   // callback for events
   if (Ps3.event.button_down.select) {
-    IS_PS3_CONTROLER_ACTIVE = !IS_PS3_CONTROLER_ACTIVE;
+    IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
-    if (DEBUG) Serial.println(IS_PS3_CONTROLER_ACTIVE);
-    setEnableMotor(IS_PS3_CONTROLER_ACTIVE);
+    if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
+    setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
   if (Ps3.event.button_down.cross) {
@@ -38,7 +38,7 @@ void activate_PS3() {
 }
 
 void control_PS3() {
-  if (Ps3.isConnected() and IS_PS3_CONTROLER_ACTIVE) {
+  if (Ps3.isConnected() and IS_PSCONTROLER_ACTIVE) {
       // Y-Direction
       if ( abs(Ps3.data.analog.stick.ly) > offset_val) {
         // move_z

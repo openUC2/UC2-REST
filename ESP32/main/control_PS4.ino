@@ -4,7 +4,7 @@
 bool IS_PS4_CONTROLER_LEDARRAY = false;
 void onConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
-  IS_PS4_CONTROLER_ACTIVE = true;
+  IS_PSCONTROLER_ACTIVE = true;
   setEnableMotor(true);
 
       if (PS4.Charging())
@@ -30,10 +30,10 @@ void onDisConnect() {
 void activate_PS4() {
   // callback for events
   if (PS4.event.button_down.share) {
-    IS_PS4_CONTROLER_ACTIVE = !IS_PS4_CONTROLER_ACTIVE;
+    IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
-    if (DEBUG) Serial.println(IS_PS4_CONTROLER_ACTIVE);
-    setEnableMotor(IS_PS4_CONTROLER_ACTIVE);
+    if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
+    setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
   if (PS4.event.button_down.cross) {
@@ -85,7 +85,7 @@ void activate_PS4() {
 }
 
 void control_PS4() {
-  if (PS4.isConnected() and IS_PS4_CONTROLER_ACTIVE) {
+  if (PS4.isConnected() and IS_PSCONTROLER_ACTIVE) {
       // Y-Direction
       if ( abs(PS4.data.analog.stick.ly) > offset_val) {
         // move_z
