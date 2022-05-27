@@ -134,6 +134,9 @@ void motor_act_fct() {
     return;
   }
 
+  if(IS_PSCONTROLER_ACTIVE)
+    IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
+
   // prepare motor to run
   setEnableMotor(true);
   //stepper_A.setSpeed(mspeed0);
@@ -145,6 +148,7 @@ void motor_act_fct() {
   stepper_Y.setMaxSpeed(mspeed2);
   stepper_Z.setMaxSpeed(mspeed3);
 
+  
   if(not isforever){
   if (isabs) {
     // absolute position coordinates
