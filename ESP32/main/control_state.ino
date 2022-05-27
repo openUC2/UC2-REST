@@ -42,9 +42,6 @@ void state_act_fct() {
     IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
   }
 
-
-
-
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
@@ -62,11 +59,11 @@ void state_set_fct() {
 // Custom function accessible by the API
 void state_get_fct() {
   // GET SOME PARAMETERS HERE
-  if (jsonDocument.containsKey("active")) {
+  if (jsonDocument.containsKey("isBusy")) {
     jsonDocument.clear();
-    jsonDocument["active"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
+    jsonDocument["isBusy"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
   }
-  if (jsonDocument.containsKey("pscontroller")) {
+  else if (jsonDocument.containsKey("pscontroller")) {
     jsonDocument.clear();
     jsonDocument["pscontroller"] = IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
   }

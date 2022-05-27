@@ -180,7 +180,7 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
-  isBusc = enable;
+  isBusy = enable;
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
 }
