@@ -557,7 +557,7 @@ void loop() {
 
 #ifdef IS_MOTOR
   if (not isstop) {
-    isactive = true;
+    isBusy = true;
     drive_motor_background();
   }
 #endif
@@ -719,7 +719,7 @@ void jsonProcessor(char task[]) {
 
 void tableProcessor() {
 
-  isactive = true;
+  isBusy = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -760,5 +760,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
-  isactive = false;
+  isBusy = false;
 }

@@ -21,6 +21,8 @@ void LASER_act_fct() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
+  isBusy = true;
+
   int LASERid = jsonDocument["LASERid"];
   int LASERval = jsonDocument["LASERval"];
   int LASERdespeckle = jsonDocument["LASERdespeckle"];
@@ -61,6 +63,8 @@ void LASER_act_fct() {
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
+
+  isBusy = false;
 }
 
 void LASER_set_fct() {

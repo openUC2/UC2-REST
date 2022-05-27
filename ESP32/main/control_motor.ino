@@ -176,7 +176,7 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
-  isactive = enable;
+  isBusc = enable;
   digitalWrite(ENABLE, !enable);
   motor_enable = enable;
 }
@@ -472,10 +472,10 @@ bool drive_motor_background() {
     if (not isen) {
       setEnableMotor(false);
     }
-    isactive = false;
+    isBusy = false;
     return true;
   }
-  isactive = true;
+  isBusy = true;
   return false; //never reached, but keeps compiler happy?
 }
 

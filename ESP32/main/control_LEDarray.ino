@@ -13,6 +13,7 @@ void ledarr_act_fct() {
 
   // here you can do something
   if (DEBUG) Serial.println("ledarr_act_fct");
+  isBusy = true;
 
   const char* LEDArrMode = jsonDocument["LEDArrMode"]; // "array", "full", "full", "single", "off", "left", "right", "top", "bottom",
 
@@ -105,6 +106,7 @@ void ledarr_act_fct() {
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
+  isBusy = false;
 
 }
 

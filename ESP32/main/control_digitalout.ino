@@ -4,6 +4,7 @@
 void digital_act_fct() {
   // here you can do something
   Serial.println("digital_act_fct");
+  isBusy = true;
 
   int digitalid = jsonDocument["digitalid"];
   int digitalval = jsonDocument["digitalval"];
@@ -85,6 +86,7 @@ void digital_set_fct() {
 
   jsonDocument.clear();
   jsonDocument["return"] = 1;
+  isBusy = false;
 
 }
 

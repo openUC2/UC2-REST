@@ -14,6 +14,7 @@ void slm_act_fct() {
 
   // here you can do something
   if (DEBUG) Serial.println("slm_act_fct");
+  isBusy = true;
 
   const char* slmMode = jsonDocument["slmMode"]; // "ring", "clear"
 
@@ -98,6 +99,9 @@ void slm_act_fct() {
     }
   }
 
+  jsonDocument.clear();
+  jsonDocument["return"] = 1;
+  isBusy = false;
 }
 
 void slm_set_fct() {
