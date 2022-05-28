@@ -7,3 +7,5 @@ const char*  identifier_author = "BD";
 // timing variables
 unsigned long startMillis;
 unsigned long currentMillis;
+
+bool isBusy = false;

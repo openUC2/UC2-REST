@@ -32,7 +32,9 @@ void activate_PS3() {
     IS_PS3_CONTROLER_LEDARRAY = !IS_PS3_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to: ");
     if (DEBUG) Serial.println(IS_PS3_CONTROLER_LEDARRAY);
+    #ifdef IS_LEDARR
     set_all(0*IS_PS3_CONTROLER_LEDARRAY,0*IS_PS3_CONTROLER_LEDARRAY,255*IS_PS3_CONTROLER_LEDARRAY);
+    #endif
     delay(1000); //Debounce?
   }
 }

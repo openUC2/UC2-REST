@@ -131,9 +131,11 @@
 //#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
 //#include "pindef_xyz_stagescan_ps4.h"
 //#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop
-#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
+//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
+#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
+
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200

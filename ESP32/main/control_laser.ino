@@ -26,6 +26,15 @@ void LASER_act_fct() {
   int LASERid = jsonDocument["LASERid"];
   int LASERval = jsonDocument["LASERval"];
   int LASERdespeckle = jsonDocument["LASERdespeckle"];
+  int LASERdespecklePeriod = jjson
+
+    if (jsonDocument.containsKey("isforever")) {
+    isforever = jsonDocument["isforever"];
+  }
+  else {
+    isforever = 0;
+  }
+
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
