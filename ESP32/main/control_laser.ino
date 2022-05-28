@@ -1,7 +1,7 @@
 #ifdef IS_LASER
 
 
-void LASER_despeckle(int LASERdespeckle, int LASERid) {
+void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
   long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
   Serial.println(laserwiggle);
   Serial.println(LASERid);
@@ -12,7 +12,7 @@ void LASER_despeckle(int LASERdespeckle, int LASERid) {
   else if (LASERid == 3)
     ledcWrite(PWM_CHANNEL_LASER_3, LASER_val_3 + laserwiggle);
 
-delay(20);
+  delay(LASERperiod);
 }
 
 
@@ -26,25 +26,22 @@ void LASER_act_fct() {
   int LASERid = jsonDocument["LASERid"];
   int LASERval = jsonDocument["LASERval"];
   int LASERdespeckle = jsonDocument["LASERdespeckle"];
-  int LASERdespecklePeriod = jjson
-
-    if (jsonDocument.containsKey("isforever")) {
-    isforever = jsonDocument["isforever"];
+  int LASERdespecklePeriod = 20;
+  if (jsonDocument.containsKey("LASERdespecklePeriod")) {
+    LASERdespecklePeriod = jsonDocument["LASERdespecklePeriod"];
   }
-  else {
-    isforever = 0;
-  }
-
 
   if (DEBUG) {
     Serial.print("LASERid "); Serial.println(LASERid);
     Serial.print("LASERval "); Serial.println(LASERval);
     Serial.print("LASERdespeckle "); Serial.println(LASERdespeckle);
+    Serial.print("LASERdespecklePeriod "); Serial.println(LASERdespecklePeriod);
   }
 
   if (LASERid == 1) {
     LASER_val_1 = LASERval;
     LASER_despeckle_1 = LASERdespeckle;
+    LASER_despeckle_period_1 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
       Serial.println(LASER_PIN_1);
@@ -54,6 +51,7 @@ void LASER_act_fct() {
   else if (LASERid == 2) {
     LASER_val_2 = LASERval;
     LASER_despeckle_2 = LASERdespeckle;
+    LASER_despeckle_period_2 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
       Serial.println(LASER_PIN_2);
@@ -63,6 +61,7 @@ void LASER_act_fct() {
   else if (LASERid == 3) {
     LASER_val_3 = LASERval;
     LASER_despeckle_3 = LASERdespeckle;
+    LASER_despeckle_period_3 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
       Serial.println(LASER_PIN_3);

@@ -15,3 +15,7 @@ int PWM_CHANNEL_LASER_3 = 2;
 int LASER_despeckle_1 = 0;
 int LASER_despeckle_2 = 0;
 int LASER_despeckle_3 = 0;
+
+int LASER_despeckle_period_1 = 20;
+int LASER_despeckle_period_2 = 20;
+int LASER_despeckle_period_3 = 20;
