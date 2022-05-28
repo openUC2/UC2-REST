@@ -10,7 +10,7 @@
   --
 
   {"task": "/state_set", "isdebug":0}
-  {"task": "/state_get", "active":1}
+  {"task": "/state_get", "isBusy":1}
 
 
   retrieve sensor value
