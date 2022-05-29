@@ -2,16 +2,35 @@
 
 
 void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
-  long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
-  Serial.println(laserwiggle);
-  Serial.println(LASERid);
-  if (LASERid == 1)
-    ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_1 + laserwiggle);
-  if (LASERid == 2)
-    ledcWrite(PWM_CHANNEL_LASER_2, LASER_val_2 + laserwiggle);
-  else if (LASERid == 3)
-    ledcWrite(PWM_CHANNEL_LASER_3, LASER_val_3 + laserwiggle);
 
+  
+int LASER_val_wiggle = 0;
+int PWM_CHANNEL_LASER = 0;
+  if(LASERid == 1){
+    LASER_val_wiggle = LASER_val_1;
+    PWM_CHANNEL_LASER = PWM_CHANNEL_LASER_1;
+  }
+  else if(LASERid == 2){
+    LASER_val_wiggle = LASER_val_2;
+    PWM_CHANNEL_LASER = PWM_CHANNEL_LASER_2;
+  }
+    else if(LASERid == 3){
+    LASER_val_wiggle = LASER_val_3;
+    PWM_CHANNEL_LASER = PWM_CHANNEL_LASER_3;
+  }
+  // add random number to current value to let it oscliate 
+  long laserwiggle = random(-LASERdespeckle, LASERdespeckle);
+  LASER_val_wiggle += laserwiggle;
+  if(LASER_val_wiggle>pwm_max)
+  LASER_val_wiggle-=(2*abs(laserwiggle));
+  if(LASER_val_wiggle<0)
+  LASER_val_wiggle+=(2*abs(laserwiggle));
+
+  if(DEBUG) Serial.println(LASERid);
+  if(DEBUG) Serial.println(LASER_val_wiggle);
+
+  ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_wiggle);
+  
   delay(LASERperiod);
 }
 
