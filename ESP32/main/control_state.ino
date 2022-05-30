@@ -31,6 +31,10 @@ void state_act_fct() {
   if (DEBUG) Serial.println("state_act_fct");
 
   // assign default values to thhe variables
+  if (jsonDocument.containsKey("restart")) {
+    ESP.restart();
+  }
+  // assign default values to thhe variables
   if (jsonDocument.containsKey("delay")) {
     int mdelayms = jsonDocument["delay"];
     delay(mdelayms);
