@@ -11,7 +11,7 @@
 //#define IS_ANALOG// ESP32-only
 #define IS_LASER
 #define IS_MOTOR
-#define IS_PS3 // ESP32-only
+#define IS_PS4 // ESP32-only
 #define IS_DIGITAL
 //#define IS_DAC
 
