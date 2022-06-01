@@ -30,7 +30,7 @@ void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
     if (DEBUG) Serial.println(LASERid);
     if (DEBUG) Serial.println(LASER_val_wiggle);
 
-    ledcWrite(PWM_CHANNEL_LASER_1, LASER_val_wiggle);
+    ledcWrite(PWM_CHANNEL_LASER, LASER_val_wiggle);
 
     delay(LASERperiod);
 
