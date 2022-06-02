@@ -131,10 +131,11 @@
 //#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
 //#include "pindef_xyz_stagescan_ps4.h"
 //#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop
-#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
+//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
 //#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
+#include "pindef_multicolour_wemos_lena.h"
 
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
@@ -216,7 +217,7 @@ DAC_Module *dac = new DAC_Module();
 #ifdef IS_MOTOR
 #include <AccelStepper.h>
 #include "parameters_motor.h"
-//AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
+AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);

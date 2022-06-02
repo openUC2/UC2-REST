@@ -20,11 +20,18 @@
 #define X_STEP_PIN          GPIO_NUM_26
 #define Y_STEP_PIN          GPIO_NUM_25
 #define Z_STEP_PIN          GPIO_NUM_17
+#define A_STEP_PIN          GPIO_NUM_19
 
 // Define step direction output pins. NOTE: All direction pins must be on the same port.
 #define X_DIRECTION_PIN     GPIO_NUM_16
 #define Y_DIRECTION_PIN     GPIO_NUM_27
 #define Z_DIRECTION_PIN     GPIO_NUM_14
+#define A_DIRECTION_PIN     GPIO_NUM_18
+
+#define X_END_STOP          GPIO_NUM_13 // arduino 9
+#define X_END_STOP          GPIO_NUM_5  // arduino 10
+#define X_END_STOP          GPIO_NUM_23  // arduino 11
+
 
 // Define stepper driver enable/disable output pin(s).
 #define STEPPERS_ENABLE_PIN GPIO_NUM_12

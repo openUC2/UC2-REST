@@ -115,14 +115,14 @@ void motor_act_fct() {
 
   if (isstop) {
     // Immediately stop the motor
-    //stepper_A.stop();
+    stepper_A.stop();
     stepper_X.stop();
     stepper_Y.stop();
     stepper_Z.stop();
     isforever = 0;
     setEnableMotor(false);
 
-    //POSITION_MOTOR_A = stepper_A.currentPosition();
+    POSITION_MOTOR_A = stepper_A.currentPosition();
     POSITION_MOTOR_X = stepper_X.currentPosition();
     POSITION_MOTOR_Y = stepper_Y.currentPosition();
     POSITION_MOTOR_Z = stepper_Z.currentPosition();
@@ -139,11 +139,11 @@ void motor_act_fct() {
 
   // prepare motor to run
   setEnableMotor(true);
-  //stepper_A.setSpeed(mspeed0);
+  stepper_A.setSpeed(mspeed0);
   stepper_X.setSpeed(mspeed1);
   stepper_Y.setSpeed(mspeed2);
   stepper_Z.setSpeed(mspeed3);
-  //stepper_A.setMaxSpeed(mspeed0);
+  stepper_A.setMaxSpeed(mspeed0);
   stepper_X.setMaxSpeed(mspeed1);
   stepper_Y.setMaxSpeed(mspeed2);
   stepper_Z.setMaxSpeed(mspeed3);
@@ -152,14 +152,14 @@ void motor_act_fct() {
   if(not isforever){
   if (isabs) {
     // absolute position coordinates
-    //stepper_A.moveTo(SIGN_A * mposition0);
+    stepper_A.moveTo(SIGN_A * mposition0);
     stepper_X.moveTo(SIGN_X * mposition1);
     stepper_Y.moveTo(SIGN_Y * mposition2);
     stepper_Z.moveTo(SIGN_Z * mposition3);
   }
   else {
     // relative position coordinates
-    //stepper_A.move(SIGN_A * mposition0);
+    stepper_A.move(SIGN_A * mposition0);
     stepper_X.move(SIGN_X * mposition1);
     stepper_Y.move(SIGN_Y * mposition2);
     stepper_Z.move(SIGN_Z * mposition3);
@@ -168,7 +168,7 @@ void motor_act_fct() {
   
   if (DEBUG) Serial.println("Start rotation in background");
 
-  //POSITION_MOTOR_A = stepper_A.currentPosition();
+  POSITION_MOTOR_A = stepper_A.currentPosition();
   POSITION_MOTOR_X = stepper_X.currentPosition();
   POSITION_MOTOR_Y = stepper_Y.currentPosition();
   POSITION_MOTOR_Z = stepper_Z.currentPosition();
@@ -249,6 +249,10 @@ void motor_set_fct() {
   if (accel >=0) {
     if (DEBUG) Serial.print("accel "); Serial.println(accel);
     switch (axis) {
+      case 0:
+        MAX_ACCELERATION_A = accel;
+        stepper_X.setAcceleration(MAX_ACCELERATION_A);
+        break;      
       case 1:
         MAX_ACCELERATION_X = accel;
         stepper_X.setAcceleration(MAX_ACCELERATION_X);
@@ -267,6 +271,9 @@ void motor_set_fct() {
   if (sign != NULL) {
     if (DEBUG) Serial.print("sign "); Serial.println(sign);
     switch (axis) {
+      case 0:
+        SIGN_A = sign;
+        break;
       case 1:
         SIGN_X = sign;
         break;
@@ -283,14 +290,16 @@ void motor_set_fct() {
   if (currentposition != NULL) {
     if (DEBUG) Serial.print("currentposition "); Serial.println(currentposition);
     switch (axis) {
+      case 0:
+        POSITION_MOTOR_A = currentposition;
+        break;
       case 1:
-        POSITION_MOTOR_X = currentposition; //stepper_X.setCurrentPosition(currentposition);break;
+        POSITION_MOTOR_X = currentposition; 
         break;
       case 2:
-        POSITION_MOTOR_Y = currentposition; //stepper_Y.setCurrentPosition(currentposition);break;
-        break;
+        POSITION_MOTOR_Y = currentposition; 
       case 3:
-        POSITION_MOTOR_Z = currentposition; //stepper_Z.setCurrentPosition(currentposition);break;
+        POSITION_MOTOR_Z = currentposition; 
         break;
     }
   }
@@ -308,20 +317,21 @@ void motor_set_fct() {
     }
   }
   if (pindir != 0 and pinstep != 0) {
-    if (axis == 1) {
+    if (axis == 0) {
+      STEP_A = pinstep;
+      DIR_A = pindir;
+    }
+    else if (axis == 1) {
       STEP_X = pinstep;
       DIR_X = pindir;
-      //A4988 stepper_X(FULLSTEPS_PER_REV_X, DIR_X, STEP_X, SLEEP, MS1, MS2, MS3); //stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
     }
     else if (axis == 2) {
       STEP_Y = pinstep;
       DIR_Y = pindir;
-      //A4988 stepper_X(FULLSTEPS_PER_REV_Y, DIR_Y, STEP_Y, SLEEP, MS1, MS2, MS3); //stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-    }
+   }
     else if (axis == 3) {
       STEP_Z = pinstep;
       DIR_Z = pindir;
-      //A4988 stepper_X(FULLSTEPS_PER_REV_Z, DIR_Z, STEP_Z, SLEEP, MS1, MS2, MS3); //stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
     }
   }
 
@@ -405,11 +415,11 @@ void setup_motor() {
   pinMode(ENABLE, OUTPUT);
   setEnableMotor(true);
   Serial.println("Setting Up Motor A,X,Y,Z");
-  //stepper_A.setMaxSpeed(MAX_VELOCITY_A);
+  stepper_A.setMaxSpeed(MAX_VELOCITY_A);
   stepper_X.setMaxSpeed(MAX_VELOCITY_X);
   stepper_Y.setMaxSpeed(MAX_VELOCITY_Y);
   stepper_Z.setMaxSpeed(MAX_VELOCITY_Z);
-  //stepper_A.setAcceleration(MAX_ACCELERATION_A);
+  stepper_A.setAcceleration(MAX_ACCELERATION_A);
   stepper_X.setAcceleration(MAX_ACCELERATION_X);
   stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
   stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
@@ -433,6 +443,7 @@ void setup_motor() {
 bool drive_motor_background() {
 
   // update motor positions
+  POSITION_MOTOR_A = stepper_A.currentPosition();
   POSITION_MOTOR_X = stepper_X.currentPosition();
   POSITION_MOTOR_Y = stepper_Y.currentPosition();
   POSITION_MOTOR_Z = stepper_Z.currentPosition();
@@ -440,17 +451,18 @@ bool drive_motor_background() {
   // this function is called during every loop cycle
   if (isforever) {
     // run forever
-    //stepper_A.runSpeed();
     // is this a bug? Otherwise the speed won't be set properly - seems like it is accelerating eventhough it shouldnt
-    //stepper_A.setSpeed(mspeed0);
+    stepper_A.setSpeed(mspeed0);
     stepper_X.setSpeed(mspeed1);
     stepper_Y.setSpeed(mspeed2);
     stepper_Z.setSpeed(mspeed3);
     // we have to at least set this. It will be recomputed or something?!
+    stepper_A.setMaxSpeed(mspeed1);
     stepper_X.setMaxSpeed(mspeed1);
     stepper_Y.setMaxSpeed(mspeed2);
     stepper_Z.setMaxSpeed(mspeed3);
 
+    stepper_A.runSpeed();
     stepper_X.runSpeed();
     stepper_Y.runSpeed();
     stepper_Z.runSpeed();
@@ -458,13 +470,13 @@ bool drive_motor_background() {
   else {
     // run at constant speed
     if (isaccel) {
-      //stepper_A.run();
+      stepper_A.run();
       stepper_X.run();
       stepper_Y.run();
       stepper_Z.run();
     }
     else {
-      //stepper_A.runSpeedToPosition();
+      stepper_A.runSpeedToPosition();
       stepper_X.runSpeedToPosition();
       stepper_Y.runSpeedToPosition();
       stepper_Z.runSpeedToPosition();
@@ -472,7 +484,7 @@ bool drive_motor_background() {
   }
 
   // PROBLEM; is running wont work here!
-  if ((stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
+  if ((stepper_A.distanceToGo() == 0) and (stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
     if (not isen) {
       setEnableMotor(false);
     }
