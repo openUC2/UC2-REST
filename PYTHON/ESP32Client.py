@@ -61,6 +61,15 @@ class galvo(object):
         }
         return dict
 
+class logger(object):
+    def __init__(self):
+        pass
+
+    def error(self,message):
+        print(message)
+
+    def debug(self, message):
+        print(message)
 
 
 class ESP32Client(object):
@@ -112,7 +121,9 @@ class ESP32Client(object):
         '''
 
         if IS_IMSWITCH:
-            if IS_IMSWITCH: self.__logger = initLogger(self, tryInheritParent=True)
+            self.__logger = initLogger(self, tryInheritParent=True)
+        else:
+            self.__logger = logger()
 
         # initialize galvos
         self.galvo1 = galvo(channel=1)
@@ -873,9 +884,9 @@ class ESP32Client(object):
         return r
 
 
-    def set_laser(self, channel=1, value=0, auto_filterswitch=False, 
+    def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
-                        despeckleAmplitude = 0.1, 
+                        despeckleAmplitude = 0.1,
                         despecklePeriod=10, timeout=20, is_blocking = True):
         if channel not in (0,1,2,3):
             if channel=="R":
@@ -888,11 +899,11 @@ class ESP32Client(object):
         if auto_filterswitch and value >0:
             if filter_position is None:
                 if channel==1:
-                    filter_position_toGo = self.filter_pos_1 
+                    filter_position_toGo = self.filter_pos_1
                 if channel==2:
-                    filter_position_toGo = self.filter_pos_2 
+                    filter_position_toGo = self.filter_pos_2
                 if channel==3:
-                    filter_position_toGo = self.filter_pos_3 
+                    filter_position_toGo = self.filter_pos_3
                 if channel=="LED":
                     filter_position_toGo = self.filter_pos_LED
             else:
@@ -908,7 +919,7 @@ class ESP32Client(object):
             "LASERval": value,
             "LASERdespeckle": int(value*despeckleAmplitude),
             "LASERdespecklePeriod": int(despecklePeriod),
-            
+
         }
 
         r = self.post_json(path, payload)
