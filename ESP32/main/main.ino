@@ -12,6 +12,8 @@
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_get", "active":1}
 
+// Confocal scanner
+{"task":"/scanner_act", "scannerMode": "classic", "scannerxMin":0,     "scannerXOff": 5,     "scanneryMin": 0,     "scannerYOff": 5,     "scannerxMax": 255,     "scanneryMax": 255,     "scannertDelay": 0,     "scannerEnable": 0}
 
   retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
@@ -92,7 +94,6 @@
 
 
   // trigger camera at a rate of 20hz
-
   {"task": "/motor_act", "speed0":0, "speed1":0,"speed2":40,"speed3":9000, "isforever":1, "isaccel":1}
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_act", "delay": 100}
@@ -342,10 +343,6 @@ void setup()
   setup_matrix();
 #endif
 
-#ifdef IS_SCANNER
-  setup_scanner();
-#endif
-
 #ifdef IS_MOTOR
   setup_motor();
 #endif
@@ -375,17 +372,12 @@ void setup()
 #endif
 
 
-#ifdef IS_LASER
-  setup_laser();
-#endif
-
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
   //Setup(dac_channel, clk_div, frequency, scale, phase, invert);
   dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
   dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
 #endif
-
 
 #ifdef IS_ANALOG
   Serial.println("Setting Up analog");
@@ -397,6 +389,15 @@ void setup()
   ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
   ledcWrite(PWM_CHANNEL_analog_2, 0);
+#endif
+
+#ifdef IS_LASER
+  setup_laser();
+#endif
+
+#ifdef IS_SCANNER
+  // important: Setup after laser! 
+  setup_scanner();
 #endif
 
 #ifdef IS_DIGITAL

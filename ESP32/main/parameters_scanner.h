@@ -1,3 +1,4 @@
+bool isScanRunning = false;
 int  scannerPinX = 25;
 int  scannerPinY = 26;
 int  scannerPinLaser = 4;
@@ -10,4 +11,5 @@ int  scannerxMax = 255;
 int  scanneryMax = 255;
 int  scannertDelay = 0;
 int  scannerEnable = 0;
-int  scannerExposure = 5;
+int  scannerExposure = 0;
+int  scannerLaserVal = 255;
