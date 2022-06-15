@@ -384,7 +384,7 @@ void setup()
 #endif
 
 #ifdef IS_SCANNER
-  // important: Setup after laser! 
+  // important: Setup after laser!
   setup_scanner();
 #endif
 
@@ -546,7 +546,7 @@ void loop() {
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0) 
+  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
     LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
     LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
