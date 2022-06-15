@@ -2,10 +2,12 @@ int  scannerPinX = 25;
 int  scannerPinY = 26;
 int  scannerPinLaser = 4;
 
+int  scannerXFrameMax= 5;
+int  scannerXFrameMin= 0;
+int  scannerYFrameMax= 5;
+int  scannerYFrameMin= 0;
 int  scannerxMin = 0;
-int  scannerXOff = 5;
 int  scanneryMin = 0;
-int  scannerYOff = 5;
 int  scannerxMax = 255;
 int  scanneryMax = 255;
 int  scannertDelay = 0;

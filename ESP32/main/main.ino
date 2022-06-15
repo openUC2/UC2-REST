@@ -135,8 +135,7 @@
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
 //#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
-//#include "pindef_multicolour_wemos_lena.h"
-#include "pindef_confocal.h"
+#include "pindef_multicolour_wemos_lena.h"
 //#include "pindef_oct_eda.h"
 
 
@@ -158,7 +157,6 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_ANALOG
 #include "parameters_analog.h"
 #endif
-
 #ifdef IS_DIGITAL
 #include "parameters_digital.h"
 #endif
@@ -170,6 +168,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_PID
 #include "parameters_PID.h"
 #endif
+
 
 #include <ArduinoJson.h>
 #include "parameters_state.h"
@@ -277,12 +276,6 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
-#ifdef IS_SCANNER
-const char* scanner_act_endpoint = "/scanner_act";
-const char* scanner_set_endpoint = "/scanner_set";
-const char* scanner_get_endpoint = "/scanner_get";
-#endif
-
 #ifdef IS_SLM
 const char* slm_act_endpoint = "/slm_act";
 const char* slm_set_endpoint = "/slm_set";
@@ -340,10 +333,6 @@ void setup()
 
 #ifdef IS_LEDARR
   setup_matrix();
-#endif
-
-#ifdef IS_SCANNER
-  setup_scanner();
 #endif
 
 #ifdef IS_MOTOR
@@ -428,9 +417,6 @@ void setup()
 #ifdef IS_LEDARR
   Serial.println("IS_LEDARR");
 #endif
-#ifdef IS_SCANNER
-  Serial.println("IS_SCANNER");
-#endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
   Serial.println(dac_get_endpoint);
@@ -465,11 +451,6 @@ void setup()
   Serial.println(ledarr_act_endpoint);
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
-#endif
-#ifdef IS_SCANNER
-  Serial.println(scanner_act_endpoint);
-  Serial.println(scanner_get_endpoint);
-  Serial.println(scanner_set_endpoint);
 #endif
 
 
@@ -700,19 +681,6 @@ void jsonProcessor(char task[]) {
     ledarr_set_fct();
   if (strcmp(task, ledarr_get_endpoint) == 0)
     ledarr_get_fct();
-#endif
-
-
-  /*
-    Drive scanner
-  */
-#ifdef IS_SCANNER
-  if (strcmp(task, scanner_act_endpoint) == 0)
-    scanner_act_fct();
-  if (strcmp(task, scanner_set_endpoint) == 0)
-    scanner_set_fct();
-  if (strcmp(task, scanner_get_endpoint) == 0)
-    scanner_get_fct();
 #endif
 
 

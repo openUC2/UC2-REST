@@ -3,25 +3,12 @@
 
 void controlGalvoTask( void * parameter ) {
 
-  scannerPinX = 25;
-  scannerPinY = 26;
-  scannerPinLaser = 4;
-
-  scannerxMin = 0;
-  scannerXOff = 5;
-  scanneryMin = 0;
-  scannerYOff = 5;
-  scannerxMax = 255;
-  scanneryMax = 255;
-  scannertDelay = 0;
-  scannerEnable = 0;
-  scannerExposure = 5;
 
   int roundTripCounter = 0;
   int LASERval = 20000;
 
-  for (int idelayX = 0; idelayX < scannerXOff; idelayX++) {
-    for (int idelayY = 0; idelayY < scannerYOff; idelayY++) {
+  for (int idelayX = scannerXFrameMin; idelayX < scannerXFrameMax; idelayX++) {
+    for (int idelayY = scannerYFrameMin; idelayY < scannerYFrameMax; idelayY++) {
       for (int ix = scannerxMin; ix < scannerxMax - scannerXOff; ix += scannerXOff) {
         // move X-mirror
         ledcWrite(scannerPinX, ix + idelayX);
