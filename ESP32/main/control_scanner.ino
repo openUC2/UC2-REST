@@ -1,6 +1,6 @@
 #ifdef IS_SCANNER
 #include "parameters_scanner.h"
-#include <FreeRTOS.h>
+//#include <FreeRTOS.h>
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
 
@@ -22,41 +22,42 @@ void controlGalvoTask( void * parameter ) {
 
 
 void runScanner() {
-  if(DEBUG) Serial.println("Start FrameStack");
+  if (DEBUG) Serial.println("Start FrameStack");
   int roundTripCounter = 0;
 
+  for (int iFrame = 0; iFrame < scannernFrames; iFrame++) {
+    // shifting phase in x
+    for (int idelayX = scannerXFrameMin; idelayX < scannerXFrameMax; idelayX++) {
+      // shifting phase in y
+      for (int idelayY = scannerYFrameMin; idelayY < scannerYFrameMax; idelayY++) {
+        // iteratinv over all pixels in x
+        for (int ix = scannerxMin; ix < scannerxMax - scannerXStep; ix += scannerXStep) {
+          // move X-mirror
+          dacWrite(scannerPinX, ix + idelayX);
+          //Serial.print("X");Serial.print(ix + idelayX);
 
-  // shifting phase in x
-  for (int idelayX = scannerXFrameMin; idelayX < scannerXFrameMax; idelayX++) {
-    // shifting phase in y
-    for (int idelayY = scannerYFrameMin; idelayY < scannerYFrameMax; idelayY++) {
-      // iteratinv over all pixels in x
-      for (int ix = scannerxMin; ix < scannerxMax - scannerXOff; ix += scannerXOff) {
-        // move X-mirror
-        dacWrite(scannerPinX, ix + idelayX);
-        //Serial.print("X");Serial.print(ix + idelayX);
+          for (int iy = scanneryMin; iy < scanneryMax - scannerYStep; iy += scannerYStep) {
+            // move Y-mirror triangle
+            int scannerPosY = 0;
+            if ((roundTripCounter % 2) == 0 ) {
+              scannerPosY = iy + idelayY;
+            }
+            else {
+              scannerPosY = 255 - (iy + idelayY);
+            }
+            dacWrite(scannerPinY, scannerPosY);
+            //Serial.print("Y");Serial.println(scannerPosY);
 
-        for (int iy = scanneryMin; iy < scanneryMax - scannerYOff; iy += scannerYOff) {
-          // move Y-mirror triangle
-          int scannerPosY = 0;
-          if ((roundTripCounter % 2)==0 ) {
-            scannerPosY = iy + idelayY;
+            // expose Laser
+            ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal);
+            delay(scannerExposure);
+            ledcWrite(PWM_CHANNEL_LASER_1, 0);
           }
-          else {
-            scannerPosY = 255 - (iy + idelayY);
-          }
-          dacWrite(scannerPinY, scannerPosY);
-          //Serial.print("Y");Serial.println(scannerPosY);
-
-          // expose Laser
-          ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal);
-          delay(scannerExposure);
-          ledcWrite(PWM_CHANNEL_LASER_1, 0);
         }
       }
     }
   }
-  if(DEBUG) Serial.println("Ending FrameStack");
+  if (DEBUG) Serial.println("Ending FrameStack");
 }
 
 
@@ -73,16 +74,41 @@ void scanner_act_fct() {
 
     // assert values
     scannerxMin = 0;
-    scannerXOff = 5;
     scanneryMin = 0;
-    scannerYOff = 5;
     scannerxMax = 255;
     scanneryMax = 255;
     scannerExposure = 0;
     scannerEnable = 0;
     scannerLaserVal = 255;
+    scannerXFrameMax = 5;
+    scannerXFrameMin = 0;
+    scannerYFrameMax = 5;
+    scannerYFrameMin = 0;
+    scannerXStep = 5;
+    scannerYStep = 5;
+    scannernFrames = 1;
 
-
+    if (jsonDocument.containsKey("scannernFrames")) {
+      scannernFrames = jsonDocument["scannernFrames"];
+    }
+    if (jsonDocument.containsKey("scannerXFrameMax")) {
+      scannerXFrameMax = jsonDocument["scannerXFrameMax"];
+    }
+    if (jsonDocument.containsKey("scannerXFrameMin")) {
+      scannerXFrameMin = jsonDocument["scannerXFrameMin"];
+    }
+    if (jsonDocument.containsKey("scannerYFrameMax")) {
+      scannerYFrameMax = jsonDocument["scannerYFrameMax"];
+    }
+    if (jsonDocument.containsKey("scannerYFrameMin")) {
+      scannerYFrameMin = jsonDocument["scannerYFrameMin"];
+    }
+    if (jsonDocument.containsKey("scannerXStep")) {
+      scannerXStep = jsonDocument["scannerXStep"];
+    }
+    if (jsonDocument.containsKey("scannerYStep")) {
+      scannerYStep = jsonDocument["scannerYStep"];
+    }
     if (jsonDocument.containsKey("scannerxMin")) {
       scannerxMin = jsonDocument["scannerxMin"];
     }
@@ -103,12 +129,6 @@ void scanner_act_fct() {
     }
     if (jsonDocument.containsKey("scannerEnable")) {
       scannerEnable = jsonDocument["scannerEnable"];
-    }
-    if (jsonDocument.containsKey("scannerXOff")) {
-      scannerXOff = jsonDocument["scannerXOff"];
-    }
-    if (jsonDocument.containsKey("scannerYOff")) {
-      scannerYOff = jsonDocument["scannerYOff"];
     }
 
     jsonDocument.clear();
