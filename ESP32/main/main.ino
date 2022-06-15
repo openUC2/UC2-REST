@@ -3,19 +3,7 @@
    Serial protocol looks like so:
 
    {"task": "/state_get"}
-   returns:
-
-  ++
-  {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
-  --
-
-  {"task": "/state_set", "isdebug":0}
-  {"task": "/state_get", "active":1}
-
-// Confocal scanner
-{"task":"/scanner_act", "scannerMode": "classic", "scannerxMin":0,     "scannerXOff": 5,     "scanneryMin": 0,     "scannerYOff": 5,     "scannerxMax": 255,     "scanneryMax": 255,     "scannertDelay": 0,     "scannerEnable": 0}
-
-  retrieve sensor value
+   returns:value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
