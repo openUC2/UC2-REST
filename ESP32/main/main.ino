@@ -12,6 +12,8 @@
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_get", "active":1}
 
+// Confocal scanner
+{"task":"/scanner_act", "scannerMode": "classic", "scannerxMin":0,     "scannerXOff": 5,     "scanneryMin": 0,     "scannerYOff": 5,     "scannerxMax": 255,     "scanneryMax": 255,     "scannertDelay": 0,     "scannerEnable": 0}
 
   retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
@@ -92,7 +94,6 @@
 
 
   // trigger camera at a rate of 20hz
-
   {"task": "/motor_act", "speed0":0, "speed1":0,"speed2":40,"speed3":9000, "isforever":1, "isaccel":1}
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_act", "delay": 100}
@@ -135,7 +136,8 @@
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
 //#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
-#include "pindef_multicolour_wemos_lena.h"
+//#include "pindef_multicolour_wemos_lena.h"
+#include "pindef_confocal.h"
 //#include "pindef_oct_eda.h"
 
 
@@ -157,6 +159,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_ANALOG
 #include "parameters_analog.h"
 #endif
+
 #ifdef IS_DIGITAL
 #include "parameters_digital.h"
 #endif
@@ -168,7 +171,6 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_PID
 #include "parameters_PID.h"
 #endif
-
 
 #include <ArduinoJson.h>
 #include "parameters_state.h"
@@ -276,6 +278,12 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
+#ifdef IS_SCANNER
+const char* scanner_act_endpoint = "/scanner_act";
+const char* scanner_set_endpoint = "/scanner_set";
+const char* scanner_get_endpoint = "/scanner_get";
+#endif
+
 #ifdef IS_SLM
 const char* slm_act_endpoint = "/slm_act";
 const char* slm_set_endpoint = "/slm_set";
@@ -364,17 +372,12 @@ void setup()
 #endif
 
 
-#ifdef IS_LASER
-  setup_laser();
-#endif
-
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
   //Setup(dac_channel, clk_div, frequency, scale, phase, invert);
   dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
   dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
 #endif
-
 
 #ifdef IS_ANALOG
   Serial.println("Setting Up analog");
@@ -386,6 +389,15 @@ void setup()
   ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
   ledcWrite(PWM_CHANNEL_analog_2, 0);
+#endif
+
+#ifdef IS_LASER
+  setup_laser();
+#endif
+
+#ifdef IS_SCANNER
+  // important: Setup after laser!
+  setup_scanner();
 #endif
 
 #ifdef IS_DIGITAL
@@ -416,6 +428,9 @@ void setup()
 #endif
 #ifdef IS_LEDARR
   Serial.println("IS_LEDARR");
+#endif
+#ifdef IS_SCANNER
+  Serial.println("IS_SCANNER");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -451,6 +466,11 @@ void setup()
   Serial.println(ledarr_act_endpoint);
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
+#endif
+#ifdef IS_SCANNER
+  Serial.println(scanner_act_endpoint);
+  Serial.println(scanner_get_endpoint);
+  Serial.println(scanner_set_endpoint);
 #endif
 
 
@@ -538,7 +558,7 @@ void loop() {
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
-  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0) 
+  if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
     LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
     LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
@@ -681,6 +701,19 @@ void jsonProcessor(char task[]) {
     ledarr_set_fct();
   if (strcmp(task, ledarr_get_endpoint) == 0)
     ledarr_get_fct();
+#endif
+
+
+  /*
+    Drive scanner
+  */
+#ifdef IS_SCANNER
+  if (strcmp(task, scanner_act_endpoint) == 0)
+    scanner_act_fct();
+  if (strcmp(task, scanner_set_endpoint) == 0)
+    scanner_set_fct();
+  if (strcmp(task, scanner_get_endpoint) == 0)
+    scanner_get_fct();
 #endif
 
 

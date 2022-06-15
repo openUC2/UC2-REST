@@ -1,37 +1,63 @@
 #ifdef IS_SCANNER
 #include "parameters_scanner.h"
+#include <FreeRTOS.h>
+#include "soc/timer_group_struct.h"
+#include "soc/timer_group_reg.h"
 
 void controlGalvoTask( void * parameter ) {
+  Serial.println("Starting Scanner Thread");
+
+  while (1) {
+    // loop forever
+
+    if (isScanRunning) {
+      runScanner();
+    }
+    else {
+      vTaskDelay(100);
+    }
+  }
+  vTaskDelete(NULL);
+}
 
 
+void runScanner() {
+  if(DEBUG) Serial.println("Start FrameStack");
   int roundTripCounter = 0;
-  int LASERval = 20000;
 
+
+  // shifting phase in x
   for (int idelayX = scannerXFrameMin; idelayX < scannerXFrameMax; idelayX++) {
+    // shifting phase in y
     for (int idelayY = scannerYFrameMin; idelayY < scannerYFrameMax; idelayY++) {
+      // iteratinv over all pixels in x
       for (int ix = scannerxMin; ix < scannerxMax - scannerXOff; ix += scannerXOff) {
         // move X-mirror
-        ledcWrite(scannerPinX, ix + idelayX);
+        dacWrite(scannerPinX, ix + idelayX);
+        //Serial.print("X");Serial.print(ix + idelayX);
 
         for (int iy = scanneryMin; iy < scanneryMax - scannerYOff; iy += scannerYOff) {
           // move Y-mirror triangle
-          if (roundTripCounter % 2)
-            ledcWrite(scannerPinX, ix + idelayX);
-          else
-            ledcWrite(scannerPinX, 255 - (ix + idelayX));
-
+          int scannerPosY = 0;
+          if ((roundTripCounter % 2)==0 ) {
+            scannerPosY = iy + idelayY;
+          }
+          else {
+            scannerPosY = 255 - (iy + idelayY);
+          }
+          dacWrite(scannerPinY, scannerPosY);
+          //Serial.print("Y");Serial.println(scannerPosY);
 
           // expose Laser
-          ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
+          ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal);
           delay(scannerExposure);
           ledcWrite(PWM_CHANNEL_LASER_1, 0);
         }
       }
     }
-    vTaskDelete(NULL);
   }
+  if(DEBUG) Serial.println("Ending FrameStack");
 }
-
 
 
 
@@ -52,11 +78,16 @@ void scanner_act_fct() {
     scannerYOff = 5;
     scannerxMax = 255;
     scanneryMax = 255;
-    scannertDelay = 0;
+    scannerExposure = 0;
     scannerEnable = 0;
+    scannerLaserVal = 255;
+
 
     if (jsonDocument.containsKey("scannerxMin")) {
       scannerxMin = jsonDocument["scannerxMin"];
+    }
+    if (jsonDocument.containsKey("scannerLaserVal")) {
+      scannerLaserVal = jsonDocument["scannerLaserVal"];
     }
     if (jsonDocument.containsKey("scanneryMin")) {
       scanneryMin = jsonDocument["scanneryMin"];
@@ -67,8 +98,8 @@ void scanner_act_fct() {
     if (jsonDocument.containsKey("scanneryMax")) {
       scanneryMax = jsonDocument["scanneryMax"];
     }
-    if (jsonDocument.containsKey("scannertDelay")) {
-      scannertDelay = jsonDocument["scannertDelay"];
+    if (jsonDocument.containsKey("scannerExposure")) {
+      scannerExposure = jsonDocument["scannerExposure"];
     }
     if (jsonDocument.containsKey("scannerEnable")) {
       scannerEnable = jsonDocument["scannerEnable"];
@@ -80,14 +111,12 @@ void scanner_act_fct() {
       scannerYOff = jsonDocument["scannerYOff"];
     }
 
-    Serial.println("Start controlGalvoTask");
-    xTaskCreatePinnedToCore(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL, 1);
-    Serial.println("Done with setting up Tasks");
-
-
     jsonDocument.clear();
+    Serial.println("Start controlGalvoTask");
+    isScanRunning = scannerEnable; // Trigger a frame acquisition
+    Serial.println("Done with setting up Tasks");
     jsonDocument["return"] = 1;
-    isBusy = false;
+
   }
 }
 
@@ -107,12 +136,15 @@ void scanner_get_fct() {
 
 
 /***************************************************************************************************/
-/*******************************************  LED Array  *******************************************/
+/******************************************* SCANNER     *******************************************/
 /***************************************************************************************************/
-/*******************************FROM OCTOPI ********************************************************/
+/****************************************** ********************************************************/
 
 
 void setup_scanner() {
+  runScanner(); // run not as a task
+  disableCore0WDT();
+  xTaskCreate(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL);
 }
 
 /*
