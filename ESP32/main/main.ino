@@ -135,8 +135,8 @@
 //#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
 //#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
-//#include "pindef_multicolour_wemos_lena.h"
-#include "pindef_oct_eda.h"
+#include "pindef_multicolour_wemos_lena.h"
+//#include "pindef_oct_eda.h"
 
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
