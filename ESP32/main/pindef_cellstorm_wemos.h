@@ -15,7 +15,6 @@
 #define IS_DIGITAL
 //#define IS_DAC
 
-
 // analog out (e.g. Lenses)
 int analog_PIN_1 = 0;
 int analog_PIN_2 = 0;
@@ -35,11 +34,11 @@ int ENABLE = STEPPERS_ENABLE_PIN;
 // Laser PWM pins
 int LASER_PIN_1 = SPINDLEPWMPIN; // Spin Dir
 int LASER_PIN_2 = SPINDLE_ENABLE_PIN;//  Spin En
-int LASER_PIN_3 = FEED_HOLD_PIN;// 
+int LASER_PIN_3 = FEED_HOLD_PIN;//X_END_STOP;// 
 
 // digital out (e.g. camera trigger)
-int digital_PIN_1 = 12; 
-int digital_PIN_2 = 13; 
+int digital_PIN_1 = 0; 
+int digital_PIN_2 = 0; 
 int digital_PIN_3 = 0; 
 
 const char* identifier_setup = "pindef_cellstorm_wemos";

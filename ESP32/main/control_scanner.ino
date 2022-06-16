@@ -10,7 +10,7 @@ void controlGalvoTask( void * parameter ) {
   while (1) {
     // loop forever
 
-    if (isScanRunning) {
+    if (isScanRunning or scannernFrames > 0) {
       runScanner();
     }
     else {
@@ -24,12 +24,31 @@ void controlGalvoTask( void * parameter ) {
 void runScanner() {
   if (DEBUG) Serial.println("Start FrameStack");
   int roundTripCounter = 0;
+  /*
+    {"task": "/scanner_act",
+    "scannernFrames":100,
+    "scannerMode":"classic",
+    "scannerXFrameMin":0,
+    "scannerXFrameMax":255,
+    "scannerYFrameMin":0,
+    "scannerYFrameMax":255,
+    "scannerEnable":0,
+    "scannerXFrameMin":1,
+    "scannerXFrameMax":1,
+    "scannerYFrameMin":1,
+    "scannerYFrameMax":1,
+    "scannerXStep":15,
+    "scannerYStep":15,
+    "scannerLaserVal":32000,
+    "scannerExposure":10,
+    "scannerDelay":1000}
+  */
 
-  for (int iFrame = 0; iFrame < scannernFrames; iFrame++) {
+  for (int iFrame = 0; iFrame <= scannernFrames; iFrame++) {
     // shifting phase in x
-    for (int idelayX = scannerXFrameMin; idelayX < scannerXFrameMax; idelayX++) {
+    for (int idelayX = scannerXFrameMin; idelayX <= scannerXFrameMax; idelayX++) {
       // shifting phase in y
-      for (int idelayY = scannerYFrameMin; idelayY < scannerYFrameMax; idelayY++) {
+      for (int idelayY = scannerYFrameMin; idelayY <= scannerYFrameMax; idelayY++) {
         // iteratinv over all pixels in x
         for (int ix = scannerxMin; ix < scannerxMax - scannerXStep; ix += scannerXStep) {
           // move X-mirror
@@ -45,18 +64,21 @@ void runScanner() {
             else {
               scannerPosY = 255 - (iy + idelayY);
             }
+            roundTripCounter++;
             dacWrite(scannerPinY, scannerPosY);
             //Serial.print("Y");Serial.println(scannerPosY);
 
             // expose Laser
             ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal);
-            delay(scannerExposure);
+            delayMicroseconds(scannerExposure);
             ledcWrite(PWM_CHANNEL_LASER_1, 0);
+            delayMicroseconds(scannerDelay);
           }
         }
       }
     }
   }
+  scannernFrames = 0;
   if (DEBUG) Serial.println("Ending FrameStack");
 }
 
@@ -68,7 +90,9 @@ void scanner_act_fct() {
   // here you can do something
   if (DEBUG) Serial.println("scanner_act_fct");
 
-  const char* scannerMode = jsonDocument["scannerMode"]; // "classic"
+  // select scanning mode
+  const char* scannerMode = jsonDocument["scannerMode"];
+
   if (strcmp(scannerMode, "classic") == 0) {
     if (DEBUG) Serial.println("classic");
 
@@ -79,7 +103,8 @@ void scanner_act_fct() {
     scanneryMax = 255;
     scannerExposure = 0;
     scannerEnable = 0;
-    scannerLaserVal = 255;
+    scannerLaserVal = 32000;
+
     scannerXFrameMax = 5;
     scannerXFrameMin = 0;
     scannerYFrameMax = 5;
@@ -87,6 +112,10 @@ void scanner_act_fct() {
     scannerXStep = 5;
     scannerYStep = 5;
     scannernFrames = 1;
+
+    scannerDelay = 0;
+
+
 
     if (jsonDocument.containsKey("scannernFrames")) {
       scannernFrames = jsonDocument["scannernFrames"];
@@ -130,11 +159,30 @@ void scanner_act_fct() {
     if (jsonDocument.containsKey("scannerEnable")) {
       scannerEnable = jsonDocument["scannerEnable"];
     }
+    if (jsonDocument.containsKey("scannerDelay")) {
+      scannerDelay = jsonDocument["scannerDelay"];
+    }
+
+    if (DEBUG) Serial.print("scannerxMin "); Serial.println(scannerxMin);
+    if (DEBUG) Serial.print("scanneryMin "); Serial.println(scanneryMin );
+    if (DEBUG) Serial.print("scannerxMax "); Serial.println(scannerxMax );
+    if (DEBUG) Serial.print("scanneryMax "); Serial.println(scanneryMax );
+    if (DEBUG) Serial.print("scannerExposure "); Serial.println(scannerExposure );
+    if (DEBUG) Serial.print("scannerEnable "); Serial.println(scannerEnable);
+    if (DEBUG) Serial.print("scannerLaserVal "); Serial.println(scannerLaserVal );
+    if (DEBUG) Serial.print("scannerXFrameMax "); Serial.println(scannerXFrameMax);
+    if (DEBUG) Serial.print("scannerXFrameMin "); Serial.println(scannerXFrameMin);
+    if (DEBUG) Serial.print("scannerYFrameMax "); Serial.println(scannerYFrameMax);
+    if (DEBUG) Serial.print("scannerYFrameMin "); Serial.println(scannerYFrameMin);
+    if (DEBUG) Serial.print("scannerXStep "); Serial.println(scannerXStep );
+    if (DEBUG) Serial.print("scannerYStep "); Serial.println(scannerYStep);
+    if (DEBUG) Serial.print("scannernFrames "); Serial.println(scannernFrames);
+    if (DEBUG) Serial.print("scannerDelay "); Serial.println(scannerDelay);
 
     jsonDocument.clear();
-    Serial.println("Start controlGalvoTask");
+    if (DEBUG) Serial.println("Start controlGalvoTask");
     isScanRunning = scannerEnable; // Trigger a frame acquisition
-    Serial.println("Done with setting up Tasks");
+    if (DEBUG) Serial.println("Done with setting up Tasks");
     jsonDocument["return"] = 1;
 
   }

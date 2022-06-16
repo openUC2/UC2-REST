@@ -14,6 +14,8 @@
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
 
+// scanner
+// {"task": "/scanner_act", "scannernFrames":1, "scannerMode":"classic", "scannerXFrameMin":0,"scannerXFrameMax":255, "scannerYFrameMin":0,"scannerYFrameMax":255, "scannerEnable":0, "scannerXFrameMin":1, "scannerXFrameMax":1, "scannerYFrameMin":1, "scannerYFrameMax":1,"scannerXStep":5,"scannerYStep":5}
 
 
   turn on the laser:
