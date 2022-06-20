@@ -62,16 +62,16 @@ void runScanner() {
               scannerPosY = iy + idelayY;
             }
             else {
-              scannerPosY = 255 - (iy + idelayY);
+              scannerPosY = (scanneryMax - scannerYStep) - (iy + idelayY);
             }
             roundTripCounter++;
             dacWrite(scannerPinY, scannerPosY);
             //Serial.print("Y");Serial.println(scannerPosY);
-
+            delayMicroseconds(scannerDelay);
             // expose Laser
-            ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal);
+            ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
             delayMicroseconds(scannerExposure);
-            ledcWrite(PWM_CHANNEL_LASER_1, 0);
+            ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //             
             delayMicroseconds(scannerDelay);
           }
         }
