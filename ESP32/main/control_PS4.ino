@@ -67,6 +67,7 @@ void activate_PS4() {
     }
 
 // FOCUS
+/*
   if (PS4.event.button_down.up) {
     if (not getEnableMotor())
       setEnableMotor(true);
@@ -79,6 +80,31 @@ void activate_PS4() {
       setEnableMotor(true);
     POSITION_MOTOR_X = stepper_X.currentPosition();
     stepper_X.move(POSITION_MOTOR_X-2);
+    delay(100); //Debounce?
+  }
+*/
+
+  // LASER 1
+  if (PS4.event.button_down.up) {
+    if (DEBUG) Serial.print("Turning on LAser 10000");
+    ledcWrite(PWM_CHANNEL_LASER_2, 20000);
+    delay(100); //Debounce?
+  }
+  if (PS4.event.button_down.down) {
+    if (DEBUG) Serial.print("Turning off LAser ");
+    ledcWrite(PWM_CHANNEL_LASER_2, 0);
+    delay(100); //Debounce?
+  }
+
+  // LASER 2
+  if (PS4.event.button_down.right) {
+    if (DEBUG) Serial.print("Turning on LAser 10000");
+    ledcWrite(PWM_CHANNEL_LASER_1, 20000);
+    delay(100); //Debounce?
+  }
+  if (PS4.event.button_down.left) {
+    if (DEBUG) Serial.print("Turning off LAser ");
+    ledcWrite(PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
   }
 
