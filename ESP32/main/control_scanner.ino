@@ -119,7 +119,7 @@ void scanner_act_fct() {
       arraySize = jsonDocument["arraySize"];
     }
 
-    for (int iFrame = 0; iFrame < scannernFramesM; iFrame++) {
+    for (int iFrame = 0; iFrame < scannernFrames; iFrame++) {
       for (int i = 0; i < arraySize; i++) { //Iterate through results
         int scannerIndex = jsonDocument["i"][i];  //Implicit cast
         int scannerPosY = scannerIndex % 255;
