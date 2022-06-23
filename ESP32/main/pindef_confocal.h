@@ -14,7 +14,7 @@
 #define IS_LASER
 #define IS_MOTOR
 #define IS_SCANNER
-#define IS_PS4 // ESP32-only
+//#define IS_PS4 // ESP32-only
 
 // Laser PWM pins for CNC Shield
 int LASER_PIN_1 = X_LIMIT_PIN; // was SPINDLEPWMPIN; // Spin Dir
