@@ -134,9 +134,11 @@ void motor_act_fct() {
     return;
   }
 
+  #ifdef IS_PS3 or IS_PS4
   if(IS_PSCONTROLER_ACTIVE)
     IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
-
+  #endif
+  
   // prepare motor to run
   setEnableMotor(true);
   stepper_A.setSpeed(mspeed0);
