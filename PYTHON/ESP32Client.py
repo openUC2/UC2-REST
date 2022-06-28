@@ -886,7 +886,7 @@ class ESP32Client(object):
 
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
-                        despeckleAmplitude = 0.1,
+                        despeckleAmplitude = 0.,
                         despecklePeriod=10, timeout=20, is_blocking = True):
         if channel not in (0,1,2,3):
             if channel=="R":
