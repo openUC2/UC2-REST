@@ -11,6 +11,8 @@ build/
 dist/
 *.egg-info/
 docs/build_*
+*travis.yml
 
 # misc
 .DS_Store
+

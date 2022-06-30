@@ -27,7 +27,7 @@ setup(
     packages=['uc2rest'],
     include_package_data=True,
     python_requires=">=3.7.*",
-    install_requires=['numpy', 'requests', 'json', 'socket', 'pyserial'],
+    install_requires=['numpy', 'requests', 'pyjson', 'socket', 'pyserial'],
     license=about['__license__'],
     zip_safe=False,
     entry_points={
@@ -35,7 +35,7 @@ setup(
     },
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Intended Audience :: Microscopy Developers',
+        'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.7',
     ],
     keywords='UC2REST API to control ESP32-driven microscopy control boards'

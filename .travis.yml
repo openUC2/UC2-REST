@@ -14,9 +14,9 @@ script:
 
 deploy:
   provider: pypi
-  user: alexioannides
+  user: beniroquai
   password:
-    secure: I/YdGexN0bIPIltYZOkMGr9Kpaby3XOfrAac0WvUhYPpNmaNyAmlCB/eUzq5r4n6chsmiWBcOj2k1ePsrtweqra0aSgAYLGv7jN8xtSMWk1rkdzB4zbMVjyvyrIyNYCtf+dmhkWGLN685WmrrTujGuGTE9IpmCqz8sBWbiLToyodAc1NK6xTF+z1NqdKwufLXKoj4dzHSmt6WHyuxGS0f0UbW8znBL6DwHUY2UFFBCZUQUZkNFS+K1Hf+LXeNU2AwDMcTf9V6daUmTU0lWdYlrzCHdbL0kMazFVGnXF3NOSoV3F4+CnH/r5ryNA4dDtkrnyYUhL3o3aDABrlW6dhzJ0mM2v+RhzPm+n2Q0AD0R/gzv64DthNKZxeJI2RQ91T/z/tOgqJi6p8FH7AbpYIJl1ztO4TCYzyTKh9FqBImPQo+esXxF968qPy5ROmCNl5SbAKsy48m9NpsH1w+mluYUsq+fOyqctZuNa1aZxRmw9vXTY606+Fx3LE9oj4RnDNA4GxD+O7M1SA2+6uDJ+8rL87RAeOD0ZPwUyPSsMlM5DpU2NLMc+ZSxuIVEjo0E0+PP7eawYtUN+stb62Xo/VL2/qpuAWqaqu6SQCtVUTyCLnzDhJCWGd24o4ssILsTr2gG1A769YaJkc/dIYwz79HVzMtXPUiMu63Ji9TB1mt4k=
+    secure: pypi-AgEIcHlwaS5vcmcCJDUxM2U5Mjg0LWJkM2UtNGI3Zi1hM2NjLTVlY2Q2NmVmM2UyZAACJXsicGVybWlzc2lvbnMiOiAidXNlciIsICJ2ZXJzaW9uIjogMX0AAAYg21ldzo6Wz3nYg4jgqh6_VT3HihkHm4DYVk3-fh2Y_MU
   on:
     tags: true
   distributions: bdist_wheel
