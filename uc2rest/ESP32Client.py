@@ -112,7 +112,7 @@ class ESP32Client(object):
         # initialize galvos
         self.galvo1 = galvo(channel=1)
         self.galvo2 = galvo(channel=2)
-        
+
         self.serialport = serialport
         self.baudrate = baudrate
 
@@ -130,7 +130,7 @@ class ESP32Client(object):
 
         elif self.serialport is not None:
             self.initSerial(self.serialport,self.baudrate)
-            
+
         else:
             self.is_connected = False
             if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
@@ -175,7 +175,7 @@ class ESP32Client(object):
                             self.__logger.debug("Trying out port "+iport.device+" failed")
                             self.__logger.error(e)
                         self.is_connected = False
-                        
+
     def isConnected(self):
         # check if client is connected to the same network
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -276,7 +276,7 @@ class ESP32Client(object):
                 self.initSerial(self.serialport, self.baudrate)
             except:
                 return -1
-        
+
         if type(payload)==dict:
             payload = json.dumps(payload)
         try:
@@ -284,8 +284,8 @@ class ESP32Client(object):
         except Exception as e:
             self.__logger.error(e)
 
-            
-            
+
+
 
     def readSerial(self, is_blocking=True, timeout = 15): # TODO: hardcoded timeout - not code
         """Receive and decode return message"""
@@ -852,7 +852,7 @@ class ESP32Client(object):
         path = '/led'
         r = self.post_json(path, payload)
         return r
-    
+
     '''
     ##############################################################################################################################
     SCANNER
@@ -956,9 +956,9 @@ class ESP32Client(object):
         return r
 
 
-    def set_laser(self, channel=1, value=0, auto_filterswitch=False, 
+    def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
-                        despeckleAmplitude = 0.1, 
+                        despeckleAmplitude = 0.,
                         despecklePeriod=10, timeout=20, is_blocking = True):
         if channel not in (0,1,2,3):
             if channel=="R":
@@ -971,11 +971,11 @@ class ESP32Client(object):
         if auto_filterswitch and value >0:
             if filter_position is None:
                 if channel==1:
-                    filter_position_toGo = self.filter_pos_1 
+                    filter_position_toGo = self.filter_pos_1
                 if channel==2:
-                    filter_position_toGo = self.filter_pos_2 
+                    filter_position_toGo = self.filter_pos_2
                 if channel==3:
-                    filter_position_toGo = self.filter_pos_3 
+                    filter_position_toGo = self.filter_pos_3
                 if channel=="LED":
                     filter_position_toGo = self.filter_pos_LED
             else:
@@ -991,7 +991,7 @@ class ESP32Client(object):
             "LASERval": value,
             "LASERdespeckle": int(value*despeckleAmplitude),
             "LASERdespecklePeriod": int(despecklePeriod),
-            
+
         }
 
         r = self.post_json(path, payload)
@@ -1032,5 +1032,3 @@ class ESP32Client(object):
             files = {'media': open(iName, 'rb')}
             if self.is_connected:
                 requests.post(self.base_uri + path, files=files)
-
-# %%
