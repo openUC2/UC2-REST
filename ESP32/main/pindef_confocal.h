@@ -8,16 +8,16 @@
  */
  
 #include "pindef_WEMOS_d1_r32.h"
-
+#define IS_LEDARR
 #define IS_ESP32
 #define IS_SERIAL
 #define IS_LASER
 #define IS_MOTOR
 #define IS_SCANNER
-//#define IS_PS4 // ESP32-only
+#define IS_PS4 // ESP32-only
 
 // Laser PWM pins for CNC Shield
-int LASER_PIN_1 = X_LIMIT_PIN; // was SPINDLEPWMPIN; // Spin Dir
+int LASER_PIN_1 = 0; // was SPINDLEPWMPIN; // Spin Dir
 int LASER_PIN_2 = Y_LIMIT_PIN; // was SPINDLE_ENABLE_PIN;//  Spin En
 int LASER_PIN_3 = 0;// 
 
@@ -37,7 +37,7 @@ int dac_fake_1 = 0; // RESET-ABORT just toggles between 1 and 0
 int dac_fake_2 = 0; // Coolant
 
 // ledarray
-int LED_ARRAY_PIN = FEED_HOLD_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
+int LED_ARRAY_PIN = X_LIMIT_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
 
 // digital out (e.g. camera trigger)
 int digital_PIN_1 = 0; //  Cycle Start/Resume

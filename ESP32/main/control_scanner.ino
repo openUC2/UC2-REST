@@ -127,10 +127,12 @@ void scanner_act_fct() {
         dacWrite(scannerPinY, scannerPosY);
         dacWrite(scannerPinX, scannerPosX);
 
-        Serial.print(scannerPosY);
+        /*
+         * Serial.print(scannerPosY);
         Serial.print("/");
         Serial.println(scannerPosX);
-
+         */
+         
         //Serial.print("Y");Serial.println(scannerPosY);
         delayMicroseconds(scannerDelay);
         // expose Laser
