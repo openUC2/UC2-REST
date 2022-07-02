@@ -57,7 +57,15 @@ class galvo(object):
         return dict
 
 
+class logger(object):
+    def __init__(self):
+        pass
 
+    def error(self,message):
+        print(message)
+
+    def debug(self, message):
+        print(message)
 class ESP32Client(object):
     # headers = {'ESP32-version': '*'}
     headers={"Content-Type":"application/json"}
@@ -107,7 +115,9 @@ class ESP32Client(object):
         '''
 
         if IS_IMSWITCH:
-            if IS_IMSWITCH: self.__logger = initLogger(self, tryInheritParent=True)
+            self.__logger = initLogger(self, tryInheritParent=True)
+        else:
+            self.__logger = logger()            
 
         # initialize galvos
         self.galvo1 = galvo(channel=1)
@@ -494,7 +504,7 @@ class ESP32Client(object):
             "blue": intensity[2],
             "LEDArrMode": pattern
         }
-        print("Setting LED Pattern (full): "+ str(intensity))
+        self.__logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
