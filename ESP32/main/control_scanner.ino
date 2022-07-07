@@ -71,7 +71,7 @@ void runScanner() {
             // expose Laser
             ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
             delayMicroseconds(scannerExposure);
-            ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //             
+            ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
             delayMicroseconds(scannerDelay);
           }
         }
@@ -93,7 +93,58 @@ void scanner_act_fct() {
   // select scanning mode
   const char* scannerMode = jsonDocument["scannerMode"];
 
-  if (strcmp(scannerMode, "classic") == 0) {
+
+  if (strcmp(scannerMode, "pattern") == 0) {
+    if (DEBUG) Serial.println("pattern");
+    // individual pattern gets adressed
+    int arraySize = 0;
+    scannerExposure = 0;
+    scannerLaserVal = 32000;
+    scannernFrames = 1;
+    scannerDelay = 0;
+
+    if (jsonDocument.containsKey("scannerExposure")) {
+      scannerExposure = jsonDocument["scannerExposure"];
+    }
+    if (jsonDocument.containsKey("scannerLaserVal")) {
+      scannerLaserVal = jsonDocument["scannerLaserVal"];
+    }
+    if (jsonDocument.containsKey("scannerDelay")) {
+      scannerDelay = jsonDocument["scannerDelay"];
+    }
+    if (jsonDocument.containsKey("scannernFrames")) {
+      scannernFrames = jsonDocument["scannernFrames"];
+    }
+    if (jsonDocument.containsKey("arraySize")) {
+      arraySize = jsonDocument["arraySize"];
+    }
+
+    for (int iFrame = 0; iFrame < scannernFrames; iFrame++) {
+      for (int i = 0; i < arraySize; i++) { //Iterate through results
+        int scannerIndex = jsonDocument["i"][i];  //Implicit cast
+        int scannerPosY = scannerIndex % 255;
+        int scannerPosX = scannerIndex / 255;
+        dacWrite(scannerPinY, scannerPosY);
+        dacWrite(scannerPinX, scannerPosX);
+
+        /*
+         * Serial.print(scannerPosY);
+        Serial.print("/");
+        Serial.println(scannerPosX);
+         */
+         
+        //Serial.print("Y");Serial.println(scannerPosY);
+        delayMicroseconds(scannerDelay);
+        // expose Laser
+        ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
+        delayMicroseconds(scannerExposure);
+        ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
+        delayMicroseconds(scannerDelay);
+      }
+    }
+  }
+
+  else if (strcmp(scannerMode, "classic") == 0) {
     if (DEBUG) Serial.println("classic");
 
     // assert values

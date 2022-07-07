@@ -1,0 +1,22 @@
+ncsudo: required
+
+language: python
+
+python:
+  - 3.7-dev
+
+install:
+  - pip install pipenv
+  - pipenv install --dev
+
+script:
+  - pipenv run pytest
+
+deploy:
+  provider: pypi
+  user: beniroquai
+  password:
+    secure: pypi-AgEIcHlwaS5vcmcCJDUxM2U5Mjg0LWJkM2UtNGI3Zi1hM2NjLTVlY2Q2NmVmM2UyZAACJXsicGVybWlzc2lvbnMiOiAidXNlciIsICJ2ZXJzaW9uIjogMX0AAAYg21ldzo6Wz3nYg4jgqh6_VT3HihkHm4DYVk3-fh2Y_MU
+  on:
+    tags: true
+  distributions: bdist_wheel

@@ -27,6 +27,13 @@ pip install socket tempfile pyserial
 
 The tutorial can be found [here](./PYTHON/UC2_REST_Tutorial_v0.ipynb).
 
+You can also install it using `PIP`:
+
+```
+!pip install UC2-REST==0.1.0rc0
+```
+
+
 ### General Usage
 
 ```py

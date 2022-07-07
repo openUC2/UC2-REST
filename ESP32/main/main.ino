@@ -66,6 +66,7 @@
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
   {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
 
+  {'task': '/scanner_act', 'scannernFrames': 1, 'scannerMode': 'pattern', 'arraySize': 9, 'i': [0, 16, 32, 48, 64, 80, 96, 112, 128], 'scannerLaserVal': 32000, 'scannerExposure': 500, 'scannerDelay': 500}
 
   {   "red": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "green": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "blue": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "arraySize": 64,   "LEDArrMode": "array",   "task": "/ledarr_act"   }
 
@@ -134,6 +135,11 @@
 //#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
 #include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
 //#include "pindef_slm.h" // - for the slm / TFT
+//#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
+//include "pindef_multicolour_wemos_lena.h"
+//#include "pindef_confocal.h"
+//#include "pindef_oct_eda.h"
+
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
