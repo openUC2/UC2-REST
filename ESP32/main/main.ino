@@ -541,11 +541,11 @@ void loop() {
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
   if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-    LASER_despeckle(LASER_despeckle_1, 1);
+    LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-    LASER_despeckle(LASER_despeckle_2, 2);
+    LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
   if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-    LASER_despeckle(LASER_despeckle_3, 3);
+    LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
 #endif
 
 #ifdef IS_PS3
