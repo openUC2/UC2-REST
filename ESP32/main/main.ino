@@ -3,7 +3,17 @@
    Serial protocol looks like so:
 
    {"task": "/state_get"}
-   returns:value
+   returns:
+
+  ++
+  {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
+  --
+
+  {"task": "/state_set", "isdebug":0}
+  {"task": "/state_get", "active":1}
+
+
+  retrieve sensor value
   {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
@@ -14,12 +24,10 @@
   {"task": "/readsensor_get", "readsensorID":0}
   {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
 
-// scanner
-// {"task": "/scanner_act", "scannernFrames":1, "scannerMode":"classic", "scannerXFrameMin":0,"scannerXFrameMax":255, "scannerYFrameMin":0,"scannerYFrameMax":255, "scannerEnable":0, "scannerXFrameMin":1, "scannerXFrameMax":1, "scannerYFrameMin":1, "scannerYFrameMax":1,"scannerXStep":5,"scannerYStep":5}
 
 
   turn on the laser:
-  {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100, "LASERdespecklePeriod": 1}
+  {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
 
   move the motor
   {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isen":1}
@@ -85,6 +93,7 @@
 
 
   // trigger camera at a rate of 20hz
+
   {"task": "/motor_act", "speed0":0, "speed1":0,"speed2":40,"speed3":9000, "isforever":1, "isaccel":1}
   {"task": "/state_set", "isdebug":0}
   {"task": "/state_act", "delay": 100}
@@ -150,7 +159,6 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_ANALOG
 #include "parameters_analog.h"
 #endif
-
 #ifdef IS_DIGITAL
 #include "parameters_digital.h"
 #endif
@@ -162,6 +170,7 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #ifdef IS_PID
 #include "parameters_PID.h"
 #endif
+
 
 #include <ArduinoJson.h>
 #include "parameters_state.h"
@@ -269,12 +278,6 @@ const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 #endif
 
-#ifdef IS_SCANNER
-const char* scanner_act_endpoint = "/scanner_act";
-const char* scanner_set_endpoint = "/scanner_set";
-const char* scanner_get_endpoint = "/scanner_get";
-#endif
-
 #ifdef IS_SLM
 const char* slm_act_endpoint = "/slm_act";
 const char* slm_set_endpoint = "/slm_set";
@@ -363,12 +366,17 @@ void setup()
 #endif
 
 
+#ifdef IS_LASER
+  setup_laser();
+#endif
+
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
   //Setup(dac_channel, clk_div, frequency, scale, phase, invert);
   dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
   dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
 #endif
+
 
 #ifdef IS_ANALOG
   Serial.println("Setting Up analog");
@@ -380,15 +388,6 @@ void setup()
   ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
   ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
   ledcWrite(PWM_CHANNEL_analog_2, 0);
-#endif
-
-#ifdef IS_LASER
-  setup_laser();
-#endif
-
-#ifdef IS_SCANNER
-  // important: Setup after laser!
-  setup_scanner();
 #endif
 
 #ifdef IS_DIGITAL
@@ -419,9 +418,6 @@ void setup()
 #endif
 #ifdef IS_LEDARR
   Serial.println("IS_LEDARR");
-#endif
-#ifdef IS_SCANNER
-  Serial.println("IS_SCANNER");
 #endif
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
@@ -457,11 +453,6 @@ void setup()
   Serial.println(ledarr_act_endpoint);
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
-#endif
-#ifdef IS_SCANNER
-  Serial.println(scanner_act_endpoint);
-  Serial.println(scanner_get_endpoint);
-  Serial.println(scanner_set_endpoint);
 #endif
 
 
@@ -550,11 +541,11 @@ void loop() {
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
   if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-    LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
+    LASER_despeckle(LASER_despeckle_1, 1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-    LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
+    LASER_despeckle(LASER_despeckle_2, 2);
   if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-    LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
+    LASER_despeckle(LASER_despeckle_3, 3);
 #endif
 
 #ifdef IS_PS3
@@ -572,7 +563,7 @@ void loop() {
 
 #ifdef IS_MOTOR
   if (not isstop) {
-    isBusy = true;
+    isactive = true;
     drive_motor_background();
   }
 #endif
@@ -696,19 +687,6 @@ void jsonProcessor(char task[]) {
 
 
   /*
-    Drive scanner
-  */
-#ifdef IS_SCANNER
-  if (strcmp(task, scanner_act_endpoint) == 0)
-    scanner_act_fct();
-  if (strcmp(task, scanner_set_endpoint) == 0)
-    scanner_set_fct();
-  if (strcmp(task, scanner_get_endpoint) == 0)
-    scanner_get_fct();
-#endif
-
-
-  /*
     Read the sensor
   */
 #ifdef IS_READSENSOR
@@ -747,7 +725,7 @@ void jsonProcessor(char task[]) {
 
 void tableProcessor() {
 
-  isBusy = true;
+  isactive = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -788,5 +766,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
-  isBusy = false;
+  isactive = false;
 }
