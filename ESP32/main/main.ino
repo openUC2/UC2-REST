@@ -303,8 +303,8 @@ const char* PID_get_endpoint = "/PID_get";
 void setup()
 {
   /*
-   * SETTING UP DEVICES
-   */
+     SETTING UP DEVICES
+  */
 
 
   // for any timing related puposes..
@@ -342,6 +342,7 @@ void setup()
 #endif
 
 #ifdef IS_PS3
+  clearBlueetoothDevice();
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attach(onAttach);
   Ps3.attachOnConnect(onConnect);
@@ -355,6 +356,7 @@ void setup()
 #endif
 
 #ifdef IS_PS4
+  clearBlueetoothDevice();
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
   PS4.attach(onAttach);
   PS4.begin("01:02:03:04:05:06");
@@ -534,9 +536,9 @@ void loop() {
   }
 #endif
 
-/*
- * continous control during loop
- */
+  /*
+     continous control during loop
+  */
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
 #ifdef IS_LASER
