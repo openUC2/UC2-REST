@@ -254,24 +254,19 @@ class ESP32Client(object):
                 return None
 
         elif self.is_serial:
-            if self.is_connected or isInit:
-
-                try:
-                    payload["task"]
-                except:
-                    payload["task"] = path
-                try:
-                    is_blocking = payload['isblock']
-                except:
-                    is_blocking = True
-                self.writeSerial(payload)
-                #self.__logger.debug(payload)
-                returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
-                return returnmessage
-            else:
-                # nothing is connected
-                return -1
-
+            try:
+                payload["task"]
+            except:
+                payload["task"] = path
+            try:
+                is_blocking = payload['isblock']
+            except:
+                is_blocking = True
+            self.writeSerial(payload)
+            #self.__logger.debug(payload)
+            returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+            return returnmessage
+        
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
@@ -279,7 +274,10 @@ class ESP32Client(object):
             self.serialdevice.flushOutput()
         except Exception as e:
             self.__logger.error(e)
-            del self.serialdevice
+            try:
+                del self.serialdevice
+            except:
+                pass
             self.is_connected=False
             # attempt to reconnect?
             try:
@@ -556,19 +554,16 @@ class ESP32Client(object):
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
-    def set_LEDMatrix(self, LED_ARRAY_PIN=1, LED_N_X=8, LED_N_Y=8, timeout=1):
+
+    def set_LEDMatrix_dimensions(self, Nx=8, Ny=8, timeout=1):
         '''
         set information about pinnumber and number of leds
         '''
         # TOOD: Not implemented yet
         path = '/ledarr_set'
         payload = {
-            "LED_ARRAY_PIN": intensity[0],
-            "LED_N_X": intensity[1],
-            "LED_N_Y": intensity[2],
-            "indexled": indexled,
-            "Nleds": Nleds,
-            "LEDArrMode": "single"
+            "LED_N_X": Nx,
+            "LED_N_Y": Ny
         }
         r = self.post_json(path, payload, timeout=timeout)
         return r

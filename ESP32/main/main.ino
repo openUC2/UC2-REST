@@ -1,118 +1,4 @@
 /*
-
-   Serial protocol looks like so:
-
-   {"task": "/state_get"}
-   returns:
-
-  ++
-  {"identifier_name":"UC2_Feather","identifier_id":"V0.1","identifier_date":"2022-02-04","identifier_author":"BD"}
-  --
-
-  {"task": "/state_set", "isdebug":0}
-  {"task": "/state_get", "active":1}
-
-
-  retrieve sensor value
-  {"task": "/readsensor_act", "readsensorID":0, "N_sensor_avg":100}
-  {"task": "/readsensor_get", "readsensorID":0}
-  {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
-
-  setup PID controller
-  {"task": "/PID_act", "PIDactive":1, "target": 500}
-  {"task": "/PID_act", "PIDactive":1, "Kp":5, "Ki":.1, "Kd":.1, "target": 500, "PID_updaterate":200}
-  {"task": "/readsensor_get", "readsensorID":0}
-  {"task": "/readsensor_set", "readsensorID":0, "readsensorPIN":34, "N_sensor_avg":10}
-
-
-
-  turn on the laser:
-  {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
-
-  move the motor
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isen":1}
-  {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isen":1} // move in the background
-  {"task": "/motor_act", "speed1":1000,"speed2":100,"speed3":5000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1,  "isen":1}
-  {"task": "/motor_act", "isstop":1}
-  {'task': '/motor_set', 'axis': 1, 'currentposition': 1}
-  {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
-  {'task': '/motor_set', 'axis': 1, 'sign': 1} // 1 or -1
-  {'task': '/motor_get', 'axis': 1}
-  {"task": "/motor_act", "speed":30, "pos1":400, "pos2":0, "pos3":0, "isabs":0, "isblock":0, "isen":1}
-
-
-  operate the analog out
-  {"task": "/analog_act", "analogid": 1, "analogval":1000}
-
-  operate the digital out
-  {"task": "/digital_act", "digitalid": 1, "digitalval":1}
-
-  operate the dac (e.g. lightsheet)
-  {"task": "/dac_act", "dac_channel": 1, "frequency":1, "offset":0, "amplitude":0, "clk_div": 1000}
-  amplitude: 0,1,2,3
-
-  # SLM display
-  {"task": "/slm_act","slmMode": "ring", "posX":100, "posY": 100, "radius":100, "color": 10000}
-  {"task": "/slm_act","slmMode": "full", "color": 10000}
-  {"task": "/slm_act","slmMode": "clear"}
-
-  operate ledmatrix
-  // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
-  {"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
-  {"task": "/ledarr_act","LEDArrMode": "full", "red":0, "green": 0, "blue":0}
-  {'red': 193, 'green': 193, 'blue': 193, 'indexled': 27, 'Nleds': 1, 'LEDArrMode': 'single', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'left', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'right', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
-
-  {'task': '/scanner_act', 'scannernFrames': 1, 'scannerMode': 'pattern', 'arraySize': 9, 'i': [0, 16, 32, 48, 64, 80, 96, 112, 128], 'scannerLaserVal': 32000, 'scannerExposure': 500, 'scannerDelay': 500}
-
-  {   "red": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "green": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "blue": [     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     244,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0   ],   "arraySize": 64,   "LEDArrMode": "array",   "task": "/ledarr_act"   }
-
-  // attempt to have fast triggering
-
-  We want to send a table of tasks:
-
-  move motor, wait, take picture cam 1/2, wait, move motor..
-  {
-  "task": "multitable",
-  "task_n": 9,
-  "repeats_n": 5,
-  "0": {"task": "/motor_act", "speed":1000, "pos1":4000, "pos2":4000, "pos3":4000, "isabs":1, "isblock":1, "isen":1},
-  "1": {"task": "/state_act", "delay": 100},
-  "2": {"task": "/digital_act", "digitalid": 1, "digitalval":1},
-  "3": {"task": "/digital_act", "digitalid": 2, "digitalval":1},
-  "4": {"task": "/digital_act", "digitalid": 2, "digitalval":0},
-  "5": {"task": "/digital_act", "digitalid": 1, "digitalval":0},
-  "6": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100},
-  "7": {"task": "/state_act", "delay": 100},
-  "8": {"task": "/laser_act", "LASERid":1, "LASERval":10000, "LASERdespeckle":100}
-  }
-
-
-
-  // trigger camera at a rate of 20hz
-
-  {"task": "/motor_act", "speed0":0, "speed1":0,"speed2":40,"speed3":9000, "isforever":1, "isaccel":1}
-  {"task": "/state_set", "isdebug":0}
-  {"task": "/state_act", "delay": 100}
-  {
-  "task": "multitable",
-  "task_n": 2,
-  "repeats_n": 200,
-  "0": {"task": "/digital_act", "digitalid": 1, "digitalval":-1},
-  "1": {"task": "/state_act", "delay": 50}
-  }
-  {"task": "/motor_act", "isstop":1}
-  {"task": "/motor_act", "isenable":0}
-  {"task": "/s-tate_set", "isdebug":1}
-
-*/
-
-
-
-/*
     Pindefintion per Setup
 */
 
@@ -173,12 +59,21 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "parameters_PID.h"
 #endif
 
-
 #include <ArduinoJson.h>
 #include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
 #include "parameters_dac.h"
 uint32_t frequency = 1000;
+#endif
+
+#ifdef IS_LEDARR
+#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include "parameters_ledarr.h"
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
+                              NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
+                              NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
+                              NEO_GRB            + NEO_KHZ800);;
 #endif
 
 //Where the JSON for the current instruction lives
@@ -189,6 +84,7 @@ uint32_t frequency = 1000;
 DynamicJsonDocument jsonDocument(256);
 //StaticJsonDocument<256> jsonDocument;
 #else
+
 #ifdef IS_SLM
 DynamicJsonDocument jsonDocument(32784);
 #else
@@ -336,6 +232,11 @@ void setup()
 #endif
 
 #ifdef IS_LEDARR
+  Serial.println("IS_LEDARR");
+  matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
+                              NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
+                              NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
+                              NEO_GRB            + NEO_KHZ800);
   setup_matrix();
 #endif
 
@@ -420,9 +321,7 @@ void setup()
 #ifdef IS_SLM
   Serial.println("IS_SLM");
 #endif
-#ifdef IS_LEDARR
-  Serial.println("IS_LEDARR");
-#endif
+
 #ifdef IS_DAC
   Serial.println(dac_act_endpoint);
   Serial.println(dac_get_endpoint);
