@@ -11,7 +11,7 @@
 
 #define IS_ESP32
 #define IS_SERIAL
-//#define IS_LASER
+#define IS_LASER
 #define IS_MOTOR
 //#define IS_DIGITAL
 //#define IS_DAC
@@ -19,7 +19,7 @@
 //#define IS_WIFI
 #define IS_PS4 // ESP32-only
 //#define IS_ANALOG// ESP32-only
-//#define IS_LEDARR
+#define IS_LEDARR
 
 // analog out (e.g. Lenses)
 int analog_PIN_1 = 0;
