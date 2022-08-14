@@ -508,11 +508,13 @@ class ESP32Client(object):
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
-    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), Nleds=8*8, timeout=1):
+    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), Nleds=None, timeout=1):
         '''
         update only a single LED with a colour:  indexled=0, intensity=(255,255,255)
         '''
         path = '/ledarr_act'
+        if Nleds is None:
+            Nleds = 64
         payload = {
             "red": intensity[0],
             "green": intensity[1],
