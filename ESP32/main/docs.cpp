@@ -60,11 +60,13 @@
   // "pattern", "individual", "full", "off", "left", "right", "top", "bottom",
   {"task": "/ledarr_act","LEDArrMode": "full", "red":100, "green": 100, "blue":100}
   {"task": "/ledarr_act","LEDArrMode": "full", "red":0, "green": 0, "blue":0}
-  {'red': 193, 'green': 193, 'blue': 193, 'indexled': 27, 'Nleds': 1, 'LEDArrMode': 'single', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'left', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'right', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'top', 'task': '/ledarr_act'}
-  {'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'bottom', 'task': '/ledarr_act'}
+  {'task': '/ledarr_act', 'red': 193, 'green': 193, 'blue': 193, 'NLeds':16, 'LEDArrMode': 'top'}
+  {'task': '/ledarr_act', 'red': 193, 'green': 193, 'blue': 193, 'NLeds':16, 'LEDArrMode': 'bottom'}
+  {'task': '/ledarr_act', 'red': 193, 'green': 193, 'blue': 193, 'NLeds':16, 'LEDArrMode': 'left'}
+  {'task': '/ledarr_act', 'red': 193, 'green': 193, 'blue': 193, 'NLeds':16, 'LEDArrMode': 'right'}
+  {'task': '/ledarr_act', 'red': 193, 'green': 193, 'blue': 193, 'LEDArrMode': 'full'}
+
+
 
   {'task': '/scanner_act', 'scannernFrames': 1, 'scannerMode': 'pattern', 'arraySize': 9, 'i': [0, 16, 32, 48, 64, 80, 96, 112, 128], 'scannerLaserVal': 32000, 'scannerExposure': 500, 'scannerDelay': 500}
 
@@ -109,4 +111,3 @@
   {"task": "/s-tate_set", "isdebug":1}
 
 */
-

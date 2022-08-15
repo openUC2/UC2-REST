@@ -29,8 +29,7 @@ except:
     IS_IMSWITCH = False
 
 
-
-
+    
 class galvo(object):
     def __init__(self, channel=1, frequency=1000, offset=0, amplitude=1/2, clk_div=0):
         '''
@@ -306,10 +305,12 @@ class ESP32Client(object):
                     rmessage =  self.serialdevice.readline().decode()
                     #self.__logger.debug(rmessage)
                     returnmessage += rmessage
-                    if rmessage.find("--")==0 or (time.time()-_time0)>timeout:
+                    if rmessage.find("--")==0:
                         break
                 except:
                     pass
+                if (time.time()-_time0)>timeout:
+                    break
             # casting to dict
             try:
                 returnmessage = json.loads(returnmessage.split("--")[0].split("++")[-1])
@@ -465,6 +466,10 @@ class ESP32Client(object):
         Send an LED array pattern e.g. an RGB Matrix: led_pattern=np.zeros((3,8,8))
         '''
         path = '/ledarr_act'
+        # Make sure LED strip is filled with matrix information
+        if len(led_pattern.shape)<3:
+            led_pattern = np.reshape(led_pattern, (led_pattern.shape[0], int(np.sqrt(led_pattern.shape[1])), int(np.sqrt(led_pattern.shape[1]))))
+        led_pattern[:,1::2, :] = led_pattern[:,1::2, ::-1]
         payload = {
             "red": led_pattern[0,:].flatten().tolist(),
             "green": led_pattern[1,:].flatten().tolist(),
@@ -482,9 +487,9 @@ class ESP32Client(object):
         path = '/ledarr_act'
         payload = {
             "task":path,
-            "red": intensity[0],
-            "green": intensity[1],
-            "blue": intensity[2],
+            "red": int(intensity[0]),
+            "green": int(intensity[1]),
+            "blue": int(intensity[2]),
             "LEDArrMode": "full"
         }
         self.__logger.debug("Setting LED Pattern (full): "+ str(intensity))
@@ -497,35 +502,32 @@ class ESP32Client(object):
         '''
         path = '/ledarr_act'
         payload = {
-            "red": intensity[0],
-            "green": intensity[1],
-            "blue": intensity[2],
+            "red": int(intensity[0]),
+            "green": int(intensity[1]),
+            "blue": int(intensity[2]),
             "LEDArrMode": pattern
         }
         self.__logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
-    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), Nleds=None, timeout=1):
+    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), timeout=1):
         '''
         update only a single LED with a colour:  indexled=0, intensity=(255,255,255)
         '''
         path = '/ledarr_act'
-        if Nleds is None:
-            Nleds = 64
         payload = {
-            "red": intensity[0],
-            "green": intensity[1],
-            "blue": intensity[2],
-            "indexled": indexled,
-            "Nleds": Nleds,
+            "red": int(intensity[0]),
+            "green": int(intensity[1]),
+            "blue": int(intensity[2]),
+            "indexled": int(indexled),
             "LEDArrMode": "single"
         }
         self.__logger.debug("Setting LED PAttern: "+str(indexled)+" - "+str(intensity))
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
-    def send_LEDMatrix_multi(self, indexled=(0), intensity=((255,255,255)), Nleds=8*8, timeout=1):
+    def send_LEDMatrix_multi(self, indexled=(0), intensity=((255,255,255)), timeout=1):
         '''
         update a list of individual LEDs with a colour:  led_pattern=(1,2,6,11), intensity=((255,255,255),(125,122,1), ..)
         '''
@@ -535,7 +537,6 @@ class ESP32Client(object):
             "green": intensity[1],
             "blue": intensity[2],
             "indexled": indexled,
-            "Nleds": Nleds,
             "LEDArrMode": "multi"
         }
         self.__logger.debug("Setting LED PAttern: "+str(indexled)+" - "+str(intensity))
@@ -554,19 +555,6 @@ class ESP32Client(object):
         r = self.post_json(path, payload, timeout=timeout)
         return r
 
-
-    def set_LEDMatrix_dimensions(self, Nx=8, Ny=8, timeout=1):
-        '''
-        set information about pinnumber and number of leds
-        '''
-        # TOOD: Not implemented yet
-        path = '/ledarr_set'
-        payload = {
-            "LED_N_X": Nx,
-            "LED_N_Y": Ny
-        }
-        r = self.post_json(path, payload, timeout=timeout)
-        return r
 
 
     '''

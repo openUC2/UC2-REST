@@ -66,15 +66,6 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 uint32_t frequency = 1000;
 #endif
 
-#ifdef IS_LEDARR
-#include <Adafruit_NeoPixel.h>
-#include <Adafruit_NeoMatrix.h>
-#include "parameters_ledarr.h"
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
-                              NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
-                              NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
-                              NEO_GRB            + NEO_KHZ800);;
-#endif
 
 //Where the JSON for the current instruction lives
 #ifdef IS_ARDUINO
@@ -233,10 +224,6 @@ void setup()
 
 #ifdef IS_LEDARR
   Serial.println("IS_LEDARR");
-  matrix = Adafruit_NeoMatrix(LED_N_X, LED_N_Y, LED_ARRAY_PIN,
-                              NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
-                              NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
-                              NEO_GRB            + NEO_KHZ800);
   setup_matrix();
 #endif
 
