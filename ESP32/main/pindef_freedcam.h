@@ -47,11 +47,11 @@ int dac_fake_1 = 0; // RESET-ABORT just toggles between 1 and 0
 int dac_fake_2 = 0; // Coolant
 
 // ledarray
-int LED_ARRAY_PIN = FEED_HOLD_PIN; //27//CYCLE_START_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
+int LED_ARRAY_PIN = 27; //FEED_HOLD_PIN; //27//CYCLE_START_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
 
 // digital out (e.g. camera trigger)
 int digital_PIN_1 = 0; //  Cycle Start/Resume
 int digital_PIN_2 = 0; //not used/reserved
 int digital_PIN_3 = 0; //not used/reserved
 
-const char* identifier_setup = "pindef_polarizationsetup";
+const char* identifier_setup = "pindef_freedcam";
