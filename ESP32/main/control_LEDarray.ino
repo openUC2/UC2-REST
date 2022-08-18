@@ -135,7 +135,10 @@ void setup_matrix() {
   // LED Matrix
   matrix.begin();
   matrix.setBrightness(255);
+  for(int iLed=0; iLed<LED_COUNT;iLed++){
+  matrix.setPixelColor(iLed, matrix.Color(255,255,255));         //  Set pixel's color (in RAM)
   matrix.show();
+  }
 }
 
 void set_all(int R, int G, int B)
