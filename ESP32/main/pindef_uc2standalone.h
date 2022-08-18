@@ -16,7 +16,7 @@
 //#define IS_DIGITAL
 #define IS_DAC
 //#define IS_DAC_FAKE
-//#define IS_WIFI
+#define IS_WIFI
 #define IS_PS4 // ESP32-only
 //#define IS_ANALOG// ESP32-only
 #define IS_LEDARR
@@ -27,7 +27,7 @@ int analog_PIN_2 = 0;
 int analog_PIN_3 = 0;
 
 // Laser PWM pins for CNC Shield
-int LASER_PIN_1 = 34; // was SPINDLEPWMPIN; // Spin Dir
+int LASER_PIN_1 = 4; //ATTENTION 35 is input only!!  // was SPINDLEPWMPIN; // Spin Dir
 int LASER_PIN_2 = 32; // was SPINDLE_ENABLE_PIN;//  Spin En
 int LASER_PIN_3 = 0;// 
 
@@ -36,12 +36,12 @@ int LIM_Y = 4;
 int LIM_Z = 15;
 
 // Stepper Motor pins
-int STEP_A = 22;
+int STEP_A = 0; // ATTENTION I2C SCL: 22;
 int STEP_X = 2;
 int STEP_Y = 27;
 int STEP_Z = 12;
-int DIR_A = 21;
-int DIR_X = 31;
+int DIR_A = 0; // ATTENTION I2C SDA 21;
+int DIR_X = 33;
 int DIR_Y = 16;
 int DIR_Z = 14;
 int ENABLE = 13;
@@ -51,7 +51,7 @@ int dac_fake_1 = 0; // RESET-ABORT just toggles between 1 and 0
 int dac_fake_2 = 0; // Coolant
 
 // ledarray
-int LED_ARRAY_PIN = 35; //CYCLE_START_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
+int LED_ARRAY_PIN = 17; //35 -> ATTENTION! INPUT ONLY!!!! //CYCLE_START_PIN; // was FEED_HOLD_PIN; // FEED HOLD 
 
 // digital out (e.g. camera trigger)
 int digital_PIN_1 = 0; //  Cycle Start/Resume

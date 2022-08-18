@@ -26,7 +26,8 @@
 //#include "pindef_confocal.h"
 //#include "pindef_oct_eda.h"
 //#include "pindef_polarizationsetup.h"
-#include "pindef_freedcam.h"
+//#include "pindef_freedcam.h"
+#include "pindef_uc2standalone.h"
 
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
@@ -37,11 +38,12 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 */
 
 // For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 #ifdef IS_WIFI
-#include <WiFi.h>
-#include <WebServer.h>
 #include "parameters_wifi.h"
+WiFiManager wm;
 #endif
 
 #ifdef IS_ANALOG
@@ -195,6 +197,8 @@ void setup()
      SETTING UP DEVICES
   */
 
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector 
+
 
   // for any timing related puposes..
   startMillis = millis();
@@ -208,12 +212,12 @@ void setup()
 
   // connect to wifi if necessary
 #ifdef IS_WIFI
-  connectToWiFi();
+  // TODO: Should do that in background
+  bool isResetWifiSettings = false;
+  autoconnectWifi(isResetWifiSettings);
   setup_routing();
   init_Spiffs();
 #endif
-
-
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);

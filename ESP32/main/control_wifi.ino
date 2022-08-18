@@ -27,46 +27,84 @@ void init_Spiffs()
 }
 
 
+#ifdef IS_WIFI
+void initWifiAP(const char *ssid) {
+  Serial.print("Network SSID (AP): ");
+  Serial.println(ssid);
 
-void connectToWiFi() {
+  WiFi.softAP(ssid);
+  Serial.print("AP IP address: ");
+  Serial.println(WiFi.softAPIP());
+}
+
+
+
+void joinWifi(const char *ssid, const char *password) {
   Serial.print("Connecting to ");
-  Serial.println(mSSID);
+  Serial.println(ssid);
 
-  WiFi.begin(mSSID, mPWD);
+  WiFi.begin(ssid, password);
 
+  int nConnectTrials = 0;
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
-    delay(100);
+    delay(500);
+    nConnectTrials += 1;
+    if (nConnectTrials > 10)
+      ESP.restart();
     // we can even make the ESP32 to sleep
   }
 
   Serial.print("Connected. IP: ");
   Serial.println(WiFi.localIP());
 }
-/*
-void connectToWiFi() {
-  Serial.print("Connecting to ");
-  Serial.println(mSSID);
-  WiFi.mode(WIFI_STA);
-  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
-  WiFi.setHostname(hostname.c_str()); //define hostname
-  WiFi.begin(mSSID, mPWD);
 
-  int notConnectedCounter = 0;
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(100);
-    Serial.println("Wifi connecting...");
-    notConnectedCounter++;
-    if (notConnectedCounter > 50) { // Reset board if not connected after 5s
-      Serial.println("Resetting due to Wifi not connecting...");
-      ESP.restart();
-    }
+
+void autoconnectWifi(boolean isResetWifiSettings) {
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+  // it is a good practice to make sure your code sets wifi mode how you want it.
+
+  // reset settings - wipe stored credentials for testing
+  // these are stored by the esp library
+  if (isResetWifiSettings) {
+    Serial.println("First run => resetting Wifi Settings");
+    wm.resetSettings();
   }
+  wm.setHostname(hostname);
+  //wm.setConfigPortalBlocking(false);
+  wm.setConfigPortalTimeout(90); // auto close configportal after n seconds
+  wm.setConnectTimeout(10);
+
+  // Automatically connect using saved credentials,
+  // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
+  // if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
+  // then goes into a blocking loop awaiting configuration and will return success result
+  bool res;
+  // res = wm.autoConnect(); // auto generated AP name from chipid
+  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
+  res = wm.autoConnect(mSSIDAP); // password protected ap
+
+
+  if (!res) {
+    Serial.println("Failed to connect");
+    initWifiAP(mSSIDAP);
+  }
+  else {
+    //if you get here you have connected to the WiFi
+    Serial.println("connected...");
+  }
+
   Serial.print("Connected. IP: ");
   Serial.println(WiFi.localIP());
+
 }
-*/
+
+
+
+#endif
+
+
 
 //https://www.gabrielcsapo.com/arduino-web-server-esp-32/
 bool loadFromSPIFFS(String path) {
@@ -174,6 +212,39 @@ void setup_routing() {
   server.on("/screen.css", handlescreen);
   server.on("/swagger-ui.min.js", handleswaggerui);
   */
+
+  Serial.println("Spinning up OTA server");
+  server.on("/ota.html", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/html", otaindex);
+  });
+  /*handling uploading firmware file */
+  server.on("/update", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+    ESP.restart();
+  }, []() {
+    HTTPUpload& upload = server.upload();
+    if (upload.status == UPLOAD_FILE_START) {
+      Serial.printf("Update: %s\n", upload.filename.c_str());
+      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+      /* flashing firmware to ESP*/
+      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_END) {
+      if (Update.end(true)) { //true to set the size to the current progress
+        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+      } else {
+        Update.printError(Serial);
+      }
+    }
+  });
+  Serial.println("Starting OTA server on port: '82'");
+  Serial.println("Visit http://IPADDRESS_SCOPE:82");
 
 
 #ifdef IS_MOTOR
