@@ -42,8 +42,11 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "soc/rtc_cntl_reg.h"
 
 #ifdef IS_WIFI
-#include "parameters_wifi.h"
+#include <WiFi.h>
+#include <WebServer.h>
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 WiFiManager wm;
+#include "parameters_wifi.h"
 #endif
 
 #ifdef IS_ANALOG
@@ -212,7 +215,6 @@ void setup()
 
   // connect to wifi if necessary
 #ifdef IS_WIFI
-  // TODO: Should do that in background
   bool isResetWifiSettings = false;
   autoconnectWifi(isResetWifiSettings);
   setup_routing();
@@ -253,10 +255,10 @@ void setup()
   clearBlueetoothDevice();
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
   PS4.attach(onAttach);
-  PS4.begin("01:02:03:04:05:06");
+  PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
   PS4.attachOnConnect(onConnect);
   PS4.attachOnDisconnect(onDisConnect);
-  const char*  PS4_MACADDESS = "01:02:03:04:05:06";
+  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println(PS4_MACADDESS);
   Serial.println("PS4 controler is set up.");
 #endif
