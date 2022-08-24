@@ -42,11 +42,8 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "soc/rtc_cntl_reg.h"
 
 #ifdef IS_WIFI
-#include <WiFi.h>
-#include <WebServer.h>
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-WiFiManager wm;
 #include "parameters_wifi.h"
+WiFiManager wm;
 #endif
 
 #ifdef IS_ANALOG
@@ -112,7 +109,6 @@ DAC_Module *dac = new DAC_Module();
    Register devices
 */
 #ifdef IS_MOTOR
-#include <AccelStepper.h>
 #include "parameters_motor.h"
 AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);

@@ -1,0 +1,24 @@
+{
+  "name": "DAC_Module",
+  "keywords": "json, rest, http, web",
+  "description": "",
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "version": "1",
+  "authors": {
+    "name": "",
+    "url": ""
+  },
+  "exclude": [
+    ".github",
+    "extras"
+  ],
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "libArchive": false
+  }
+}

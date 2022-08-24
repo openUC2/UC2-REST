@@ -1,4 +1,5 @@
 #ifdef IS_ESP32
+#include <AccelStepper.h>
 #include "esp_task_wdt.h"
 #endif 
 
