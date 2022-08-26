@@ -2,7 +2,6 @@
 /*
  * Important: Don't use any pins that are not "allowed" on the ESP (also not twice assigment!!)
  */
-#define IS_ARDUINO
 #define IS_SERIAL
 #define IS_LASER
 #define IS_MOTOR

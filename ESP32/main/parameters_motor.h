@@ -1,7 +1,5 @@
-#ifdef IS_ESP32
 #include <AccelStepper.h>
 #include "esp_task_wdt.h"
-#endif 
 
 // for stepper.h
 #define MOTOR_STEPS 200

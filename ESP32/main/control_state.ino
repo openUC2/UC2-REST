@@ -1,24 +1,3 @@
-#ifdef ARDUINO_SERIAL
-#define IS_SERIAL
-#define IS_ARDUINO
-#endif
-
-#ifdef ESP32_SERIAL
-#define IS_SERIAL
-#define IS_ESP32
-#endif
-
-#ifdef ESP32_WIFI
-#define IS_WIFI
-#define IS_ESP32
-#endif
-
-#ifdef ESP32_SERIAL_WIFI
-#define IS_WIFI
-#define IS_SERIAL
-#define IS_ESP32
-#endif
-
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"

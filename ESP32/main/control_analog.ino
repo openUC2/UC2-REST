@@ -55,34 +55,32 @@ void analog_set_fct() {
       analog_PIN_1 = analogpin;
       pinMode(analog_PIN_1, OUTPUT);
       digitalWrite(analog_PIN_1, LOW);
-#ifdef IS_ESP32
+
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
       ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
       ledcWrite(PWM_CHANNEL_analog_1, 0);
-#endif
+
     }
     else if (analogid == 2) {
       analog_PIN_2 = analogpin;
       pinMode(analog_PIN_2, OUTPUT);
       digitalWrite(analog_PIN_2, LOW);
-#ifdef IS_ESP32
+
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
       ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
       ledcWrite(PWM_CHANNEL_analog_2, 0);
-#endif
     }
     else if (analogid == 3) {
       analog_PIN_3 = analogpin;
       pinMode(analog_PIN_3, OUTPUT);
       digitalWrite(analog_PIN_3, LOW);
-#ifdef IS_ESP32
+
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_3, pwm_frequency, pwm_resolution);
       ledcAttachPin(analog_PIN_3, PWM_CHANNEL_analog_3);
       ledcWrite(PWM_CHANNEL_analog_3, 0);
-#endif
 
 }
 

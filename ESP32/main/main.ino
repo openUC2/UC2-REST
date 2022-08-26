@@ -70,19 +70,10 @@ uint32_t frequency = 1000;
 
 
 //Where the JSON for the current instruction lives
-#ifdef IS_ARDUINO
-// shhould not be more than 300 !!!
-//StaticJsonDocument<300> jsonDocument;
-//char* content = malloc(300);
-DynamicJsonDocument jsonDocument(256);
-//StaticJsonDocument<256> jsonDocument;
-#else
-
 #ifdef IS_SLM
 DynamicJsonDocument jsonDocument(32784);
 #else
 DynamicJsonDocument jsonDocument(4096);
-#endif
 #endif
 
 #ifdef IS_WIFI
@@ -295,12 +286,6 @@ void setup()
 #ifdef IS_WIFI
   Serial.println("IS_WIFI");
 #endif
-#ifdef IS_ARDUINO
-  Serial.println("IS_ARDUINO");
-#endif
-#ifdef IS_ESP32
-  Serial.println("IS_ESP32");
-#endif
 #ifdef IS_PS3
   Serial.println("IS_PS3");
 #endif
@@ -397,14 +382,11 @@ void loop() {
     Serial.flush();
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
-#ifdef IS_ARDUINO
-    const char* task = jsonDocument["task"].as<char*>();
-    //char* task = jsonDocument["task"];
-#else
-    String task_s = jsonDocument["task"];
-    char task[50];
-    task_s.toCharArray(task, 256);
-#endif
+
+  String task_s = jsonDocument["task"];
+  char task[50];
+  task_s.toCharArray(task, 256);
+
 
     //jsonDocument.garbageCollect(); // memory leak?
     /*if (task == "null") return;*/

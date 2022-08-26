@@ -9,7 +9,7 @@
  
 #include "pindef_WEMOS_d1_r32.h"
 
-#define IS_ESP32
+
 #define IS_SERIAL
 #define IS_LASER
 #define IS_MOTOR

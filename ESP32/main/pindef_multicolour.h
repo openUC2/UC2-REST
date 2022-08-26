@@ -3,7 +3,7 @@
  * Important: Don't use any pins that are not "allowed" on the ESP (also not twice assigment!!)
  */
 // load modules
-#define IS_ESP32
+
 #define IS_SERIAL
 //#define IS_WIFI
 #define IS_PS3 // ESP32-only
