@@ -59,4 +59,4 @@ jobs:
       # in the build matrix.
       - name: Compile Sketch
         #run: arduino-cli compile --fqbn ${{ matrix.fqbn }} ./blink
-        run arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,CPUFreq=80 ./ESP32/main/main.ino  --output-dir ./ESP32/build/ --libraries ./ESP32/libraries/
+        run: arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,CPUFreq=80 ./ESP32/main/main.ino  --output-dir ./ESP32/build/ --libraries ./ESP32/libraries/
