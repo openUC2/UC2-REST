@@ -10,7 +10,7 @@
 
 
 
-#define IS_LASER
+
 
 bool IS_PSCONTROLER_ACTIVE = 0;
 

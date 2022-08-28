@@ -6,7 +6,7 @@
 
 //#define IS_WIFI
 #define IS_SLM
-#define IS_LEDARR
+
 
 int TFT_RST = 4;
 int TFT_DC = 2; //A0

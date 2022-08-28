@@ -26,11 +26,10 @@ void state_act_fct() {
   if (jsonDocument.containsKey("isBusy")) {
     isBusy = jsonDocument["isBusy"];
   }
-#ifdef IS_PS3 or IS_PS4
+
   if (jsonDocument.containsKey("pscontroller")) {
     IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
   }
-#endif
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
@@ -52,14 +51,11 @@ void state_get_fct() {
     jsonDocument.clear();
     jsonDocument["isBusy"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
   }
-#ifdef IS_PS3 or IS_PS4
+
   else if (jsonDocument.containsKey("pscontroller")) {
     jsonDocument.clear();
-#ifdef IS_PS3 or IS_PS4
     jsonDocument["pscontroller"] = IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
-#endif
   }
-#endif
   else {
     jsonDocument.clear();
     jsonDocument["identifier_name"] = identifier_name;

@@ -2,11 +2,11 @@
  * Important: Don't use any pins that are not "allowed" on the ESP (also not twice assigment!!)
  */
 
-//#define IS_LASER
-#define IS_MOTOR
+//
+
 //#define IS_DAC
 //#define IS_WIFI
-//#define IS_PS3 // ESP32-only
+// // ESP32-only
 //#define IS_ANALOG// ESP32-only
 
 // analog out (e.g. Lenses)

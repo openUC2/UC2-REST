@@ -61,6 +61,10 @@ WiFiManager wm;
 #include "parameters_PID.h"
 #endif
 
+#include <Ps3Controller.h>
+#include <PS4Controller.h>
+
+
 #include <ArduinoJson.h>
 #include "parameters_state.h"
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
@@ -84,36 +88,26 @@ char output[1000];
 // ensure motors switch off when PS3 controller is operating them
 bool override_overheating = false;
 
-
 #ifdef IS_DAC
 DAC_Module *dac = new DAC_Module();
 #endif
 
-#ifdef IS_PS3
-#include <Ps3Controller.h>
-#endif
-
-#ifdef IS_PS4
-#include <PS4Controller.h>
-#endif
 /*
    Register devices
 */
-#ifdef IS_MOTOR
+
 #include "parameters_motor.h"
 AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
 AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
 AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
 AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
-#endif
+
 
 #ifdef IS_SLM
 #include "parameters_slm.h"
 #endif
 
-#ifdef IS_LASER
 #include "parameters_laser.h"
-#endif
 
 /*
    Register functions
@@ -123,17 +117,13 @@ const char* state_act_endpoint = "/state_act";
 const char* state_set_endpoint = "/state_set";
 const char* state_get_endpoint = "/state_get";
 
-#ifdef IS_LASER
 const char* laser_act_endpoint = "/laser_act";
 const char* laser_set_endpoint = "/laser_set";
 const char* laser_get_endpoint = "/laser_get";
-#endif
 
-#ifdef IS_MOTOR
 const char* motor_act_endpoint = "/motor_act";
 const char* motor_set_endpoint = "/motor_set";
 const char* motor_get_endpoint = "/motor_get";
-#endif
 
 #ifdef IS_DAC
 const char* dac_act_endpoint = "/dac_act";
@@ -153,11 +143,9 @@ const char* digital_set_endpoint = "/digital_set";
 const char* digital_get_endpoint = "/digital_get";
 #endif
 
-#ifdef IS_LEDARR
 const char* ledarr_act_endpoint = "/ledarr_act";
 const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
-#endif
 
 #ifdef IS_SLM
 const char* slm_act_endpoint = "/slm_act";
@@ -215,16 +203,12 @@ void setup()
   setup_slm();
 #endif
 
-#ifdef IS_LEDARR
-  Serial.println("IS_LEDARR");
-  setup_matrix();
-#endif
+Serial.println("IS_LEDARR");
+setup_matrix();
 
-#ifdef IS_MOTOR
   setup_motor();
-#endif
 
-#ifdef IS_PS3
+
   clearBlueetoothDevice();
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attach(onAttach);
@@ -236,10 +220,6 @@ void setup()
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
-#endif
-
-#ifdef IS_PS4
-  clearBlueetoothDevice();
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
   PS4.attach(onAttach);
   PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
@@ -248,12 +228,9 @@ void setup()
   const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println(PS4_MACADDESS);
   Serial.println("PS4 controler is set up.");
-#endif
 
-
-#ifdef IS_LASER
   setup_laser();
-#endif
+
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
@@ -283,12 +260,6 @@ void setup()
 #ifdef IS_WIFI
   Serial.println("IS_WIFI");
 #endif
-#ifdef IS_PS3
-  Serial.println("IS_PS3");
-#endif
-#ifdef IS_PS4
-  Serial.println("IS_PS4");
-#endif
 #ifdef IS_SLM
   Serial.println("IS_SLM");
 #endif
@@ -298,16 +269,13 @@ void setup()
   Serial.println(dac_get_endpoint);
   Serial.println(dac_set_endpoint);
 #endif
-#ifdef IS_MOTOR
   Serial.println(motor_act_endpoint);
   Serial.println(motor_get_endpoint);
   Serial.println(motor_set_endpoint);
-#endif
-#ifdef IS_LASER
+
   Serial.println(laser_act_endpoint);
   Serial.println(laser_get_endpoint);
   Serial.println(laser_set_endpoint);
-#endif
 #ifdef IS_ANALOG
   Serial.println(analog_act_endpoint);
   Serial.println(analog_get_endpoint);
@@ -323,11 +291,11 @@ void setup()
   Serial.println(digital_get_endpoint);
   Serial.println(digital_set_endpoint);
 #endif
-#ifdef IS_LEDARR
+
   Serial.println(ledarr_act_endpoint);
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
-#endif
+
 
 
 #ifdef IS_DAC_FAKE
@@ -410,34 +378,29 @@ void loop() {
   */
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
-#ifdef IS_LASER
   if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
     LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
     LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
   if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
     LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
-#endif
 
-#ifdef IS_PS3
+
   control_PS3(); // if controller is operating motors, overheating protection is enabled
-#endif
-
-#ifdef IS_PS4
   control_PS4();
-#endif
 
 #ifdef IS_WIFI
   server.handleClient();
 #endif
 
-
-#ifdef IS_MOTOR
+  /*
+     continous control during loop
+  */
   if (not isstop) {
     isactive = true;
     drive_motor_background();
   }
-#endif
+
 
 #ifdef IS_PID
   if (PID_active and (currentMillis - startMillis >= PID_updaterate)) {
@@ -465,7 +428,6 @@ void jsonProcessor(char task[]) {
   /*
     Drive Motors
   */
-#ifdef IS_MOTOR
   if (strcmp(task, motor_act_endpoint) == 0) {
     motor_act_fct();
   }
@@ -475,7 +437,6 @@ void jsonProcessor(char task[]) {
   if (strcmp(task, motor_get_endpoint) == 0) {
     motor_get_fct();
   }
-#endif
 
 
   /*
@@ -508,15 +469,12 @@ void jsonProcessor(char task[]) {
   /*
     Drive Laser
   */
-#ifdef IS_LASER
   if (strcmp(task, laser_act_endpoint) == 0)
     LASER_act_fct();
   if (strcmp(task, laser_set_endpoint) == 0)
     LASER_get_fct();
   if (strcmp(task, laser_get_endpoint) == 0)
     LASER_set_fct();
-#endif
-
 
   /*
     Drive analog
@@ -547,14 +505,13 @@ void jsonProcessor(char task[]) {
   /*
     Drive LED Matrix
   */
-#ifdef IS_LEDARR
+
   if (strcmp(task, ledarr_act_endpoint) == 0)
     ledarr_act_fct();
   if (strcmp(task, ledarr_set_endpoint) == 0)
     ledarr_set_fct();
   if (strcmp(task, ledarr_get_endpoint) == 0)
     ledarr_get_fct();
-#endif
 
 
   /*

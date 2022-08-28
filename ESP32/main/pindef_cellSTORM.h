@@ -5,10 +5,10 @@
 
 
 //#define IS_WIFI
-#define IS_PS3 // ESP32-only
+ // ESP32-only
 #define IS_ANALOG// ESP32-only
-#define IS_LASER
-#define IS_MOTOR
+
+
 //#define IS_DAC
 
 

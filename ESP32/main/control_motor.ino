@@ -1,7 +1,3 @@
-#ifdef IS_MOTOR
-
-
-
 // Custom function accessible by the API
 void motor_act_fct() {
   if (DEBUG) Serial.println("motor_act_fct");
@@ -134,11 +130,9 @@ void motor_act_fct() {
     return;
   }
 
-  #ifdef IS_PS3 or IS_PS4
   if(IS_PSCONTROLER_ACTIVE)
-    IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
-  #endif
-  
+  IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
+
   // prepare motor to run
   setEnableMotor(true);
   stepper_A.setSpeed(mspeed0);
@@ -533,4 +527,4 @@ void motor_set_fct_http() {
   server.send(200, "application/json", output);
 }
 #endif
-#endif
+

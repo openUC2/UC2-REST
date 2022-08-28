@@ -3,15 +3,15 @@
  */
 
 
-//#define IS_LASER
-#define IS_MOTOR
+//
+
 #define IS_DIGITAL
 //#define IS_DAC
 #define IS_DAC_FAKE
 //#define IS_WIFI
-#define IS_PS4 // ESP32-only
+ // ESP32-only
 //#define IS_ANALOG// ESP32-only
-#define IS_LEDARR
+
 #define IS_READSENSOR
 #define IS_PID
 

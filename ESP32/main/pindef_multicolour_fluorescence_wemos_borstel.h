@@ -3,18 +3,13 @@
  */
 
 #include "pindef_WEMOS_d1_r32.h"
-
-
-
-#define IS_LASER
-#define IS_MOTOR
 //#define IS_DIGITAL
 //#define IS_DAC
 //#define IS_DAC_FAKE
 //#define IS_WIFI
-#define IS_PS4 //IS_PS3 // ESP32-only
+
 //#define IS_ANALOG// ESP32-only
-#define IS_LEDARR
+
 
 // analog out (e.g. Lenses)
 int analog_PIN_1 = 0;

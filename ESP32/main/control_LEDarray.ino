@@ -1,5 +1,3 @@
-#ifdef IS_LEDARR
-
 #include "parameters_ledarr.h"
 
 // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
@@ -231,5 +229,4 @@ void ledarr_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 #endif

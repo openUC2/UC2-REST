@@ -253,12 +253,10 @@ void setup_routing() {
   */
 
 
-#ifdef IS_MOTOR
   // POST
   server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
   server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
   server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
-#endif
 
 #ifdef IS_DAC
   server.on(dac_act_endpoint, HTTP_POST, dac_act_fct_http);
@@ -266,11 +264,9 @@ void setup_routing() {
   server.on(dac_set_endpoint, HTTP_POST, dac_set_fct_http);
 #endif
 
-#ifdef IS_LASER
   server.on(laser_act_endpoint, HTTP_POST, LASER_act_fct_http);
   server.on(laser_get_endpoint, HTTP_POST, LASER_get_fct_http);
   server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
-#endif
 
 #ifdef IS_ANALOG
   server.on(analog_act_endpoint, HTTP_POST, analog_act_fct_http);
@@ -284,11 +280,9 @@ void setup_routing() {
   server.on(digital_set_endpoint, HTTP_POST, digital_set_fct_http);
 #endif
 
-#ifdef IS_LEDARR
-  server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
-  server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);
-  server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
-#endif
+server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
+server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);
+server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
 
 
 

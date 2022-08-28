@@ -1,6 +1,3 @@
-#ifdef IS_LASER
-
-
 void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
 
   if ( not isBusy) {
@@ -231,4 +228,4 @@ void LASER_set_fct_http() {
   server.send(200, "application/json", output);
 }
 #endif
-#endif
+

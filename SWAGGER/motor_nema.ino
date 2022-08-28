@@ -18,12 +18,10 @@ int SPEED = 0;
 boolean is_motor_running = false;
 boolean is_motor_on = false;
 
-
 // special variable definitions 
 int glob_motor_steps[] = {0, 0, 0};
 
 A4988 stepper();
-
 A4988 stepper(MOTOR_STEPS, PIN_DIR, PIN_STEP, SLEEP, MS1, MS2, MS3);
 
 

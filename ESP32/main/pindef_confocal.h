@@ -8,13 +8,13 @@
  */
  
 #include "pindef_WEMOS_d1_r32.h"
-#define IS_LEDARR
 
 
-#define IS_LASER
-#define IS_MOTOR
+
+
+
 #define IS_SCANNER
-#define IS_PS4 // ESP32-only
+ // ESP32-only
 
 // Laser PWM pins for CNC Shield
 int LASER_PIN_1 = 0; // was SPINDLEPWMPIN; // Spin Dir
