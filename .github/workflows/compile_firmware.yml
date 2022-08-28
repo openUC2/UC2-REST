@@ -50,3 +50,8 @@ jobs:
         with:
           name: Upload-BIN
           path: ./ESP32/build
+      
+      - name: auto-commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply php-cs-fixer changes
