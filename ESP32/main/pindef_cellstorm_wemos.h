@@ -5,10 +5,7 @@
 #include "pindef_WEMOS_d1_r32.h"
 
 
-#define IS_SERIAL
-//#define IS_WIFI
-//#define IS_PS3 // ESP32-only
-//#define IS_ANALOG// ESP32-only
+
 #define IS_LASER
 #define IS_MOTOR
 #define IS_PS4 // ESP32-only

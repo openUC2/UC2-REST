@@ -280,9 +280,6 @@ void setup()
 #endif
 
   // list modules
-#ifdef IS_SERIAL
-  Serial.println("IS_SERIAL");
-#endif
 #ifdef IS_WIFI
   Serial.println("IS_WIFI");
 #endif

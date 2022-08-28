@@ -9,7 +9,7 @@
 #include "pindef_WEMOS_d1_r32.h"
 
 
-#define IS_SERIAL
+
 #define IS_LASER
 
 bool IS_PSCONTROLER_ACTIVE = 0;

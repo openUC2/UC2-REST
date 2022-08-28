@@ -4,7 +4,7 @@
  */
 // load modules
 
-#define IS_SERIAL
+
 //#define IS_WIFI
 #define IS_PS4 // ESP32-only
 #define IS_ANALOG// ESP32-only
