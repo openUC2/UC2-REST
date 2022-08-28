@@ -40,11 +40,11 @@ jobs:
       - name: Compile Sketch
         run: |
           arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,CPUFreq=80  ./ESP32/main/main.ino --libraries ./ESP32/libraries/ --export-binaries
-          dir ./ESP32/main/
+          dir ./ESP32/build/
           del ./ESP32/build/main.ino.elf
-          del ./ESP32/main.ino.map
-          del ./ESP32/main.ino.partitions.bin
-          del ./ESP32/main.ino.bootloader.bin          
+          del ./ESP32/build/main.ino.map
+          del ./ESP32/build/main.ino.partitions.bin
+          del ./ESP32/build/main.ino.bootloader.bin          
       - name: Archive
         uses: actions/upload-artifact@v2
         with:
