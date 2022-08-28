@@ -38,7 +38,7 @@ jobs:
 
           arduino-cli core install esp32:esp32
       - name: Compile Sketch
-        run: >
+        run: |
           arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,CPUFreq=80  ./ESP32/main/main.ino --libraries ./ESP32/libraries/ --export-binaries
           ls -la
           pwd
