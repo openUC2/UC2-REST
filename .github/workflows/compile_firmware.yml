@@ -11,10 +11,7 @@ jobs:
         include:
           - arduino-platform: 'esp32:esp32'
             fqbn: 'esp32:esp32:esp32'
-    runs-on: ubuntu-latest
-#    defaults:
-#      run:
-#       working-directory: ./ESP32
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,11 +37,18 @@ jobs:
       - name: Compile Sketch
         run: |
           arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,CPUFreq=80  ./ESP32/main/main.ino --libraries ./ESP32/libraries/ --export-binaries
-          ls -la
-          pwd
-          ls -la ESP32
+          dir ./ESP32/build/
+          del ./ESP32/build/main.ino.elf
+          del ./ESP32/build/main.ino.map
+          del ./ESP32/build/main.ino.partitions.bin
+          del ./ESP32/build/main.ino.bootloader.bin          
       - name: Archive
         uses: actions/upload-artifact@v2
         with:
           name: Upload-BIN
           path: ./ESP32/build
+      
+      - name: auto-commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Updating latest .bin
