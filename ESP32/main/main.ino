@@ -74,11 +74,7 @@ uint32_t frequency = 1000;
 
 
 //Where the JSON for the current instruction lives
-#ifdef IS_SLM
 DynamicJsonDocument jsonDocument(32784);
-#else
-DynamicJsonDocument jsonDocument(4096);
-#endif
 
 #ifdef IS_WIFI
 WebServer server(80);
@@ -175,7 +171,7 @@ void setup()
      SETTING UP DEVICES
   */
 
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector 
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
 
   // for any timing related puposes..
@@ -203,8 +199,8 @@ void setup()
   setup_slm();
 #endif
 
-Serial.println("IS_LEDARR");
-setup_matrix();
+  Serial.println("IS_LEDARR");
+  setup_matrix();
 
   setup_motor();
 
@@ -335,7 +331,7 @@ void loop() {
   // for any timing-related purposes
   currentMillis = millis();
 
-#ifdef IS_SERIAL
+
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
     //free(Serial);
@@ -348,9 +344,9 @@ void loop() {
     if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
 
-  String task_s = jsonDocument["task"];
-  char task[50];
-  task_s.toCharArray(task, 256);
+    String task_s = jsonDocument["task"];
+    char task[50];
+    task_s.toCharArray(task, 256);
 
 
     //jsonDocument.garbageCollect(); // memory leak?
@@ -371,12 +367,10 @@ void loop() {
     }
 
   }
-#endif
 
   /*
      continous control during loop
   */
-
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
   if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
     LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
