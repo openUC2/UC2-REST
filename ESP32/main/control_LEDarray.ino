@@ -202,8 +202,6 @@ void set_center(int R, int G, int B)
 /*
    wrapper for HTTP requests
 */
-
-#ifdef IS_WIFI
 void ledarr_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -229,4 +227,3 @@ void ledarr_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif

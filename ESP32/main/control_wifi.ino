@@ -1,5 +1,3 @@
-#ifdef IS_WIFI
-
 #include <WiFi.h>
 #include <WebServer.h>
 #include <SPIFFS.h>
@@ -26,9 +24,7 @@ void init_Spiffs()
   }
 }
 
-
-#ifdef IS_WIFI
-void initWifiAP(const char *ssid) {
+void initWifiAP(char *ssid) {
   Serial.print("Network SSID (AP): ");
   Serial.println(ssid);
 
@@ -39,7 +35,7 @@ void initWifiAP(const char *ssid) {
 
 
 
-void joinWifi(const char *ssid, const char *password) {
+void joinWifi(char *ssid, char *password) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -84,12 +80,16 @@ void autoconnectWifi(boolean isResetWifiSettings) {
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect(mSSIDAP); // password protected ap
+  char wifiSSID_char[32];
+  strlcpy(wifiSSID_char, wifiSSID, sizeof(wifiSSID_char));
+  res = wm.autoConnect(wifiSSIDAP); // password protected ap
 
 
   if (!res) {
     Serial.println("Failed to connect");
-    initWifiAP(mSSIDAP);
+    char wifiSSID_char[32];
+    strlcpy(wifiSSID_char, wifiSSID, sizeof(wifiSSID_char));
+    initWifiAP(wifiSSIDAP);
   }
   else {
     //if you get here you have connected to the WiFi
@@ -140,9 +140,6 @@ void startserver() {
   Serial.println("Starting OTA server on port: '82'");
   Serial.println("Visit http://IPADDRESS_SCOPE:82");
 }
-
-#endif
-
 
 
 //https://www.gabrielcsapo.com/arduino-web-server-esp-32/
@@ -290,4 +287,3 @@ server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
   // start server
   server.begin();
 }
-#endif

@@ -52,34 +52,34 @@ void analog_set_fct() {
 
 
     if (analogid == 1) {
-      analog_PIN_1 = analogpin;
-      pinMode(analog_PIN_1, OUTPUT);
-      digitalWrite(analog_PIN_1, LOW);
+      ANALOG_PIN_1 = analogpin;
+      pinMode(ANALOG_PIN_1, OUTPUT);
+      digitalWrite(ANALOG_PIN_1, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
+      ledcAttachPin(ANALOG_PIN_1, PWM_CHANNEL_analog_1);
       ledcWrite(PWM_CHANNEL_analog_1, 0);
 
     }
     else if (analogid == 2) {
-      analog_PIN_2 = analogpin;
-      pinMode(analog_PIN_2, OUTPUT);
-      digitalWrite(analog_PIN_2, LOW);
+      ANALOG_PIN_2 = analogpin;
+      pinMode(ANALOG_PIN_2, OUTPUT);
+      digitalWrite(ANALOG_PIN_2, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
+      ledcAttachPin(ANALOG_PIN_2, PWM_CHANNEL_analog_2);
       ledcWrite(PWM_CHANNEL_analog_2, 0);
     }
     else if (analogid == 3) {
-      analog_PIN_3 = analogpin;
-      pinMode(analog_PIN_3, OUTPUT);
-      digitalWrite(analog_PIN_3, LOW);
+      ANALOG_PIN_3 = analogpin;
+      pinMode(ANALOG_PIN_3, OUTPUT);
+      digitalWrite(ANALOG_PIN_3, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_3, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_3, PWM_CHANNEL_analog_3);
+      ledcAttachPin(ANALOG_PIN_3, PWM_CHANNEL_analog_3);
       ledcWrite(PWM_CHANNEL_analog_3, 0);
 
 }
@@ -98,19 +98,19 @@ void analog_get_fct() {
 
   if (analogid == 1) {
     if (DEBUG) Serial.println("analog 1");
-    analogpin = analog_PIN_1;
+    analogpin = ANALOG_PIN_1;
     analogval = analog_val_1;
   }
   else if (analogid == 2) {
     if (DEBUG) Serial.println("AXIS 2");
     if (DEBUG) Serial.println("analog 2");
-    analogpin = analog_PIN_2;
+    analogpin = ANALOG_PIN_2;
     analogval = analog_val_2;
   }
   else if (analogid == 3) {
     if (DEBUG) Serial.println("AXIS 3");
     if (DEBUG) Serial.println("analog 1");
-    analogpin = analog_PIN_3;
+    analogpin = ANALOG_PIN_3;
     analogval = analog_val_3;
   }
 
@@ -124,7 +124,6 @@ void analog_get_fct() {
 /*
   wrapper for HTTP requests
 */
-#ifdef IS_WIFI
 void analog_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -150,5 +149,4 @@ void analog_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 #endif

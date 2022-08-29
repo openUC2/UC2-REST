@@ -62,7 +62,7 @@ void state_get_fct() {
     jsonDocument["identifier_id"] = identifier_id;
     jsonDocument["identifier_date"] = identifier_date;
     jsonDocument["identifier_author"] = identifier_author;
-    jsonDocument["identifier_setup"] = identifier_setup;
+    jsonDocument["IDENTIFIER_NAME"] = IDENTIFIER_NAME;
   }
 }
 
@@ -128,8 +128,6 @@ void clearBlueetoothDevice() {
 /*
    wrapper for HTTP requests
 */
-
-#ifdef IS_WIFI
 void state_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -155,4 +153,3 @@ void state_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif

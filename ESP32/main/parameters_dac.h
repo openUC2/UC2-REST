@@ -7,5 +7,6 @@ uint32_t clk_div = 0;
 uint32_t scale = 0;
 uint32_t invert = 2;
 uint32_t phase = 0;
+uint32_t frequency = 1000;
 
 boolean dac_is_running = false;

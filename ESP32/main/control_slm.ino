@@ -147,8 +147,6 @@ void slm_get_fct() {
 /*
    wrapper for HTTP requests
 */
-
-#ifdef IS_WIFI
 void slm_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -174,7 +172,6 @@ void slm_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 
 void setup_slm() {
   if(DEBUG) Serial.println("Initializing SLM");

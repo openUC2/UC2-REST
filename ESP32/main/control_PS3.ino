@@ -1,19 +1,16 @@
-#ifdef IS_PS3
-#include "parameters_ps3.h"
-
 bool IS_PS3_CONTROLER_LEDARRAY = false;
-void onConnect() {
+void onConnectPS3() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
   setEnableMotor(true);
 }
 
-void onAttach() {
+void onAttachPS3() {
   Ps3.attach(activate_PS3);
 }
 
 
-void onDisConnect() {
+void onDisConnectPS3() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   setEnableMotor(false);
 }
@@ -270,5 +267,3 @@ void control_PS3() {
 //
 //    }
 
-
-#endif

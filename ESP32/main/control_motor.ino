@@ -177,7 +177,7 @@ void motor_act_fct() {
 
 void setEnableMotor(bool enable) {
   isBusy = enable;
-  digitalWrite(ENABLE, !enable);
+  digitalWrite(ENABLE_PIN, !enable);
   motor_enable = enable;
 }
 
@@ -314,29 +314,29 @@ void motor_set_fct() {
   }
   if (pindir != 0 and pinstep != 0) {
     if (axis == 0) {
-      STEP_A = pinstep;
-      DIR_A = pindir;
+      STEP_PIN_A = pinstep;
+      DIR_PIN_A = pindir;
     }
     else if (axis == 1) {
-      STEP_X = pinstep;
-      DIR_X = pindir;
+      STEP_PIN_X = pinstep;
+      DIR_PIN_X = pindir;
     }
     else if (axis == 2) {
-      STEP_Y = pinstep;
-      DIR_Y = pindir;
+      STEP_PIN_Y = pinstep;
+      DIR_PIN_Y = pindir;
    }
     else if (axis == 3) {
-      STEP_Z = pinstep;
-      DIR_Z = pindir;
+      STEP_PIN_Z = pinstep;
+      DIR_PIN_Z = pindir;
     }
   }
 
   //if (DEBUG) Serial.print("isen "); Serial.println(isen);
   if (isen != 0 and isen) {
-    digitalWrite(ENABLE, 0);
+    digitalWrite(ENABLE_PIN, 0);
   }
   else if (isen != 0 and not isen) {
-    digitalWrite(ENABLE, 1);
+    digitalWrite(ENABLE_PIN, 1);
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
@@ -364,8 +364,8 @@ void motor_get_fct() {
       mspeed = stepper_X.speed();
       POSITION_MOTOR_X = stepper_X.currentPosition();
       mposition = POSITION_MOTOR_X;
-      pinstep = STEP_X;
-      pindir = DIR_X;
+      pinstep = STEP_PIN_X;
+      pindir = DIR_PIN_X;
       sign = SIGN_X;
       break;
     case 2:
@@ -374,8 +374,8 @@ void motor_get_fct() {
       mspeed = stepper_Y.speed();
       POSITION_MOTOR_Y = stepper_Y.currentPosition();
       mposition = POSITION_MOTOR_Y;
-      pinstep = STEP_Y;
-      pindir = DIR_Y;
+      pinstep = STEP_PIN_Y;
+      pindir = DIR_PIN_Y;
       sign = SIGN_Y;
       break;
     case 3:
@@ -384,8 +384,8 @@ void motor_get_fct() {
       mspeed = stepper_Z.speed();
       POSITION_MOTOR_Z = stepper_Z.currentPosition();
       mposition = POSITION_MOTOR_Z;
-      pinstep = STEP_Z;
-      pindir = DIR_Z;
+      pinstep = STEP_PIN_Z;
+      pindir = DIR_PIN_Z;
       sign = SIGN_Z;
       break;
     default:
@@ -408,7 +408,7 @@ void setup_motor() {
      Motor related settings
   */
   Serial.println("Setting Up Motors");
-  pinMode(ENABLE, OUTPUT);
+  pinMode(ENABLE_PIN, OUTPUT);
   setEnableMotor(true);
   Serial.println("Setting Up Motor A,X,Y,Z");
   stepper_A.setMaxSpeed(MAX_VELOCITY_A);
@@ -496,8 +496,6 @@ bool drive_motor_background() {
    wrapper for HTTP requests
 */
 
-
-#ifdef IS_WIFI
 void motor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -526,5 +524,4 @@ void motor_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 

@@ -1,7 +1,5 @@
-#include "parameters_PS4.h"
-
 bool IS_PS4_CONTROLER_LEDARRAY = false;
-void onConnect() {
+void onConnectPS4() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
   setEnableMotor(true);
@@ -15,12 +13,11 @@ void onConnect() {
     Serial.println();
 }
 
-void onAttach() {
+void onAttachPS4() {
   PS4.attach(activate_PS4);
 }
 
-
-void onDisConnect() {
+void onDisConnectPS4() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   setEnableMotor(false);
 }

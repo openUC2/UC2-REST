@@ -1,50 +1,26 @@
-/*
-    Pindefintion per Setup
-*/
+// external headers
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
+#include <Ps3Controller.h>
+#include <PS4Controller.h>
+#include <ArduinoJson.h>
 
-//#include "pindef_lightsheet.h"
-//#include "pindef_lightsheet_arduino.h"
-//#include "pindef_ptychography.h"
-//#include "pindef.h"
-//#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
-//#include "pindef_cellSTORM_cellphone.h"
-//#include "pindef_cellSTORM.h"
-//#include "pindef_cellSTORM_wifi.h"
-//#include "pindef_multicolour_borstel.h"
-//#include "pindef_cncshield_esp.h"
-//#include "pindef_lightsheet_tomo_galvo.h"
-//#include "pindef_lightsheet_tomo_galvo_espwemos.h"
-//#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
-//#include "pindef_xyz_stagescan_ps4.h"
-//#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop
-//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
-//#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
-//#include "pindef_slm.h" // - for the slm / TFT
-//#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
-//include "pindef_multicolour_wemos_lena.h"
-//#include "pindef_confocal.h"
-//#include "pindef_oct_eda.h"
-//#include "pindef_polarizationsetup.h"
-//#include "pindef_freedcam.h"
-#include "pindef_uc2standalone.h"
+// internal headers
+#include "parameters_state.h"
+#include "parameters_laser.h"
+#include "parameters_motor.h"
+#include "pindef.h" // for pin definitions
+#include "parameters_ps.h" // playstation parameters
 
+#if defined(IS_DAC) || defined(IS_DAC_FAKE)
+#include "parameters_dac.h"
+#endif
 
 int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
 #define BAUDRATE 115200
 
-/*
-    IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
-*/
-
-// For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
-#include "soc/soc.h"
-#include "soc/rtc_cntl_reg.h"
-
-#ifdef IS_WIFI
 #include "parameters_wifi.h"
 WiFiManager wm;
-#endif
 
 #ifdef IS_ANALOG
 #include "parameters_analog.h"
@@ -61,28 +37,10 @@ WiFiManager wm;
 #include "parameters_PID.h"
 #endif
 
-#include <Ps3Controller.h>
-#include <PS4Controller.h>
-
-
-#include <ArduinoJson.h>
-#include "parameters_state.h"
-#if defined(IS_DAC) || defined(IS_DAC_FAKE)
-#include "parameters_dac.h"
-uint32_t frequency = 1000;
-#endif
-
-
-//Where the JSON for the current instruction lives
 DynamicJsonDocument jsonDocument(32784);
 
-#ifdef IS_WIFI
 WebServer server(80);
 char output[1000];
-#endif
-
-// ensure motors switch off when PS3 controller is operating them
-bool override_overheating = false;
 
 #ifdef IS_DAC
 DAC_Module *dac = new DAC_Module();
@@ -91,74 +49,13 @@ DAC_Module *dac = new DAC_Module();
 /*
    Register devices
 */
-
-#include "parameters_motor.h"
-AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
-
+AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_PIN_A, DIR_PIN_A);
+AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_PIN_X, DIR_PIN_X);
+AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_PIN_Y, DIR_PIN_Y);
+AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_PIN_Z, DIR_PIN_Z);
 
 #ifdef IS_SLM
 #include "parameters_slm.h"
-#endif
-
-#include "parameters_laser.h"
-
-/*
-   Register functions
-*/
-
-const char* state_act_endpoint = "/state_act";
-const char* state_set_endpoint = "/state_set";
-const char* state_get_endpoint = "/state_get";
-
-const char* laser_act_endpoint = "/laser_act";
-const char* laser_set_endpoint = "/laser_set";
-const char* laser_get_endpoint = "/laser_get";
-
-const char* motor_act_endpoint = "/motor_act";
-const char* motor_set_endpoint = "/motor_set";
-const char* motor_get_endpoint = "/motor_get";
-
-#ifdef IS_DAC
-const char* dac_act_endpoint = "/dac_act";
-const char* dac_set_endpoint = "/dac_set";
-const char* dac_get_endpoint = "/dac_get";
-#endif
-
-#ifdef IS_ANALOG
-const char* analog_act_endpoint = "/analog_act";
-const char* analog_set_endpoint = "/analog_set";
-const char* analog_get_endpoint = "/analog_get";
-#endif
-
-#ifdef IS_DIGITAL
-const char* digital_act_endpoint = "/digital_act";
-const char* digital_set_endpoint = "/digital_set";
-const char* digital_get_endpoint = "/digital_get";
-#endif
-
-const char* ledarr_act_endpoint = "/ledarr_act";
-const char* ledarr_set_endpoint = "/ledarr_set";
-const char* ledarr_get_endpoint = "/ledarr_get";
-
-#ifdef IS_SLM
-const char* slm_act_endpoint = "/slm_act";
-const char* slm_set_endpoint = "/slm_set";
-const char* slm_get_endpoint = "/slm_get";
-#endif
-
-#ifdef IS_READSENSOR
-const char* readsensor_act_endpoint = "/readsensor_act";
-const char* readsensor_set_endpoint = "/readsensor_set";
-const char* readsensor_get_endpoint = "/readsensor_get";
-#endif
-
-#ifdef IS_PID
-const char* PID_act_endpoint = "/PID_act";
-const char* PID_set_endpoint = "/PID_set";
-const char* PID_get_endpoint = "/PID_get";
 #endif
 
 /* --------------------------------------------
@@ -173,24 +70,28 @@ void setup()
 
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
-
   // for any timing related puposes..
   startMillis = millis();
 
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start");
+  
+  // load config
+  loadPreferences();
+  
+  // display state
   printInfo();
 
+  // reset jsonDocument
   jsonDocument.clear();
 
   // connect to wifi if necessary
-#ifdef IS_WIFI
   bool isResetWifiSettings = false;
   autoconnectWifi(isResetWifiSettings);
   setup_routing();
   init_Spiffs();
-#endif
+
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);
@@ -207,9 +108,9 @@ void setup()
 
   clearBlueetoothDevice();
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-  Ps3.attach(onAttach);
-  Ps3.attachOnConnect(onConnect);
-  Ps3.attachOnDisconnect(onDisConnect);
+  Ps3.attach(PS3);
+  Ps3.attachOnConnect(onConnectPS3);
+  Ps3.attachOnDisconnect(onDisConnectPS3);
   const char* PS3_MACADDESS = "01:02:03:04:05:06";
   Ps3.begin("01:02:03:04:05:06");
   Serial.println(PS3_MACADDESS);
@@ -217,10 +118,10 @@ void setup()
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  PS4.attach(onAttach);
+  PS4.attach(onAttachPS4);
   PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
-  PS4.attachOnConnect(onConnect);
-  PS4.attachOnDisconnect(onDisConnect);
+  PS4.attachOnConnect(onConnectPS4);
+  PS4.attachOnDisconnect(onDisConnectPS4);
   const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println(PS4_MACADDESS);
   Serial.println("PS4 controler is set up.");
@@ -240,11 +141,11 @@ void setup()
   Serial.println("Setting Up analog");
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
+  ledcAttachPin(ANALOG_PIN_1, PWM_CHANNEL_analog_1);
   ledcWrite(PWM_CHANNEL_analog_1, 0);
 
   ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
+  ledcAttachPin(ANALOG_PIN_2, PWM_CHANNEL_analog_2);
   ledcWrite(PWM_CHANNEL_analog_2, 0);
 #endif
 
@@ -253,9 +154,6 @@ void setup()
 #endif
 
   // list modules
-#ifdef IS_WIFI
-  Serial.println("IS_WIFI");
-#endif
 #ifdef IS_SLM
   Serial.println("IS_SLM");
 #endif
@@ -295,8 +193,8 @@ void setup()
 
 
 #ifdef IS_DAC_FAKE
-  pinMode(dac_fake_1, OUTPUT);
-  pinMode(dac_fake_2, OUTPUT);
+  pinMode(DAC_FAKE_PIN_1, OUTPUT);
+  pinMode(DAC_FAKE_PIN_2, OUTPUT);
   frequency = 1;
   xTaskCreate(
     drive_galvo,    // Function that should be called
@@ -382,10 +280,8 @@ void loop() {
 
   control_PS3(); // if controller is operating motors, overheating protection is enabled
   control_PS4();
-
-#ifdef IS_WIFI
   server.handleClient();
-#endif
+
 
   /*
      continous control during loop

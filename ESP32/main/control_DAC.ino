@@ -116,9 +116,6 @@ void dac_get_fct() {
 /*
    wrapper for HTTP requests
 */
-
-
-#ifdef IS_WIFI
 void dac_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -145,17 +142,16 @@ void dac_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 
 
 
 void drive_galvo(void * parameter){
   while(true){ // infinite loop
-    digitalWrite(dac_fake_1, HIGH);
-    digitalWrite(dac_fake_2, HIGH);
+    digitalWrite(DAC_FAKE_PIN_1, HIGH);
+    digitalWrite(DAC_FAKE_PIN_2, HIGH);
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
-    digitalWrite(dac_fake_1, LOW);
-    digitalWrite(dac_fake_2, LOW);
+    digitalWrite(DAC_FAKE_PIN_1, LOW);
+    digitalWrite(DAC_FAKE_PIN_2, LOW);
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }

@@ -99,8 +99,6 @@ void setup_sensors(){
 /*
    wrapper for HTTP requests
 */
-
-#ifdef IS_WIFI
 void readsensor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -126,5 +124,4 @@ void readsensor_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 #endif
