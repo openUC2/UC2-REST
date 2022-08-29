@@ -15,6 +15,8 @@ from tempfile import NamedTemporaryFile
 import serial
 import serial.tools.list_ports
 
+from galvo import Galvo
+
 try:
     import cv2
     is_cv2 = True
@@ -30,30 +32,6 @@ except:
 
 
     
-class galvo(object):
-    def __init__(self, channel=1, frequency=1000, offset=0, amplitude=1/2, clk_div=0):
-        '''
-        defaults:
-            dac->Setup(DAC_CHANNEL_1, 0, 1, 0, 0, 2);
-            dac->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
-      '''
-        self.channel= channel
-        self.frequency = frequency
-        self.offset = offset
-        self.amplitude = amplitude
-        self.clk_div = clk_div
-        self.path = "/dac_act"
-
-    def return_dict(self):
-        dict = {
-        "task":self.path,
-        "dac_channel": self.channel, # 1 or 2
-        "frequency": self.frequency,
-        "offset": self.offset,
-        "amplitude":self.amplitude,
-        "clk_div": self.clk_div
-        }
-        return dict
 
 
 class logger(object):
@@ -119,8 +97,8 @@ class ESP32Client(object):
             self.__logger = logger()            
 
         # initialize galvos
-        self.galvo1 = galvo(channel=1)
-        self.galvo2 = galvo(channel=2)
+        self.galvo1 = Galvo(channel=1)
+        self.galvo2 = Galvo(channel=2)
 
         self.serialport = serialport
         self.baudrate = baudrate
