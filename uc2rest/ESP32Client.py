@@ -16,6 +16,7 @@ import serial
 import serial.tools.list_ports
 
 from galvo import Galvo
+from config import config
 
 try:
     import cv2
@@ -99,6 +100,9 @@ class ESP32Client(object):
         # initialize galvos
         self.galvo1 = Galvo(channel=1)
         self.galvo2 = Galvo(channel=2)
+        
+        # initialize config object
+        self.config = config()
 
         self.serialport = serialport
         self.baudrate = baudrate
@@ -297,6 +301,29 @@ class ESP32Client(object):
                 returnmessage = ""
         return returnmessage
 
+
+    '''################################################################################################################################################
+    Set Configurations
+    ################################################################################################################################################'''
+
+    def loadConfig(self, timeout=1):
+        path = '/config_get'
+        payload = {
+        }
+        r = self.post_json(path, payload, timeout=timeout)
+        
+        self.config.setDefaultConfig(r)
+        return r
+
+    def setConfig(self, config, timeout=1):
+        path = '/config_set'
+        payload = {
+            "config": config
+        }
+        r = self.post_json(path, payload, timeout=timeout)
+        return r
+
+        
 
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
@@ -537,7 +564,7 @@ class ESP32Client(object):
 
     '''
     ##############################################################################################################################
-    MOTOR
+    STATE
     ##############################################################################################################################
     '''
     def isControllerMode(self, timeout=1):
@@ -583,7 +610,11 @@ class ESP32Client(object):
             return r["isBusy"]
         except:
             return r
-
+    '''
+    ##############################################################################################################################
+    MOTOR
+    ##############################################################################################################################
+    '''
     def move_forever(self, speed=(0,0,0), is_stop=False, timeout=1):
         path = "/motor_act"
         payload = {
@@ -1005,3 +1036,8 @@ class ESP32Client(object):
             files = {'media': open(iName, 'rb')}
             if self.is_connected:
                 requests.post(self.base_uri + path, files=files)
+
+
+
+#if __name__ == '__main__':
+    

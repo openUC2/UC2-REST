@@ -1,8 +1,14 @@
+//#define IS_PS3
+#define IS_PS4
+
 // external headers
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
-#include <Ps3Controller.h>
-#include <PS4Controller.h>
+#ifdef IS_PS3 
+#include <Ps3Controller.h> 
+#else
+#include <PS4Controller.h> 
+#endif
 #include <ArduinoJson.h>
 
 // internal headers
@@ -78,7 +84,7 @@ void setup()
   Serial.println("Start");
   
   // load config
-  loadPreferences();
+  loadConfiguration();
   
   // display state
   printInfo();
@@ -99,21 +105,23 @@ void setup()
 #ifdef IS_SLM
   setup_slm();
 #endif
-
-  Serial.println("IS_LEDARR");
   setup_matrix();
-
   setup_motor();
 
-
+  /*
+  setting up playstation controller
+  */
+ 
   clearBlueetoothDevice();
+  #ifdef IS_PS3 
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-  Ps3.attach(PS3);
+  Ps3.attach(onAttachPS3);
   Ps3.attachOnConnect(onConnectPS3);
   Ps3.attachOnDisconnect(onDisConnectPS3);
   const char* PS3_MACADDESS = "01:02:03:04:05:06";
   Ps3.begin("01:02:03:04:05:06");
   Serial.println(PS3_MACADDESS);
+  #else
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
@@ -125,9 +133,10 @@ void setup()
   const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println(PS4_MACADDESS);
   Serial.println("PS4 controler is set up.");
-
+  #endif
+  
+  // setup laser
   setup_laser();
-
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
@@ -190,7 +199,9 @@ void setup()
   Serial.println(ledarr_get_endpoint);
   Serial.println(ledarr_set_endpoint);
 
-
+  Serial.println(config_act_endpoint);
+  Serial.println(config_get_endpoint);
+  Serial.println(config_set_endpoint);
 
 #ifdef IS_DAC_FAKE
   pinMode(DAC_FAKE_PIN_1, OUTPUT);
@@ -278,8 +289,13 @@ void loop() {
     LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
 
 
+  #ifdef IS_PS3
   control_PS3(); // if controller is operating motors, overheating protection is enabled
+  #else
   control_PS4();
+  #endif
+
+  // handle any http requests
   server.handleClient();
 
 
@@ -403,6 +419,15 @@ void jsonProcessor(char task[]) {
   if (strcmp(task, ledarr_get_endpoint) == 0)
     ledarr_get_fct();
 
+  /*
+    Change Configuration
+  */
+  if (strcmp(task, config_act_endpoint) == 0)
+    config_act_fct();
+  if (strcmp(task, config_set_endpoint) == 0)
+    config_set_fct();
+  if (strcmp(task, config_get_endpoint) == 0)
+    config_get_fct();
 
   /*
     Read the sensor

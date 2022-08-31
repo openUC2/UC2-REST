@@ -1,3 +1,4 @@
+#ifndef IS_PS3
 bool IS_PS4_CONTROLER_LEDARRAY = false;
 void onConnectPS4() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
@@ -305,3 +306,5 @@ void control_PS4() {
 //      }
 //
 //    }
+
+#endif

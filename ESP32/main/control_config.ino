@@ -9,7 +9,7 @@ Preferences preferences;
 void config_act_fct() {
 
   if(jsonDocument.containsKey("resetPrefs")) {
-    resetPreferences();
+    resetConfigurations();
   }
   
   jsonDocument.clear();
@@ -17,31 +17,37 @@ void config_act_fct() {
 }
 
 void config_set_fct() {
-  setPreferences();
+  setConfigurations();
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
 
 void config_get_fct() {
-  loadPreferences();
+  loadConfiguration();
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
 
-bool resetPreferences() {
+bool resetConfigurations() {
+  Serial.println("Resetting Hardware configuration!!!");
   preferences.begin(prefNamespace , false);
   preferences.clear();
   preferences.end();
   return true;
 }
 
-bool setPreferences() {
+bool setConfigurations() {
   /*
   This function sets the preferences for the parameters based on a JSON document.
   */
+  if(DEBUG) Serial.println("Setting Hardware Configuration");
+  
   preferences.begin(prefNamespace , false);
 
+  if (jsonDocument.containsKey(keyMotorXStepPin))
   preferences.putUInt(keyMotorXStepPin, jsonDocument[keyMotorXStepPin]);
+  
+  if (jsonDocument.containsKey(keyMotorXStepPin))
   preferences.putUInt(keyMotorXDirPin, jsonDocument[keyMotorXDirPin]);
 
   preferences.putUInt(keyMotorYStepPin, jsonDocument[keyMotorYStepPin]);
@@ -84,7 +90,7 @@ bool setPreferences() {
 }
 
 
-bool loadPreferences() {
+bool loadConfiguration() {
   /* This function gets the preferences for the parameters
   and returns a JSON document. */
 
@@ -121,8 +127,8 @@ bool loadPreferences() {
   DAC_FAKE_PIN_2 = preferences.getUInt(keyDACfake2Pin, DAC_FAKE_PIN_2);
 
   IDENTIFIER_NAME = preferences.getString(keyDACfake1Pin, IDENTIFIER_NAME);
-  wifiSSID = preferences.getString(keyWifiSSID, wifiSSID);
-  wifiPW = preferences.getString(keyWifiPW, WifiPW);
+  WifiSSID = preferences.getString(keyWifiSSID, WifiSSID).c_str();
+  WifiPW = preferences.getString(keyWifiPW, WifiPW).c_str();
 
   jsonDocument.clear();
   
@@ -149,8 +155,8 @@ bool loadPreferences() {
   jsonDocument["dacFake1"] = DAC_FAKE_PIN_1;
   jsonDocument["dacFake2"] = DAC_FAKE_PIN_2;
   jsonDocument["identifier"] = IDENTIFIER_NAME;
-  jsonDocument["ssid"] = wifiSSID;
-  jsonDocument["PW"] = wifiPW;
+  jsonDocument["ssid"] = WifiSSID;
+  jsonDocument["PW"] = WifiPW;
 
   Serial.println("Current pin definitions:");
   serializeJsonPretty(jsonDocument, Serial);
@@ -159,3 +165,32 @@ bool loadPreferences() {
   return true;
 }
 
+
+/*
+   wrapper for HTTP requests
+*/
+void config_act_fct_http() {
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+  config_act_fct();
+  serializeJson(jsonDocument, output);
+  server.send(200, "application/json", output);
+}
+
+// wrapper for HTTP requests
+void config_get_fct_http() {
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+  config_get_fct();
+  serializeJson(jsonDocument, output);
+  server.send(200, "application/json", output);
+}
+
+// wrapper for HTTP requests
+void config_set_fct_http() {
+  String body = server.arg("plain");
+  deserializeJson(jsonDocument, body);
+  config_set_fct();
+  serializeJson(jsonDocument, output);
+  server.send(200, "application/json", output);
+}

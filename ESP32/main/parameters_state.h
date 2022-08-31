@@ -42,6 +42,10 @@ const char* ledarr_act_endpoint = "/ledarr_act";
 const char* ledarr_set_endpoint = "/ledarr_set";
 const char* ledarr_get_endpoint = "/ledarr_get";
 
+const char* config_act_endpoint = "/config_act";
+const char* config_set_endpoint = "/config_set";
+const char* config_get_endpoint = "/config_get";
+
 const char* slm_act_endpoint = "/slm_act";
 const char* slm_set_endpoint = "/slm_set";
 const char* slm_get_endpoint = "/slm_get";

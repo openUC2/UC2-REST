@@ -1,3 +1,4 @@
+#ifdef IS_PS3
 bool IS_PS3_CONTROLER_LEDARRAY = false;
 void onConnectPS3() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
@@ -267,3 +268,4 @@ void control_PS3() {
 //
 //    }
 
+#endif

@@ -24,7 +24,7 @@ void init_Spiffs()
   }
 }
 
-void initWifiAP(char *ssid) {
+void initWifiAP(const char *ssid) {
   Serial.print("Network SSID (AP): ");
   Serial.println(ssid);
 
@@ -80,16 +80,11 @@ void autoconnectWifi(boolean isResetWifiSettings) {
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  char wifiSSID_char[32];
-  strlcpy(wifiSSID_char, wifiSSID, sizeof(wifiSSID_char));
-  res = wm.autoConnect(wifiSSIDAP); // password protected ap
-
+  res = wm.autoConnect(WifiSSIDAP); // password protected ap
 
   if (!res) {
     Serial.println("Failed to connect");
-    char wifiSSID_char[32];
-    strlcpy(wifiSSID_char, wifiSSID, sizeof(wifiSSID_char));
-    initWifiAP(wifiSSIDAP);
+    initWifiAP(WifiSSIDAP);
   }
   else {
     //if you get here you have connected to the WiFi
@@ -281,6 +276,9 @@ server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
 server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);
 server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
 
+server.on(config_act_endpoint, HTTP_POST, config_act_fct_http);
+server.on(config_get_endpoint, HTTP_POST, config_get_fct_http);
+server.on(config_set_endpoint, HTTP_POST, config_set_fct_http);
 
 
 
