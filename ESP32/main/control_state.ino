@@ -144,6 +144,11 @@ bool isFirstRun() {
   return !stored_date.equals(compiled_date);
 }
 
+void getIdentity() {
+  if(DEBUG) Serial.println("Get Identity");
+  server.send(200, "application/json", identifier_name);
+}
+
 /*
    wrapper for HTTP requests
 */
