@@ -1,15 +1,16 @@
 import json
 
+
 class config(object):
-    def __init__(self, configFilePath=None):
-        
+    def __init__(self, ESP32, configFilePath=None): 
+        self.ESP32 = ESP32
         self.configFilePath = configFilePath
         
         if self.configFilePath is not None:
             self.configFilePath = "./config.json"
             #TODO: read file and load
             
-        self.configFile = self.getDummyConfig()
+        self.configFile = self.getDefaultConfig()
         
     
     '''
@@ -137,4 +138,27 @@ class config(object):
     send configuration to device
     '''
     
+    '''################################################################################################################################################
+    Set Configurations
+    ################################################################################################################################################'''
+
+    def loadConfig(self, timeout=1):
+        path = '/config_get'
+        payload = {
+        }
+        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        
+        self.setDefaultConfig(r)
+        return r
+
+    def setConfig(self, config, timeout=1):
+        path = '/config_set'
+        if type(config)==dict:
+            payload = config
+        else: 
+            return None
+        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        return r
+
+
     

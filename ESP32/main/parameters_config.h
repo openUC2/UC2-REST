@@ -1,5 +1,6 @@
 /* sample config file
   {
+  "task":"/config_set", 
   "motXstp": 1,
   "motXdir": 2,
   "motYstp": 3,
@@ -60,4 +61,3 @@ const char* keyIdentifier = "identifier";
 
 const char* keyWifiSSID = "ssid";
 const char* keyWifiPW = "PW";
-

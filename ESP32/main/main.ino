@@ -10,6 +10,14 @@
 #include <PS4Controller.h> 
 #endif
 #include <ArduinoJson.h>
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+#include"esp_gap_bt_api.h"
+#include "esp_err.h"
+#include "Preferences.h"
+#include <Preferences.h>
+#include <ArduinoJson.h>
+
 
 // internal headers
 #include "parameters_state.h"
@@ -17,6 +25,13 @@
 #include "parameters_motor.h"
 #include "pindef.h" // for pin definitions
 #include "parameters_ps.h" // playstation parameters
+#include "parameters_config.h"
+
+
+
+
+// define permanent flash object 
+Preferences preferences;
 
 #if defined(IS_DAC) || defined(IS_DAC_FAKE)
 #include "parameters_dac.h"
@@ -83,6 +98,9 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   
+  // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
+  if(isFirstRun())
+    resetConfigurations();
   // load config
   loadConfiguration();
   

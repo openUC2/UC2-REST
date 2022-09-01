@@ -15,8 +15,9 @@ from tempfile import NamedTemporaryFile
 import serial
 import serial.tools.list_ports
 
-from galvo import Galvo
-from config import config
+from .galvo import Galvo
+from .config import config
+
 
 try:
     import cv2
@@ -91,6 +92,8 @@ class ESP32Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
+        
+        
 
         if IS_IMSWITCH:
             self.__logger = initLogger(self, tryInheritParent=True)
@@ -101,8 +104,8 @@ class ESP32Client(object):
         self.galvo1 = Galvo(channel=1)
         self.galvo2 = Galvo(channel=2)
         
-        # initialize config object
-        self.config = config()
+        # initialize config
+        self.config = config(self)
 
         self.serialport = serialport
         self.baudrate = baudrate
@@ -126,6 +129,7 @@ class ESP32Client(object):
             self.is_connected = False
             if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
 
+        self.pinConfig = self.config.loadConfig()
         self.__logger.debug("We are connected: "+str(self.is_connected))
 
 
@@ -302,29 +306,12 @@ class ESP32Client(object):
         return returnmessage
 
 
-    '''################################################################################################################################################
-    Set Configurations
-    ################################################################################################################################################'''
+    def loadConfig(self):
+        return self.config.loadConfig()
 
-    def loadConfig(self, timeout=1):
-        path = '/config_get'
-        payload = {
-        }
-        r = self.post_json(path, payload, timeout=timeout)
-        
-        self.config.setDefaultConfig(r)
-        return r
-
-    def setConfig(self, config, timeout=1):
-        path = '/config_set'
-        payload = {
-            "config": config
-        }
-        r = self.post_json(path, payload, timeout=timeout)
-        return r
-
-        
-
+    def setConfig(self,config={}):
+        return self.config.setConfig(config)
+            
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''

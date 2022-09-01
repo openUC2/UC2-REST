@@ -1,77 +1,37 @@
-from ESP32Client import ESP32Client, ledmatrix
-ESP32 = ESP32Client(serialport="unknown")
+import uc2rest as uc2
 
-# move and measure
-print(ESP32.get_position(axis=1))
-ESP32.move_x(steps=1000, speed=1000, is_blocking=True, is_absolute=False, is_enabled=False)
-print(ESP32.get_position(axis=1))
-ESP32.move_x(steps=0, speed=1000, is_blocking=True, is_absolute=True, is_enabled=False)
-print(ESP32.get_position(axis=1))
+ESP32 = uc2.ESP32Client(serialport="unknown")
 
 
-# set all LEDs to a certain RGB value
-ESP32.send_LEDMatrix_full(intensity = (0,255,255),timeout=1)
+mConfig = ESP32.loadConfig()
 
+mConfig = {
+    "motXstp": 0,
+    "motXdir": 2,
+    "motYstp": 3,
+    "motYdir": 4,
+    "motZstp": 5,
+    "motZdir": 6,
+    "motAstp": 7,
+    "motAdir": 8,
+    "motEnable": 9,
+    "ledArrPin": 0,
+    "ledArrNum": 64,
+    "digitalPin1":10,
+    "digitalPin2":11,
+    "analogPin1":12,
+    "analogPin2":13,
+    "analogPin3":14,
+    "laserPin1":15,
+    "laserPin2":16,
+    "laserPin3":17,
+    "dacFake1":18,
+    "dacFake2":19,
+    "identifier": "TEST",
+    "ssid": "ssid",
+    "PW": "PW"}
 
-# set a funny pattern
-import numpy as np
+ESP32.config.setConfig(mConfig)
 
-#%%
-ESP32.send_LEDMatrix_full(intensity = (0,0,0),timeout=1)
+mConfig = ESP32.loadConfig()
 
-# High level matrix addressing
-mLEDmatrix = ledmatrix(ESP32, NLeds=16)
-mLEDmatrix.single(0, (255,255,255))
-mLEDmatrix.single(4, (255,255,255))
-mLEDmatrix.single(8, (255,255,255))
-mLEDmatrix.single(12, (255,255,255))
-
-intensity = (125,125,125)
-led_pattern = np.diag(np.ones(4))
-led_pattern = np.expand_dims(led_pattern,-1)*intensity
-led_pattern = np.transpose(led_pattern,(2,0,1))
-mLEDmatrix.pattern(led_pattern)
-
-mLEDmatrix.all((255,255,255))
-
-
-#%%
-# turn on random LEDs   
-Nx=4
-Ny=4
-led_pattern = np.abs(np.int8(np.random.randn(3,Nx*Ny)*125))
-ESP32.send_LEDMatrix_array(led_pattern, timeout=1)
-
-# turn on ring of LEDs
-intensity = np.array((25,25,25))
-led_pattern = np.array(((0,1,1,0),(1,1,1,1),(1,1,1,1),(0,1,1,0)))
-led_pattern = np.expand_dims(led_pattern,-1)*intensity
-led_pattern = np.transpose(led_pattern,(2,0,1))
-ESP32.send_LEDMatrix_array(led_pattern, timeout=1)
-
-# turn on diagonal 
-intensity = (125,125,125)
-led_pattern = np.diag(np.ones(Nx))
-
-led_pattern = np.expand_dims(led_pattern,-1)*intensity
-led_pattern = np.transpose(led_pattern,(2,0,1))
-
-ESP32.send_LEDMatrix_array(led_pattern, timeout=1)
-
-#%% iterate over all LEDs
-for i in range(0,Nx):
-    for j in range(0,Ny):
-        led_pattern = np.zeros((3,Nx,Ny))
-        led_pattern[:,i,j] = intensity
-        ESP32.send_LEDMatrix_array(led_pattern, timeout=1)
-
-# tur off all LEDs
-ESP32.send_LEDMatrix_full(intensity = (0,0,0))
-
-# turn on single LED 
-ESP32.send_LEDMatrix_single(indexled=10, intensity=(255,255,255), timeout=1)
-
-# turn on a selected list of LEDs
-ESP32.send_LEDMatrix_multi(indexled=(0,2,6), intensity=((255,255,255),(255,255,255),(255,255,255)), timeout=1)
-
-#%%

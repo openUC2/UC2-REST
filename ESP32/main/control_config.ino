@@ -1,31 +1,32 @@
-#include <Preferences.h>
-#include <ArduinoJson.h>
-#include "parameters_config.h"
-
-Preferences preferences;
-
 
 
 void config_act_fct() {
 
-  if(jsonDocument.containsKey("resetPrefs")) {
+  if (jsonDocument.containsKey("resetConfig")) {
+    if (DEBUG) Serial.println("resetConfig");
     resetConfigurations();
   }
-  
+  if (jsonDocument.containsKey("applyConfig")) {
+    if (DEBUG) Serial.println("applyConfig");
+    if (DEBUG) Serial.println("Restarting..");
+    ESP.restart();
+  }
+  if (jsonDocument.containsKey("printConfig")) {
+    if (DEBUG) Serial.println("printConfig");
+    printConfig();
+  }
+
   jsonDocument.clear();
   jsonDocument["return"] = 1;
 }
 
 void config_set_fct() {
   setConfigurations();
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
 }
 
 void config_get_fct() {
-  loadConfiguration();
   jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  loadConfiguration();
 }
 
 bool resetConfigurations() {
@@ -38,52 +39,89 @@ bool resetConfigurations() {
 
 bool setConfigurations() {
   /*
-  This function sets the preferences for the parameters based on a JSON document.
+    This function sets the preferences for the parameters based on a JSON document.
   */
-  if(DEBUG) Serial.println("Setting Hardware Configuration");
-  
+  if (DEBUG) Serial.println("Setting Hardware Configuration");
+
   preferences.begin(prefNamespace , false);
 
+  // MOTOR X
   if (jsonDocument.containsKey(keyMotorXStepPin))
-  preferences.putUInt(keyMotorXStepPin, jsonDocument[keyMotorXStepPin]);
-  
-  if (jsonDocument.containsKey(keyMotorXStepPin))
-  preferences.putUInt(keyMotorXDirPin, jsonDocument[keyMotorXDirPin]);
+    preferences.putUInt(keyMotorXStepPin, jsonDocument[keyMotorXStepPin]);
+  if (jsonDocument.containsKey(keyMotorXDirPin))
+    preferences.putUInt(keyMotorXDirPin, jsonDocument[keyMotorXDirPin]);
 
-  preferences.putUInt(keyMotorYStepPin, jsonDocument[keyMotorYStepPin]);
-  preferences.putUInt(keyMotorYDirPin, jsonDocument[keyMotorYDirPin]);
+  // MOTOR Y
+  if (jsonDocument.containsKey(keyMotorYStepPin))
+    preferences.putUInt(keyMotorYStepPin, jsonDocument[keyMotorYStepPin]);
+  if (jsonDocument.containsKey(keyMotorYDirPin))
+    preferences.putUInt(keyMotorYDirPin, jsonDocument[keyMotorYDirPin]);
 
-  preferences.putUInt(keyMotorZStepPin, jsonDocument[keyMotorZStepPin]);
-  preferences.putUInt(keyMotorZDirPin, jsonDocument[keyMotorZDirPin]);
+  // MOTOR Z
+  if (jsonDocument.containsKey(keyMotorZStepPin))
+    preferences.putUInt(keyMotorZStepPin, jsonDocument[keyMotorZStepPin]);
+  if (jsonDocument.containsKey(keyMotorZDirPin))
+    preferences.putUInt(keyMotorZDirPin, jsonDocument[keyMotorZDirPin]);
 
-  preferences.putUInt(keyMotorAStepPin, jsonDocument[keyMotorAStepPin]);
-  preferences.putUInt(keyMotorADirPin, jsonDocument[keyMotorADirPin]);
+  // MOTOR A
+  if (jsonDocument.containsKey(keyMotorAStepPin))
+    preferences.putUInt(keyMotorAStepPin, jsonDocument[keyMotorAStepPin]);
+  if (jsonDocument.containsKey(keyMotorADirPin))
+    preferences.putUInt(keyMotorADirPin, jsonDocument[keyMotorADirPin]);
 
-  preferences.putUInt(keyMotorEnable, jsonDocument[keyMotorEnable]);
+  // MOTOR ENABLE
+  if (jsonDocument.containsKey(keyMotorEnable))
+    preferences.putUInt(keyMotorEnable, jsonDocument[keyMotorEnable]);
 
-  preferences.putUInt(keyLEDArray, jsonDocument[keyLEDArray]);
-  preferences.putUInt(keyLEDNumLEDArray, jsonDocument[keyLEDNumLEDArray]);
+  // LEDARRAY
+  if (jsonDocument.containsKey(keyLEDArray))
+    preferences.putUInt(keyLEDArray, jsonDocument[keyLEDArray]);
+  if (jsonDocument.containsKey(keyLEDNumLEDArray))
+    preferences.putUInt(keyLEDNumLEDArray, jsonDocument[keyLEDNumLEDArray]);
 
-  preferences.putUInt(keyDigital1Pin, jsonDocument[keyDigital1Pin]);
-  preferences.putUInt(keyDigital2Pin, jsonDocument[keyDigital2Pin]);
+  // DIGITAL PINN
+  if (jsonDocument.containsKey(keyDigital1Pin))
+    preferences.putUInt(keyDigital1Pin, jsonDocument[keyDigital1Pin]);
+  if (jsonDocument.containsKey(keyDigital2Pin))
+    preferences.putUInt(keyDigital2Pin, jsonDocument[keyDigital2Pin]);
 
-  preferences.putUInt(keyAnalog1Pin, jsonDocument[keyAnalog1Pin]);
-  preferences.putUInt(keyAnalog2Pin, jsonDocument[keyAnalog2Pin]);
-  preferences.putUInt(keyAnalog3Pin, jsonDocument[keyAnalog3Pin]);
+  // ANALOG PIN
+  if (jsonDocument.containsKey(keyAnalog1Pin))
+    preferences.putUInt(keyAnalog1Pin, jsonDocument[keyAnalog1Pin]);
+  if (jsonDocument.containsKey(keyAnalog2Pin))
+    preferences.putUInt(keyAnalog2Pin, jsonDocument[keyAnalog2Pin]);
+  if (jsonDocument.containsKey(keyAnalog3Pin))
+    preferences.putUInt(keyAnalog3Pin, jsonDocument[keyAnalog3Pin]);
 
-  preferences.putUInt(keyLaser1Pin, jsonDocument[keyLaser1Pin]);
-  preferences.putUInt(keyLaser2Pin, jsonDocument[keyLaser2Pin]);
-  preferences.putUInt(keyLaser3Pin, jsonDocument[keyLaser3Pin]);
+  // LASER PIN
+  if (jsonDocument.containsKey(keyLaser1Pin))
+    preferences.putUInt(keyLaser1Pin, jsonDocument[keyLaser1Pin]);
+  if (jsonDocument.containsKey(keyLaser2Pin))
+    preferences.putUInt(keyLaser2Pin, jsonDocument[keyLaser2Pin]);
+  if (jsonDocument.containsKey(keyLaser3Pin))
+    preferences.putUInt(keyLaser3Pin, jsonDocument[keyLaser3Pin]);
 
-  preferences.putUInt(keyDACfake1Pin, jsonDocument[keyDACfake1Pin]);
-  preferences.putUInt(keyDACfake2Pin, jsonDocument[keyDACfake2Pin]);
+  // DAC FAKE PIN
+  if (jsonDocument.containsKey(keyDACfake1Pin))
+    preferences.putUInt(keyDACfake1Pin, jsonDocument[keyDACfake1Pin]);
+  if (jsonDocument.containsKey(keyDACfake2Pin))
+    preferences.putUInt(keyDACfake2Pin, jsonDocument[keyDACfake2Pin]);
 
-  String Identifier = jsonDocument[keyIdentifier];
-  String WifiSSID = jsonDocument[keyWifiSSID];
-  String WifiPW = jsonDocument[keyWifiPW];
-  preferences.putString(keyIdentifier, Identifier);
-  preferences.putString(keyWifiSSID, WifiSSID);
-  preferences.putString(keyWifiPW, WifiPW);
+  // IDENTIFIER
+  if (jsonDocument.containsKey(keyIdentifier)) {
+    String Identifier = jsonDocument[keyIdentifier];
+    preferences.putString(keyIdentifier, Identifier);
+  }
+
+  // WIFI
+  if (jsonDocument.containsKey(keyWifiSSID)) {
+    String WifiSSID = jsonDocument[keyWifiSSID];
+    preferences.putString(keyWifiSSID, WifiSSID);
+  }
+  if (jsonDocument.containsKey(keyWifiPW)) {
+    String WifiPW = jsonDocument[keyWifiPW];
+    preferences.putString(keyWifiPW, WifiPW);
+  }
 
   preferences.end();
   return true;
@@ -92,7 +130,7 @@ bool setConfigurations() {
 
 bool loadConfiguration() {
   /* This function gets the preferences for the parameters
-  and returns a JSON document. */
+    and returns a JSON document. */
 
   preferences.begin(prefNamespace, false);
   STEP_PIN_X = preferences.getUInt(keyMotorXStepPin, STEP_PIN_X);
@@ -129,10 +167,30 @@ bool loadConfiguration() {
   IDENTIFIER_NAME = preferences.getString(keyDACfake1Pin, IDENTIFIER_NAME);
   WifiSSID = preferences.getString(keyWifiSSID, WifiSSID).c_str();
   WifiPW = preferences.getString(keyWifiPW, WifiPW).c_str();
+  preferences.end();
 
+  // return preferences as json document
+  config2json();
+
+  return true;
+}
+
+void printConfig() {
+  // Send JSON information back
+  Serial.println("++");
+  config2json();
+  serializeJsonPretty(jsonDocument, Serial);
+  Serial.println();
+  Serial.println("--");
   jsonDocument.clear();
-  
+  jsonDocument.garbageCollect();
+
+}
+
+void config2json() {
   // Assign to JSON jsonDocumentument
+  jsonDocument.clear();
+
   jsonDocument["motXstp"] = STEP_PIN_X;
   jsonDocument["motXdir"] = DIR_PIN_X;
   jsonDocument["motYstp"] = STEP_PIN_Y;
@@ -158,11 +216,9 @@ bool loadConfiguration() {
   jsonDocument["ssid"] = WifiSSID;
   jsonDocument["PW"] = WifiPW;
 
-  Serial.println("Current pin definitions:");
-  serializeJsonPretty(jsonDocument, Serial);
+  if (DEBUG) Serial.println("Current pin definitions:");
+  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
 
-  preferences.end();
-  return true;
 }
 
 

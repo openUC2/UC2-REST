@@ -1,7 +1,4 @@
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
-#include"esp_gap_bt_api.h"
-#include "esp_err.h"
+
 
 static inline int8_t sgn(int val) {
   if (val < 0) return -1;
@@ -124,6 +121,28 @@ void clearBlueetoothDevice() {
 }
 
 
+bool isFirstRun() {
+  preferences.begin(prefNamespace, false);
+  static const char dateKey[] = "date";
+  const char *compiled_date = __DATE__ " " __TIME__;
+  String stored_date = preferences.getString(dateKey, "");  // FIXME
+
+  Serial.println("Stored date:");
+  Serial.println(stored_date);
+  Serial.println("Compiled date:");
+  Serial.println(compiled_date);
+
+  Serial.print("First run? ");
+  if (!stored_date.equals(compiled_date)) {
+    Serial.println("yes");
+  } else {
+    Serial.println("no");
+  }
+
+  preferences.putString(dateKey, compiled_date); // FIXME?
+  preferences.end();
+  return !stored_date.equals(compiled_date);
+}
 
 /*
    wrapper for HTTP requests
