@@ -33,8 +33,6 @@ void initWifiAP(const char *ssid) {
   Serial.println(WiFi.softAPIP());
 }
 
-
-
 void joinWifi(char *ssid, char *password) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -95,47 +93,6 @@ void autoconnectWifi(boolean isResetWifiSettings) {
   Serial.println(WiFi.localIP());
 
 }
-
-
-
-void startserver() {
-  /*return index page which is stored in serverIndex */
-
-  Serial.println("Spinning up OTA server");
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", otaindex);
-  });
-  /*handling uploading firmware file */
-  server.on("/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {
-    HTTPUpload& upload = server.upload();
-    if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("Update: %s\n", upload.filename.c_str());
-      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_WRITE) {
-      /* flashing firmware to ESP*/
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-      } else {
-        Update.printError(Serial);
-      }
-    }
-  });
-  server.begin();
-  Serial.println("Starting OTA server on port: '82'");
-  Serial.println("Visit http://IPADDRESS_SCOPE:82");
-}
-
 
 //https://www.gabrielcsapo.com/arduino-web-server-esp-32/
 bool loadFromSPIFFS(String path) {
@@ -209,15 +166,48 @@ void handleswaggercss() {
 */
 
 
-void setup_routing() {
+void setupRouting() {
   // GET
   //  server.on("/temperature", getTemperature);
   //server.on("/env", getEnv);
   // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
-
+  Serial.println("Setting up HTTP Routing");
   server.on(state_act_endpoint, HTTP_POST, state_act_fct_http);
   server.on(state_get_endpoint, HTTP_POST, state_get_fct_http);
   server.on(state_set_endpoint, HTTP_POST, state_set_fct_http);
+
+  server.on("/identity", getIdentity);
+
+  server.on("/ota", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/html", otaindex);
+  });
+  /*handling uploading firmware file */
+  server.on("/update", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+    ESP.restart();
+  }, []() {
+    HTTPUpload& upload = server.upload();
+    if (upload.status == UPLOAD_FILE_START) {
+      Serial.printf("Update: %s\n", upload.filename.c_str());
+      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+      /* flashing firmware to ESP*/
+      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_END) {
+      if (Update.end(true)) { //true to set the size to the current progress
+        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+      } else {
+        Update.printError(Serial);
+      }
+    }
+  });
+
 
   // Website
   server.on("/openapi.yaml", handleSwaggerYaml);
@@ -280,8 +270,9 @@ server.on(config_act_endpoint, HTTP_POST, config_act_fct_http);
 server.on(config_get_endpoint, HTTP_POST, config_get_fct_http);
 server.on(config_set_endpoint, HTTP_POST, config_set_fct_http);
 
+}
 
-
-  // start server
+void startServer() {
+  Serial.println("Starting Server");
   server.begin();
 }

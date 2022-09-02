@@ -408,9 +408,7 @@ void setup_motor() {
      Motor related settings
   */
   Serial.println("Setting Up Motors");
-  Serial.println("1");
   pinMode(ENABLE_PIN, OUTPUT);
-  Serial.println("2");
   setEnableMotor(true);
   Serial.println("Setting Up Motor A,X,Y,Z");
   stepper_A.setMaxSpeed(MAX_VELOCITY_A);
