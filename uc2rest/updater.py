@@ -4,9 +4,19 @@ import subprocess
 import os 
 class updater(object):
     
-    def __init__(self, port=None, firmwarePath="./", firmwareDownloadPath=None):
-        self.port = port
-        self.firmwarePath = firmwarePath
+    def __init__(self, ESP32=None, port=None, firmwarePath="./", firmwareDownloadPath=None):
+        if ESP32 is not None:
+            self.port = ESP32.serialport
+        if port is not None:
+            self.port = port
+            
+
+        # define a temporary firmware file name for the firmware download
+        if firmwarePath is not None:
+            self.firmwarePath = firmwarePath
+        else:
+            self.firmwarePath = "./"
+            
         self.FWfileName = 'firmware.bin'
         
         if firmwareDownloadPath is None:
@@ -14,7 +24,10 @@ class updater(object):
         else:   
             self.firmwareDownloadPath = firmwareDownloadPath
             
-    def flashFirmware(self):
+    def flashFirmware(self, firmwarePath=None):
+        # sideload the firmware if already available online
+        if firmwarePath is not None:
+            self.FWfileName = firmwarePath
         try:
             cmd = ["esptool.py", 
                     "--chip", "esp32",
@@ -37,8 +50,21 @@ class updater(object):
     def downloadFirmware(self):
         print("Downloading Firmware")
         response = requests.get(self.firmwareDownloadPath)
-        open(self.FWfileName, "wb").write(response.content)
-        
+        # check if folder exists and create it if not
+        if response.status_code == 200:
+            
+            try:
+                if not os.path.exists(self.firmwarePath):
+                    os.makedirs(self.firmwarePath)
+                open(self.firmwarePath+self.FWfileName, "wb").write(response.content) 
+                return True
+            except Exception as e:
+                print(e)
+                print("Firmware download failed")
+                return False
+        else:
+            return False
+                
     def removeFirmware(self):
         try:
             print("Removing Firmware")

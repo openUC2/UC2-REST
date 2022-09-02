@@ -142,7 +142,7 @@ class config(object):
     Set Configurations
     ################################################################################################################################################'''
 
-    def loadConfig(self, timeout=1):
+    def loadConfigDevice(self, timeout=1):
         path = '/config_get'
         payload = {
         }
@@ -151,7 +151,7 @@ class config(object):
         self.setDefaultConfig(r)
         return r
 
-    def setConfig(self, config, timeout=1):
+    def setConfigDevice(self, config, timeout=1):
         path = '/config_set'
         if type(config)==dict:
             payload = config

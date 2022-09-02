@@ -129,7 +129,7 @@ class ESP32Client(object):
             self.is_connected = False
             if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
 
-        self.pinConfig = self.config.loadConfig()
+        self.pinConfig = self.config.loadConfigDevice()
         self.__logger.debug("We are connected: "+str(self.is_connected))
 
 
