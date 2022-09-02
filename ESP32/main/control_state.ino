@@ -28,7 +28,9 @@ void state_act_fct() {
   }
 
   if (jsonDocument.containsKey("pscontroller")) {
-    IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
+    #if defined IS_PS3 || defined IS_PS4
+      gp_controller.IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
+    #endif
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
@@ -54,7 +56,9 @@ void state_get_fct() {
 
   else if (jsonDocument.containsKey("pscontroller")) {
     jsonDocument.clear();
-    jsonDocument["pscontroller"] = IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
+    #if defined IS_PS3 || defined IS_PS4
+    jsonDocument["pscontroller"] = gp_controller.IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
+    #endif
   }
   else {
     jsonDocument.clear();

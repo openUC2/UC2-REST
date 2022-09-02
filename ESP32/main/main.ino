@@ -28,10 +28,8 @@
 //#include "pindef_polarizationsetup.h"
 //#include "pindef_freedcam.h"
 #include "pindef_uc2standalone.h"
+#include "config.h"
 
-
-int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during multiple serial prints..
-#define BAUDRATE 115200
 
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
@@ -42,15 +40,15 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 #include "soc/rtc_cntl_reg.h"
 
 #ifdef IS_WIFI
-#include "parameters_wifi.h"
-WiFiManager wm;
+  #include "parameters_wifi.h"
+  WiFiManager wm;
 #endif
 
 #ifdef IS_ANALOG
-#include "parameters_analog.h"
+  #include "parameters_analog.h"
 #endif
 #ifdef IS_DIGITAL
-#include "parameters_digital.h"
+  #include "parameters_digital.h"
 #endif
 
 #ifdef IS_READSENSOR
@@ -60,9 +58,6 @@ WiFiManager wm;
 #ifdef IS_PID
 #include "parameters_PID.h"
 #endif
-
-#include <Ps3Controller.h>
-#include <PS4Controller.h>
 
 
 #include <ArduinoJson.h>
@@ -75,9 +70,9 @@ uint32_t frequency = 1000;
 
 //Where the JSON for the current instruction lives
 #ifdef IS_SLM
-DynamicJsonDocument jsonDocument(32784);
+  DynamicJsonDocument jsonDocument(32784);
 #else
-DynamicJsonDocument jsonDocument(4096);
+  DynamicJsonDocument jsonDocument(4096);
 #endif
 
 #ifdef IS_WIFI
@@ -165,6 +160,15 @@ const char* PID_set_endpoint = "/PID_set";
 const char* PID_get_endpoint = "/PID_get";
 #endif
 
+#ifdef IS_PS3
+  #include "src/gamepads/ps3_controller.h"
+  ps3_controller gp_controller;
+#endif
+#ifdef IS_PS4
+  #include "gamepads/ps4_controller.h"
+  ps4_controller * gp_controller;
+#endif
+
 /* --------------------------------------------
    Setup
   --------------------------------------------
@@ -210,24 +214,18 @@ setup_matrix();
 
 
   clearBlueetoothDevice();
-  Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-  Ps3.attach(onAttach);
-  Ps3.attachOnConnect(onConnect);
-  Ps3.attachOnDisconnect(onDisConnect);
-  const char* PS3_MACADDESS = "01:02:03:04:05:06";
-  Ps3.begin("01:02:03:04:05:06");
-  Serial.println(PS3_MACADDESS);
-  //String address = Ps3.getAddress(); // have arbitrary address?
-  //Serial.println(address);
-  Serial.println("PS3 controler is set up.");
-  Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  PS4.attach(onAttach);
-  PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
-  PS4.attachOnConnect(onConnect);
-  PS4.attachOnDisconnect(onDisConnect);
-  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
-  Serial.println(PS4_MACADDESS);
-  Serial.println("PS4 controler is set up.");
+  #ifdef IS_PS3
+    #ifdef DEBUG_GAMEPAD
+      gp_controller.DEBUG = true;
+    #endif
+    gp_controller.start();
+  #endif
+  #ifdef IS_PS4
+    #ifdef DEBUG_GAMEPAD
+      gp_controller.DEBUG = true;
+    #endif
+    gp_controller->start();
+  #endif
 
   setup_laser();
 
@@ -386,8 +384,9 @@ void loop() {
     LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
 
 
-  control_PS3(); // if controller is operating motors, overheating protection is enabled
-  control_PS4();
+#if defined IS_PS3 || defined IS_PS4
+  gp_controller.control(); // if controller is operating motors, overheating protection is enabled
+#endif
 
 #ifdef IS_WIFI
   server.handleClient();

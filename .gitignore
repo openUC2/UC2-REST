@@ -16,3 +16,5 @@ docs/build_*
 # misc
 .DS_Store
 
+/build/*
+/ESP32/main/.vs/*
