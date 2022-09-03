@@ -80,7 +80,9 @@ class ESP32Client(object):
     steps_last_2 = 0
     steps_last_3 = 0
 
-    def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
+    BAUDRATE = 115200
+    
+    def __init__(self, host=None, port=31950, serialport=None, baudrate=BAUDRATE):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -133,10 +135,13 @@ class ESP32Client(object):
         self.__logger.debug("We are connected: "+str(self.is_connected))
 
 
-    def initSerial(self,serialport,baudrate):
+    def initSerial(self,serialport,baudrate=None):
         # use client in wired mode
         self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
         self.is_serial = True
+        
+        if baudrate is None:
+           baudrate = self.baudrate 
 
         if IS_IMSWITCH: self.__logger.debug(f'Searching for SERIAL devices...')
         self.is_connected = False
@@ -171,6 +176,10 @@ class ESP32Client(object):
                             self.__logger.error(e)
                         self.is_connected = False
 
+
+    def closeSerial(self):
+        self.serialdevice.close()
+        
     def isConnected(self):
         # check if client is connected to the same network
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
