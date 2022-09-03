@@ -217,12 +217,14 @@ focusMotor.setup_motor();
     #ifdef DEBUG_GAMEPAD
       gp_controller.DEBUG = true;
     #endif
+    gp_controller.focusmotor = &focusMotor;
     gp_controller.start();
   #endif
   #ifdef IS_PS4
     #ifdef DEBUG_GAMEPAD
       gp_controller.DEBUG = true;
     #endif
+    gp_controller.focusmotor = &focusMotor;
     gp_controller->start();
   #endif
 

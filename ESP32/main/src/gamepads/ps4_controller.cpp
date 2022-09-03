@@ -38,7 +38,7 @@ void gamepad::start()
 void gamepad::onConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
-  setEnableMotor(true);
+  focusmotor->setEnableMotor(true);
 
     if (pS4Controller.Charging())
     {
@@ -59,7 +59,7 @@ void gamepad::onAttach() {
 
 void gamepad::onDisConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
-  setEnableMotor(false);
+  focusmotor->setEnableMotor(false);
 }
 
 
@@ -70,23 +70,23 @@ void gamepad::activate() {
     IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
-    setEnableMotor(IS_PSCONTROLER_ACTIVE);
+    focusmotor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
   if (pS4Controller.event.button_down.cross) {
-    IS_PS4_CONTROLER_LEDARRAY = !IS_PS4_CONTROLER_LEDARRAY;
+    IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (cross): ");
-    if (DEBUG) Serial.println(IS_PS4_CONTROLER_LEDARRAY);
+    if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
 
-    set_all(255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
+    set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
   if (pS4Controller.event.button_down.circle) {
-    IS_PS4_CONTROLER_LEDARRAY = !IS_PS4_CONTROLER_LEDARRAY;
+    IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (circle): ");
-    if (DEBUG) Serial.println(IS_PS4_CONTROLER_LEDARRAY);
+    if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
 
-    set_center(255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY,255*IS_PS4_CONTROLER_LEDARRAY);
+    set_center(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
 
   }
@@ -159,13 +159,13 @@ void gamepad::control() {
         // move_z
         stick_ly = pS4Controller.data.analog.stick.ly;
         stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-        mspeed2 =  stick_ly * 5 * global_speed;
-        if (not getEnableMotor())
-          setEnableMotor(true);
+        focusmotor->mspeed2 =  stick_ly * 5 * global_speed;
+        if (!focusmotor->getEnableMotor())
+          focusmotor->setEnableMotor(true);
       }
-      else if (mspeed2 != 0) {
-        mspeed2 = 0;
-        stepper_Y.setSpeed(mspeed2); // set motor off only once to not affect other modes
+      else if (focusmotor->mspeed2 != 0) {
+        focusmotor->mspeed2 = 0;
+        focusmotor->stepper_Y.setSpeed(focusmotor->mspeed2); // set motor off only once to not affect other modes
       }
 
       // Z-Direction
@@ -173,13 +173,13 @@ void gamepad::control() {
         // move_x
         stick_rx = PS4.data.analog.stick.rx;
         stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-        mspeed3  = stick_rx * 5 * global_speed;
-        if (not getEnableMotor())
-          setEnableMotor(true);
+        focusmotor->mspeed3  = stick_rx * 5 * global_speed;
+        if (focusmotor->getEnableMotor())
+          focusmotor->setEnableMotor(true);
       }
-      else if (mspeed3 != 0) {
-        mspeed3 = 0;
-        stepper_Z.setSpeed(mspeed3); // set motor off only once to not affect other modes
+      else if (focusmotor->mspeed3 != 0) {
+        focusmotor->mspeed3 = 0;
+        focusmotor->stepper_Z.setSpeed(focusmotor->mspeed3); // set motor off only once to not affect other modes
       }
 
       // X-direction
@@ -187,13 +187,13 @@ void gamepad::control() {
         // move_y
         stick_ry = pS4Controller.data.analog.stick.ry;
         stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-        mspeed1 = stick_ry * 5 * global_speed;
-        if (not getEnableMotor())
-          setEnableMotor(true);
+        focusmotor->mspeed1 = stick_ry * 5 * global_speed;
+        if (!focusmotor->getEnableMotor())
+          focusmotor->setEnableMotor(true);
       }
-      else if (mspeed1 != 0) {
-        mspeed1 = 0;
-        stepper_X.setSpeed(mspeed1); // set motor off only once to not affect other modes
+      else if (focusmotor->mspeed1 != 0) {
+        focusmotor->mspeed1 = 0;
+        focusmotor->stepper_X.setSpeed(focusmotor->mspeed1); // set motor off only once to not affect other modes
       }
 
       /*
@@ -275,15 +275,15 @@ void gamepad::control() {
 #endif
 
       // run all motors simultaneously
-      stepper_X.setSpeed(mspeed1);
-      stepper_Y.setSpeed(mspeed2);
-      stepper_Z.setSpeed(mspeed3);
+      focusmotor->stepper_X.setSpeed(focusmotor->mspeed1);
+      focusmotor->stepper_Y.setSpeed(focusmotor->mspeed2);
+      focusmotor->stepper_Z.setSpeed(focusmotor->mspeed3);
 
-      if (mspeed1 or mspeed2 or mspeed3) {
-        isforever = true;
+      if (focusmotor->mspeed1 or focusmotor->mspeed2 or focusmotor->mspeed3) {
+        focusmotor->isforever = true;
       }
       else {
-        isforever = false;
+        focusmotor->isforever = false;
       }
     }
   

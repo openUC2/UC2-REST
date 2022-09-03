@@ -41,7 +41,7 @@ void gamepad::onConnect()
 {
     if (DEBUG) Serial.println("PS3 Controller Connected.");
     IS_PSCONTROLER_ACTIVE = true;
-    setEnableMotor(true);
+    focusmotor->setEnableMotor(true);
 }
 
 void gamepad::onAttach() {
@@ -51,7 +51,7 @@ void gamepad::onAttach() {
 
 void gamepad::onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
-  setEnableMotor(false);
+  focusmotor->setEnableMotor(false);
 }
 
 
@@ -61,14 +61,14 @@ void gamepad::activate() {
     IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
-    setEnableMotor(IS_PSCONTROLER_ACTIVE);
+    focusmotor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
   if (ps3Controller.event.button_down.cross) {
-    IS_PS3_CONTROLER_LEDARRAY = !IS_PS3_CONTROLER_LEDARRAY;
+    IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to: ");
-    if (DEBUG) Serial.println(IS_PS3_CONTROLER_LEDARRAY);
-    set_all(255 * IS_PS3_CONTROLER_LEDARRAY, 255 * IS_PS3_CONTROLER_LEDARRAY, 255 * IS_PS3_CONTROLER_LEDARRAY);
+    if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
+    set_all(255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
 
@@ -110,13 +110,13 @@ void gamepad::control() {
       if (abs(stick_ly) > 100)
         stick_ly *= 2;
 
-      mspeed3 =  stick_ly * 5 * global_speed;
-      if (not getEnableMotor())
-        setEnableMotor(true);
+      focusmotor->mspeed3 =  stick_ly * 5 * global_speed;
+      if (!focusmotor->getEnableMotor())
+        focusmotor->setEnableMotor(true);
     }
-    else if (mspeed3 != 0) {
-      mspeed3 = 0;
-      stepper_Y.setSpeed(mspeed3); // set motor off only once to not affect other modes
+    else if (focusmotor->mspeed3 != 0) {
+      focusmotor->mspeed3 = 0;
+      focusmotor->stepper_Y.setSpeed(focusmotor->mspeed3); // set motor off only once to not affect other modes
     }
 
     // Z-Direction
@@ -128,13 +128,13 @@ void gamepad::control() {
       if (abs(stick_rx) > 100)
         stick_rx *= 2;
 
-      mspeed2  = stick_rx * 5 * global_speed;
-      if (not getEnableMotor())
-        setEnableMotor(true);
+      focusmotor->mspeed2  = stick_rx * 5 * global_speed;
+      if (!focusmotor->getEnableMotor())
+        focusmotor->setEnableMotor(true);
     }
-    else if (mspeed2 != 0) {
-      mspeed2 = 0;
-      stepper_Z.setSpeed(mspeed2); // set motor off only once to not affect other modes
+    else if (focusmotor->mspeed2 != 0) {
+      focusmotor->mspeed2 = 0;
+      focusmotor->stepper_Z.setSpeed(focusmotor->mspeed2); // set motor off only once to not affect other modes
     }
 
     // X-direction
@@ -144,13 +144,13 @@ void gamepad::control() {
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
       if (abs(stick_ry) > 100)
         stick_ry *= 2;
-      mspeed1 = stick_ry * 5 * global_speed;
-      if (not getEnableMotor())
-        setEnableMotor(true);
+      focusmotor->mspeed1 = stick_ry * 5 * global_speed;
+      if (not focusmotor->getEnableMotor())
+        focusmotor->setEnableMotor(true);
     }
-    else if (mspeed1 != 0) {
-      mspeed1 = 0;
-      stepper_X.setSpeed(mspeed1); // set motor off only once to not affect other modes
+    else if (focusmotor->mspeed1 != 0) {
+      focusmotor->mspeed1 = 0;
+      focusmotor->stepper_X.setSpeed(focusmotor->mspeed1); // set motor off only once to not affect other modes
     }
 
     /*
@@ -232,15 +232,15 @@ void gamepad::control() {
 #endif
 
     // run all motors simultaneously
-    stepper_X.setSpeed(mspeed1);
-    stepper_Y.setSpeed(mspeed3);
-    stepper_Z.setSpeed(mspeed2);
+    focusmotor->stepper_X.setSpeed(focusmotor->mspeed1);
+    focusmotor->stepper_Y.setSpeed(focusmotor->mspeed3);
+    focusmotor->stepper_Z.setSpeed(focusmotor->mspeed2);
 
-    if (mspeed1 or mspeed3 or mspeed2) {
-      isforever = true;
+    if (focusmotor->mspeed1 or focusmotor->mspeed3 or focusmotor->mspeed2) {
+      focusmotor->isforever = true;
     }
     else {
-      isforever = false;
+      focusmotor->isforever = false;
     }
   }
 

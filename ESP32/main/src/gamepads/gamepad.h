@@ -21,9 +21,10 @@ public:
     int IS_PSCONTROLER_ACTIVE = false;
 
     int global_speed = 2; // multiplier for the speed
+    FocusMotor *focusmotor;
 
     bool DEBUG = false;
-    bool IS_PS3_CONTROLER_LEDARRAY = false;
+    bool IS_PS_CONTROLER_LEDARRAY = false;
     void start();
     void stop();
 
