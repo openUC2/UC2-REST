@@ -30,7 +30,7 @@
 #include "pindef_uc2standalone.h"
 #include "config.h"
 
-
+#include "src/motor/FocusMotor.h"
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
@@ -90,12 +90,7 @@ DAC_Module *dac = new DAC_Module();
 /*
    Register devices
 */
-
-#include "parameters_motor.h"
-AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+FocusMotor focusMotor;
 
 
 #ifdef IS_SLM
@@ -210,7 +205,11 @@ void setup()
 Serial.println("IS_LEDARR");
 setup_matrix();
 
-  setup_motor();
+#ifdef DEBUG_MOTOR
+  focusmotor.DEBUG = true;
+#endif
+focusMotor.jsonDocument = jsonDocument;
+focusMotor.setup_motor();
 
 
   clearBlueetoothDevice();
@@ -395,9 +394,9 @@ void loop() {
   /*
      continous control during loop
   */
-  if (not isstop) {
+  if (!isstop) {
     isactive = true;
-    drive_motor_background();
+    focusMotor.drive_motor_background();
   }
 
 
@@ -428,13 +427,13 @@ void jsonProcessor(char task[]) {
     Drive Motors
   */
   if (strcmp(task, motor_act_endpoint) == 0) {
-    motor_act_fct();
+    focusMotor.motor_act_fct();
   }
   if (strcmp(task, motor_set_endpoint) == 0) {
-    motor_set_fct();
+    focusMotor.motor_set_fct();
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
-    motor_get_fct();
+    focusMotor.motor_get_fct();
   }
 
 

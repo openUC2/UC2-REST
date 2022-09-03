@@ -1,6 +1,8 @@
-// Custom function accessible by the API
-void motor_act_fct() {
-  if (DEBUG) Serial.println("motor_act_fct");
+#include "FocusMotor.h"
+
+void FocusMotor::motor_act_fct()
+{
+    if (DEBUG) Serial.println("motor_act_fct");
 
 
   // assign default values to thhe variables
@@ -177,20 +179,21 @@ void motor_act_fct() {
   jsonDocument["POSZ"] = POSITION_MOTOR_Z;
 }
 
-void setEnableMotor(bool enable) {
-  isBusy = enable;
-  digitalWrite(ENABLE, !enable);
-  motor_enable = enable;
+void FocusMotor::setEnableMotor(bool enable)
+{
+    isBusy = enable;
+    digitalWrite(ENABLE, !enable);
+    motor_enable = enable;
 }
 
-bool getEnableMotor() {
-  return motor_enable;
+bool FocusMotor::getEnableMotor()
+{
+    return motor_enable;
 }
 
-void motor_set_fct() {
-
-
-  // default value handling
+void FocusMotor::motor_set_fct()
+{
+    // default value handling
   int axis = -1;
   if (jsonDocument.containsKey("axis")) {
     int axis = jsonDocument["axis"];
@@ -344,11 +347,9 @@ void motor_set_fct() {
   jsonDocument["return"] = 1;
 }
 
-
-
-// Custom function accessible by the API
-void motor_get_fct() {
-  int axis = jsonDocument["axis"];
+void FocusMotor::motor_get_fct()
+{
+    int axis = jsonDocument["axis"];
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
 
@@ -403,9 +404,9 @@ void motor_get_fct() {
   jsonDocument["sign"] = sign;
 }
 
-
-void setup_motor() {
-
+void FocusMotor::setup_motor()
+{
+    
   /*
      Motor related settings
   */
@@ -436,10 +437,9 @@ void setup_motor() {
   setEnableMotor(false);
 }
 
-
-
-bool drive_motor_background() {
-
+bool FocusMotor::drive_motor_background()
+{
+    
   // update motor positions
   POSITION_MOTOR_A = stepper_A.currentPosition();
   POSITION_MOTOR_X = stepper_X.currentPosition();
@@ -493,14 +493,8 @@ bool drive_motor_background() {
   return false; //never reached, but keeps compiler happy?
 }
 
-
-/*
-   wrapper for HTTP requests
-*/
-
-
 #ifdef IS_WIFI
-void motor_act_fct_http() {
+void FocusMotor::motor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
@@ -510,7 +504,7 @@ void motor_act_fct_http() {
 }
 
 // wrapper for HTTP requests
-void motor_get_fct_http() {
+void FocusMotor::motor_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
@@ -520,7 +514,7 @@ void motor_get_fct_http() {
 }
 
 // wrapper for HTTP requests
-void motor_set_fct_http() {
+void FocusMotor::motor_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
@@ -529,4 +523,3 @@ void motor_set_fct_http() {
   server.send(200, "application/json", output);
 }
 #endif
-
