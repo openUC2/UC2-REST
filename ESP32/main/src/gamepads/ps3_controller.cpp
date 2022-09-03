@@ -3,12 +3,32 @@
 
 Ps3Controller ps3Controller;
 
+Ps3Controller::callback_t ps3_controller::onConnected(gamepad *p)
+{
+    p->onConnect();
+}
+
+Ps3Controller::callback_t ps3_controller::onAttached(gamepad *p)
+{
+    p->onAttach();
+}
+
+Ps3Controller::callback_t ps3_controller::onDisConnected(gamepad *p)
+{
+    p->onDisConnect();
+}
+
+Ps3Controller::callback_t ps3_controller::onActivated(gamepad *p)
+{
+    p->activate();
+}
+
 void gamepad::start()
 {
     Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-    ps3Controller.attach(onAttach);
-    ps3Controller.attachOnConnect(onConnect);
-    ps3Controller.attachOnDisconnect(onDisConnect);
+    ps3Controller.attach(ps3_controller::onAttached(this));
+    ps3Controller.attachOnConnect(ps3_controller::onConnected(this));
+    ps3Controller.attachOnDisconnect(ps3_controller::onDisConnected(this));
     const char* PS3_MACADDESS = "01:02:03:04:05:06";
     ps3Controller.begin("01:02:03:04:05:06");
     Serial.println(PS3_MACADDESS);
@@ -25,7 +45,7 @@ void gamepad::onConnect()
 }
 
 void gamepad::onAttach() {
-  ps3Controller.attach((Ps3Controller::callback_t)&activate);
+  ps3Controller.attach(ps3_controller::onActivated(this));
 }
 
 

@@ -27,10 +27,10 @@ public:
     void start();
     void stop();
 
-    static void onConnect();
-    static void onAttach();
-    static void onDisConnect();
-    static void activate();
+    void onConnect();
+    void onAttach();
+    void onDisConnect();
+    void activate();
     void control();
 };
 

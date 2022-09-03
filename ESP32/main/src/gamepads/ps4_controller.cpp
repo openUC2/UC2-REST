@@ -1,16 +1,14 @@
-#include "ps4_controller.h""
-#include <PS4Controller.h>
+#include "ps4_controller.h"
 
-#define NO_GLOBAL_INSTANCES
 PS4Controller pS4Controller;
 
 void gamepad::start()
 {
     Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-    pS4Controller.attach(onAttach);
+    pS4Controller.attach(ps4_controller::onAttached(this));
     pS4Controller.begin("1a:2b:3c:01:01:01 - UNICAST!");
-    pS4Controller.attachOnConnect(onConnect);
-    pS4Controller.attachOnDisconnect(onDisConnect);
+    pS4Controller.attachOnConnect(ps4_controller::onConnected(this));
+    pS4Controller.attachOnDisconnect(ps4_controller::onDisConnected(this));
     const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
     Serial.println(PS4_MACADDESS);
     Serial.println("PS4 controler is set up.");
@@ -30,16 +28,29 @@ void gamepad::onConnect() {
     Serial.println();
 }
 
-void gamepad::onAttach() {
-  pS4Controller.attach((PS4Controller::callback_t)&activate);
+PS4Controller::callback_t ps4_controller::onConnected(gamepad *p)
+{
+    p->onConnect();
 }
 
+void gamepad::onAttach() {
+  pS4Controller.attach(ps4_controller::onActivated(this));
+}
+
+PS4Controller::callback_t ps4_controller::onAttached(gamepad *p)
+{
+    p->onAttach();
+}
 
 void gamepad::onDisConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   setEnableMotor(false);
 }
 
+PS4Controller::callback_t ps4_controller::onDisConnected(gamepad *p)
+{
+    p->onDisConnect();
+}
 
 void gamepad::activate() {
   // callback for events
@@ -125,6 +136,11 @@ void gamepad::activate() {
 
 
   
+}
+
+PS4Controller::callback_t ps4_controller::onActivated(gamepad *p)
+{
+    p->activate();
 }
 
 void gamepad::control() {

@@ -5,5 +5,12 @@
 
 class ps4_controller : public gamepad
 {
+    private:
+    
+    public:
+    static PS4Controller::callback_t onAttached(gamepad * at);
+    static PS4Controller::callback_t onConnected(gamepad * at);
+    static PS4Controller::callback_t onDisConnected(gamepad * at);
+    static PS4Controller::callback_t onActivated(gamepad * at);
 };
 #endif
