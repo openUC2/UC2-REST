@@ -1,6 +1,18 @@
-void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
+#include "LaserController.h"
 
-  if ( not isBusy) {
+LaserController::LaserController(/* args */)
+{
+}
+
+LaserController::~LaserController()
+{
+}
+
+
+
+void LaserController::LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
+
+  if (!isBusy) {
 
     int LASER_val_wiggle = 0;
     int PWM_CHANNEL_LASER = 0;
@@ -36,18 +48,18 @@ void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod) {
 
 
 // Custom function accessible by the API
-void LASER_act_fct() {
+void LaserController::LASER_act_fct() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
   isBusy = true;
 
-  int LASERid = jsonDocument["LASERid"];
-  int LASERval = jsonDocument["LASERval"];
-  int LASERdespeckle = jsonDocument["LASERdespeckle"];
+  int LASERid = (*jsonDocument)["LASERid"];
+  int LASERval = (*jsonDocument)["LASERval"];
+  int LASERdespeckle = (*jsonDocument)["LASERdespeckle"];
   int LASERdespecklePeriod = 20;
-  if (jsonDocument.containsKey("LASERdespecklePeriod")) {
-    LASERdespecklePeriod = jsonDocument["LASERdespecklePeriod"];
+  if (jsonDocument->containsKey("LASERdespecklePeriod")) {
+    LASERdespecklePeriod = (*jsonDocument)["LASERdespecklePeriod"];
   }
 
   if (DEBUG) {
@@ -63,7 +75,7 @@ void LASER_act_fct() {
     LASER_despeckle_period_1 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
-      Serial.println(LASER_PIN_1);
+      Serial.println(pins->LASER_PIN_1);
     }
     ledcWrite(PWM_CHANNEL_LASER_1, LASERval);
   }
@@ -73,7 +85,7 @@ void LASER_act_fct() {
     LASER_despeckle_period_2 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
-      Serial.println(LASER_PIN_2);
+      Serial.println(pins->LASER_PIN_2);
     }
     ledcWrite(PWM_CHANNEL_LASER_2, LASERval);
   }
@@ -83,116 +95,116 @@ void LASER_act_fct() {
     LASER_despeckle_period_3 = LASERdespecklePeriod;
     if (DEBUG) {
       Serial.print("LaserPIN ");
-      Serial.println(LASER_PIN_3);
+      Serial.println(pins->LASER_PIN_3);
     }
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
   }
 
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 
   isBusy = false;
 }
 
-void LASER_set_fct() {
+void LaserController::LASER_set_fct() {
   // here you can set parameters
-  int LASERid = jsonDocument["LASERid"];
-  int LASERpin = jsonDocument["LASERpin"];
+  int LASERid = (*jsonDocument)["LASERid"];
+  int LASERpin = (*jsonDocument)["LASERpin"];
 
   if (DEBUG) Serial.print("LASERid "); Serial.println(LASERid);
   if (DEBUG) Serial.print("LASERpin "); Serial.println(LASERpin);
 
   if (LASERid != NULL and LASERpin != NULL) {
     if (LASERid == 1) {
-      LASER_PIN_1 = LASERpin;
-      pinMode(LASER_PIN_1, OUTPUT);
-      digitalWrite(LASER_PIN_1, LOW);
+      pins->LASER_PIN_1 = LASERpin;
+      pinMode(pins->LASER_PIN_1, OUTPUT);
+      digitalWrite(pins->LASER_PIN_1, LOW);
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
-      ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
+      ledcAttachPin(pins->LASER_PIN_1, PWM_CHANNEL_LASER_1);
       ledcWrite(PWM_CHANNEL_LASER_1, 0);
     }
     else if (LASERid == 2) {
-      LASER_PIN_2 = LASERpin;
-      pinMode(LASER_PIN_2, OUTPUT);
-      digitalWrite(LASER_PIN_2, LOW);
+      pins->LASER_PIN_2 = LASERpin;
+      pinMode(pins->LASER_PIN_2, OUTPUT);
+      digitalWrite(pins->LASER_PIN_2, LOW);
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
-      ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
+      ledcAttachPin(pins->LASER_PIN_2, PWM_CHANNEL_LASER_2);
       ledcWrite(PWM_CHANNEL_LASER_2, 0);
     }
     else if (LASERid == 3) {
-      LASER_PIN_3 = LASERpin;
-      pinMode(LASER_PIN_3, OUTPUT);
-      digitalWrite(LASER_PIN_3, LOW);
+      pins->LASER_PIN_3 = LASERpin;
+      pinMode(pins->LASER_PIN_3, OUTPUT);
+      digitalWrite(pins->LASER_PIN_3, LOW);
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
-      ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
+      ledcAttachPin(pins->LASER_PIN_3, PWM_CHANNEL_LASER_3);
       ledcWrite(PWM_CHANNEL_LASER_3, 0);
     }
   }
 
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
 // Custom function accessible by the API
-void LASER_get_fct() {
+void LaserController::LASER_get_fct() {
   // GET SOME PARAMETERS HERE
-  int LASERid = jsonDocument["LASERid"];
+  int LASERid = (*jsonDocument)["LASERid"];
   int LASERpin = 0;
   int LASERval = 0;
 
   if (LASERid == 1) {
     if (DEBUG) Serial.println("LASER 1");
-    LASERpin = LASER_PIN_1;
+    LASERpin = pins->LASER_PIN_1;
     LASERval = LASER_val_1;
   }
   else if (LASERid == 2) {
     if (DEBUG) Serial.println("AXIS 2");
     if (DEBUG) Serial.println("LASER 2");
-    LASERpin = LASER_PIN_2;
+    LASERpin = pins->LASER_PIN_2;
     LASERval = LASER_val_2;
   }
   else if (LASERid == 3) {
     if (DEBUG) Serial.println("AXIS 3");
     if (DEBUG) Serial.println("LASER 1");
-    LASERpin = LASER_PIN_3;
+    LASERpin = pins->LASER_PIN_3;
     LASERval = LASER_val_3;
   }
 
-  jsonDocument.clear();
-  jsonDocument["LASERid"] = LASERid;
-  jsonDocument["LASERval"] = LASERval;
-  jsonDocument["LASERpin"] = LASERpin;
+  jsonDocument->clear();
+  (*jsonDocument)["LASERid"] = LASERid;
+  (*jsonDocument)["LASERval"] = LASERval;
+  (*jsonDocument)["LASERpin"] = LASERpin;
 }
 
-void setup_laser() {
+void LaserController::setup_laser() {
   Serial.println("Setting Up LASERs");
 
   // switch of the LASER directly
-  pinMode(LASER_PIN_1, OUTPUT);
-  pinMode(LASER_PIN_2, OUTPUT);
-  pinMode(LASER_PIN_3, OUTPUT);
-  digitalWrite(LASER_PIN_1, LOW);
-  digitalWrite(LASER_PIN_2, LOW);
-  digitalWrite(LASER_PIN_3, LOW);
+  pinMode(pins->LASER_PIN_1, OUTPUT);
+  pinMode(pins->LASER_PIN_2, OUTPUT);
+  pinMode(pins->LASER_PIN_3, OUTPUT);
+  digitalWrite(pins->LASER_PIN_1, LOW);
+  digitalWrite(pins->LASER_PIN_2, LOW);
+  digitalWrite(pins->LASER_PIN_3, LOW);
 
   /* setup the PWM ports and reset them to 0*/
   ledcSetup(PWM_CHANNEL_LASER_1, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_1, PWM_CHANNEL_LASER_1);
+  ledcAttachPin(pins->LASER_PIN_1, PWM_CHANNEL_LASER_1);
   ledcWrite(PWM_CHANNEL_LASER_1, 10000);
   delay(500);
   ledcWrite(PWM_CHANNEL_LASER_1, 0);
 
   ledcSetup(PWM_CHANNEL_LASER_2, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_2, PWM_CHANNEL_LASER_2);
+  ledcAttachPin(pins->LASER_PIN_2, PWM_CHANNEL_LASER_2);
   ledcWrite(PWM_CHANNEL_LASER_2, 10000);
   delay(500);
   ledcWrite(PWM_CHANNEL_LASER_2, 0);
 
   ledcSetup(PWM_CHANNEL_LASER_3, pwm_frequency, pwm_resolution);
-  ledcAttachPin(LASER_PIN_3, PWM_CHANNEL_LASER_3);
+  ledcAttachPin(pins->LASER_PIN_3, PWM_CHANNEL_LASER_3);
   ledcWrite(PWM_CHANNEL_LASER_3, 10000);
   delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
@@ -202,30 +214,29 @@ void setup_laser() {
   wrapper for HTTP requests
 */
 #ifdef IS_WIFI
-void LASER_act_fct_http() {
+void LaserController::LASER_act_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   LASER_act_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void LASER_get_fct_http() {
+void LaserController::LASER_get_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   LASER_get_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void LASER_set_fct_http() {
+void LaserController::LASER_set_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   LASER_set_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
 #endif
-

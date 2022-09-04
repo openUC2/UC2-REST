@@ -27,11 +27,12 @@
 //#include "pindef_oct_eda.h"
 //#include "pindef_polarizationsetup.h"
 //#include "pindef_freedcam.h"
-#include "pindef_uc2standalone.h"
+//#include "pindef_uc2standalone.h"
 #include "config.h"
 
 #include "src/motor/FocusMotor.h"
 #include "src/led/led_controller.h"
+#include "src/laser/LaserController.h"
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
@@ -91,8 +92,10 @@ DAC_Module *dac = new DAC_Module();
 /*
    Register devices
 */
-FocusMotor focusMotor;
-led_controller led;
+FocusMotor * focusMotor;
+led_controller * led;
+LaserController * laser;
+PINDEF * pins;
 
 
 
@@ -182,7 +185,8 @@ void setup()
 
   // for any timing related puposes..
   startMillis = millis();
-
+  pins = new PINDEF();
+  getDefaultPinDef((*pins));
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start");
@@ -206,25 +210,28 @@ void setup()
 #endif
 
 Serial.println("IS_LEDARR");
+led = new led_controller();
 #ifdef DEBUG_LED
-led.DEBUG = true;
+  led->DEBUG = true;
 #endif
-led.jsonDocument = &jsonDocument;
-led.setup_matrix();
+led = new led_controller();
+led->jsonDocument = &jsonDocument;
+led->setup_matrix();
 
+focusMotor = new FocusMotor(pins);
 #ifdef DEBUG_MOTOR
-  focusmotor.DEBUG = true;
+  focusmotor->DEBUG = true;
 #endif
-focusMotor.jsonDocument = &jsonDocument;
-focusMotor.setup_motor();
+focusMotor->jsonDocument = &jsonDocument;
+focusMotor->setup_motor();
 
   clearBlueetoothDevice();
   #ifdef IS_PS3
     #ifdef DEBUG_GAMEPAD
       gp_controller.DEBUG = true;
     #endif
-    gp_controller.focusmotor = &focusMotor;
-    gp_controller.led = &led;
+    gp_controller.focusmotor = focusMotor;
+    gp_controller.led = led;
     gp_controller.start();
   #endif
   #ifdef IS_PS4
@@ -236,7 +243,8 @@ focusMotor.setup_motor();
     gp_controller->start();
   #endif
 
-  setup_laser();
+  laser = new LaserController();
+  laser->setup_laser();
 
 
 #ifdef IS_DAC
@@ -404,9 +412,9 @@ void loop() {
   /*
      continous control during loop
   */
-  if (!focusMotor.isstop) {
-    focusMotor.isactive = true;
-    focusMotor.drive_motor_background();
+  if (!focusMotor->isstop) {
+    focusMotor->isactive = true;
+    focusMotor->drive_motor_background();
   }
 
 
@@ -437,13 +445,13 @@ void jsonProcessor(char task[]) {
     Drive Motors
   */
   if (strcmp(task, motor_act_endpoint) == 0) {
-    focusMotor.motor_act_fct();
+    focusMotor->motor_act_fct();
   }
   if (strcmp(task, motor_set_endpoint) == 0) {
-    focusMotor.motor_set_fct();
+    focusMotor->motor_set_fct();
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
-    focusMotor.motor_get_fct();
+    focusMotor->motor_get_fct();
   }
 
 
@@ -515,11 +523,11 @@ void jsonProcessor(char task[]) {
   */
 
   if (strcmp(task, ledarr_act_endpoint) == 0)
-    led.ledarr_act_fct();
+    led->ledarr_act_fct();
   if (strcmp(task, ledarr_set_endpoint) == 0)
-    led.ledarr_set_fct();
+    led->ledarr_set_fct();
   if (strcmp(task, ledarr_get_endpoint) == 0)
-    led.ledarr_get_fct();
+    led->ledarr_get_fct();
 
 
   /*
@@ -561,7 +569,7 @@ void jsonProcessor(char task[]) {
 
 void tableProcessor() {
 
-  focusMotor.isactive = true;
+  focusMotor->isactive = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -602,5 +610,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
-  focusMotor.isactive = false;
+  focusMotor->isactive = false;
 }

@@ -1,6 +1,15 @@
 #include "FocusMotor.h"
 #include <ArduinoJson.h>
 
+FocusMotor::FocusMotor(PINDEF * p)
+{
+    pins = p;
+    stepper_A = new AccelStepper(AccelStepper::DRIVER, pins->STEP_A, pins->DIR_A);
+    stepper_X = new AccelStepper(AccelStepper::DRIVER, pins->STEP_X, pins->DIR_X);
+    stepper_Y = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Y, pins->DIR_Y);
+    stepper_Z = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Z, pins->DIR_Z);
+};
+
 void FocusMotor::motor_act_fct()
 {
     if (DEBUG) Serial.println("motor_act_fct");
@@ -114,17 +123,17 @@ void FocusMotor::motor_act_fct()
 
   if (isstop) {
     // Immediately stop the motor
-    stepper_A.stop();
-    stepper_X.stop();
-    stepper_Y.stop();
-    stepper_Z.stop();
+    stepper_A->stop();
+    stepper_X->stop();
+    stepper_Y->stop();
+    stepper_Z->stop();
     isforever = 0;
     setEnableMotor(false);
 
-    POSITION_MOTOR_A = stepper_A.currentPosition();
-    POSITION_MOTOR_X = stepper_X.currentPosition();
-    POSITION_MOTOR_Y = stepper_Y.currentPosition();
-    POSITION_MOTOR_Z = stepper_Z.currentPosition();
+    POSITION_MOTOR_A = stepper_A->currentPosition();
+    POSITION_MOTOR_X = stepper_X->currentPosition();
+    POSITION_MOTOR_Y = stepper_Y->currentPosition();
+    POSITION_MOTOR_Z = stepper_Z->currentPosition();
 
     (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
     (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
@@ -140,39 +149,39 @@ void FocusMotor::motor_act_fct()
 #endif
   // prepare motor to run
   setEnableMotor(true);
-  stepper_A.setSpeed(mspeed0);
-  stepper_X.setSpeed(mspeed1);
-  stepper_Y.setSpeed(mspeed2);
-  stepper_Z.setSpeed(mspeed3);
-  stepper_A.setMaxSpeed(mspeed0);
-  stepper_X.setMaxSpeed(mspeed1);
-  stepper_Y.setMaxSpeed(mspeed2);
-  stepper_Z.setMaxSpeed(mspeed3);
+  stepper_A->setSpeed(mspeed0);
+  stepper_X->setSpeed(mspeed1);
+  stepper_Y->setSpeed(mspeed2);
+  stepper_Z->setSpeed(mspeed3);
+  stepper_A->setMaxSpeed(mspeed0);
+  stepper_X->setMaxSpeed(mspeed1);
+  stepper_Y->setMaxSpeed(mspeed2);
+  stepper_Z->setMaxSpeed(mspeed3);
 
   
   if(not isforever){
   if (isabs) {
     // absolute position coordinates
-    stepper_A.moveTo(SIGN_A * mposition0);
-    stepper_X.moveTo(SIGN_X * mposition1);
-    stepper_Y.moveTo(SIGN_Y * mposition2);
-    stepper_Z.moveTo(SIGN_Z * mposition3);
+    stepper_A->moveTo(SIGN_A * mposition0);
+    stepper_X->moveTo(SIGN_X * mposition1);
+    stepper_Y->moveTo(SIGN_Y * mposition2);
+    stepper_Z->moveTo(SIGN_Z * mposition3);
   }
   else {
     // relative position coordinates
-    stepper_A.move(SIGN_A * mposition0);
-    stepper_X.move(SIGN_X * mposition1);
-    stepper_Y.move(SIGN_Y * mposition2);
-    stepper_Z.move(SIGN_Z * mposition3);
+    stepper_A->move(SIGN_A * mposition0);
+    stepper_X->move(SIGN_X * mposition1);
+    stepper_Y->move(SIGN_Y * mposition2);
+    stepper_Z->move(SIGN_Z * mposition3);
   }
   }
   
   if (DEBUG) Serial.println("Start rotation in background");
 
-  POSITION_MOTOR_A = stepper_A.currentPosition();
-  POSITION_MOTOR_X = stepper_X.currentPosition();
-  POSITION_MOTOR_Y = stepper_Y.currentPosition();
-  POSITION_MOTOR_Z = stepper_Z.currentPosition();
+  POSITION_MOTOR_A = stepper_A->currentPosition();
+  POSITION_MOTOR_X = stepper_X->currentPosition();
+  POSITION_MOTOR_Y = stepper_Y->currentPosition();
+  POSITION_MOTOR_Z = stepper_Z->currentPosition();
 
   (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
   (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
@@ -183,7 +192,7 @@ void FocusMotor::motor_act_fct()
 void FocusMotor::setEnableMotor(bool enable)
 {
     isBusy = enable;
-    digitalWrite(ENABLE, !enable);
+    digitalWrite(pins->ENABLE, !enable);
     motor_enable = enable;
 }
 
@@ -197,42 +206,42 @@ void FocusMotor::motor_set_fct()
     // default value handling
   int axis = -1;
   if (jsonDocument->containsKey("axis")) {
-    int axis = (*jsonDocument)["axis"];
+    axis = (*jsonDocument)["axis"];
   }
 
   int currentposition = NULL;
   if (jsonDocument->containsKey("currentposition")) {
-    int currentposition = (*jsonDocument)["currentposition"];
+    currentposition = (*jsonDocument)["currentposition"];
   }
 
   int maxspeed = NULL;
   if (jsonDocument->containsKey("maxspeed")) {
-    int maxspeed = (*jsonDocument)["maxspeed"];
+    maxspeed = (*jsonDocument)["maxspeed"];
   }
 
   int accel = NULL;
   if (jsonDocument->containsKey("accel")) {
-    int accel = (*jsonDocument)["accel"];
+    accel = (*jsonDocument)["accel"];
   }
 
   int pinstep = -1;
   if (jsonDocument->containsKey("pinstep")) {
-    int pinstep = (*jsonDocument)["pinstep"];
+    pinstep = (*jsonDocument)["pinstep"];
   }
 
   int pindir = -1;
   if (jsonDocument->containsKey("pindir")) {
-    int pindir = (*jsonDocument)["pindir"];
+    pindir = (*jsonDocument)["pindir"];
   }
 
   int isen = -1;
   if (jsonDocument->containsKey("isen")) {
-    int isen = (*jsonDocument)["isen"];
+    isen = (*jsonDocument)["isen"];
   }
 
   int sign = NULL;
   if (jsonDocument->containsKey("sign")) {
-    int sign = (*jsonDocument)["sign"];
+    sign = (*jsonDocument)["sign"];
   }
 
   // DEBUG printing
@@ -253,19 +262,19 @@ void FocusMotor::motor_set_fct()
     switch (axis) {
       case 0:
         MAX_ACCELERATION_A = accel;
-        stepper_X.setAcceleration(MAX_ACCELERATION_A);
+        stepper_X->setAcceleration(MAX_ACCELERATION_A);
         break;      
       case 1:
         MAX_ACCELERATION_X = accel;
-        stepper_X.setAcceleration(MAX_ACCELERATION_X);
+        stepper_X->setAcceleration(MAX_ACCELERATION_X);
         break;
       case 2:
         MAX_ACCELERATION_Y = accel;
-        stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
+        stepper_Y->setAcceleration(MAX_ACCELERATION_Y);
         break;
       case 3:
         MAX_ACCELERATION_Z = accel;
-        stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
+        stepper_Z->setAcceleration(MAX_ACCELERATION_Z);
         break;
     }
   }
@@ -308,41 +317,41 @@ void FocusMotor::motor_set_fct()
   if (maxspeed != 0) {
     switch (axis) {
       case 1:
-        stepper_X.setMaxSpeed(maxspeed);
+        stepper_X->setMaxSpeed(maxspeed);
         break;
       case 2:
-        stepper_Y.setMaxSpeed(maxspeed);
+        stepper_Y->setMaxSpeed(maxspeed);
         break;
       case 3:
-        stepper_Z.setMaxSpeed(maxspeed); 
+        stepper_Z->setMaxSpeed(maxspeed); 
         break;
     }
   }
   if (pindir != 0 and pinstep != 0) {
     if (axis == 0) {
-      STEP_A = pinstep;
-      DIR_A = pindir;
+      pins->STEP_A = pinstep;
+      pins->DIR_A = pindir;
     }
     else if (axis == 1) {
-      STEP_X = pinstep;
-      DIR_X = pindir;
+      pins->STEP_X = pinstep;
+      pins->DIR_X = pindir;
     }
     else if (axis == 2) {
-      STEP_Y = pinstep;
-      DIR_Y = pindir;
+      pins->STEP_Y = pinstep;
+      pins->DIR_Y = pindir;
    }
     else if (axis == 3) {
-      STEP_Z = pinstep;
-      DIR_Z = pindir;
+      pins->STEP_Z = pinstep;
+      pins->DIR_Z = pindir;
     }
   }
 
   //if (DEBUG) Serial.print("isen "); Serial.println(isen);
   if (isen != 0 and isen) {
-    digitalWrite(ENABLE, 0);
+    digitalWrite(pins->ENABLE, 0);
   }
   else if (isen != 0 and not isen) {
-    digitalWrite(ENABLE, 1);
+    digitalWrite(pins->ENABLE, 1);
   }
   jsonDocument->clear();
   (*jsonDocument)["return"] = 1;
@@ -364,32 +373,32 @@ void FocusMotor::motor_get_fct()
   switch (axis) {
     case 1:
       if (DEBUG) Serial.println("AXIS 1");
-      mmaxspeed = stepper_X.maxSpeed();
-      mspeed = stepper_X.speed();
-      POSITION_MOTOR_X = stepper_X.currentPosition();
+      mmaxspeed = stepper_X->maxSpeed();
+      mspeed = stepper_X->speed();
+      POSITION_MOTOR_X = stepper_X->currentPosition();
       mposition = POSITION_MOTOR_X;
-      pinstep = STEP_X;
-      pindir = DIR_X;
+      pinstep = pins->STEP_X;
+      pindir = pins->DIR_X;
       sign = SIGN_X;
       break;
     case 2:
       if (DEBUG) Serial.println("AXIS 2");
-      mmaxspeed = stepper_Y.maxSpeed();
-      mspeed = stepper_Y.speed();
-      POSITION_MOTOR_Y = stepper_Y.currentPosition();
+      mmaxspeed = stepper_Y->maxSpeed();
+      mspeed = stepper_Y->speed();
+      POSITION_MOTOR_Y = stepper_Y->currentPosition();
       mposition = POSITION_MOTOR_Y;
-      pinstep = STEP_Y;
-      pindir = DIR_Y;
+      pinstep = pins->STEP_Y;
+      pindir = pins->DIR_Y;
       sign = SIGN_Y;
       break;
     case 3:
       if (DEBUG) Serial.println("AXIS 3");
-      mmaxspeed = stepper_Z.maxSpeed();
-      mspeed = stepper_Z.speed();
-      POSITION_MOTOR_Z = stepper_Z.currentPosition();
+      mmaxspeed = stepper_Z->maxSpeed();
+      mspeed = stepper_Z->speed();
+      POSITION_MOTOR_Z = stepper_Z->currentPosition();
       mposition = POSITION_MOTOR_Z;
-      pinstep = STEP_Z;
-      pindir = DIR_Z;
+      pinstep = pins->STEP_Z;
+      pindir = pins->DIR_Z;
       sign = SIGN_Z;
       break;
     default:
@@ -412,29 +421,29 @@ void FocusMotor::setup_motor()
      Motor related settings
   */
   Serial.println("Setting Up Motors");
-  pinMode(ENABLE, OUTPUT);
+  pinMode(pins->ENABLE, OUTPUT);
   setEnableMotor(true);
   Serial.println("Setting Up Motor A,X,Y,Z");
-  stepper_A.setMaxSpeed(MAX_VELOCITY_A);
-  stepper_X.setMaxSpeed(MAX_VELOCITY_X);
-  stepper_Y.setMaxSpeed(MAX_VELOCITY_Y);
-  stepper_Z.setMaxSpeed(MAX_VELOCITY_Z);
-  stepper_A.setAcceleration(MAX_ACCELERATION_A);
-  stepper_X.setAcceleration(MAX_ACCELERATION_X);
-  stepper_Y.setAcceleration(MAX_ACCELERATION_Y);
-  stepper_Z.setAcceleration(MAX_ACCELERATION_Z);
-  stepper_X.enableOutputs();
-  stepper_Y.enableOutputs();
-  stepper_Z.enableOutputs();
-  stepper_X.runToNewPosition(-100);
-  stepper_X.runToNewPosition(100);
-  stepper_Y.runToNewPosition(-100);
-  stepper_Y.runToNewPosition(100);
-  stepper_Z.runToNewPosition(-100);
-  stepper_Z.runToNewPosition(100);
-  stepper_X.setCurrentPosition(0);
-  stepper_Y.setCurrentPosition(0);
-  stepper_Z.setCurrentPosition(0);
+  stepper_A->setMaxSpeed(MAX_VELOCITY_A);
+  stepper_X->setMaxSpeed(MAX_VELOCITY_X);
+  stepper_Y->setMaxSpeed(MAX_VELOCITY_Y);
+  stepper_Z->setMaxSpeed(MAX_VELOCITY_Z);
+  stepper_A->setAcceleration(MAX_ACCELERATION_A);
+  stepper_X->setAcceleration(MAX_ACCELERATION_X);
+  stepper_Y->setAcceleration(MAX_ACCELERATION_Y);
+  stepper_Z->setAcceleration(MAX_ACCELERATION_Z);
+  stepper_X->enableOutputs();
+  stepper_Y->enableOutputs();
+  stepper_Z->enableOutputs();
+  stepper_X->runToNewPosition(-100);
+  stepper_X->runToNewPosition(100);
+  stepper_Y->runToNewPosition(-100);
+  stepper_Y->runToNewPosition(100);
+  stepper_Z->runToNewPosition(-100);
+  stepper_Z->runToNewPosition(100);
+  stepper_X->setCurrentPosition(0);
+  stepper_Y->setCurrentPosition(0);
+  stepper_Z->setCurrentPosition(0);
   setEnableMotor(false);
 }
 
@@ -442,48 +451,48 @@ bool FocusMotor::drive_motor_background()
 {
     
   // update motor positions
-  POSITION_MOTOR_A = stepper_A.currentPosition();
-  POSITION_MOTOR_X = stepper_X.currentPosition();
-  POSITION_MOTOR_Y = stepper_Y.currentPosition();
-  POSITION_MOTOR_Z = stepper_Z.currentPosition();
+  POSITION_MOTOR_A = stepper_A->currentPosition();
+  POSITION_MOTOR_X = stepper_X->currentPosition();
+  POSITION_MOTOR_Y = stepper_Y->currentPosition();
+  POSITION_MOTOR_Z = stepper_Z->currentPosition();
   
   // this function is called during every loop cycle
   if (isforever) {
     // run forever
     // is this a bug? Otherwise the speed won't be set properly - seems like it is accelerating eventhough it shouldnt
-    stepper_A.setSpeed(mspeed0);
-    stepper_X.setSpeed(mspeed1);
-    stepper_Y.setSpeed(mspeed2);
-    stepper_Z.setSpeed(mspeed3);
+    stepper_A->setSpeed(mspeed0);
+    stepper_X->setSpeed(mspeed1);
+    stepper_Y->setSpeed(mspeed2);
+    stepper_Z->setSpeed(mspeed3);
     // we have to at least set this. It will be recomputed or something?!
-    stepper_A.setMaxSpeed(mspeed1);
-    stepper_X.setMaxSpeed(mspeed1);
-    stepper_Y.setMaxSpeed(mspeed2);
-    stepper_Z.setMaxSpeed(mspeed3);
+    stepper_A->setMaxSpeed(mspeed1);
+    stepper_X->setMaxSpeed(mspeed1);
+    stepper_Y->setMaxSpeed(mspeed2);
+    stepper_Z->setMaxSpeed(mspeed3);
 
-    stepper_A.runSpeed();
-    stepper_X.runSpeed();
-    stepper_Y.runSpeed();
-    stepper_Z.runSpeed();
+    stepper_A->runSpeed();
+    stepper_X->runSpeed();
+    stepper_Y->runSpeed();
+    stepper_Z->runSpeed();
   }
   else {
     // run at constant speed
     if (isaccel) {
-      stepper_A.run();
-      stepper_X.run();
-      stepper_Y.run();
-      stepper_Z.run();
+      stepper_A->run();
+      stepper_X->run();
+      stepper_Y->run();
+      stepper_Z->run();
     }
     else {
-      stepper_A.runSpeedToPosition();
-      stepper_X.runSpeedToPosition();
-      stepper_Y.runSpeedToPosition();
-      stepper_Z.runSpeedToPosition();
+      stepper_A->runSpeedToPosition();
+      stepper_X->runSpeedToPosition();
+      stepper_Y->runSpeedToPosition();
+      stepper_Z->runSpeedToPosition();
     }
   }
 
   // PROBLEM; is running wont work here!
-  if ((stepper_A.distanceToGo() == 0) and (stepper_X.distanceToGo() == 0) and (stepper_Y.distanceToGo() == 0) and (stepper_Z.distanceToGo() == 0 ) and not isforever) {
+  if ((stepper_A->distanceToGo() == 0) && (stepper_X->distanceToGo() == 0) && (stepper_Y->distanceToGo() == 0) && (stepper_Z->distanceToGo() == 0 ) && !isforever) {
     if (not isen) {
       setEnableMotor(false);
     }

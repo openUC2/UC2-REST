@@ -3,11 +3,16 @@
 
 #include "AccelStepper.h"
 #include <ArduinoJson.h>
+#include "../../pinstruct.h""
 
 class FocusMotor
 {
     public:
-        FocusMotor();
+        FocusMotor(PINDEF * pins);
+        ~FocusMotor();
+
+        PINDEF * pins;
+
         bool DEBUG = false;
 
         // for stepper.h
@@ -65,21 +70,11 @@ class FocusMotor
         long MAX_ACCELERATION_Y = 100000;
         long MAX_ACCELERATION_Z = 100000;
 
-        // Stepper Motor pins
-        int STEP_A = 0; // ATTENTION I2C SCL: 22;
-        int STEP_X = 2;
-        int STEP_Y = 27;
-        int STEP_Z = 12;
-        int DIR_A = 0; // ATTENTION I2C SDA 21;
-        int DIR_X = 33;
-        int DIR_Y = 16;
-        int DIR_Z = 14;
-        int ENABLE = 13;
 
-        AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_A, DIR_A);
-        AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_X, DIR_X);
-        AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
-        AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
+        AccelStepper * stepper_A;
+        AccelStepper * stepper_X;
+        AccelStepper * stepper_Y;
+        AccelStepper * stepper_Z;
 
         DynamicJsonDocument * jsonDocument;
 

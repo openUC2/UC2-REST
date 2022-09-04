@@ -102,7 +102,7 @@ void gamepad::control() {
     }
     else if (focusmotor->mspeed3 != 0) {
       focusmotor->mspeed3 = 0;
-      focusmotor->stepper_Y.setSpeed(focusmotor->mspeed3); // set motor off only once to not affect other modes
+      focusmotor->stepper_Y->setSpeed(focusmotor->mspeed3); // set motor off only once to not affect other modes
     }
 
     // Z-Direction
@@ -120,7 +120,7 @@ void gamepad::control() {
     }
     else if (focusmotor->mspeed2 != 0) {
       focusmotor->mspeed2 = 0;
-      focusmotor->stepper_Z.setSpeed(focusmotor->mspeed2); // set motor off only once to not affect other modes
+      focusmotor->stepper_Z->setSpeed(focusmotor->mspeed2); // set motor off only once to not affect other modes
     }
 
     // X-direction
@@ -136,7 +136,7 @@ void gamepad::control() {
     }
     else if (focusmotor->mspeed1 != 0) {
       focusmotor->mspeed1 = 0;
-      focusmotor->stepper_X.setSpeed(focusmotor->mspeed1); // set motor off only once to not affect other modes
+      focusmotor->stepper_X->setSpeed(focusmotor->mspeed1); // set motor off only once to not affect other modes
     }
 
     /*
@@ -218,9 +218,9 @@ void gamepad::control() {
 #endif
 
     // run all motors simultaneously
-    focusmotor->stepper_X.setSpeed(focusmotor->mspeed1);
-    focusmotor->stepper_Y.setSpeed(focusmotor->mspeed3);
-    focusmotor->stepper_Z.setSpeed(focusmotor->mspeed2);
+    focusmotor->stepper_X->setSpeed(focusmotor->mspeed1);
+    focusmotor->stepper_Y->setSpeed(focusmotor->mspeed3);
+    focusmotor->stepper_Z->setSpeed(focusmotor->mspeed2);
 
     if (focusmotor->mspeed1 or focusmotor->mspeed3 or focusmotor->mspeed2) {
       focusmotor->isforever = true;
