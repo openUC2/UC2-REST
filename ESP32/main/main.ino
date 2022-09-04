@@ -32,13 +32,6 @@
 Adafruit_NeoPixel matrix;
 
 
-void colorWipe(uint32_t color, int wait) {
-  for (int i = 0; i < matrix.numPixels(); i++) { // For each pixel in strip...
-    matrix.setPixelColor(i, color);         //  Set pixel's color (in RAM)
-    matrix.show();                          //  Update strip to match
-    delay(wait);                           //  Pause for a moment
-  }
-}
 
 
 
@@ -82,10 +75,10 @@ DAC_Module *dac = new DAC_Module();
 /*
    Register devices
 */
-AccelStepper stepper_A = AccelStepper(AccelStepper::DRIVER, STEP_PIN_A, DIR_PIN_A);
-AccelStepper stepper_X = AccelStepper(AccelStepper::DRIVER, STEP_PIN_X, DIR_PIN_X);
-AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_PIN_Y, DIR_PIN_Y);
-AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_PIN_Z, DIR_PIN_Z);
+AccelStepper stepper_A;
+AccelStepper stepper_X;
+AccelStepper stepper_Y;
+AccelStepper stepper_Z;
 
 #ifdef IS_SLM
 #include "parameters_slm.h"
@@ -121,8 +114,11 @@ void setup()
   // check if setup went through after new config - avoid endless boot-loop
   preferences.begin("setup", false);
   if (preferences.getBool("setupComplete", true) == false) {
-    Serial.println("Setup not done, resetting config?");
+    Serial.println("Setup not done, resetting config?"); //TODO not working!
     resetConfigurations();
+  }
+  else{
+    Serial.println("Setup done, continue.");
   }
   preferences.putBool("setupComplete", false);
   preferences.end();
@@ -157,7 +153,6 @@ void setup()
 #endif
 
   setup_matrix();
-  colorWipe(matrix.Color(255,   0,   0), 50);
   setup_motor();
 
   /*
@@ -283,6 +278,12 @@ void setup()
   Serial.println(PID_set_endpoint);
   Serial.println(PID_get_endpoint);
 #endif
+
+
+  // check if setup went through after new config
+  preferences.begin("setup", false);
+  preferences.putBool("setupComplete", true);
+  preferences.end();
 }
 
 //char *task = strdup("");
@@ -367,10 +368,7 @@ void loop() {
 #endif
 
 
-  // check if setup went through after new config
-  preferences.begin("setup", false);
-  preferences.putBool("setupComplete", true);
-  preferences.end();
+
 
 }
 
@@ -517,8 +515,6 @@ void jsonProcessor(char task[]) {
   Serial.println("--");
   jsonDocument.clear();
   jsonDocument.garbageCollect();
-
-
 }
 
 

@@ -110,4 +110,34 @@
   {"task": "/motor_act", "isenable":0}
   {"task": "/s-tate_set", "isdebug":1}
 
+
+
+// load config
+  {
+  "task":"/config_set", 
+  "motXstp": 2,
+  "motXdir": 31,
+  "motYstp": 27,
+  "motYdir": 16,
+  "motZstp": 12,
+  "motZdir": 14,
+  "motAstp": 22,
+  "motAdir": 21,
+  "motEnable": 13,
+  "ledArrPin": 17,
+  "ledArrNum": 16,
+  "digitalPin1":10,
+  "digitalPin2":11,
+  "analogPin1":0,
+  "analogPin2":0,
+  "analogPin3":0,
+  "laserPin1":4,
+  "laserPin2":15,
+  "laserPin3":0,
+  "dacFake1":0,
+  "dacFake2":0,
+  "identifier": "UC2Standalone",
+  "ssid": "Blynk",
+  "PW": "12345678"
+  }
 */
