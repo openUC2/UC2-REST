@@ -1,7 +1,5 @@
-#include "parameters_ledarr.h"
 
-// We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
-Adafruit_NeoPixel matrix(LED_COUNT, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
+
 
 // Custom function accessible by the API
 void ledarr_act_fct() {
@@ -131,6 +129,10 @@ void set_led_RGB(int iLed, int R, int G, int B)  {
 
 void setup_matrix() {
   // LED Matrix
+  if(DEBUG) Serial.println("Setting up LED array");
+  if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(LED_ARRAY_PIN));
+  if(DEBUG) Serial.println("LED_COUNT: " + String(LED_COUNT));
+  matrix = Adafruit_NeoPixel(LED_COUNT, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   matrix.begin();
   matrix.setBrightness(255);
   for(int iLed=0; iLed<LED_COUNT;iLed++){

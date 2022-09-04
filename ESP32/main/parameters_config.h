@@ -1,31 +1,68 @@
-/* sample config file
+/* 
+sample config file for ESP WEMOS D1 E32 + CNC Shield
+{
+  "motXstp": 26,
+  "motXdir": 16,
+  "motYstp": 25,
+  "motYdir": 27,
+  "motZstp": 17,
+  "motZdir": 14,
+  "motAstp": 0,
+  "motAdir": 0,
+  "motEnable": 12,
+  "ledArrPin": 4,
+  "ledArrNum": 64,
+  "digitalPin1": 0,
+  "digitalPin2": 0,
+  "analogPin1": 0,
+  "analogPin2": 0,
+  "analogPin3": 0,
+  "laserPin1": 19,
+  "laserPin2": 18,
+  "laserPin3": 0,
+  "dacFake1": 0,
+  "dacFake2": 0,
+  "identifier": "",
+  "ssid": "",
+  "PW": ""
+}
+
+sample config file for Uc2 Standalone 
+
+led -> LIMX
+laser1 -> LIMY
+laser2 -> LIMZ
   {
   "task":"/config_set", 
-  "motXstp": 1,
-  "motXdir": 2,
-  "motYstp": 3,
-  "motYdir": 4,
-  "motZstp": 5,
-  "motZdir": 6,
-  "motAstp": 7,
-  "motAdir": 8,
-  "motEnable": 9,
-  "ledArrPin": 0,
-  "ledArrNum": 64,
+  "motXstp": 2,
+  "motXdir": 33,
+  "motYstp": 27,
+  "motYdir": 16,
+  "motZstp": 12,
+  "motZdir": 14,
+  "motAstp": 22,
+  "motAdir": 21,
+  "motEnable": 13,
+  "ledArrPin": 17,
+  "ledArrNum": 16,
   "digitalPin1":10,
   "digitalPin2":11,
-  "analogPin1":12,
-  "analogPin2":13,
-  "analogPin3":14,
-  "laserPin1":15,
-  "laserPin2":16,
-  "laserPin3":17,
-  "dacFake1":18,
-  "dacFake2":19,
-  "identifier": "TEST",
-  "ssid": "ssid",
-  "PW": "PW"
+  "analogPin1":0,
+  "analogPin2":0,
+  "analogPin3":0,
+  "laserPin1":4,
+  "laserPin2":15,
+  "laserPin3":0,
+  "dacFake1":0,
+  "dacFake2":0,
+  "identifier": "UC2Standalone",
+  "ssid": "Blynk",
+  "PW": "12345678"
   }
+  {"task":"/config_act", "applyConfig":1}
+  {"task":"/config_get"}
+  
+
 */
 
 const char* prefNamespace = "UC2";
@@ -61,3 +98,7 @@ const char* keyIdentifier = "identifier";
 
 const char* keyWifiSSID = "ssid";
 const char* keyWifiPW = "PW";
+
+const char* keyPS3Mac = "PS3Mac";
+const char* keyPS4Mac = "PS4Mac";
+

@@ -122,7 +122,9 @@ void clearBlueetoothDevice() {
 
 
 bool isFirstRun() {
-  preferences.begin(prefNamespace, false);
+  // define preference name
+  const char* prefName = "firstRun";
+  preferences.begin(prefName, false);
   static const char dateKey[] = "date";
   const char *compiled_date = __DATE__ " " __TIME__;
   String stored_date = preferences.getString(dateKey, "");  // FIXME

@@ -72,7 +72,7 @@ bool setConfigurations() {
   // MOTOR ENABLE
   if (jsonDocument.containsKey(keyMotorEnable))
     preferences.putUInt(keyMotorEnable, jsonDocument[keyMotorEnable]);
-
+ 
   // LEDARRAY
   if (jsonDocument.containsKey(keyLEDArray))
     preferences.putUInt(keyLEDArray, jsonDocument[keyLEDArray]);
@@ -123,7 +123,26 @@ bool setConfigurations() {
     preferences.putString(keyWifiPW, WifiPW);
   }
 
+  // Playstation
+  if (jsonDocument.containsKey(keyPS3Mac)) {
+    String PS3Mac = jsonDocument[keyPS3Mac];
+    preferences.putString(keyPS3Mac, PS3Mac);
+  }
+  if (jsonDocument.containsKey(keyPS4Mac)) {
+    String PS4Mac = jsonDocument[keyPS4Mac];
+    preferences.putString(keyPS4Mac, PS4Mac);
+  }
   preferences.end();
+
+
+  // indicate that new config is applied
+  preferences.begin("setup" , false);
+  preferences.putBool("isNewConfig", true);
+  preferences.end();
+  
+
+
+
   return true;
 }
 
@@ -147,8 +166,8 @@ bool loadConfiguration() {
 
   ENABLE_PIN = preferences.getUInt(keyMotorEnable, ENABLE_PIN);
 
-  LED_ARRAY_PIN = preferences.getUInt(keyMotorEnable, LED_ARRAY_PIN);
-  LED_ARRAY_NUM = preferences.getUInt(keyMotorEnable, LED_ARRAY_NUM);
+  LED_ARRAY_PIN = preferences.getUInt(keyLEDArray , LED_ARRAY_PIN);
+  LED_ARRAY_NUM = preferences.getUInt(keyLEDNumLEDArray, LED_ARRAY_NUM);
 
   DIGITAL_PIN_1 = preferences.getUInt(keyDigital1Pin, DIGITAL_PIN_1);
   DIGITAL_PIN_2 = preferences.getUInt(keyDigital2Pin, DIGITAL_PIN_2);
@@ -167,6 +186,9 @@ bool loadConfiguration() {
   IDENTIFIER_NAME = preferences.getString(keyDACfake1Pin, IDENTIFIER_NAME);
   WifiSSID = preferences.getString(keyWifiSSID, WifiSSID).c_str();
   WifiPW = preferences.getString(keyWifiPW, WifiPW).c_str();
+  PS3Mac = preferences.getString(keyPS3Mac, PS3Mac).c_str();
+  PS4Mac = preferences.getString(keyPS4Mac, PS4Mac).c_str();
+
   preferences.end();
 
   // return preferences as json document
@@ -215,6 +237,8 @@ void config2json() {
   jsonDocument["identifier"] = IDENTIFIER_NAME;
   jsonDocument["ssid"] = WifiSSID;
   jsonDocument["PW"] = WifiPW;
+  jsonDocument["PS3Mac"] = PS3Mac;
+  jsonDocument["PS4Mac"] = PS4Mac;
 
   if (DEBUG) Serial.println("Current pin definitions:");
   if (DEBUG) serializeJsonPretty(jsonDocument, Serial);

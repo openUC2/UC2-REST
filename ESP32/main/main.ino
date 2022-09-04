@@ -23,10 +23,22 @@
 #include "parameters_state.h"
 #include "parameters_laser.h"
 #include "parameters_motor.h"
+#include "parameters_ledarr.h"
 #include "pindef.h" // for pin definitions
 #include "parameters_ps.h" // playstation parameters
 #include "parameters_config.h"
 
+// We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
+Adafruit_NeoPixel matrix;
+
+
+void colorWipe(uint32_t color, int wait) {
+  for (int i = 0; i < matrix.numPixels(); i++) { // For each pixel in strip...
+    matrix.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    matrix.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
+  }
+}
 
 
 
@@ -89,6 +101,7 @@ void setup()
      SETTING UP DEVICES
   */
 
+
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
   // for any timing related puposes..
@@ -98,9 +111,26 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
 
+
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  if (isFirstRun())
+  if (isFirstRun()) {
+    Serial.println("First Run, resetting config?");
     resetConfigurations();
+  }
+
+  // check if setup went through after new config - avoid endless boot-loop
+  preferences.begin("setup", false);
+  if (preferences.getBool("setupComplete", true) == false) {
+    Serial.println("Setup not done, resetting config?");
+    resetConfigurations();
+  }
+  preferences.putBool("setupComplete", false);
+  preferences.end();
+
+
+
+
+
   // load config
   loadConfiguration();
 
@@ -113,7 +143,7 @@ void setup()
   // connect to wifi if necessary
   bool isResetWifiSettings = false;
   //autoconnectWifi(isResetWifiSettings);
-  initWifiAP(WifiSSIDAP); 
+  initWifiAP(WifiSSIDAP);
   setupRouting();
   startServer();
   init_Spiffs();
@@ -125,7 +155,9 @@ void setup()
 #ifdef IS_SLM
   setup_slm();
 #endif
+
   setup_matrix();
+  colorWipe(matrix.Color(255,   0,   0), 50);
   setup_motor();
 
   /*
@@ -334,6 +366,11 @@ void loop() {
   }
 #endif
 
+
+  // check if setup went through after new config
+  preferences.begin("setup", false);
+  preferences.putBool("setupComplete", true);
+  preferences.end();
 
 }
 

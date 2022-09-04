@@ -29,3 +29,7 @@ int LASER_PIN_3 = 0;
 
 int DAC_FAKE_PIN_1 = 0;
 int DAC_FAKE_PIN_2 = 0;
+
+
+String PS3Mac = "01:02:03:04:05:06";
+String PS4Mac = "1a:2b:3c:01:01:01";
