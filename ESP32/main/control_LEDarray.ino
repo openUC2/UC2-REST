@@ -15,7 +15,7 @@ void ledarr_act_fct() {
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
   if (strcmp(LEDArrMode, "array") == 0) {
     if (DEBUG) Serial.println("pattern");
-    for (int iled = 0; iled < LED_COUNT; iled++) { //Iterate through results
+    for (int iled = 0; iled < LED_ARRAY_NUM; iled++) { //Iterate through results
       int red = jsonDocument["red"][iled];  //Implicit cast
       int green = jsonDocument["green"][iled];  //Implicit cast
       int blue = jsonDocument["blue"][iled];  //Implicit cast
@@ -112,6 +112,8 @@ void ledarr_set_fct() {
 void ledarr_get_fct() {
   jsonDocument.clear();
   jsonDocument["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
+  jsonDocument["LED_ARRAY_NUM"] = LED_ARRAY_NUM;
+
 
 }
 
@@ -123,27 +125,25 @@ void ledarr_get_fct() {
 /*******************************FROM OCTOPI ********************************************************/
 
 void set_led_RGB(int iLed, int R, int G, int B)  {
-  matrix.setPixelColor(iLed, matrix.Color(R,   G,   B));         //  Set pixel's color (in RAM)
-  matrix.show();                          //  Update strip to match
+  matrix->setPixelColor(iLed, matrix->Color(R,   G,   B));         //  Set pixel's color (in RAM)
+  matrix->show();                          //  Update strip to match
 }
 
 void setup_matrix() {
   // LED Matrix
   if(DEBUG) Serial.println("Setting up LED array");
   if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(LED_ARRAY_PIN));
-  if(DEBUG) Serial.println("LED_COUNT: " + String(LED_COUNT));
-  matrix = Adafruit_NeoPixel(LED_COUNT, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
-  matrix.begin();
-  matrix.setBrightness(255);
-  for(int iLed=0; iLed<LED_COUNT;iLed++){
-  matrix.setPixelColor(iLed, matrix.Color(100,100,100));         //  Set pixel's color (in RAM)
-  matrix.show();
-  }
+  matrix = new Adafruit_NeoPixel(LED_ARRAY_NUM, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
+  matrix->begin();
+  matrix->setBrightness(255);
+  set_all(0,0,0);
+  delay(100);
+  set_all(100,100,100);
 }
 
 void set_all(int R, int G, int B)
 {
-  for (int i = 0; i < (LED_COUNT); i++) {
+  for (int i = 0; i < (LED_ARRAY_NUM); i++) {
     set_led_RGB(i, R, G, B);
   }
 }
@@ -195,9 +195,9 @@ if(NLed == NLED8x8){
 void set_center(int R, int G, int B)
 {
   /*
-  matrix.fillScreen(matrix.Color(0, 0, 0));
-  matrix.drawPixel(4, 4, matrix.Color(R,   G,   B));
-  matrix.show();
+  matrix->fillScreen(matrix->Color(0, 0, 0));
+  matrix->drawPixel(4, 4, matrix->Color(R,   G,   B));
+  matrix->show();
   */
 }
 

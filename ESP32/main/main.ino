@@ -29,7 +29,7 @@
 #include "parameters_config.h"
 
 // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
-Adafruit_NeoPixel matrix;
+Adafruit_NeoPixel* matrix = NULL;
 
 
 
@@ -93,6 +93,7 @@ void setup()
   /*
      SETTING UP DEVICES
   */
+
 
 
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
@@ -366,15 +367,10 @@ void loop() {
     startMillis = millis();
   }
 #endif
-
-
-
-
 }
 
+
 void jsonProcessor(char task[]) {
-
-
   /*
       Return state
   */
@@ -515,6 +511,8 @@ void jsonProcessor(char task[]) {
   Serial.println("--");
   jsonDocument.clear();
   jsonDocument.garbageCollect();
+
+  if(DEBUG) Serial.println("JSON processed");
 }
 
 

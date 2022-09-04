@@ -1,7 +1,6 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 
-int LED_COUNT = 64; // this is the maximum number of LEDs per matrix 
 
 int NLED4x4=16;
 int NLED8x8=64;
