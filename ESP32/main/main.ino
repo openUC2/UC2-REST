@@ -1,33 +1,3 @@
-/*
-    Pindefintion per Setup
-*/
-
-//#include "pindef_lightsheet.h"
-//#include "pindef_lightsheet_arduino.h"
-//#include "pindef_ptychography.h"
-//#include "pindef.h"
-//#include "pindef_multicolour.h"
-//#include "pindef_STORM_Berlin.h"
-//#include "pindef_cellSTORM_cellphone.h"
-//#include "pindef_cellSTORM.h"
-//#include "pindef_cellSTORM_wifi.h"
-//#include "pindef_multicolour_borstel.h"
-//#include "pindef_cncshield_esp.h"
-//#include "pindef_lightsheet_tomo_galvo.h"
-//#include "pindef_lightsheet_tomo_galvo_espwemos.h"
-//#include "pindef_lightsheet_tomo_PID_espwemos.h" // for the HoLiSheet
-//#include "pindef_xyz_stagescan_ps4.h"
-//#include "pindef_incubator_microscope_zonly_matrix.h" // for the workshop
-//#include "pindef_multicolour_fluorescence_wemos_borstel.h" // - for the borstel setup
-//#include "pindef_lightsheet_espwemos.h" // - for the diagonal lightsheet setup
-//#include "pindef_slm.h" // - for the slm / TFT
-//#include "pindef_cellstorm_wemos.h" // - for the standalone cellstorm setup
-//include "pindef_multicolour_wemos_lena.h"
-//#include "pindef_confocal.h"
-//#include "pindef_oct_eda.h"
-//#include "pindef_polarizationsetup.h"
-//#include "pindef_freedcam.h"
-//#include "pindef_uc2standalone.h"
 #include "config.h"
 
 #include "src/motor/FocusMotor.h"
@@ -214,7 +184,6 @@ led = new led_controller();
 #ifdef DEBUG_LED
   led->DEBUG = true;
 #endif
-led = new led_controller();
 led->jsonDocument = &jsonDocument;
 led->setup_matrix();
 
@@ -394,11 +363,11 @@ void loop() {
 
   // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
   if (LASER_despeckle_1 > 0 and LASER_val_1 > 0)
-    LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
+    laser->LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
   if (LASER_despeckle_2 > 0 and LASER_val_2 > 0)
-    LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
+    laser->LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
   if (LASER_despeckle_3 > 0 and LASER_val_3 > 0)
-    LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
+    laser->LASER_despeckle(LASER_despeckle_3, 3, LASER_despeckle_period_3);
 
 
 #if defined IS_PS3 || defined IS_PS4
@@ -486,11 +455,11 @@ void jsonProcessor(char task[]) {
     Drive Laser
   */
   if (strcmp(task, laser_act_endpoint) == 0)
-    LASER_act_fct();
+    laser->LASER_act_fct();
   if (strcmp(task, laser_set_endpoint) == 0)
-    LASER_get_fct();
+    laser->LASER_get_fct();
   if (strcmp(task, laser_get_endpoint) == 0)
-    LASER_set_fct();
+    laser->LASER_set_fct();
 
   /*
     Drive analog

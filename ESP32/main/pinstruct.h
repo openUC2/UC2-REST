@@ -1,3 +1,5 @@
+#ifndef PINDEF_H
+#define PINDEF_H
 struct PINDEF{
     // analog out (e.g. Lenses)
     int analog_PIN_1;
@@ -37,3 +39,5 @@ struct PINDEF{
     const char *mSSID;
     const char *mPWD; 
 };
+
+#endif

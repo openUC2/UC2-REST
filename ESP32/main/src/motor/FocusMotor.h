@@ -3,7 +3,7 @@
 
 #include "AccelStepper.h"
 #include <ArduinoJson.h>
-#include "../../pinstruct.h""
+#include "../../pinstruct.h"
 
 class FocusMotor
 {
