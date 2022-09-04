@@ -1,0 +1,72 @@
+#ifndef led_controller_h
+#define led_controller_h
+
+#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include <ArduinoJson.h>
+
+class led_controller
+{
+    public:
+    led_controller();
+    bool DEBUG = false;
+
+    int LED_ARRAY_PIN;
+    int LED_COUNT = 64; // this is the maximum number of LEDs per matrix 
+
+    int NLED4x4=16;
+    int NLED8x8=64;
+
+    int LED_PATTERN_DPC_TOP_8x8 [64] = {1,1,1,1,1,1,1,1,
+                                        1,1,1,1,1,1,1,1,
+                                        1,1,1,1,1,1,1,1,
+                                        1,1,1,1,1,1,1,1,      
+                                        0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0,
+                                        0,0,0,0,0,0,0,0};
+
+    int LED_PATTERN_DPC_LEFT_8x8 [64]= {1,1,1,1,0,0,0,0,
+                                        0,0,0,0,1,1,1,1,
+                                        1,1,1,1,0,0,0,0,
+                                        0,0,0,0,1,1,1,1,
+                                        1,1,1,1,0,0,0,0,
+                                        0,0,0,0,1,1,1,1,
+                                        1,1,1,1,0,0,0,0,
+                                        0,0,0,0,1,1,1,1};
+                                  
+    int LED_PATTERN_DPC_TOP_4x4 [16]=  {1,1,1,1,
+                                        1,1,1,1,
+                                        0,0,0,0,
+                                        0,0,0,0};
+
+    int LED_PATTERN_DPC_LEFT_4x4 [16]= {1,1,0,0,
+                                        0,0,1,1,
+                                        1,1,0,0,
+                                        0,0,1,1};
+
+    void ledarr_act_fct();
+    void ledarr_set_fct();
+    void ledarr_get_fct();
+    void set_led_RGB(int iLed, int R, int G, int B);
+    void setup_matrix();
+    void set_all(int R, int G, int B);
+    void set_left(int NLed, int R, int G, int B);
+    void set_right(int NLed, int R, int G, int B);
+    void set_top(int NLed, int R, int G, int B);
+    void set_bottom(int NLed, int R, int G, int B);
+    void set_center(int R, int G, int B);
+
+    #ifdef IS_WIFI
+    void ledarr_act_fct_http();
+    void ledarr_get_fct_http();
+    void ledarr_set_fct_http();
+    #endif
+
+    // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
+    Adafruit_NeoPixel * matrix;
+    DynamicJsonDocument * jsonDocument;
+
+};
+
+#endif

@@ -254,9 +254,9 @@ void setup_routing() {
 
 
   // POST
-  server.on(motor_act_endpoint, HTTP_POST, motor_act_fct_http);
-  server.on(motor_get_endpoint, HTTP_POST, motor_get_fct_http);
-  server.on(motor_set_endpoint, HTTP_POST, motor_set_fct_http);
+  server.on(motor_act_endpoint, HTTP_POST, FocusMotor_motor_act_fct_http_wrapper);
+  server.on(motor_get_endpoint, HTTP_POST, FocusMotor_motor_get_fct_http_wrapper);
+  server.on(motor_set_endpoint, HTTP_POST, FocusMotor_motor_set_fct_http_wrapper);
 
 #ifdef IS_DAC
   server.on(dac_act_endpoint, HTTP_POST, dac_act_fct_http);

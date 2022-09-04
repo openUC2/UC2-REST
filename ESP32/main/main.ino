@@ -31,6 +31,7 @@
 #include "config.h"
 
 #include "src/motor/FocusMotor.h"
+#include "src/led/led_controller.h"
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
@@ -91,6 +92,8 @@ DAC_Module *dac = new DAC_Module();
    Register devices
 */
 FocusMotor focusMotor;
+led_controller led;
+
 
 
 #ifdef IS_SLM
@@ -203,14 +206,17 @@ void setup()
 #endif
 
 Serial.println("IS_LEDARR");
-setup_matrix();
+#ifdef DEBUG_LED
+led.DEBUG = true;
+#endif
+led.jsonDocument = &jsonDocument;
+led.setup_matrix();
 
 #ifdef DEBUG_MOTOR
   focusmotor.DEBUG = true;
 #endif
-focusMotor.jsonDocument = jsonDocument;
+focusMotor.jsonDocument = &jsonDocument;
 focusMotor.setup_motor();
-
 
   clearBlueetoothDevice();
   #ifdef IS_PS3
@@ -218,6 +224,7 @@ focusMotor.setup_motor();
       gp_controller.DEBUG = true;
     #endif
     gp_controller.focusmotor = &focusMotor;
+    gp_controller.led = &led;
     gp_controller.start();
   #endif
   #ifdef IS_PS4
@@ -225,6 +232,7 @@ focusMotor.setup_motor();
       gp_controller.DEBUG = true;
     #endif
     gp_controller.focusmotor = &focusMotor;
+    gp_controller.led = &led;
     gp_controller->start();
   #endif
 
@@ -396,8 +404,8 @@ void loop() {
   /*
      continous control during loop
   */
-  if (!isstop) {
-    isactive = true;
+  if (!focusMotor.isstop) {
+    focusMotor.isactive = true;
     focusMotor.drive_motor_background();
   }
 
@@ -507,11 +515,11 @@ void jsonProcessor(char task[]) {
   */
 
   if (strcmp(task, ledarr_act_endpoint) == 0)
-    ledarr_act_fct();
+    led.ledarr_act_fct();
   if (strcmp(task, ledarr_set_endpoint) == 0)
-    ledarr_set_fct();
+    led.ledarr_set_fct();
   if (strcmp(task, ledarr_get_endpoint) == 0)
-    ledarr_get_fct();
+    led.ledarr_get_fct();
 
 
   /*
@@ -553,7 +561,7 @@ void jsonProcessor(char task[]) {
 
 void tableProcessor() {
 
-  isactive = true;
+  focusMotor.isactive = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -594,5 +602,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
-  isactive = false;
+  focusMotor.isactive = false;
 }

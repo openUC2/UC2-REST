@@ -1,4 +1,5 @@
 #include "FocusMotor.h"
+#include <ArduinoJson.h>
 
 void FocusMotor::motor_act_fct()
 {
@@ -6,94 +7,94 @@ void FocusMotor::motor_act_fct()
 
 
   // assign default values to thhe variables
-  if (jsonDocument.containsKey("speed0")) {
-    mspeed0 = jsonDocument["speed0"];
+  if (jsonDocument->containsKey("speed0")) {
+    mspeed0 = (*jsonDocument)["speed0"];
   }
-  else if (jsonDocument.containsKey("speed")) {
-    mspeed0 = jsonDocument["speed"];
+  else if (jsonDocument->containsKey("speed")) {
+    mspeed0 = (*jsonDocument)["speed"];
   }
-  if (jsonDocument.containsKey("speed1")) {
-    mspeed1 = jsonDocument["speed1"];
+  if (jsonDocument->containsKey("speed1")) {
+    mspeed1 = (*jsonDocument)["speed1"];
   }
-  else if (jsonDocument.containsKey("speed")) {
-    mspeed1 = jsonDocument["speed"];
+  else if (jsonDocument->containsKey("speed")) {
+    mspeed1 = (*jsonDocument)["speed"];
   }
-  if (jsonDocument.containsKey("speed2")) {
-    mspeed2 = jsonDocument["speed2"];
+  if (jsonDocument->containsKey("speed2")) {
+    mspeed2 = (*jsonDocument)["speed2"];
   }
-  else if (jsonDocument.containsKey("speed")) {
-    mspeed2 = jsonDocument["speed"];
+  else if (jsonDocument->containsKey("speed")) {
+    mspeed2 = (*jsonDocument)["speed"];
   }
-  if (jsonDocument.containsKey("speed3")) {
-    mspeed3 = jsonDocument["speed3"];
+  if (jsonDocument->containsKey("speed3")) {
+    mspeed3 = (*jsonDocument)["speed3"];
   }
-  else if (jsonDocument.containsKey("speed")) {
-    mspeed3 = jsonDocument["speed"];
+  else if (jsonDocument->containsKey("speed")) {
+    mspeed3 = (*jsonDocument)["speed"];
   }
 
-  if (jsonDocument.containsKey("pos0")) {
-    mposition0 = jsonDocument["pos0"];
+  if (jsonDocument->containsKey("pos0")) {
+    mposition0 = (*jsonDocument)["pos0"];
   }
   else {
     mposition0 = 0;
   }
-  if (jsonDocument.containsKey("pos1")) {
-    mposition1 = jsonDocument["pos1"];
+  if (jsonDocument->containsKey("pos1")) {
+    mposition1 = (*jsonDocument)["pos1"];
   }
   else {
     mposition1 = 0;
   }
 
-  if (jsonDocument.containsKey("pos2")) {
-    mposition2 = jsonDocument["pos2"];
+  if (jsonDocument->containsKey("pos2")) {
+    mposition2 = (*jsonDocument)["pos2"];
   }
   else {
     mposition2 = 0;
   }
 
-  if (jsonDocument.containsKey("pos3")) {
-    mposition3 = jsonDocument["pos3"];
+  if (jsonDocument->containsKey("pos3")) {
+    mposition3 = (*jsonDocument)["pos3"];
   }
   else {
     mposition3 = 0;
   }
 
-  if (jsonDocument.containsKey("isabs")) {
-    isabs = jsonDocument["isabs"];
+  if (jsonDocument->containsKey("isabs")) {
+    isabs = (*jsonDocument)["isabs"];
   }
   else {
     isabs = 0;
   }
 
-  if (jsonDocument.containsKey("isstop")) {
-    isstop = jsonDocument["isstop"];
+  if (jsonDocument->containsKey("isstop")) {
+    isstop = (*jsonDocument)["isstop"];
   }
   else {
     isstop = 0;
   }
 
-  if (jsonDocument.containsKey("isaccel")) {
-    isaccel = jsonDocument["isaccel"];
+  if (jsonDocument->containsKey("isaccel")) {
+    isaccel = (*jsonDocument)["isaccel"];
   }
   else {
     isaccel = 1;
   }
 
-  if (jsonDocument.containsKey("isen")) {
-    isen = jsonDocument["isen"];
+  if (jsonDocument->containsKey("isen")) {
+    isen = (*jsonDocument)["isen"];
   }
   else {
     isen = 0;
   }
 
-  if (jsonDocument.containsKey("isforever")) {
-    isforever = jsonDocument["isforever"];
+  if (jsonDocument->containsKey("isforever")) {
+    isforever = (*jsonDocument)["isforever"];
   }
   else {
     isforever = 0;
   }
 
-  jsonDocument.clear();
+  jsonDocument->clear();
 
   if (DEBUG) {
     Serial.print("speed0 "); Serial.println(mspeed0);
@@ -125,10 +126,10 @@ void FocusMotor::motor_act_fct()
     POSITION_MOTOR_Y = stepper_Y.currentPosition();
     POSITION_MOTOR_Z = stepper_Z.currentPosition();
 
-    jsonDocument["POSA"] = POSITION_MOTOR_A;
-    jsonDocument["POSX"] = POSITION_MOTOR_X;
-    jsonDocument["POSY"] = POSITION_MOTOR_Y;
-    jsonDocument["POSZ"] = POSITION_MOTOR_Z;
+    (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
+    (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
+    (*jsonDocument)["POSY"] = POSITION_MOTOR_Y;
+    (*jsonDocument)["POSZ"] = POSITION_MOTOR_Z;
     return;
   }
 
@@ -173,10 +174,10 @@ void FocusMotor::motor_act_fct()
   POSITION_MOTOR_Y = stepper_Y.currentPosition();
   POSITION_MOTOR_Z = stepper_Z.currentPosition();
 
-  jsonDocument["POSA"] = POSITION_MOTOR_A;
-  jsonDocument["POSX"] = POSITION_MOTOR_X;
-  jsonDocument["POSY"] = POSITION_MOTOR_Y;
-  jsonDocument["POSZ"] = POSITION_MOTOR_Z;
+  (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
+  (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
+  (*jsonDocument)["POSY"] = POSITION_MOTOR_Y;
+  (*jsonDocument)["POSZ"] = POSITION_MOTOR_Z;
 }
 
 void FocusMotor::setEnableMotor(bool enable)
@@ -195,43 +196,43 @@ void FocusMotor::motor_set_fct()
 {
     // default value handling
   int axis = -1;
-  if (jsonDocument.containsKey("axis")) {
-    int axis = jsonDocument["axis"];
+  if (jsonDocument->containsKey("axis")) {
+    int axis = (*jsonDocument)["axis"];
   }
 
   int currentposition = NULL;
-  if (jsonDocument.containsKey("currentposition")) {
-    int currentposition = jsonDocument["currentposition"];
+  if (jsonDocument->containsKey("currentposition")) {
+    int currentposition = (*jsonDocument)["currentposition"];
   }
 
   int maxspeed = NULL;
-  if (jsonDocument.containsKey("maxspeed")) {
-    int maxspeed = jsonDocument["maxspeed"];
+  if (jsonDocument->containsKey("maxspeed")) {
+    int maxspeed = (*jsonDocument)["maxspeed"];
   }
 
   int accel = NULL;
-  if (jsonDocument.containsKey("accel")) {
-    int accel = jsonDocument["accel"];
+  if (jsonDocument->containsKey("accel")) {
+    int accel = (*jsonDocument)["accel"];
   }
 
   int pinstep = -1;
-  if (jsonDocument.containsKey("pinstep")) {
-    int pinstep = jsonDocument["pinstep"];
+  if (jsonDocument->containsKey("pinstep")) {
+    int pinstep = (*jsonDocument)["pinstep"];
   }
 
   int pindir = -1;
-  if (jsonDocument.containsKey("pindir")) {
-    int pindir = jsonDocument["pindir"];
+  if (jsonDocument->containsKey("pindir")) {
+    int pindir = (*jsonDocument)["pindir"];
   }
 
   int isen = -1;
-  if (jsonDocument.containsKey("isen")) {
-    int isen = jsonDocument["isen"];
+  if (jsonDocument->containsKey("isen")) {
+    int isen = (*jsonDocument)["isen"];
   }
 
   int sign = NULL;
-  if (jsonDocument.containsKey("sign")) {
-    int sign = jsonDocument["sign"];
+  if (jsonDocument->containsKey("sign")) {
+    int sign = (*jsonDocument)["sign"];
   }
 
   // DEBUG printing
@@ -343,13 +344,13 @@ void FocusMotor::motor_set_fct()
   else if (isen != 0 and not isen) {
     digitalWrite(ENABLE, 1);
   }
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
 void FocusMotor::motor_get_fct()
 {
-    int axis = jsonDocument["axis"];
+    int axis = (*jsonDocument)["axis"];
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
 
@@ -395,13 +396,13 @@ void FocusMotor::motor_get_fct()
       break;
   }
 
-  jsonDocument.clear();
-  jsonDocument["position"] = mposition;
-  jsonDocument["speed"] = mspeed;
-  jsonDocument["maxspeed"] = mmaxspeed;
-  jsonDocument["pinstep"] = pinstep;
-  jsonDocument["pindir"] = pindir;
-  jsonDocument["sign"] = sign;
+  jsonDocument->clear();
+  (*jsonDocument)["position"] = mposition;
+  (*jsonDocument)["speed"] = mspeed;
+  (*jsonDocument)["maxspeed"] = mmaxspeed;
+  (*jsonDocument)["pinstep"] = pinstep;
+  (*jsonDocument)["pindir"] = pindir;
+  (*jsonDocument)["sign"] = sign;
 }
 
 void FocusMotor::setup_motor()

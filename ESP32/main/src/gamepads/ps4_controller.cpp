@@ -2,34 +2,18 @@
 
 PS4Controller pS4Controller;
 
-
-PS4Controller::callback_t ps4_controller::onConnected(gamepad *p)
+gamepad::gamepad()
 {
-    p->onConnect();
-}
-
-PS4Controller::callback_t ps4_controller::onAttached(gamepad *p)
-{
-    p->onAttach();
-}
-
-PS4Controller::callback_t ps4_controller::onDisConnected(gamepad *p)
-{
-    p->onDisConnect();
-}
-
-PS4Controller::callback_t ps4_controller::onActivated(gamepad *p)
-{
-    p->activate();
+    gp = this;
 }
 
 void gamepad::start()
 {
     Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-    pS4Controller.attach(ps4_controller::onAttached(this));
+    pS4Controller.attach(gamepad_onAttach);
     pS4Controller.begin("1a:2b:3c:01:01:01 - UNICAST!");
-    pS4Controller.attachOnConnect(ps4_controller::onConnected(this));
-    pS4Controller.attachOnDisconnect(ps4_controller::onDisConnected(this));
+    pS4Controller.attachOnConnect(gamepad_onConnect);
+    pS4Controller.attachOnDisconnect(gamepad_onDisConnect);
     const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
     Serial.println(PS4_MACADDESS);
     Serial.println("PS4 controler is set up.");
@@ -52,7 +36,7 @@ void gamepad::onConnect() {
 
 
 void gamepad::onAttach() {
-  pS4Controller.attach(ps4_controller::onActivated(this));
+  pS4Controller.attach(gamepad_activate);
 }
 
 

@@ -1,34 +1,20 @@
-#include "ps3_controller.h"
+#include "ps3_controller.h" 
 #include <Ps3Controller.h>
+#include <functional>
 
 Ps3Controller ps3Controller;
 
-Ps3Controller::callback_t ps3_controller::onConnected(gamepad *p)
+gamepad::gamepad()
 {
-    p->onConnect();
-}
-
-Ps3Controller::callback_t ps3_controller::onAttached(gamepad *p)
-{
-    p->onAttach();
-}
-
-Ps3Controller::callback_t ps3_controller::onDisConnected(gamepad *p)
-{
-    p->onDisConnect();
-}
-
-Ps3Controller::callback_t ps3_controller::onActivated(gamepad *p)
-{
-    p->activate();
+    gp = this;
 }
 
 void gamepad::start()
 {
     Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-    ps3Controller.attach(ps3_controller::onAttached(this));
-    ps3Controller.attachOnConnect(ps3_controller::onConnected(this));
-    ps3Controller.attachOnDisconnect(ps3_controller::onDisConnected(this));
+    ps3Controller.attach(gamepad_onAttach);
+    ps3Controller.attachOnConnect(gamepad_onConnect);
+    ps3Controller.attachOnDisconnect(gamepad_onDisConnect);
     const char* PS3_MACADDESS = "01:02:03:04:05:06";
     ps3Controller.begin("01:02:03:04:05:06");
     Serial.println(PS3_MACADDESS);
@@ -45,7 +31,7 @@ void gamepad::onConnect()
 }
 
 void gamepad::onAttach() {
-  ps3Controller.attach(ps3_controller::onActivated(this));
+  ps3Controller.attach(gamepad_activate);
 }
 
 
@@ -68,7 +54,7 @@ void gamepad::activate() {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to: ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
-    set_all(255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY);
+    led->set_all(255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY, 255 * IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
 

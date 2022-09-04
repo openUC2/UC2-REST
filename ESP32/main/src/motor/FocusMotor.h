@@ -7,6 +7,7 @@
 class FocusMotor
 {
     public:
+        FocusMotor();
         bool DEBUG = false;
 
         // for stepper.h
@@ -80,7 +81,7 @@ class FocusMotor
         AccelStepper stepper_Y = AccelStepper(AccelStepper::DRIVER, STEP_Y, DIR_Y);
         AccelStepper stepper_Z = AccelStepper(AccelStepper::DRIVER, STEP_Z, DIR_Z);
 
-        DynamicJsonDocument jsonDocument;
+        DynamicJsonDocument * jsonDocument;
 
         void motor_act_fct();
         void setEnableMotor(bool enable);
@@ -97,5 +98,24 @@ class FocusMotor
         #endif
 
 };
+
+#ifdef IS_WIFI
+FocusMotor* object_which_will_handle_signal;
+
+void FocusMotor_motor_act_fct_http_wrapper()
+{
+  object_which_will_handle_signal->motor_act_fct_http();
+}
+
+void FocusMotor_motor_get_fct_http_wrapper()
+{
+  object_which_will_handle_signal->motor_get_fct_http();
+}
+
+void FocusMotor_motor_set_fct_http_wrapper()
+{
+  object_which_will_handle_signal->motor_set_fct_http();
+}
+#endif
 
 #endif

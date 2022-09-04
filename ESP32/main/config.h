@@ -8,3 +8,4 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 //#define IS_WIFI
 
 //#define DEBUG_MOTOR
+//#define DEBUG_LED
