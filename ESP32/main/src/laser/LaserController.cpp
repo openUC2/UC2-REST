@@ -213,7 +213,6 @@ void LaserController::setup_laser() {
 /*
   wrapper for HTTP requests
 */
-#ifdef IS_WIFI
 void LaserController::LASER_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson((*jsonDocument), body);
@@ -239,4 +238,3 @@ void LaserController::LASER_set_fct_http() {
   serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
-#endif

@@ -503,7 +503,6 @@ bool FocusMotor::drive_motor_background()
   return false; //never reached, but keeps compiler happy?
 }
 
-#ifdef IS_WIFI
 void FocusMotor::motor_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -532,4 +531,3 @@ void FocusMotor::motor_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif

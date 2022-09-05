@@ -1,8 +1,36 @@
+#include "DacController.h"
 
-#if defined(IS_DAC) || defined(IS_DAC_FAKE)
+
+DacController::DacController()
+{
+  #ifdef IS_DAC
+    dac = new DAC_Module();
+  #endif
+}
+
+void DacController::setup()
+{
+    #ifdef IS_DAC
+    dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
+    dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
+    #endif
+    #ifdef IS_DAC_FAKE
+      pinMode(dac_fake_1, OUTPUT);
+      pinMode(dac_fake_2, OUTPUT);
+      frequency = 1;
+      xTaskCreate(
+        drive_galvo,    // Function that should be called
+        "drive_galvo",   // Name of the task (for debugging)
+        1000,            // Stack size (bytes)
+        NULL,            // Parameter to pass
+        1,               // Task priority
+        NULL             // Task handle
+      );
+    #endif
+}
 
 // Custom function accessible by the API
-void dac_act_fct() {
+void DacController::dac_act_fct() {
   // here you can do something
 
   Serial.println("dac_act_fct");
@@ -10,37 +38,37 @@ void dac_act_fct() {
   // apply default parameters
   // DAC Channel
   dac_channel = DAC_CHANNEL_1;
-  if (jsonDocument.containsKey("dac_channel")) {
-    dac_channel = jsonDocument["dac_channel"];
+  if (jsonDocument->containsKey("dac_channel")) {
+    dac_channel = (*jsonDocument)["dac_channel"];
   }
 
   // DAC Frequency
   frequency = 1000;
-  if (jsonDocument.containsKey("frequency")) {
-    frequency = jsonDocument["frequency"];
+  if (jsonDocument->containsKey("frequency")) {
+    frequency = (*jsonDocument)["frequency"];
   }
 
   // DAC offset
   int offset = 0;
-  if (jsonDocument.containsKey("offset")) {
-    int offset = jsonDocument["offset"];
+  if (jsonDocument->containsKey("offset")) {
+    int offset = (*jsonDocument)["offset"];
   }
 
   // DAC amplitude
   int amplitude = 0;
-  if (jsonDocument.containsKey("amplitude")) {
-    int amplitude = jsonDocument["amplitude"];
+  if (jsonDocument->containsKey("amplitude")) {
+    int amplitude = (*jsonDocument)["amplitude"];
   }
 
   // DAC clk_div
   int clk_div = 0;
-  if (jsonDocument.containsKey("clk_div")) {
-    int clk_div = jsonDocument["clk_div"];
+  if (jsonDocument->containsKey("clk_div")) {
+    int clk_div = (*jsonDocument)["clk_div"];
   }
 
-  if (jsonDocument["dac_channel"] == 1)
+  if ((*jsonDocument)["dac_channel"] == 1)
     dac_channel = DAC_CHANNEL_1;
-  else if (jsonDocument["dac_channel"] == 2)
+  else if ((*jsonDocument)["dac_channel"] == 2)
     dac_channel = DAC_CHANNEL_2;
 
   //Scale output of a DAC channel using two bit pattern:
@@ -75,11 +103,11 @@ void dac_act_fct() {
   }
   #endif
 
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
-void dac_set_fct() {
+void DacController::dac_set_fct() {
   // here you can set parameters
   int value = jsonDocument["value"];
 
@@ -87,15 +115,15 @@ void dac_set_fct() {
     Serial.print("value "); Serial.println(value);
   }
 
-  int dac_set = jsonDocument["dac_set"];
+  int dac_set = (*jsonDocument)["dac_set"];
 
   if (dac_set != NULL) {
     if (DEBUG) Serial.print("dac_set "); Serial.println(dac_set);
     // SET SOMETHING
   }
 
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 
 }
 
@@ -104,11 +132,11 @@ void dac_set_fct() {
 
 
 // Custom function accessible by the API
-void dac_get_fct() {
+void DacController::dac_get_fct() {
   // GET SOME PARAMETERS HERE
   int dac_variable = 12343;
 
-  jsonDocument.clear();
+  jsonDocument->clear();
   jsonDocument["dac_variable"] = dac_variable;
 }
 
@@ -118,8 +146,7 @@ void dac_get_fct() {
 */
 
 
-#ifdef IS_WIFI
-void dac_act_fct_http() {
+void DacController::dac_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   dac_act_fct();
@@ -128,7 +155,7 @@ void dac_act_fct_http() {
 }
 
 // wrapper for HTTP requests
-void dac_get_fct_http() {
+void DacController::dac_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   dac_get_fct();
@@ -138,20 +165,19 @@ void dac_get_fct_http() {
 
 
 // wrapper for HTTP requests
-void dac_set_fct_http() {
+void DacController::dac_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   dac_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 
 
 
-void drive_galvo(void * parameter){
+void DacController::drive_galvo(void * parameter){
   while(true){ // infinite loop
-    digitalWrite(dac_fake_1, HIGH);
+    digitalWrite(pins->dac_fake_1, HIGH);
     digitalWrite(dac_fake_2, HIGH);
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
     digitalWrite(dac_fake_1, LOW);
@@ -159,4 +185,3 @@ void drive_galvo(void * parameter){
     vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }
-#endif

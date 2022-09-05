@@ -86,31 +86,10 @@ class FocusMotor
         void setup_motor();
         bool drive_motor_background();
 
-        #ifdef IS_WIFI
         void motor_act_fct_http();
         void motor_get_fct_http();
         void motor_set_fct_http();
-        #endif
 
 };
-
-#ifdef IS_WIFI
-FocusMotor* object_which_will_handle_signal;
-
-void FocusMotor_motor_act_fct_http_wrapper()
-{
-  object_which_will_handle_signal->motor_act_fct_http();
-}
-
-void FocusMotor_motor_get_fct_http_wrapper()
-{
-  object_which_will_handle_signal->motor_get_fct_http();
-}
-
-void FocusMotor_motor_set_fct_http_wrapper()
-{
-  object_which_will_handle_signal->motor_set_fct_http();
-}
-#endif
 
 #endif

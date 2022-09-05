@@ -1,7 +1,4 @@
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
-#include"esp_gap_bt_api.h"
-#include "esp_err.h"
+#include "State.h"
 
 static inline int8_t sgn(int val) {
   if (val < 0) return -1;
@@ -10,84 +7,73 @@ static inline int8_t sgn(int val) {
 }
 
 // Custom function accessible by the API
-void state_act_fct() {
+void State::state_act_fct() {
   // here you can do something
   if (DEBUG) Serial.println("state_act_fct");
 
   // assign default values to thhe variables
-  if (jsonDocument.containsKey("restart")) {
+  if (jsonDocument->containsKey("restart")) {
     ESP.restart();
   }
   // assign default values to thhe variables
-  if (jsonDocument.containsKey("delay")) {
-    int mdelayms = jsonDocument["delay"];
+  if (jsonDocument->containsKey("delay")) {
+    int mdelayms = (*jsonDocument)["delay"];
     delay(mdelayms);
   }
-  if (jsonDocument.containsKey("isBusy")) {
-    isBusy = jsonDocument["isBusy"];
+  if (jsonDocument->containsKey("isBusy")) {
+    isBusy = (*jsonDocument)["isBusy"];
   }
 
-  if (jsonDocument.containsKey("pscontroller")) {
+  if (jsonDocument->containsKey("pscontroller")) {
     #if defined IS_PS3 || defined IS_PS4
-      gp_controller.IS_PSCONTROLER_ACTIVE = jsonDocument["pscontroller"];
+      gp_controller.IS_PSCONTROLER_ACTIVE = (*jsonDocument)["pscontroller"];
     #endif
   }
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
-void state_set_fct() {
+void State::state_set_fct() {
   // here you can set parameters
 
-  int isdebug = jsonDocument["isdebug"];
+  int isdebug = (*jsonDocument)["isdebug"];
   DEBUG = isdebug;
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 
 }
 
 // Custom function accessible by the API
-void state_get_fct() {
+void State::state_get_fct() {
   // GET SOME PARAMETERS HERE
-  if (jsonDocument.containsKey("isBusy")) {
-    jsonDocument.clear();
-    jsonDocument["isBusy"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
+  if (jsonDocument->containsKey("isBusy")) {
+    jsonDocument->clear();
+    (*jsonDocument)["isBusy"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
   }
 
-  else if (jsonDocument.containsKey("pscontroller")) {
-    jsonDocument.clear();
+  else if (jsonDocument->containsKey("pscontroller")) {
+    jsonDocument->clear();
     #if defined IS_PS3 || defined IS_PS4
     jsonDocument["pscontroller"] = gp_controller.IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
     #endif
   }
   else {
-    jsonDocument.clear();
-    jsonDocument["identifier_name"] = identifier_name;
-    jsonDocument["identifier_id"] = identifier_id;
-    jsonDocument["identifier_date"] = identifier_date;
-    jsonDocument["identifier_author"] = identifier_author;
-    jsonDocument["identifier_setup"] = identifier_setup;
+    jsonDocument->clear();
+    (*jsonDocument)["identifier_name"] = identifier_name;
+    (*jsonDocument)["identifier_id"] = identifier_id;
+    (*jsonDocument)["identifier_date"] = identifier_date;
+    (*jsonDocument)["identifier_author"] = identifier_author;
+    (*jsonDocument)["identifier_setup"] = pins->identifier_setup;
   }
 }
 
-void printInfo() {
+void State::printInfo() {
   if (DEBUG) Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
   if (DEBUG) Serial.println("https://github.com/openUC2/UC2-REST/");
   //Serial.println("A first try can be: \{\"task\": \"/state_get\"");
 }
 
-
-
-
-// Check if Bluetoothdevice exists?
-//https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/bt_remove_paired_devices/bt_remove_paired_devices.ino
-//https://github.com/aed3/PS4-esp32/issues/40
-#define PAIR_MAX_DEVICES 20
-uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
-char bda_str[18];
-#define REMOVE_BONDED_DEVICES 1   // <- Set to 0 to view all bonded devices addresses, set to 1 to remove
-
-char *bda2str(const uint8_t* bda, char *str, size_t size)
+char *State::bda2str(const uint8_t* bda, char *str, size_t size)
 {
   if (bda == NULL || str == NULL || size < 18) {
     return NULL;
@@ -96,7 +82,7 @@ char *bda2str(const uint8_t* bda, char *str, size_t size)
           bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
   return str;
 }
-void clearBlueetoothDevice() {
+void State::clearBlueetoothDevice() {
   Serial.print("ESP32 bluetooth address: "); Serial.println(bda2str(esp_bt_dev_get_address(), bda_str, 18));
   // Get the numbers of bonded/paired devices in the BT module
   int count = esp_bt_gap_get_bond_device_num();
@@ -133,30 +119,28 @@ void clearBlueetoothDevice() {
    wrapper for HTTP requests
 */
 
-#ifdef IS_WIFI
-void state_act_fct_http() {
+void State::state_act_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   state_act_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void state_get_fct_http() {
+void State::state_get_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   state_get_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
 
 // wrapper for HTTP requests
-void state_set_fct_http() {
+void State::state_set_fct_http() {
   String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
+  deserializeJson((*jsonDocument), body);
   state_set_fct();
-  serializeJson(jsonDocument, output);
+  serializeJson((*jsonDocument), output);
   server.send(200, "application/json", output);
 }
-#endif

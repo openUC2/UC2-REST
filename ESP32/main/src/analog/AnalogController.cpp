@@ -1,12 +1,26 @@
-#ifdef IS_ANALOG
+#include "AnalogController.h"
+
+
+void AnalogController::setup()
+{
+    Serial.println("Setting Up analog");
+    /* setup the PWM ports and reset them to 0*/
+    ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
+    ledcAttachPin(pins->analog_PIN_1, PWM_CHANNEL_analog_1);
+    ledcWrite(PWM_CHANNEL_analog_1, 0);
+
+    ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
+    ledcAttachPin(pins->analog_PIN_2, PWM_CHANNEL_analog_2);
+    ledcWrite(PWM_CHANNEL_analog_2, 0);
+}
 
 // Custom function accessible by the API
-void analog_act_fct() {
+void AnalogController::analog_act_fct() {
   // here you can do something
   Serial.println("analog_act_fct");
 
-  int analogid = jsonDocument["analogid"];
-  int analogval = jsonDocument["analogval"];
+  int analogid = (*jsonDocument)["analogid"];
+  int analogval = (*jsonDocument)["analogval"];
 
   if (DEBUG) {
     Serial.print("analogid "); Serial.println(analogid);
@@ -25,25 +39,21 @@ void analog_act_fct() {
     analog_val_3 = analogval;
     ledcWrite(PWM_CHANNEL_analog_3, analogval);
   }
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
-void analog_set_fct() {
+void AnalogController::analog_set_fct() {
   // here you can set parameters
   
-  if (jsonDocument.containsKey("analogid")) {
-    int analogid = jsonDocument["analogid"];
-  }
-  else{
-    int analogid = 0;
+  int analogid = 0;
+  if (jsonDocument->containsKey("analogid")) {
+    analogid = (*jsonDocument)["analogid"];
   }
 
-  if (jsonDocument.containsKey("analogpin")) {
-    int analogpin = jsonDocument["analogpin"];
-  }
-  else{
-    int analogpin = 0;
+  int analogpin = 0;
+  if (jsonDocument->containsKey("analogpin")) {
+    int analogpin = (*jsonDocument)["analogpin"];
   }
 
   if (DEBUG) Serial.print("analogid "); Serial.println(analogid);
@@ -52,72 +62,72 @@ void analog_set_fct() {
 
 
     if (analogid == 1) {
-      analog_PIN_1 = analogpin;
-      pinMode(analog_PIN_1, OUTPUT);
-      digitalWrite(analog_PIN_1, LOW);
+      pins->analog_PIN_1 = analogpin;
+      pinMode(pins->analog_PIN_1, OUTPUT);
+      digitalWrite(pins->analog_PIN_1, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_1, PWM_CHANNEL_analog_1);
+      ledcAttachPin(pins->analog_PIN_1, PWM_CHANNEL_analog_1);
       ledcWrite(PWM_CHANNEL_analog_1, 0);
 
     }
     else if (analogid == 2) {
-      analog_PIN_2 = analogpin;
-      pinMode(analog_PIN_2, OUTPUT);
-      digitalWrite(analog_PIN_2, LOW);
+      pins->analog_PIN_2 = analogpin;
+      pinMode(pins->analog_PIN_2, OUTPUT);
+      digitalWrite(pins->analog_PIN_2, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_2, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_2, PWM_CHANNEL_analog_2);
+      ledcAttachPin(pins->analog_PIN_2, PWM_CHANNEL_analog_2);
       ledcWrite(PWM_CHANNEL_analog_2, 0);
     }
     else if (analogid == 3) {
-      analog_PIN_3 = analogpin;
-      pinMode(analog_PIN_3, OUTPUT);
-      digitalWrite(analog_PIN_3, LOW);
+      pins->analog_PIN_3 = analogpin;
+      pinMode(pins->analog_PIN_3, OUTPUT);
+      digitalWrite(pins->analog_PIN_3, LOW);
 
       /* setup the PWM ports and reset them to 0*/
       ledcSetup(PWM_CHANNEL_analog_3, pwm_frequency, pwm_resolution);
-      ledcAttachPin(analog_PIN_3, PWM_CHANNEL_analog_3);
+      ledcAttachPin(pins->analog_PIN_3, PWM_CHANNEL_analog_3);
       ledcWrite(PWM_CHANNEL_analog_3, 0);
 
 }
 
-jsonDocument.clear();
-jsonDocument["return"] = 1;
+jsonDocument->clear();
+(*jsonDocument)["return"] = 1;
 
 }
 
 // Custom function accessible by the API
-void analog_get_fct() {
+void AnalogController::analog_get_fct() {
   // GET SOME PARAMETERS HERE
-  int analogid = jsonDocument["analogid"];
+  int analogid = (*jsonDocument)["analogid"];
   int analogpin = 0;
   int analogval = 0;
 
   if (analogid == 1) {
     if (DEBUG) Serial.println("analog 1");
-    analogpin = analog_PIN_1;
+    analogpin = pins->analog_PIN_1;
     analogval = analog_val_1;
   }
   else if (analogid == 2) {
     if (DEBUG) Serial.println("AXIS 2");
     if (DEBUG) Serial.println("analog 2");
-    analogpin = analog_PIN_2;
+    analogpin = pins->analog_PIN_2;
     analogval = analog_val_2;
   }
   else if (analogid == 3) {
     if (DEBUG) Serial.println("AXIS 3");
     if (DEBUG) Serial.println("analog 1");
-    analogpin = analog_PIN_3;
+    analogpin = pins->analog_PIN_3;
     analogval = analog_val_3;
   }
 
-  jsonDocument.clear();
-  jsonDocument["analogid"] = analogid;
-  jsonDocument["analogval"] = analogval;
-  jsonDocument["analogpin"] = analogpin;
+  jsonDocument->clear();
+  (*jsonDocument)["analogid"] = analogid;
+  (*jsonDocument)["analogval"] = analogval;
+  (*jsonDocument)["analogpin"] = analogpin;
 }
 
 
@@ -125,7 +135,7 @@ void analog_get_fct() {
   wrapper for HTTP requests
 */
 #ifdef IS_WIFI
-void analog_act_fct_http() {
+void AnalogController::analog_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   analog_act_fct();
@@ -134,7 +144,7 @@ void analog_act_fct_http() {
 }
 
 // wrapper for HTTP requests
-void analog_get_fct_http() {
+void AnalogController::analog_get_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   analog_get_fct();
@@ -143,12 +153,11 @@ void analog_get_fct_http() {
 }
 
 // wrapper for HTTP requests
-void analog_set_fct_http() {
+void AnalogController::analog_set_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
   analog_set_fct();
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif
 #endif

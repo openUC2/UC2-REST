@@ -209,7 +209,6 @@ void led_controller::set_center(int R, int G, int B)
   */
 }
 
-#ifdef IS_WIFI
 void led_controller::ledarr_act_fct_http() {
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
@@ -235,4 +234,3 @@ void led_controller::ledarr_set_fct_http() {
   serializeJson(jsonDocument, output);
   server.send(200, "application/json", output);
 }
-#endif

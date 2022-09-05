@@ -1,11 +1,26 @@
-#ifdef IS_WIFI
+#include "WifiController.h"
 
 #include <WiFi.h>
 #include <WebServer.h>
 #include <SPIFFS.h>
 
 
-void init_Spiffs()
+WifiController::WifiController()
+{
+  globalWifi = this;
+}
+
+WifiController::~WifiController()
+{
+  globalWifi = nullptr;
+}
+
+void WifiController::handelMessages()
+{
+  globalWifi->server->handleClient();
+}
+
+void WifiController::init_Spiffs()
 {
   if (!SPIFFS.begin()) /* Démarrage du gestionnaire de fichiers SPIFFS */
   {
@@ -26,9 +41,7 @@ void init_Spiffs()
   }
 }
 
-
-#ifdef IS_WIFI
-void initWifiAP(const char *ssid) {
+void WifiController::initWifiAP(const char *ssid) {
   Serial.print("Network SSID (AP): ");
   Serial.println(ssid);
 
@@ -38,8 +51,7 @@ void initWifiAP(const char *ssid) {
 }
 
 
-
-void joinWifi(const char *ssid, const char *password) {
+void WifiController::joinWifi(const char *ssid, const char *password) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -61,7 +73,7 @@ void joinWifi(const char *ssid, const char *password) {
 
 
 
-void autoconnectWifi(boolean isResetWifiSettings) {
+void WifiController::autoconnectWifi(boolean isResetWifiSettings) {
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   // it is a good practice to make sure your code sets wifi mode how you want it.
 
@@ -69,13 +81,13 @@ void autoconnectWifi(boolean isResetWifiSettings) {
   // these are stored by the esp library
   if (isResetWifiSettings) {
     Serial.println("First run => resetting Wifi Settings");
-    wm.resetSettings();
+    wm->resetSettings();
   }
-  wm.setHostname(hostname);
-  wm.setConfigPortalBlocking(false);
+  wm->setHostname(hostname);
+  wm->setConfigPortalBlocking(false);
   //wm.setConfigPortalBlocking(false);
   //wm.setConfigPortalTimeout(90); // auto close configportal after n seconds
-  wm.setConnectTimeout(10);
+  wm->setConnectTimeout(10);
 
   // Automatically connect using saved credentials,
   // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
@@ -84,7 +96,7 @@ void autoconnectWifi(boolean isResetWifiSettings) {
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect(mSSIDAP); // password protected ap
+  res = wm->autoConnect(mSSIDAP); // password protected ap
 
 
   if (!res) {
@@ -103,21 +115,21 @@ void autoconnectWifi(boolean isResetWifiSettings) {
 
 
 
-void startserver() {
+void WifiController::startserver() {
   /*return index page which is stored in serverIndex */
 
   Serial.println("Spinning up OTA server");
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", otaindex);
+  server->on("/", HTTP_GET, []() {
+    globalWifi->server->sendHeader("Connection", "close");
+    globalWifi->server->send(200, "text/html", otaindex);
   });
   /*handling uploading firmware file */
-  server.on("/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+  server->on("/update", HTTP_POST, []() {
+    globalWifi->server->sendHeader("Connection", "close");
+    globalWifi->server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
   }, []() {
-    HTTPUpload& upload = server.upload();
+    HTTPUpload& upload = globalWifi->server->upload();
     if (upload.status == UPLOAD_FILE_START) {
       Serial.printf("Update: %s\n", upload.filename.c_str());
       if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
@@ -136,14 +148,10 @@ void startserver() {
       }
     }
   });
-  server.begin();
+  server->begin();
   Serial.println("Starting OTA server on port: '82'");
   Serial.println("Visit http://IPADDRESS_SCOPE:82");
 }
-
-#endif
-
-
 
 //https://www.gabrielcsapo.com/arduino-web-server-esp-32/
 bool loadFromSPIFFS(String path) {
@@ -158,7 +166,7 @@ bool loadFromSPIFFS(String path) {
           return false;
       }
  
-      if (server.streamFile(dataFile, dataType) != dataFile.size()) {
+      if (globalWifi->server->streamFile(dataFile, dataType) != dataFile.size()) {
         Serial.println("Sent less data than expected!");
       }else{
           Serial.println("Page served!");
@@ -175,18 +183,18 @@ bool loadFromSPIFFS(String path) {
 void handleNotFound() {
   String message = "File Not Found\n\n";
   message += "URI: ";
-  message += server.uri();
+  message += globalWifi->server->uri();
   message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += (globalWifi->server->method() == HTTP_GET) ? "GET" : "POST";
   message += "\nArguments: ";
-  message += server.args();
+  message += globalWifi->server->args();
   message += "\n";
  
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  for (uint8_t i = 0; i < globalWifi->server->args(); i++) {
+    message += " " + globalWifi->server->argName(i) + ": " + globalWifi->server->arg(i) + "\n";
   }
  
-  server.send(404, "text/plain", message);
+  globalWifi->server->send(404, "text/plain", message);
 }
 
 
@@ -217,22 +225,22 @@ void handleswaggercss() {
 */
 
 
-void setup_routing() {
+void WifiController::setup_routing() {
   // GET
   //  server.on("/temperature", getTemperature);
   //server.on("/env", getEnv);
   // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
 
-  server.on(state_act_endpoint, HTTP_POST, state_act_fct_http);
-  server.on(state_get_endpoint, HTTP_POST, state_get_fct_http);
-  server.on(state_set_endpoint, HTTP_POST, state_set_fct_http);
+  globalWifi->server->on(state_act_endpoint, HTTP_POST, State_act_fct_http_wrapper);
+  globalWifi->server->on(state_get_endpoint, HTTP_POST, State_get_fct_http_wrapper);
+  globalWifi->server->on(state_set_endpoint, HTTP_POST, State_set_fct_http_wrapper);
 
   // Website
-  server.on("/openapi.yaml", handleSwaggerYaml);
-  server.on("/index.html", handleSwaggerUI);
-  server.on("/swagger_standalone.js", handlestandalone);
-  server.on("/swagger-ui-bundle.js", handleswaggerbundle);
-  server.on("/swagger-ui.css", handleswaggercss);
+  globalWifi->server->on("/openapi.yaml", handleSwaggerYaml);
+  globalWifi->server->on("/index.html", handleSwaggerUI);
+  globalWifi->server->on("/swagger_standalone.js", handlestandalone);
+  globalWifi->server->on("/swagger-ui-bundle.js", handleswaggerbundle);
+  globalWifi->server->on("/swagger-ui.css", handleswaggercss);
 
 
   /*
@@ -254,40 +262,42 @@ void setup_routing() {
 
 
   // POST
-  server.on(motor_act_endpoint, HTTP_POST, FocusMotor_motor_act_fct_http_wrapper);
-  server.on(motor_get_endpoint, HTTP_POST, FocusMotor_motor_get_fct_http_wrapper);
-  server.on(motor_set_endpoint, HTTP_POST, FocusMotor_motor_set_fct_http_wrapper);
+  globalWifi->server->on(motor_act_endpoint, HTTP_POST, FocusMotor_motor_act_fct_http_wrapper);
+  globalWifi->server->on(motor_get_endpoint, HTTP_POST, FocusMotor_motor_get_fct_http_wrapper);
+  globalWifi->server->on(motor_set_endpoint, HTTP_POST, FocusMotor_motor_set_fct_http_wrapper);
+
 
 #ifdef IS_DAC
-  server.on(dac_act_endpoint, HTTP_POST, dac_act_fct_http);
-  server.on(dac_get_endpoint, HTTP_POST, dac_get_fct_http);
-  server.on(dac_set_endpoint, HTTP_POST, dac_set_fct_http);
+  globalWifi->server->on(dac_act_endpoint, HTTP_POST, Dac_act_fct_http_wrapper);
+  globalWifi->server->on(dac_get_endpoint, HTTP_POST, Dac_get_fct_http_wrapper);
+  globalWifi->server->on(dac_set_endpoint, HTTP_POST, Dac_set_fct_http_wrapper);
 #endif
 
-  server.on(laser_act_endpoint, HTTP_POST, LASER_act_fct_http);
-  server.on(laser_get_endpoint, HTTP_POST, LASER_get_fct_http);
-  server.on(laser_set_endpoint, HTTP_POST, LASER_set_fct_http);
+  globalWifi->server->on(laser_act_endpoint, HTTP_POST, Laser_act_fct_http_wrapper);
+  globalWifi->server->on(laser_get_endpoint, HTTP_POST, Laser_get_fct_http_wrapper);
+  globalWifi->server->on(laser_set_endpoint, HTTP_POST, Laser_set_fct_http_wrapper);
 
 #ifdef IS_ANALOG
-  server.on(analog_act_endpoint, HTTP_POST, analog_act_fct_http);
-  server.on(analog_get_endpoint, HTTP_POST, analog_get_fct_http);
-  server.on(analog_set_endpoint, HTTP_POST, analog_set_fct_http);
+  globalWifi->server->on(analog_act_endpoint, HTTP_POST, Analog_act_fct_http_wrapper);
+  globalWifi->server->on(analog_get_endpoint, HTTP_POST, Analog_get_fct_http_wrapper);
+  globalWifi->server->on(analog_set_endpoint, HTTP_POST, Analog_set_fct_http_wrapper);
 #endif
 
 #ifdef IS_DIGITAL
-  server.on(digital_act_endpoint, HTTP_POST, digital_act_fct_http);
-  server.on(digital_get_endpoint, HTTP_POST, digital_get_fct_http);
-  server.on(digital_set_endpoint, HTTP_POST, digital_set_fct_http);
+  globalWifi->server->on(digital_act_endpoint, HTTP_POST, digital_act_fct_http);
+  globalWifi->server->on(digital_get_endpoint, HTTP_POST, digital_get_fct_http);
+  globalWifi->server->on(digital_set_endpoint, HTTP_POST, digital_set_fct_http);
 #endif
 
-server.on(ledarr_act_endpoint, HTTP_POST, ledarr_act_fct_http);
-server.on(ledarr_get_endpoint, HTTP_POST, ledarr_get_fct_http);
-server.on(ledarr_set_endpoint, HTTP_POST, ledarr_set_fct_http);
+globalWifi->server->on(ledarr_act_endpoint, HTTP_POST, Led_act_fct_http_wrapper);
+globalWifi->server->on(ledarr_get_endpoint, HTTP_POST, Led_get_fct_http_wrapper);
+globalWifi->server->on(ledarr_set_endpoint, HTTP_POST, Led_set_fct_http_wrapper);
 
 
 
 
   // start server
-  server.begin();
+  globalWifi->server->begin();
 }
-#endif
+
+

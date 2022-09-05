@@ -1,3 +1,6 @@
+#ifndef parameters_wifi_h
+#define parameters_wifi_h
+
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiClient.h>
@@ -70,3 +73,5 @@ static const char PROGMEM otaindex[] = R"rawliteral(
 </span></p>
 </html>
 )rawliteral";
+
+#endif

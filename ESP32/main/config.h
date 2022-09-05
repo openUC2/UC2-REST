@@ -6,11 +6,15 @@ int DEBUG = 1; // if tihs is set to true, the arduino runs into problems during 
 //#define IS_PS4
 //#define DEBUG_GAMEPAD
 
-//#define IS_WIFI
+#define IS_WIFI
+#define IS_DAC
+#define IS_DAC_FAKE
 
 //#define DEBUG_MOTOR
 //#define DEBUG_LED
 //#define DEBUG_LASER
+//#define IS_ANALOG
+//#define DEBUG_ANALOG
 
 
 
