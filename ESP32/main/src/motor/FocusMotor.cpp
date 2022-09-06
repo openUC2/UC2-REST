@@ -10,7 +10,7 @@ FocusMotor::FocusMotor(PINDEF * p)
     stepper_Z = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Z, pins->DIR_Z);
 };
 
-void FocusMotor::motor_act_fct()
+void FocusMotor::act()
 {
     if (DEBUG) Serial.println("motor_act_fct");
 
@@ -201,7 +201,7 @@ bool FocusMotor::getEnableMotor()
     return motor_enable;
 }
 
-void FocusMotor::motor_set_fct()
+void FocusMotor::set()
 {
     // default value handling
   int axis = -1;
@@ -357,7 +357,7 @@ void FocusMotor::motor_set_fct()
   (*jsonDocument)["return"] = 1;
 }
 
-void FocusMotor::motor_get_fct()
+void FocusMotor::get()
 {
     int axis = (*jsonDocument)["axis"];
   if (DEBUG) Serial.println("motor_get_fct");
@@ -414,7 +414,7 @@ void FocusMotor::motor_get_fct()
   (*jsonDocument)["sign"] = sign;
 }
 
-void FocusMotor::setup_motor()
+void FocusMotor::setup()
 {
     
   /*
@@ -447,7 +447,7 @@ void FocusMotor::setup_motor()
   setEnableMotor(false);
 }
 
-bool FocusMotor::drive_motor_background()
+bool FocusMotor::background()
 {
     
   // update motor positions
@@ -501,33 +501,4 @@ bool FocusMotor::drive_motor_background()
   }
   isBusy = true;
   return false; //never reached, but keeps compiler happy?
-}
-
-void FocusMotor::motor_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
-  motor_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void FocusMotor::motor_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
-  motor_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void FocusMotor::motor_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  if (DEBUG) serializeJsonPretty(jsonDocument, Serial);
-  motor_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
 }

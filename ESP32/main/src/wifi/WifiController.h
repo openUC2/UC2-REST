@@ -14,6 +14,8 @@
 #include "../led/led_controller.h"
 #include "../analog/AnalogController.h"
 #include "../digital/DigitalController.h"
+#include "../pid/PidController.h"
+#include "../sensor/SensorController.h"
 
 
     /*
@@ -83,15 +85,6 @@ public:
     DynamicJsonDocument * jsonDocument;
     WiFiManager * wm;
     WebServer * server;
-    State * state;
-    FocusMotor * motor;
-    LaserController * laser;
-    DacController * dac;
-    led_controller * led;
-    AnalogController * analog;
-    DigitalController * digital;
-    
-    
     
     char output[1000];
 
@@ -118,139 +111,188 @@ WifiController::~WifiController()
     server = nullptr;
 }
 
-WifiController * globalWifi;
+WifiController * wifi;
 
 void deserialize()
 {
-  String body = (*globalWifi->server).arg("plain");
-  deserializeJson((*globalWifi->jsonDocument), body);
+  String body = (*wifi->server).arg("plain");
+  deserializeJson((*wifi->jsonDocument), body);
 }
 
 void serialize()
 {
-  serializeJson((*globalWifi->jsonDocument), globalWifi->output);
-  (*globalWifi->server).send(200, "application/json", globalWifi->output);
+  serializeJson((*wifi->jsonDocument), wifi->output);
+  (*wifi->server).send(200, "application/json", wifi->output);
 }
 
-void FocusMotor_motor_act_fct_http_wrapper()
-{
-  globalWifi->motor->motor_act_fct_http();
-}
-
-void FocusMotor_motor_get_fct_http_wrapper()
-{
-  globalWifi->motor->motor_get_fct_http();
-}
-
-void FocusMotor_motor_set_fct_http_wrapper()
-{
-  globalWifi->motor->motor_set_fct_http();
-}
-
-void Laser_act_fct_http_wrapper()
-{
-  globalWifi->laser->LASER_act_fct();
-}
-
-void Laser_get_fct_http_wrapper()
-{
-  globalWifi->laser->LASER_get_fct();
-}
-
-void Laser_set_fct_http_wrapper()
-{
-  globalWifi->laser->LASER_set_fct();
-}
-
-void Dac_act_fct_http_wrapper()
-{
-  globalWifi->dac->dac_act_fct();
-}
-
-void Dac_get_fct_http_wrapper()
-{
-  globalWifi->dac->dac_get_fct();
-}
-
-void Dac_set_fct_http_wrapper()
-{
-  globalWifi->dac->dac_set_fct();
-}
-
-
-void Led_act_fct_http_wrapper()
-{
-  globalWifi->led->ledarr_act_fct();
-}
-
-void Led_get_fct_http_wrapper()
-{
-  globalWifi->led->ledarr_get_fct();
-}
-
-void Led_set_fct_http_wrapper()
-{
-  globalWifi->led->ledarr_set_fct();
-}
-
-
-void State_act_fct_http_wrapper()
-{
-  globalWifi->state->state_act_fct_http();
-}
-
-void State_get_fct_http_wrapper()
-{
-  globalWifi->state->state_get_fct_http();
-}
-
-void State_set_fct_http_wrapper()
-{
-  globalWifi->state->state_set_fct_http();
-}
-
-void Analog_act_fct_http_wrapper()
-{
-  globalWifi->analog->analog_act_fct();
-}
-
-void Analog_get_fct_http_wrapper()
-{
-  globalWifi->analog->analog_get_fct();
-}
-
-void Analog_set_fct_http_wrapper()
-{
-  globalWifi->analog->analog_set_fct();
-}
-
-void Digital_act_fct_http_wrapper()
+void FocusMotor_act()
 {
   deserialize();
-  int digitalid = (*globalWifi->jsonDocument)["digitalid"];
-  int digitalval = (*globalWifi->jsonDocument)["digitalval"];
-  globalWifi->digital->digital_act_fct(digitalid,digitalval);
-  globalWifi->jsonDocument->clear();
-  (*globalWifi->jsonDocument)["return"] = 1;
-  serialize();
-  
-}
-
-void Digital_get_fct_http_wrapper()
-{
-  deserialize();
-  globalWifi->digital->digital_get_fct(globalWifi->jsonDocument);
+  motor->act();
   serialize();
 }
 
-void Digital_set_fct_http_wrapper()
+void FocusMotor_get()
 {
   deserialize();
-  int digitalid = (*globalWifi->jsonDocument)["digitalid"];
-  int digitalpin = (*globalWifi->jsonDocument)["digitalpin"];
-  globalWifi->digital->digital_set_fct(digitalid,digitalpin);
-  globalWifi->jsonDocument->clear();
-  (*globalWifi->jsonDocument)["return"] = 1;
+  motor->get();
+  serialize();
+}
+
+void FocusMotor_set()
+{
+  deserialize();
+  motor->set();
+  serialize();
+}
+
+void Laser_act()
+{
+  deserialize();
+  laser->act();
+  serialize();
+}
+
+void Laser_get()
+{
+  deserialize();
+  laser->get();
+  serialize();
+}
+
+void Laser_set()
+{
+  deserialize();
+  laser->set();
+  serialize();
+}
+
+void Dac_act()
+{
+  deserialize();
+  dac->act();
+  serialize();
+}
+
+void Dac_get()
+{
+  deserialize();
+  dac->get();
+  serialize();
+}
+
+void Dac_set()
+{
+  deserialize();
+  dac->set();
+  serialize();
+}
+
+
+void Led_act()
+{
+  deserialize();
+  led->act();
+  serialize();
+}
+
+void Led_get()
+{
+  deserialize();
+  led->get();
+  serialize();
+}
+
+void Led_set()
+{
+  deserialize();
+  led->set();
+  serialize();
+}
+
+
+void State_act()
+{
+  deserialize();
+  state->act();
+  serialize();
+}
+
+void State_get()
+{
+  deserialize();
+  state->get();
+  serialize();
+}
+
+void State_set()
+{
+  deserialize();
+  state->set();
+  serialize();
+}
+
+void Analog_act()
+{
+  deserialize();
+  analog->act();
+  serialize();
+}
+
+void Analog_get()
+{
+  deserialize();
+  analog->get();
+  serialize();
+}
+
+void Analog_set()
+{
+  deserialize();
+  analog->set();
+  serialize();
+}
+
+void Digital_act()
+{
+  deserialize();
+  digital->act(wifi->jsonDocument);
+  serialize();
+}
+
+void Digital_get()
+{
+  deserialize();
+  digital->get(wifi->jsonDocument);
+  serialize();
+}
+
+void Digital_set()
+{
+  deserialize();
+  digital->set(wifi->jsonDocument);
+  serialize();
+}
+
+
+void Pid_act()
+{
+  deserialize();
+  pid->act();
+  serialize();
+}
+
+void Pid_get()
+{
+  deserialize();
+  pid->get();
+  serialize();
+}
+
+void Pid_set()
+{
+  deserialize();
+  pid->set();
   serialize();
 }
 

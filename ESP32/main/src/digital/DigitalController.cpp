@@ -1,10 +1,13 @@
 #include "DigitalController.h"
 // Custom function accessible by the API
-void DigitalController::digital_act_fct(int digitalid,int digitalval) {
+void DigitalController::act(DynamicJsonDocument * jsonDocument) {
   // here you can do something
   Serial.println("digital_act_fct");
   isBusy = true;
   int triggerdelay=10;
+
+  int digitalid = (*jsonDocument)["digitalid"];
+  int digitalval = (*jsonDocument)["digitalval"];
 
   if (DEBUG) {
     Serial.print("digitalid "); Serial.println(digitalid);
@@ -50,11 +53,15 @@ void DigitalController::digital_act_fct(int digitalid,int digitalval) {
       Serial.print("digital_PIN "); Serial.println(pins->digital_PIN_3);
     }
   }
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
-void DigitalController::digital_set_fct(int digitalid,int digitalpin) {
+void DigitalController::set(DynamicJsonDocument * jsonDocument) {
   // here you can set parameters
 
+  int digitalid = (*jsonDocument)["digitalid"];
+  int digitalpin = (*jsonDocument)["digitalpin"];
   if (DEBUG) Serial.print("digitalid "); Serial.println(digitalid);
   if (DEBUG) Serial.print("digitalpin "); Serial.println(digitalpin);
 
@@ -76,11 +83,12 @@ void DigitalController::digital_set_fct(int digitalid,int digitalpin) {
     }
   }
   isBusy = false;
-
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
 // Custom function accessible by the API
-void DigitalController::digital_get_fct(DynamicJsonDocument * jsonDocument) {
+void DigitalController::get(DynamicJsonDocument * jsonDocument) {
   // GET SOME PARAMETERS HERE
   int digitalid = (*jsonDocument)["digitalid"];
   int digitalpin = 0;
@@ -110,7 +118,7 @@ void DigitalController::digital_get_fct(DynamicJsonDocument * jsonDocument) {
   (*jsonDocument)["digitalpin"] = digitalpin;
 }
 
-void DigitalController::setupDigital() {
+void DigitalController::setup() {
   Serial.println("Setting Up digital");
   /* setup the output nodes and reset them to 0*/
   pinMode(pins->digital_PIN_1, OUTPUT);

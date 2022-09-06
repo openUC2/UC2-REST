@@ -15,7 +15,7 @@ void AnalogController::setup()
 }
 
 // Custom function accessible by the API
-void AnalogController::analog_act_fct() {
+void AnalogController::act() {
   // here you can do something
   Serial.println("analog_act_fct");
 
@@ -43,7 +43,7 @@ void AnalogController::analog_act_fct() {
   (*jsonDocument)["return"] = 1;
 }
 
-void AnalogController::analog_set_fct() {
+void AnalogController::set() {
   // here you can set parameters
   
   int analogid = 0;
@@ -100,7 +100,7 @@ jsonDocument->clear();
 }
 
 // Custom function accessible by the API
-void AnalogController::analog_get_fct() {
+void AnalogController::get() {
   // GET SOME PARAMETERS HERE
   int analogid = (*jsonDocument)["analogid"];
   int analogpin = 0;
@@ -129,35 +129,3 @@ void AnalogController::analog_get_fct() {
   (*jsonDocument)["analogval"] = analogval;
   (*jsonDocument)["analogpin"] = analogpin;
 }
-
-
-/*
-  wrapper for HTTP requests
-*/
-#ifdef IS_WIFI
-void AnalogController::analog_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  analog_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void AnalogController::analog_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  analog_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void AnalogController::analog_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  analog_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-#endif

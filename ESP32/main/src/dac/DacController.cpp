@@ -1,18 +1,13 @@
 #include "DacController.h"
 
 
-DacController::DacController()
-{
-  #ifdef IS_DAC
-    dac = new DAC_Module();
-  #endif
-}
+
 
 void DacController::setup()
 {
     #ifdef IS_DAC
-    dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
-    dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
+    dac->dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
+    dac->dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
     #endif
     #ifdef IS_DAC_FAKE
       pinMode(dac_fake_1, OUTPUT);
@@ -30,7 +25,7 @@ void DacController::setup()
 }
 
 // Custom function accessible by the API
-void DacController::dac_act_fct() {
+void DacController::act() {
   // here you can do something
 
   Serial.println("dac_act_fct");
@@ -107,9 +102,9 @@ void DacController::dac_act_fct() {
   (*jsonDocument)["return"] = 1;
 }
 
-void DacController::dac_set_fct() {
+void DacController::set() {
   // here you can set parameters
-  int value = jsonDocument["value"];
+  int value = (*jsonDocument)["value"];
 
   if (DEBUG) {
     Serial.print("value "); Serial.println(value);
@@ -132,12 +127,12 @@ void DacController::dac_set_fct() {
 
 
 // Custom function accessible by the API
-void DacController::dac_get_fct() {
+void DacController::get() {
   // GET SOME PARAMETERS HERE
   int dac_variable = 12343;
 
   jsonDocument->clear();
-  jsonDocument["dac_variable"] = dac_variable;
+  (*jsonDocument)["dac_variable"] = dac_variable;
 }
 
 
@@ -146,42 +141,15 @@ void DacController::dac_get_fct() {
 */
 
 
-void DacController::dac_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  dac_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void DacController::dac_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  dac_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
 
 
-// wrapper for HTTP requests
-void DacController::dac_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  dac_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-
-
-void DacController::drive_galvo(void * parameter){
+void drive_galvo(void * parameter){
   while(true){ // infinite loop
-    digitalWrite(pins->dac_fake_1, HIGH);
-    digitalWrite(dac_fake_2, HIGH);
-    vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
-    digitalWrite(dac_fake_1, LOW);
-    digitalWrite(dac_fake_2, LOW);
-    vTaskDelay(frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(dac->pins->dac_fake_1, HIGH);
+    digitalWrite(dac->pins->dac_fake_2, HIGH);
+    vTaskDelay(dac->frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(dac->pins->dac_fake_1, LOW);
+    digitalWrite(dac->pins->dac_fake_2, LOW);
+    vTaskDelay(dac->frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }

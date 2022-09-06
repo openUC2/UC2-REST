@@ -49,19 +49,14 @@ public:
     bool DEBUG = false;
 
     void LASER_despeckle(int LASERdespeckle, int LASERid, int LASERperiod);
-    void LASER_act_fct();
-    void LASER_set_fct();
-    void LASER_get_fct();
-    void setup_laser();
+    void act();
+    void set();
+    void get();
+    void setup();
 
-    #ifdef IS_WIFI
-    void LASER_act_fct_http();
-    void LASER_get_fct_http();
-    void LASER_set_fct_http();
-    #endif
 };
 
 
-
+LaserController * laser;
 
 #endif

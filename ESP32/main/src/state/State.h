@@ -9,6 +9,12 @@
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 
+static int8_t sgn(int val) {
+  if (val < 0) return -1;
+  if (val == 0) return 0;
+  return 1;
+}
+
 class State
 {
 
@@ -40,14 +46,13 @@ class State
     unsigned long currentMillis;
     bool isBusy = false;
 
-    void state_act_fct();
-    void state_set_fct();
-    void state_get_fct();
+    void act();
+    void set();
+    void get();
     void printInfo();
     void clearBlueetoothDevice();
-    void state_act_fct_http();
-    void state_get_fct_http();
-    void state_set_fct_http();
 };
+
+State * state;
 
 #endif

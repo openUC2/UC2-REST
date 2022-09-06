@@ -78,18 +78,16 @@ class FocusMotor
 
         DynamicJsonDocument * jsonDocument;
 
-        void motor_act_fct();
+        void act();
         void setEnableMotor(bool enable);
         bool getEnableMotor();
-        void motor_set_fct();
-        void motor_get_fct();
-        void setup_motor();
-        bool drive_motor_background();
-
-        void motor_act_fct_http();
-        void motor_get_fct_http();
-        void motor_set_fct_http();
+        void set();
+        void get();
+        void setup();
+        bool background();
 
 };
+
+FocusMotor * motor;
 
 #endif

@@ -42,17 +42,13 @@ class AnalogController
     int PWM_CHANNEL_analog_2 = 5;
     int PWM_CHANNEL_analog_3 = 6;
 
-    void analog_act_fct();
-    void analog_set_fct();
-    void analog_get_fct();
+    void act();
+    void set();
+    void get();
 
     void setup();    
-
-    #ifdef IS_WIFI
-    void analog_act_fct_http();
-    void analog_get_fct_http();
-    void analog_set_fct_http();
-    #endif
 };
+
+AnalogController * analog;
 
 #endif

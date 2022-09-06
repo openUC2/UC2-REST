@@ -5,7 +5,14 @@
 #include "src/laser/LaserController.h"
 #include "src/analog/AnalogController.h"
 #include "src/state/State.h"
+#include "src/scanner/ScannerController.h"
+#include "src/pid/PidController.h"
+#include "src/digital/DigitalController.h"
+#include "src/sensor/SensorController.h"
 #include "src/wifi/WifiController.h"
+#include "src/dac/DacController.h"
+#include "src/gamepads/ps3_controller.h"
+#include "src/gamepads/ps4_controller.h"
 
 #include <ArduinoJson.h>
 
@@ -16,23 +23,6 @@
 // For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
-
-
-
-#ifdef IS_DIGITAL
-  #include "parameters_digital.h"
-#endif
-
-#ifdef IS_READSENSOR
-//#include "parameters_readsensor.h"
-#endif
-
-#ifdef IS_PID
-#include "parameters_PID.h"
-#endif
-
-
-
 
 
 //Where the JSON for the current instruction lives
@@ -46,35 +36,11 @@
 // ensure motors switch off when PS3 controller is operating them
 bool override_overheating = false;
 
-/*
-   Register devices
-*/
-FocusMotor * focusMotor;
-led_controller * led;
-LaserController * laser;
-PINDEF * pins;
-AnalogController * analog;
-State * state;
-#if defined(IS_DAC) || defined(IS_DAC_FAKE)
-  #include "src/dac/DacController.h"
-  DacController * dac;
-#endif
-
-WifiController * wifi;
-
 #ifdef IS_SLM
 #include "parameters_slm.h"
 #endif
 
-#ifdef IS_PS3
-  #include "src/gamepads/ps3_controller.h"
-  ps3_controller gp_controller;
-#endif
-#ifdef IS_PS4
-  #include "gamepads/ps4_controller.h"
-  ps4_controller * gp_controller;
-#endif
-
+PINDEF * pins;
 /* --------------------------------------------
    Setup
   --------------------------------------------
@@ -103,7 +69,6 @@ void setup()
 #ifdef IS_WIFI
   bool isResetWifiSettings = false;
   wifi = new WifiController();
-  wifi->state = state;
   wifi->autoconnectWifi(isResetWifiSettings);
   wifi->setup_routing();
   wifi->init_Spiffs();
@@ -118,63 +83,50 @@ void setup()
 
 Serial.println("IS_LEDARR");
 led = new led_controller();
-if(wifi != nullptr)
-  wifi->led = led;
 #ifdef DEBUG_LED
   led->DEBUG = true;
 #endif
 led->jsonDocument = &jsonDocument;
 led->setup_matrix();
-
-focusMotor = new FocusMotor(pins);
-if(wifi != nullptr)
-  wifi->motor = focusMotor;
+motor = new FocusMotor(pins);
 #ifdef DEBUG_MOTOR
-  focusmotor->DEBUG = true;
+  motor->DEBUG = true;
 #endif
-focusMotor->jsonDocument = &jsonDocument;
-focusMotor->setup_motor();
+motor->jsonDocument = &jsonDocument;
+motor->setup();
 
-  state->clearBlueetoothDevice();
-  #ifdef IS_PS3
-    #ifdef DEBUG_GAMEPAD
-      gp_controller.DEBUG = true;
-    #endif
-    gp_controller.focusmotor = focusMotor;
-    gp_controller.led = led;
-    gp_controller.start();
+state->clearBlueetoothDevice();
+#ifdef IS_PS3
+  gamepad_controller = new ps3_controller();
+  #ifdef DEBUG_GAMEPAD
+    gamepad_controller->DEBUG = true;
   #endif
-  #ifdef IS_PS4
-    #ifdef DEBUG_GAMEPAD
-      gp_controller.DEBUG = true;
-    #endif
-    gp_controller.focusmotor = &focusMotor;
-    gp_controller.led = &led;
-    gp_controller->start();
+  gamepad_controller->start();
+#endif
+#ifdef IS_PS4
+  gamepad_controller = new ps4_controller();
+  #ifdef DEBUG_GAMEPAD
+    gamepad_controller->DEBUG = true;
   #endif
+  gamepad_controller->start();
+#endif
 
-  laser = new LaserController();
-  laser->setup_laser();
-
-  if(wifi != nullptr)
-    wifi->laser = laser;
+laser = new LaserController();
+laser->jsonDocument = &jsonDocument;
+laser->setup();
 
 
-#if defined IS_DAC || definded IS_DAC_FAKE
+#if defined IS_DAC || defined IS_DAC_FAKE
   Serial.println("Setting Up DAC");
   dac = new DacController();
   dac->jsonDocument = &jsonDocument;
   dac->pins = pins;
   dac->setup();
-  if(wifi != nullptr)
-  wifi->dac = dac;
 #endif
 
 
 #ifdef IS_ANALOG
   analog = new AnalogController();
-  if(wifi != nullptr)
-  wifi->analog = analog;
   #ifdef DEBUG_ANALOG
     analog->DEBUG = true;
   #endif
@@ -184,44 +136,66 @@ focusMotor->setup_motor();
 #endif
 
 #ifdef IS_DIGITAL
-  setupDigital();
-#endif
-
-  // list modules
-if(wifi != nullptr)
-    Serial.println("IS_WIFI");
-if(led != nullptr)
-    Serial.println("IS_LED");
-if(analog != nullptr)
-    Serial.println("IS_ANALOG");
-if(dac != nullptr)
-{
-  #if defined IS_DAC
-    Serial.println("IS_DAC");
-  #endif
-  #ifdef definded IS_DAC_FAKE
-    Serial.println("IS_DAC_FAKE");
-  #endif
-}
-if(focusMotor != nullptr)
-  Serial.println("IS_MOTOR");
-#ifdef IS_SLM
-  Serial.println("IS_SLM");
+  digital = new DigitalController();
+  digital->pins = pins;
+  digital->setup();
 #endif
 
 #ifdef IS_READSENSOR
-  setup_sensors();
+  sensor = new SensorController();
+  sensor->jsonDocument = &jsonDocument;
+  sensor->pins = pins;
+  sensor->setup();
   Serial.println(readsensor_act_endpoint);
   Serial.println(readsensor_set_endpoint);
   Serial.println(readsensor_get_endpoint);
 #endif
 
 #ifdef IS_PID
-  setup_PID();
+  pid = new PidController();
+  pid->jsonDocument = &jsonDocument;
+  pid->pins = pins;
+  pid->setup();
   Serial.println(PID_act_endpoint);
   Serial.println(PID_set_endpoint);
   Serial.println(PID_get_endpoint);
 #endif
+#ifdef IS_SCANNER
+  scanner = new ScannerController(pins);
+  scanner->setup();
+#endif
+
+// list modules
+if(wifi != nullptr)
+    Serial.println("IS_WIFI");
+if(led != nullptr)
+    Serial.println("IS_LED");
+if(analog != nullptr)
+    Serial.println("IS_ANALOG");
+if(digital != nullptr)
+    Serial.println("IS_DIGITAL");
+if(pid != nullptr)
+    Serial.println("IS_PID");
+if(sensor != nullptr)
+    Serial.println("IS_SENSOR");
+if(scanner != nullptr)
+    Serial.println("IS_SCANNER");
+if(dac != nullptr)
+{
+  #if defined IS_DAC
+    Serial.println("IS_DAC");
+  #endif
+  #if defined IS_DAC_FAKE
+    Serial.println("IS_DAC_FAKE");
+  #endif
+}
+if(motor != nullptr)
+  Serial.println("IS_MOTOR");
+#ifdef IS_SLM
+  Serial.println("IS_SLM");
+#endif
+
+
 }
 
 //char *task = strdup("");
@@ -283,7 +257,7 @@ void loop() {
 
 
 #if defined IS_PS3 || defined IS_PS4
-  gp_controller.control(); // if controller is operating motors, overheating protection is enabled
+  gamepad_controller->control(); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_WIFI
@@ -293,16 +267,16 @@ void loop() {
   /*
      continous control during loop
   */
-  if (!focusMotor->isstop) {
-    focusMotor->isactive = true;
-    focusMotor->drive_motor_background();
+  if (!motor->isstop) {
+    motor->isactive = true;
+    motor->background();
   }
 
 
 #ifdef IS_PID
-  if (PID_active and (state->currentMillis - state->startMillis >= PID_updaterate)) {
-    PID_background();
-    startMillis = millis();
+  if (pid->PID_active && (state->currentMillis - state->startMillis >= pid->PID_updaterate)) {
+    pid->background();
+    state->startMillis = millis();
   }
 #endif
 
@@ -316,23 +290,23 @@ void jsonProcessor(char task[]) {
       Return state
   */
   if (strcmp(task, state_act_endpoint) == 0)
-    state->state_act_fct();
+    state->act();
   if (strcmp(task, state_set_endpoint) == 0)
-    state->state_set_fct();
+    state->set();
   if (strcmp(task, state_get_endpoint) == 0)
-    state->state_get_fct();
+    state->get();
 
   /*
     Drive Motors
   */
   if (strcmp(task, motor_act_endpoint) == 0) {
-    focusMotor->motor_act_fct();
+    motor->act();
   }
   if (strcmp(task, motor_set_endpoint) == 0) {
-    focusMotor->motor_set_fct();
+    motor->set();
   }
   if (strcmp(task, motor_get_endpoint) == 0) {
-    focusMotor->motor_get_fct();
+    motor->get();
   }
 
 
@@ -356,33 +330,33 @@ void jsonProcessor(char task[]) {
   */
 #ifdef IS_DAC
   if (strcmp(task, dac_act_endpoint) == 0)
-    dac->dac_act_fct();
+    dac->act();
   if (strcmp(task, dac_set_endpoint) == 0)
-    dac->dac_set_fct();
+    dac->set();
   if (strcmp(task, dac_get_endpoint) == 0)
-    dac->dac_get_fct();
+    dac->get();
 #endif
 
   /*
     Drive Laser
   */
   if (strcmp(task, laser_act_endpoint) == 0)
-    laser->LASER_act_fct();
+    laser->act();
   if (strcmp(task, laser_set_endpoint) == 0)
-    laser->LASER_get_fct();
+    laser->get();
   if (strcmp(task, laser_get_endpoint) == 0)
-    laser->LASER_set_fct();
+    laser->set();
 
   /*
     Drive analog
   */
 #ifdef IS_ANALOG
   if (strcmp(task, analog_act_endpoint) == 0)
-    analog->analog_act_fct();
+    analog->act();
   if (strcmp(task, analog_set_endpoint) == 0)
-    analog->analog_set_fct();
+    analog->set();
   if (strcmp(task, analog_get_endpoint) == 0)
-    analog->analog_get_fct();
+    analog->get();
 #endif
 
 
@@ -391,11 +365,11 @@ void jsonProcessor(char task[]) {
   */
 #ifdef IS_DIGITAL
   if (strcmp(task, digital_act_endpoint) == 0)
-    digital_act_fct();
+   digital->act(&jsonDocument);
   if (strcmp(task, digital_set_endpoint) == 0)
-    digital_set_fct();
+    digital->set(&jsonDocument);
   if (strcmp(task, digital_get_endpoint) == 0)
-    digital_get_fct();
+    digital->get(&jsonDocument);
 #endif
 
 
@@ -404,11 +378,11 @@ void jsonProcessor(char task[]) {
   */
 
   if (strcmp(task, ledarr_act_endpoint) == 0)
-    led->ledarr_act_fct();
+    led->act();
   if (strcmp(task, ledarr_set_endpoint) == 0)
-    led->ledarr_set_fct();
+    led->set();
   if (strcmp(task, ledarr_get_endpoint) == 0)
-    led->ledarr_get_fct();
+    led->get();
 
 
   /*
@@ -416,11 +390,11 @@ void jsonProcessor(char task[]) {
   */
 #ifdef IS_READSENSOR
   if (strcmp(task, readsensor_act_endpoint) == 0)
-    readsensor_act_fct();
+    sensor->act();
   if (strcmp(task, readsensor_set_endpoint) == 0)
-    readsensor_set_fct();
+    sensor->set();
   if (strcmp(task, readsensor_get_endpoint) == 0)
-    readsensor_get_fct();
+    sensor->get();
 #endif
 
   /*
@@ -428,14 +402,12 @@ void jsonProcessor(char task[]) {
   */
 #ifdef IS_PID
   if (strcmp(task, PID_act_endpoint) == 0)
-    PID_act_fct();
+    pid->act();
   if (strcmp(task, PID_set_endpoint) == 0)
-    PID_set_fct();
+    pid->set();
   if (strcmp(task, PID_get_endpoint) == 0)
-    PID_get_fct();
+    pid->get();
 #endif
-
-
   // Send JSON information back
   Serial.println("++");
   serializeJson(jsonDocument, Serial);
@@ -443,14 +415,12 @@ void jsonProcessor(char task[]) {
   Serial.println("--");
   jsonDocument.clear();
   jsonDocument.garbageCollect();
-
-
 }
 
 
 void tableProcessor() {
 
-  focusMotor->isactive = true;
+  motor->isactive = true;
   // 1. Copy the table
   DynamicJsonDocument tmpJsonDoc = jsonDocument;
   jsonDocument.clear();
@@ -491,5 +461,5 @@ void tableProcessor() {
   }
   tmpJsonDoc.clear();
 
-  focusMotor->isactive = false;
+  motor->isactive = false;
 }

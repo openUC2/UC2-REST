@@ -48,7 +48,7 @@ void LaserController::LASER_despeckle(int LASERdespeckle, int LASERid, int LASER
 
 
 // Custom function accessible by the API
-void LaserController::LASER_act_fct() {
+void LaserController::act() {
   // here you can do something
   Serial.println("LASER_act_fct");
 
@@ -106,7 +106,7 @@ void LaserController::LASER_act_fct() {
   isBusy = false;
 }
 
-void LaserController::LASER_set_fct() {
+void LaserController::set() {
   // here you can set parameters
   int LASERid = (*jsonDocument)["LASERid"];
   int LASERpin = (*jsonDocument)["LASERpin"];
@@ -149,7 +149,7 @@ void LaserController::LASER_set_fct() {
 }
 
 // Custom function accessible by the API
-void LaserController::LASER_get_fct() {
+void LaserController::get() {
   // GET SOME PARAMETERS HERE
   int LASERid = (*jsonDocument)["LASERid"];
   int LASERpin = 0;
@@ -179,7 +179,7 @@ void LaserController::LASER_get_fct() {
   (*jsonDocument)["LASERpin"] = LASERpin;
 }
 
-void LaserController::setup_laser() {
+void LaserController::setup() {
   Serial.println("Setting Up LASERs");
 
   // switch of the LASER directly
@@ -208,33 +208,4 @@ void LaserController::setup_laser() {
   ledcWrite(PWM_CHANNEL_LASER_3, 10000);
   delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
-}
-
-/*
-  wrapper for HTTP requests
-*/
-void LaserController::LASER_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  LASER_act_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void LaserController::LASER_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  LASER_get_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void LaserController::LASER_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  LASER_set_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
 }

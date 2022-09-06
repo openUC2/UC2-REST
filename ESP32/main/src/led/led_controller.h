@@ -10,6 +10,7 @@ class led_controller
     public:
     led_controller();
     bool DEBUG = false;
+    bool isBusy;
 
     int LED_ARRAY_PIN;
     int LED_COUNT = 64; // this is the maximum number of LEDs per matrix 
@@ -45,9 +46,9 @@ class led_controller
                                         1,1,0,0,
                                         0,0,1,1};
 
-    void ledarr_act_fct();
-    void ledarr_set_fct();
-    void ledarr_get_fct();
+    void act();
+    void set();
+    void get();
     void set_led_RGB(int iLed, int R, int G, int B);
     void setup_matrix();
     void set_all(int R, int G, int B);
@@ -57,16 +58,12 @@ class led_controller
     void set_bottom(int NLed, int R, int G, int B);
     void set_center(int R, int G, int B);
 
-    #ifdef IS_WIFI
-    void ledarr_act_fct_http();
-    void ledarr_get_fct_http();
-    void ledarr_set_fct_http();
-    #endif
-
     // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
     Adafruit_NeoPixel * matrix;
     DynamicJsonDocument * jsonDocument;
 
 };
+
+led_controller * led;
 
 #endif

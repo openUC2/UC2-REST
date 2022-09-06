@@ -33,16 +33,25 @@ class DacController
 
     void setup();
 
-    void dac_act_fct();
-    void dac_set_fct();
-    void dac_get_fct();
+    void act();
+    void set();
+    void get();
 
-    #ifdef IS_WIFI
-    void dac_act_fct_http();
-    void dac_get_fct_http();
-    void dac_set_fct_http();
-    void drive_galvo(void * parameter);
-    #endif
+   
 };
+
+DacController::DacController()
+{
+  #ifdef IS_DAC
+    dac = new DAC_Module();
+  #endif
+}
+
+DacController::~DacController()
+{
+    
+}
+
+DacController * dac;
 
 #endif

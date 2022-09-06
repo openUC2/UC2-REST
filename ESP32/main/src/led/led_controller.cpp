@@ -6,7 +6,7 @@ led_controller::led_controller()
 }
 
 // Custom function accessible by the API
-void led_controller::ledarr_act_fct() {
+void led_controller::act() {
 
   // here you can do something
   if (DEBUG) Serial.println("ledarr_act_fct");
@@ -103,7 +103,7 @@ void led_controller::ledarr_act_fct() {
 
 }
 
-void led_controller::ledarr_set_fct() {
+void led_controller::set() {
 
   Serial.println("Updating Hardware config of LED Array");
 
@@ -114,7 +114,7 @@ void led_controller::ledarr_set_fct() {
 
 
 // Custom function accessible by the API
-void led_controller::ledarr_get_fct() {
+void led_controller::get() {
   jsonDocument->clear();
   (*jsonDocument)["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
 }
@@ -207,30 +207,4 @@ void led_controller::set_center(int R, int G, int B)
   matrix.drawPixel(4, 4, matrix.Color(R,   G,   B));
   matrix.show();
   */
-}
-
-void led_controller::ledarr_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  ledarr_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void led_controller::ledarr_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  ledarr_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void led_controller::ledarr_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  ledarr_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
 }

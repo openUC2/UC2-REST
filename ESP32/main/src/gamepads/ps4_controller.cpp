@@ -1,10 +1,14 @@
 #include "ps4_controller.h"
+#include "../motor/FocusMotor.h"
+#include "../led/led_controller.h"
+#include "../state/State.h"
+#include "../laser/LaserController.h"
+#include "../analog/AnalogController.h"
 
 PS4Controller pS4Controller;
 
 gamepad::gamepad()
 {
-    gp = this;
 }
 
 void gamepad::start()
@@ -22,7 +26,7 @@ void gamepad::start()
 void gamepad::onConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
-  focusmotor->setEnableMotor(true);
+  motor->setEnableMotor(true);
 
     if (pS4Controller.Charging())
     {
@@ -33,8 +37,6 @@ void gamepad::onConnect() {
     Serial.println();
 }
 
-
-
 void gamepad::onAttach() {
   pS4Controller.attach(gamepad_activate);
 }
@@ -43,7 +45,7 @@ void gamepad::onAttach() {
 
 void gamepad::onDisConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
-  focusmotor->setEnableMotor(false);
+  motor->setEnableMotor(false);
 }
 
 
@@ -54,7 +56,7 @@ void gamepad::activate() {
     IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
-    focusmotor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
+    motor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
   if (pS4Controller.event.button_down.cross) {
@@ -62,7 +64,7 @@ void gamepad::activate() {
     if (DEBUG) Serial.print("Turning LED Matrix to (cross): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
 
-    set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
+    led->set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
   if (pS4Controller.event.button_down.circle) {
@@ -70,19 +72,19 @@ void gamepad::activate() {
     if (DEBUG) Serial.print("Turning LED Matrix to (circle): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
 
-    set_center(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
+    led->set_center(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
 
   }
   // LASER
   if (pS4Controller.event.button_down.triangle) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
-    ledcWrite(PWM_CHANNEL_LASER_1, 10000);
+    ledcWrite(laser->PWM_CHANNEL_LASER_1, 10000);
     delay(100); //Debounce?
   }
   if (pS4Controller.event.button_down.square) {
     if (DEBUG) Serial.print("Turning off LAser ");
-    ledcWrite(PWM_CHANNEL_LASER_1, 0);
+    ledcWrite(laser->PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
     }
 
@@ -107,30 +109,26 @@ void gamepad::activate() {
   // LASER 1
   if (pS4Controller.event.button_down.up) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
-    ledcWrite(PWM_CHANNEL_LASER_2, 20000);
+    ledcWrite(laser->PWM_CHANNEL_LASER_2, 20000);
     delay(100); //Debounce?
   }
   if (pS4Controller.event.button_down.down) {
     if (DEBUG) Serial.print("Turning off LAser ");
-    ledcWrite(PWM_CHANNEL_LASER_2, 0);
+    ledcWrite(laser->PWM_CHANNEL_LASER_2, 0);
     delay(100); //Debounce?
   }
 
   // LASER 2
   if (pS4Controller.event.button_down.right) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
-    ledcWrite(PWM_CHANNEL_LASER_1, 20000);
+    ledcWrite(laser->PWM_CHANNEL_LASER_1, 20000);
     delay(100); //Debounce?
   }
   if (pS4Controller.event.button_down.left) {
     if (DEBUG) Serial.print("Turning off LAser ");
-    ledcWrite(PWM_CHANNEL_LASER_1, 0);
+    ledcWrite(laser->PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
   }
-
-
-
-
   
 }
 
@@ -143,13 +141,13 @@ void gamepad::control() {
         // move_z
         stick_ly = pS4Controller.data.analog.stick.ly;
         stick_ly = stick_ly - sgn(stick_ly) * offset_val;
-        focusmotor->mspeed2 =  stick_ly * 5 * global_speed;
-        if (!focusmotor->getEnableMotor())
-          focusmotor->setEnableMotor(true);
+        motor->mspeed2 =  stick_ly * 5 * global_speed;
+        if (!motor->getEnableMotor())
+          motor->setEnableMotor(true);
       }
-      else if (focusmotor->mspeed2 != 0) {
-        focusmotor->mspeed2 = 0;
-        focusmotor->stepper_Y.setSpeed(focusmotor->mspeed2); // set motor off only once to not affect other modes
+      else if (motor->mspeed2 != 0) {
+        motor->mspeed2 = 0;
+        motor->stepper_Y->setSpeed(motor->mspeed2); // set motor off only once to not affect other modes
       }
 
       // Z-Direction
@@ -157,13 +155,13 @@ void gamepad::control() {
         // move_x
         stick_rx = PS4.data.analog.stick.rx;
         stick_rx = stick_rx - sgn(stick_rx) * offset_val;
-        focusmotor->mspeed3  = stick_rx * 5 * global_speed;
-        if (focusmotor->getEnableMotor())
-          focusmotor->setEnableMotor(true);
+        motor->mspeed3  = stick_rx * 5 * global_speed;
+        if (motor->getEnableMotor())
+          motor->setEnableMotor(true);
       }
-      else if (focusmotor->mspeed3 != 0) {
-        focusmotor->mspeed3 = 0;
-        focusmotor->stepper_Z.setSpeed(focusmotor->mspeed3); // set motor off only once to not affect other modes
+      else if (motor->mspeed3 != 0) {
+        motor->mspeed3 = 0;
+        motor->stepper_Z->setSpeed(motor->mspeed3); // set motor off only once to not affect other modes
       }
 
       // X-direction
@@ -171,13 +169,13 @@ void gamepad::control() {
         // move_y
         stick_ry = pS4Controller.data.analog.stick.ry;
         stick_ry = stick_ry - sgn(stick_ry) * offset_val;
-        focusmotor->mspeed1 = stick_ry * 5 * global_speed;
-        if (!focusmotor->getEnableMotor())
-          focusmotor->setEnableMotor(true);
+        motor->mspeed1 = stick_ry * 5 * global_speed;
+        if (!motor->getEnableMotor())
+          motor->setEnableMotor(true);
       }
-      else if (focusmotor->mspeed1 != 0) {
-        focusmotor->mspeed1 = 0;
-        focusmotor->stepper_X.setSpeed(focusmotor->mspeed1); // set motor off only once to not affect other modes
+      else if (motor->mspeed1 != 0) {
+        motor->mspeed1 = 0;
+        motor->stepper_X->setSpeed(motor->mspeed1); // set motor off only once to not affect other modes
       }
 
       /*
@@ -199,22 +197,22 @@ void gamepad::control() {
       /*
          Keypad left
       */
-      if ( pS4Controller.data.button.left) {
+      if (pS4Controller.data.button.left) {
         // fine lens -
         analog_val_1 -= 1;
         delay(100);
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
-      if ( pS4Controller.data.button.right) {
+      if (pS4Controller.data.button.right) {
         // fine lens +
         analog_val_1 += 1;
         delay(100);
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
       if ( pS4Controller.data.button.start) {
         // reset
         analog_val_1 = 0;
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
 
       int offset_val_shoulder = 5;
@@ -222,7 +220,7 @@ void gamepad::control() {
         // analog_val_1++ coarse
         if ((analog_val_1 + 1000 < pwm_max)) {
           analog_val_1 += 1000;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
         }
         if (DEBUG) Serial.println(analog_val_1);
         delay(100);
@@ -232,7 +230,7 @@ void gamepad::control() {
         // analog_val_1-- coarse
         if ((analog_val_1 - 1000 > 0)) {
           analog_val_1 -= 1000;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
         }
         if (DEBUG) Serial.println(analog_val_1);
         delay(100);
@@ -243,7 +241,7 @@ void gamepad::control() {
         // analog_val_1 + semi coarse
         if ((analog_val_1 + 100 < pwm_max)) {
           analog_val_1 += 100;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
           delay(100);
         }
       }
@@ -251,7 +249,7 @@ void gamepad::control() {
         // analog_val_1 - semi coarse
         if ((analog_val_1 - 100 > 0)) {
           analog_val_1 -= 100;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
           delay(50);
         }
       }
@@ -259,15 +257,15 @@ void gamepad::control() {
 #endif
 
       // run all motors simultaneously
-      focusmotor->stepper_X.setSpeed(focusmotor->mspeed1);
-      focusmotor->stepper_Y.setSpeed(focusmotor->mspeed2);
-      focusmotor->stepper_Z.setSpeed(focusmotor->mspeed3);
+      motor->stepper_X->setSpeed(motor->mspeed1);
+      motor->stepper_Y->setSpeed(motor->mspeed2);
+      motor->stepper_Z->setSpeed(motor->mspeed3);
 
-      if (focusmotor->mspeed1 or focusmotor->mspeed2 or focusmotor->mspeed3) {
-        focusmotor->isforever = true;
+      if (motor->mspeed1 || motor->mspeed2 || motor->mspeed3) {
+        motor->isforever = true;
       }
       else {
-        focusmotor->isforever = false;
+        motor->isforever = false;
       }
     }
   

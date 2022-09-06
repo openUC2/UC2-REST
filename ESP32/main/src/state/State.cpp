@@ -1,13 +1,9 @@
 #include "State.h"
 
-static inline int8_t sgn(int val) {
-  if (val < 0) return -1;
-  if (val == 0) return 0;
-  return 1;
-}
+
 
 // Custom function accessible by the API
-void State::state_act_fct() {
+void State::act() {
   // here you can do something
   if (DEBUG) Serial.println("state_act_fct");
 
@@ -33,7 +29,7 @@ void State::state_act_fct() {
   (*jsonDocument)["return"] = 1;
 }
 
-void State::state_set_fct() {
+void State::set() {
   // here you can set parameters
 
   int isdebug = (*jsonDocument)["isdebug"];
@@ -44,7 +40,7 @@ void State::state_set_fct() {
 }
 
 // Custom function accessible by the API
-void State::state_get_fct() {
+void State::get() {
   // GET SOME PARAMETERS HERE
   if (jsonDocument->containsKey("isBusy")) {
     jsonDocument->clear();
@@ -111,36 +107,4 @@ void State::clearBlueetoothDevice() {
       }
     }
   }
-}
-
-
-
-/*
-   wrapper for HTTP requests
-*/
-
-void State::state_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  state_act_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void State::state_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  state_get_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void State::state_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson((*jsonDocument), body);
-  state_set_fct();
-  serializeJson((*jsonDocument), output);
-  server.send(200, "application/json", output);
 }

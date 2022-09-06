@@ -20,10 +20,10 @@ public:
     int digital_val_2 = 0;
     int digital_val_3 = 0;
 
-    void digital_act_fct(int digitalid,int digitalval);
-    void digital_set_fct(int digitalid,int digitalpin);
-    void digital_get_fct(DynamicJsonDocument * jsonDocument);
-    void setupDigital();
+    void act(DynamicJsonDocument * jsonDocument);
+    void set(DynamicJsonDocument * jsonDocument);
+    void get(DynamicJsonDocument * jsonDocument);
+    void setup();
 };
 
 DigitalController::DigitalController(/* args */)
@@ -34,5 +34,6 @@ DigitalController::~DigitalController()
 {
 }
 
+DigitalController * digital;
 
 #endif

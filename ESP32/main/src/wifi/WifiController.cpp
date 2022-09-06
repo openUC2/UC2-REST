@@ -4,20 +4,9 @@
 #include <WebServer.h>
 #include <SPIFFS.h>
 
-
-WifiController::WifiController()
-{
-  globalWifi = this;
-}
-
-WifiController::~WifiController()
-{
-  globalWifi = nullptr;
-}
-
 void WifiController::handelMessages()
 {
-  globalWifi->server->handleClient();
+  wifi->server->handleClient();
 }
 
 void WifiController::init_Spiffs()
@@ -120,16 +109,16 @@ void WifiController::startserver() {
 
   Serial.println("Spinning up OTA server");
   server->on("/", HTTP_GET, []() {
-    globalWifi->server->sendHeader("Connection", "close");
-    globalWifi->server->send(200, "text/html", otaindex);
+    wifi->server->sendHeader("Connection", "close");
+    wifi->server->send(200, "text/html", otaindex);
   });
   /*handling uploading firmware file */
   server->on("/update", HTTP_POST, []() {
-    globalWifi->server->sendHeader("Connection", "close");
-    globalWifi->server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+    wifi->server->sendHeader("Connection", "close");
+    wifi->server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
   }, []() {
-    HTTPUpload& upload = globalWifi->server->upload();
+    HTTPUpload& upload = wifi->server->upload();
     if (upload.status == UPLOAD_FILE_START) {
       Serial.printf("Update: %s\n", upload.filename.c_str());
       if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
@@ -153,6 +142,25 @@ void WifiController::startserver() {
   Serial.println("Visit http://IPADDRESS_SCOPE:82");
 }
 
+
+
+void handleNotFound() {
+    String message = "File Not Found\n\n";
+    message += "URI: ";
+    message += wifi->server->uri();
+    message += "\nMethod: ";
+    message += (wifi->server->method() == HTTP_GET) ? "GET" : "POST";
+    message += "\nArguments: ";
+    message += wifi->server->args();
+    message += "\n";
+  
+    for (uint8_t i = 0; i < wifi->server->args(); i++) {
+        message += " " + wifi->server->argName(i) + ": " + wifi->server->arg(i) + "\n";
+    }
+  
+    wifi->server->send(404, "text/plain", message);
+}
+
 //https://www.gabrielcsapo.com/arduino-web-server-esp-32/
 bool loadFromSPIFFS(String path) {
   String dataType = "text/html";
@@ -166,7 +174,7 @@ bool loadFromSPIFFS(String path) {
           return false;
       }
  
-      if (globalWifi->server->streamFile(dataFile, dataType) != dataFile.size()) {
+      if (wifi->server->streamFile(dataFile, dataType) != dataFile.size()) {
         Serial.println("Sent less data than expected!");
       }else{
           Serial.println("Page served!");
@@ -180,124 +188,107 @@ bool loadFromSPIFFS(String path) {
   return true;
 }
 
-void handleNotFound() {
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += globalWifi->server->uri();
-  message += "\nMethod: ";
-  message += (globalWifi->server->method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += globalWifi->server->args();
-  message += "\n";
- 
-  for (uint8_t i = 0; i < globalWifi->server->args(); i++) {
-    message += " " + globalWifi->server->argName(i) + ": " + globalWifi->server->arg(i) + "\n";
-  }
- 
-  globalWifi->server->send(404, "text/plain", message);
-}
-
-
 void handleSwaggerYaml() { //Handler for the body path
-    loadFromSPIFFS("/openapi.yaml");
-}
+      loadFromSPIFFS("/openapi.yaml");
+  }
 
-void handleSwaggerUI() { //Handler for the body path 
-    loadFromSPIFFS("/index.html");
-}
+  void handleSwaggerUI() { //Handler for the body path 
+      loadFromSPIFFS("/index.html");
+  }
 
-    
-void handlestandalone() { 
-    loadFromSPIFFS("/swagger_standalone.js");
-}
+      
+  void handlestandalone() { 
+      loadFromSPIFFS("/swagger_standalone.js");
+  }
 
-void handleswaggerbundle() { 
-    loadFromSPIFFS("/swagger-ui-bundle.js");
-}
+  void handleswaggerbundle() { 
+      loadFromSPIFFS("/swagger-ui-bundle.js");
+  }
 
-void handleswaggercss() { 
-    loadFromSPIFFS("/swagger-ui.css");
-}
-
-
-/*
-   Define Endpoints for HTTP REST API
-*/
-
-
-void WifiController::setup_routing() {
-  // GET
-  //  server.on("/temperature", getTemperature);
-  //server.on("/env", getEnv);
-  // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
-
-  globalWifi->server->on(state_act_endpoint, HTTP_POST, State_act_fct_http_wrapper);
-  globalWifi->server->on(state_get_endpoint, HTTP_POST, State_get_fct_http_wrapper);
-  globalWifi->server->on(state_set_endpoint, HTTP_POST, State_set_fct_http_wrapper);
-
-  // Website
-  globalWifi->server->on("/openapi.yaml", handleSwaggerYaml);
-  globalWifi->server->on("/index.html", handleSwaggerUI);
-  globalWifi->server->on("/swagger_standalone.js", handlestandalone);
-  globalWifi->server->on("/swagger-ui-bundle.js", handleswaggerbundle);
-  globalWifi->server->on("/swagger-ui.css", handleswaggercss);
-
+  void handleswaggercss() { 
+      loadFromSPIFFS("/swagger-ui.css");
+  }
 
   /*
-   * server.on("/backbone-min.js", handlebackbone);
-  server.on("/handlebars.min.js", handlehandlebars);
-  server.on("/highlight.min.js", handlehighlight);
-  server.on("/images/throbber.gif", handlethrobber);
-  server.on("/jquery-1.8.0.min.js", handlejquery);
-  server.on("/jquery.ba-bbq.min.js", handlejquerybbq);
-  server.on("/json.min.js", handlejson);
-  server.on("/jsoneditor.min.js", handlejsoneditor);
-  server.on("/lodash.min.js", handlelodash);
-  server.on("/logo_small.png", handlelogo_small);
-  server.on("/marked.min.js", handlemarked);
-  server.on("/reset.min.css", handlereset);
-  server.on("/screen.css", handlescreen);
-  server.on("/swagger-ui.min.js", handleswaggerui);
+    Define Endpoints for HTTP REST API
   */
 
 
-  // POST
-  globalWifi->server->on(motor_act_endpoint, HTTP_POST, FocusMotor_motor_act_fct_http_wrapper);
-  globalWifi->server->on(motor_get_endpoint, HTTP_POST, FocusMotor_motor_get_fct_http_wrapper);
-  globalWifi->server->on(motor_set_endpoint, HTTP_POST, FocusMotor_motor_set_fct_http_wrapper);
+  void WifiController::setup_routing() {
+    // GET
+    //  server.on("/temperature", getTemperature);
+    //server.on("/env", getEnv);
+    // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
+
+    wifi->server->on(state_act_endpoint, HTTP_POST, State_act);
+    wifi->server->on(state_get_endpoint, HTTP_POST, State_get);
+    wifi->server->on(state_set_endpoint, HTTP_POST, State_set);
+
+    // Website
+    wifi->server->on("/openapi.yaml", handleSwaggerYaml);
+    wifi->server->on("/index.html", handleSwaggerUI);
+    wifi->server->on("/swagger_standalone.js", handlestandalone);
+    wifi->server->on("/swagger-ui-bundle.js", handleswaggerbundle);
+    wifi->server->on("/swagger-ui.css", handleswaggercss);
 
 
-#ifdef IS_DAC
-  globalWifi->server->on(dac_act_endpoint, HTTP_POST, Dac_act_fct_http_wrapper);
-  globalWifi->server->on(dac_get_endpoint, HTTP_POST, Dac_get_fct_http_wrapper);
-  globalWifi->server->on(dac_set_endpoint, HTTP_POST, Dac_set_fct_http_wrapper);
-#endif
-
-  globalWifi->server->on(laser_act_endpoint, HTTP_POST, Laser_act_fct_http_wrapper);
-  globalWifi->server->on(laser_get_endpoint, HTTP_POST, Laser_get_fct_http_wrapper);
-  globalWifi->server->on(laser_set_endpoint, HTTP_POST, Laser_set_fct_http_wrapper);
-
-#ifdef IS_ANALOG
-  globalWifi->server->on(analog_act_endpoint, HTTP_POST, Analog_act_fct_http_wrapper);
-  globalWifi->server->on(analog_get_endpoint, HTTP_POST, Analog_get_fct_http_wrapper);
-  globalWifi->server->on(analog_set_endpoint, HTTP_POST, Analog_set_fct_http_wrapper);
-#endif
-
-#ifdef IS_DIGITAL
-  globalWifi->server->on(digital_act_endpoint, HTTP_POST, digital_act_fct_http);
-  globalWifi->server->on(digital_get_endpoint, HTTP_POST, digital_get_fct_http);
-  globalWifi->server->on(digital_set_endpoint, HTTP_POST, digital_set_fct_http);
-#endif
-
-globalWifi->server->on(ledarr_act_endpoint, HTTP_POST, Led_act_fct_http_wrapper);
-globalWifi->server->on(ledarr_get_endpoint, HTTP_POST, Led_get_fct_http_wrapper);
-globalWifi->server->on(ledarr_set_endpoint, HTTP_POST, Led_set_fct_http_wrapper);
+    /*
+    * server.on("/backbone-min.js", handlebackbone);
+    server.on("/handlebars.min.js", handlehandlebars);
+    server.on("/highlight.min.js", handlehighlight);
+    server.on("/images/throbber.gif", handlethrobber);
+    server.on("/jquery-1.8.0.min.js", handlejquery);
+    server.on("/jquery.ba-bbq.min.js", handlejquerybbq);
+    server.on("/json.min.js", handlejson);
+    server.on("/jsoneditor.min.js", handlejsoneditor);
+    server.on("/lodash.min.js", handlelodash);
+    server.on("/logo_small.png", handlelogo_small);
+    server.on("/marked.min.js", handlemarked);
+    server.on("/reset.min.css", handlereset);
+    server.on("/screen.css", handlescreen);
+    server.on("/swagger-ui.min.js", handleswaggerui);
+    */
 
 
+    // POST
+    wifi->server->on(motor_act_endpoint, HTTP_POST, FocusMotor_act);
+    wifi->server->on(motor_get_endpoint, HTTP_POST, FocusMotor_get);
+    wifi->server->on(motor_set_endpoint, HTTP_POST, FocusMotor_set);
 
 
+  #ifdef IS_DAC
+    wifi->server->on(dac_act_endpoint, HTTP_POST, Dac_act);
+    wifi->server->on(dac_get_endpoint, HTTP_POST, Dac_get);
+    wifi->server->on(dac_set_endpoint, HTTP_POST, Dac_set);
+  #endif
+
+    wifi->server->on(laser_act_endpoint, HTTP_POST, Laser_act);
+    wifi->server->on(laser_get_endpoint, HTTP_POST, Laser_get);
+    wifi->server->on(laser_set_endpoint, HTTP_POST, Laser_set);
+
+  #ifdef IS_ANALOG
+    wifi->server->on(analog_act_endpoint, HTTP_POST, Analog_act);
+    wifi->server->on(analog_get_endpoint, HTTP_POST, Analog_get);
+    wifi->server->on(analog_set_endpoint, HTTP_POST, Analog_set);
+  #endif
+
+  #ifdef IS_DIGITAL
+    wifi->server->on(digital_act_endpoint, HTTP_POST, Digital_act);
+    wifi->server->on(digital_get_endpoint, HTTP_POST, Digital_get);
+    wifi->server->on(digital_set_endpoint, HTTP_POST, Digital_set);
+  #endif
+  
+  #ifdef IS_PID
+    wifi->server->on(PID_act_endpoint, HTTP_POST, Pid_act);
+    wifi->server->on(PID_get_endpoint, HTTP_POST, Pid_get);
+    wifi->server->on(PID_set_endpoint, HTTP_POST, Pid_set);
+  #endif
+
+  wifi->server->on(ledarr_act_endpoint, HTTP_POST, Led_act);
+  wifi->server->on(ledarr_get_endpoint, HTTP_POST, Led_get);
+  wifi->server->on(ledarr_set_endpoint, HTTP_POST, Led_set);
   // start server
-  globalWifi->server->begin();
+  wifi->server->begin();
 }
 
 

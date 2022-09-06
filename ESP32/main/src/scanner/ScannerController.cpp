@@ -1,8 +1,9 @@
-#ifdef IS_SCANNER
-#include "parameters_scanner.h"
+
+#include "ScannerController.h"
 //#include <FreeRTOS.h>
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
+#include "../laser/LaserController.h"
 
 void controlGalvoTask( void * parameter ) {
   Serial.println("Starting Scanner Thread");
@@ -10,8 +11,8 @@ void controlGalvoTask( void * parameter ) {
   while (1) {
     // loop forever
 
-    if (isScanRunning or scannernFrames > 0) {
-      runScanner();
+    if (scanner->isScanRunning || scanner->scannernFrames > 0) {
+      scanner->background();
     }
     else {
       vTaskDelay(100);
@@ -21,7 +22,7 @@ void controlGalvoTask( void * parameter ) {
 }
 
 
-void runScanner() {
+void ScannerController::background() {
   if (DEBUG) Serial.println("Start FrameStack");
   int roundTripCounter = 0;
   /*
@@ -69,9 +70,9 @@ void runScanner() {
             //Serial.print("Y");Serial.println(scannerPosY);
             delayMicroseconds(scannerDelay);
             // expose Laser
-            ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
+            ledcWrite(laser->PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
             delayMicroseconds(scannerExposure);
-            ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
+            ledcWrite(laser->PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
             delayMicroseconds(scannerDelay);
           }
         }
@@ -85,13 +86,13 @@ void runScanner() {
 
 
 // Custom function accessible by the API
-void scanner_act_fct() {
+void ScannerController::act(DynamicJsonDocument * jsonDocument) {
 
   // here you can do something
   if (DEBUG) Serial.println("scanner_act_fct");
 
   // select scanning mode
-  const char* scannerMode = jsonDocument["scannerMode"];
+  const char* scannerMode = (*jsonDocument)["scannerMode"];
 
 
   if (strcmp(scannerMode, "pattern") == 0) {
@@ -103,25 +104,25 @@ void scanner_act_fct() {
     scannernFrames = 1;
     scannerDelay = 0;
 
-    if (jsonDocument.containsKey("scannerExposure")) {
-      scannerExposure = jsonDocument["scannerExposure"];
+    if (jsonDocument->containsKey("scannerExposure")) {
+      scannerExposure = (*jsonDocument)["scannerExposure"];
     }
-    if (jsonDocument.containsKey("scannerLaserVal")) {
-      scannerLaserVal = jsonDocument["scannerLaserVal"];
+    if (jsonDocument->containsKey("scannerLaserVal")) {
+      scannerLaserVal = (*jsonDocument)["scannerLaserVal"];
     }
-    if (jsonDocument.containsKey("scannerDelay")) {
-      scannerDelay = jsonDocument["scannerDelay"];
+    if (jsonDocument->containsKey("scannerDelay")) {
+      scannerDelay = (*jsonDocument)["scannerDelay"];
     }
-    if (jsonDocument.containsKey("scannernFrames")) {
-      scannernFrames = jsonDocument["scannernFrames"];
+    if (jsonDocument->containsKey("scannernFrames")) {
+      scannernFrames = (*jsonDocument)["scannernFrames"];
     }
-    if (jsonDocument.containsKey("arraySize")) {
-      arraySize = jsonDocument["arraySize"];
+    if (jsonDocument->containsKey("arraySize")) {
+      arraySize = (*jsonDocument)["arraySize"];
     }
 
     for (int iFrame = 0; iFrame < scannernFrames; iFrame++) {
       for (int i = 0; i < arraySize; i++) { //Iterate through results
-        int scannerIndex = jsonDocument["i"][i];  //Implicit cast
+        int scannerIndex = (*jsonDocument)["i"][i];  //Implicit cast
         int scannerPosY = scannerIndex % 255;
         int scannerPosX = scannerIndex / 255;
         dacWrite(scannerPinY, scannerPosY);
@@ -136,9 +137,9 @@ void scanner_act_fct() {
         //Serial.print("Y");Serial.println(scannerPosY);
         delayMicroseconds(scannerDelay);
         // expose Laser
-        ledcWrite(PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
+        ledcWrite(laser->PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
         delayMicroseconds(scannerExposure);
-        ledcWrite(PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
+        ledcWrite(laser->PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
         delayMicroseconds(scannerDelay);
       }
     }
@@ -168,50 +169,50 @@ void scanner_act_fct() {
 
 
 
-    if (jsonDocument.containsKey("scannernFrames")) {
-      scannernFrames = jsonDocument["scannernFrames"];
+    if (jsonDocument->containsKey("scannernFrames")) {
+      scannernFrames = (*jsonDocument)["scannernFrames"];
     }
-    if (jsonDocument.containsKey("scannerXFrameMax")) {
-      scannerXFrameMax = jsonDocument["scannerXFrameMax"];
+    if (jsonDocument->containsKey("scannerXFrameMax")) {
+      scannerXFrameMax = (*jsonDocument)["scannerXFrameMax"];
     }
-    if (jsonDocument.containsKey("scannerXFrameMin")) {
-      scannerXFrameMin = jsonDocument["scannerXFrameMin"];
+    if (jsonDocument->containsKey("scannerXFrameMin")) {
+      scannerXFrameMin = (*jsonDocument)["scannerXFrameMin"];
     }
-    if (jsonDocument.containsKey("scannerYFrameMax")) {
-      scannerYFrameMax = jsonDocument["scannerYFrameMax"];
+    if (jsonDocument->containsKey("scannerYFrameMax")) {
+      scannerYFrameMax = (*jsonDocument)["scannerYFrameMax"];
     }
-    if (jsonDocument.containsKey("scannerYFrameMin")) {
-      scannerYFrameMin = jsonDocument["scannerYFrameMin"];
+    if (jsonDocument->containsKey("scannerYFrameMin")) {
+      scannerYFrameMin = (*jsonDocument)["scannerYFrameMin"];
     }
-    if (jsonDocument.containsKey("scannerXStep")) {
-      scannerXStep = jsonDocument["scannerXStep"];
+    if (jsonDocument->containsKey("scannerXStep")) {
+      scannerXStep = (*jsonDocument)["scannerXStep"];
     }
-    if (jsonDocument.containsKey("scannerYStep")) {
-      scannerYStep = jsonDocument["scannerYStep"];
+    if (jsonDocument->containsKey("scannerYStep")) {
+      scannerYStep = (*jsonDocument)["scannerYStep"];
     }
-    if (jsonDocument.containsKey("scannerxMin")) {
-      scannerxMin = jsonDocument["scannerxMin"];
+    if (jsonDocument->containsKey("scannerxMin")) {
+      scannerxMin = (*jsonDocument)["scannerxMin"];
     }
-    if (jsonDocument.containsKey("scannerLaserVal")) {
-      scannerLaserVal = jsonDocument["scannerLaserVal"];
+    if (jsonDocument->containsKey("scannerLaserVal")) {
+      scannerLaserVal = (*jsonDocument)["scannerLaserVal"];
     }
-    if (jsonDocument.containsKey("scanneryMin")) {
-      scanneryMin = jsonDocument["scanneryMin"];
+    if (jsonDocument->containsKey("scanneryMin")) {
+      scanneryMin = (*jsonDocument)["scanneryMin"];
     }
-    if (jsonDocument.containsKey("scannerxMax")) {
-      scannerxMax = jsonDocument["scannerxMax"];
+    if (jsonDocument->containsKey("scannerxMax")) {
+      scannerxMax = (*jsonDocument)["scannerxMax"];
     }
-    if (jsonDocument.containsKey("scanneryMax")) {
-      scanneryMax = jsonDocument["scanneryMax"];
+    if (jsonDocument->containsKey("scanneryMax")) {
+      scanneryMax = (*jsonDocument)["scanneryMax"];
     }
-    if (jsonDocument.containsKey("scannerExposure")) {
-      scannerExposure = jsonDocument["scannerExposure"];
+    if (jsonDocument->containsKey("scannerExposure")) {
+      scannerExposure = (*jsonDocument)["scannerExposure"];
     }
-    if (jsonDocument.containsKey("scannerEnable")) {
-      scannerEnable = jsonDocument["scannerEnable"];
+    if (jsonDocument->containsKey("scannerEnable")) {
+      scannerEnable = (*jsonDocument)["scannerEnable"];
     }
-    if (jsonDocument.containsKey("scannerDelay")) {
-      scannerDelay = jsonDocument["scannerDelay"];
+    if (jsonDocument->containsKey("scannerDelay")) {
+      scannerDelay = (*jsonDocument)["scannerDelay"];
     }
 
     if (DEBUG) Serial.print("scannerxMin "); Serial.println(scannerxMin);
@@ -230,26 +231,26 @@ void scanner_act_fct() {
     if (DEBUG) Serial.print("scannernFrames "); Serial.println(scannernFrames);
     if (DEBUG) Serial.print("scannerDelay "); Serial.println(scannerDelay);
 
-    jsonDocument.clear();
+    jsonDocument->clear();
     if (DEBUG) Serial.println("Start controlGalvoTask");
     isScanRunning = scannerEnable; // Trigger a frame acquisition
     if (DEBUG) Serial.println("Done with setting up Tasks");
-    jsonDocument["return"] = 1;
+    (*jsonDocument)["return"] = 1;
 
   }
 }
 
-void scanner_set_fct() {
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+void ScannerController::set(DynamicJsonDocument * jsonDocument) {
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
 }
 
 
 
 // Custom function accessible by the API
-void scanner_get_fct() {
-  jsonDocument.clear();
-  jsonDocument["return"] = 0;
+void ScannerController::get(DynamicJsonDocument * jsonDocument) {
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 0;
 }
 
 
@@ -260,42 +261,9 @@ void scanner_get_fct() {
 /****************************************** ********************************************************/
 
 
-void setup_scanner() {
-  runScanner(); // run not as a task
+void ScannerController::setup() {
+  background(); // run not as a task
   disableCore0WDT();
   xTaskCreate(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL);
 }
 
-/*
-   wrapper for HTTP requests
-*/
-
-
-#ifdef IS_WIFI
-void scanner_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  scanner_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void scanner_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  scanner_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void scanner_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  scanner_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-#endif
-#endif

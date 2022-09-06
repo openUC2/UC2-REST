@@ -24,8 +24,6 @@ public:
     int IS_PSCONTROLER_ACTIVE = false;
 
     int global_speed = 2; // multiplier for the speed
-    FocusMotor *focusmotor;
-    led_controller * led;
 
     bool DEBUG = false;
     bool IS_PS_CONTROLER_LEDARRAY = false;
@@ -39,26 +37,26 @@ public:
     void control();
 };
 
-gamepad * gp;
+gamepad * gamepad_controller;
 
 void gamepad_onAttach()
 {
-    gp->onAttach();
+    gamepad_controller->onAttach();
 }
 
 void gamepad_onConnect()
 {
-    gp->onConnect();
+    gamepad_controller->onConnect();
 }
 
 void gamepad_onDisConnect()
 {
-    gp->onDisConnect();
+    gamepad_controller->onDisConnect();
 }
 
 void gamepad_activate()
 {
-    gp->activate();
+    gamepad_controller->activate();
 }
 
 #endif
