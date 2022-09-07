@@ -57,6 +57,6 @@ public:
 };
 
 
-LaserController * laser;
+static LaserController * laser;
 
 #endif

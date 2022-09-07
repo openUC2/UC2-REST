@@ -40,7 +40,7 @@ class DacController
    
 };
 
-DacController::DacController()
+/*DacController::DacController()
 {
   #ifdef IS_DAC
     dac = new DAC_Module();
@@ -50,8 +50,8 @@ DacController::DacController()
 DacController::~DacController()
 {
     
-}
+}*/
 
-DacController * dac;
+static DacController * dac;
 
 #endif

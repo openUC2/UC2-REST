@@ -53,6 +53,6 @@ class State
     void clearBlueetoothDevice();
 };
 
-State * state;
+static State * state;
 
 #endif

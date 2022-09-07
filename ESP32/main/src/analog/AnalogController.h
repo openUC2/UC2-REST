@@ -49,6 +49,6 @@ class AnalogController
     void setup();    
 };
 
-AnalogController * analog;
+static AnalogController * analog;
 
 #endif

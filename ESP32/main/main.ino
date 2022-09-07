@@ -1,18 +1,39 @@
 #include "config.h"
 
 #include "src/motor/FocusMotor.h"
-#include "src/led/led_controller.h"
-#include "src/laser/LaserController.h"
-#include "src/analog/AnalogController.h"
+#ifdef IS_LED
+  #include "src/led/led_controller.h"
+#endif
+#ifdef IS_LASER
+  #include "src/laser/LaserController.h"
+#endif
+#ifdef IS_ANALOG
+  #include "src/analog/AnalogController.h"
+#endif
 #include "src/state/State.h"
-#include "src/scanner/ScannerController.h"
-#include "src/pid/PidController.h"
-#include "src/digital/DigitalController.h"
-#include "src/sensor/SensorController.h"
+#ifdef IS_SCANNER
+  #include "src/scanner/ScannerController.h"
+#endif
+#ifdef IS_PID
+  #include "src/pid/PidController.h"
+#endif
+#ifdef IS_DIGITAL
+  #include "src/digital/DigitalController.h"
+  #endif
+#ifdef IS_READSENSOR
+  #include "src/sensor/SensorController.h"
+#endif
+
+#ifdef IS_DAC || IS_DAC_FAKE
+  #include "src/dac/DacController.h"
+#endif
+#ifdef IS_PS3
+  #include "src/gamepads/ps3_controller.h"
+#endif
+#ifdef IS_PS4
+  #include "src/gamepads/ps4_controller.h"
+#endif
 #include "src/wifi/WifiController.h"
-#include "src/dac/DacController.h"
-#include "src/gamepads/ps3_controller.h"
-#include "src/gamepads/ps4_controller.h"
 
 #include <ArduinoJson.h>
 
@@ -53,7 +74,6 @@ void setup()
 
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector 
 
-  state = new State();
   // for any timing related puposes..
   state->startMillis = millis();
   pins = new PINDEF();
@@ -97,28 +117,26 @@ motor->setup();
 
 state->clearBlueetoothDevice();
 #ifdef IS_PS3
-  gamepad_controller = new ps3_controller();
   #ifdef DEBUG_GAMEPAD
-    gamepad_controller->DEBUG = true;
+    ps3_c->DEBUG = true;
   #endif
-  gamepad_controller->start();
+  ps3_c->start();
 #endif
 #ifdef IS_PS4
-  gamepad_controller = new ps4_controller();
   #ifdef DEBUG_GAMEPAD
-    gamepad_controller->DEBUG = true;
+    ps4_c->DEBUG = true;
   #endif
-  gamepad_controller->start();
+  ps4_c->start();
 #endif
 
-laser = new LaserController();
-laser->jsonDocument = &jsonDocument;
-laser->setup();
+#ifdef IS_LASER
+  laser->jsonDocument = &jsonDocument;
+  laser->setup();
+#endif
 
 
 #if defined IS_DAC || defined IS_DAC_FAKE
   Serial.println("Setting Up DAC");
-  dac = new DacController();
   dac->jsonDocument = &jsonDocument;
   dac->pins = pins;
   dac->setup();
@@ -126,7 +144,6 @@ laser->setup();
 
 
 #ifdef IS_ANALOG
-  analog = new AnalogController();
   #ifdef DEBUG_ANALOG
     analog->DEBUG = true;
   #endif
@@ -136,13 +153,11 @@ laser->setup();
 #endif
 
 #ifdef IS_DIGITAL
-  digital = new DigitalController();
   digital->pins = pins;
   digital->setup();
 #endif
 
 #ifdef IS_READSENSOR
-  sensor = new SensorController();
   sensor->jsonDocument = &jsonDocument;
   sensor->pins = pins;
   sensor->setup();
@@ -152,7 +167,6 @@ laser->setup();
 #endif
 
 #ifdef IS_PID
-  pid = new PidController();
   pid->jsonDocument = &jsonDocument;
   pid->pins = pins;
   pid->setup();
@@ -161,7 +175,7 @@ laser->setup();
   Serial.println(PID_get_endpoint);
 #endif
 #ifdef IS_SCANNER
-  scanner = new ScannerController(pins);
+  scanner->pins = pins;
   scanner->setup();
 #endif
 
@@ -256,8 +270,11 @@ void loop() {
     laser->LASER_despeckle(laser->LASER_despeckle_3, 3, laser->LASER_despeckle_period_3);
 
 
-#if defined IS_PS3 || defined IS_PS4
-  gamepad_controller->control(); // if controller is operating motors, overheating protection is enabled
+#if defined IS_PS3
+  ps3_c->control(); // if controller is operating motors, overheating protection is enabled
+#endif
+#if defined IS_PS4
+  ps4_c->control(); // if controller is operating motors, overheating protection is enabled
 #endif
 
 #ifdef IS_WIFI

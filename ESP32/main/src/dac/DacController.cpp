@@ -5,6 +5,9 @@
 
 void DacController::setup()
 {
+  #ifdef IS_DAC
+    dac->dac = new DAC_Module();
+  #endif
     #ifdef IS_DAC
     dac->dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
     dac->dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
@@ -143,7 +146,7 @@ void DacController::get() {
 
 
 
-void drive_galvo(void * parameter){
+static void drive_galvo(void * parameter){
   while(true){ // infinite loop
     digitalWrite(dac->pins->dac_fake_1, HIGH);
     digitalWrite(dac->pins->dac_fake_2, HIGH);

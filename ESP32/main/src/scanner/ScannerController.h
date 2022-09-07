@@ -7,15 +7,14 @@
 class ScannerController
 {
 private:
-    PINDEF * pins;
     /* data */
 public:
-    ScannerController(PINDEF * pins);
+    ScannerController();
     ~ScannerController();
 
     bool DEBUG = false;
 
-
+    PINDEF * pins;
     bool isScanRunning = false;
     int  scannerPinX = 25;
     int  scannerPinY = 26;
@@ -47,17 +46,8 @@ int scannernFrames = 1;
     void background();
 };
 
-ScannerController *scanner;
+static ScannerController *scanner;
 
-ScannerController::ScannerController(PINDEF * p)
-{
-    pins = p;
-}
-
-ScannerController::~ScannerController()
-{
-    pins = nullptr;
-}
 
 
 #endif

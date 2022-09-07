@@ -37,15 +37,8 @@ public:
     void set();
 };
 
-PidController::PidController(/* args */)
-{
-}
 
-PidController::~PidController()
-{
-}
-
-PidController * pid;
+static PidController * pid;
 
 
 #endif

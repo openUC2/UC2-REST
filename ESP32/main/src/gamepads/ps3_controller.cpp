@@ -1,59 +1,48 @@
-#include "ps3_controller.h" 
-#include <Ps3Controller.h>
-#include "../motor/FocusMotor.h"
-#include "../state/State.h"
-#include "../laser/LaserController.h"
-#include "../analog/AnalogController.h"
+#ifdef IS_PS3
+#include "ps3_controller.h"
 
-Ps3Controller ps3Controller;
-
-gamepad::gamepad()
-{
-
-}
-
-void gamepad::start()
+void ps3_controller::start()
 {
     Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
-    ps3Controller.attach(gamepad_onAttach);
-    ps3Controller.attachOnConnect(gamepad_onConnect);
-    ps3Controller.attachOnDisconnect(gamepad_onDisConnect);
+    Ps3.attach(ps3_onAttach);
+    Ps3.attachOnConnect(ps3_onConnect);
+    Ps3.attachOnDisconnect(ps3_onDisConnect);
     const char* PS3_MACADDESS = "01:02:03:04:05:06";
-    ps3Controller.begin("01:02:03:04:05:06");
+    Ps3.begin("01:02:03:04:05:06");
     Serial.println(PS3_MACADDESS);
     //String address = Ps3.getAddress(); // have arbitrary address?
     //Serial.println(address);
     Serial.println("PS3 controler is set up.");
 }
 
-void gamepad::onConnect()
+void ps3_controller::onConnect()
 {
     if (DEBUG) Serial.println("PS3 Controller Connected.");
     IS_PSCONTROLER_ACTIVE = true;
     motor->setEnableMotor(true);
 }
 
-void gamepad::onAttach() {
-  ps3Controller.attach(gamepad_activate);
+void ps3_controller::onAttach() {
+  Ps3.attach(ps3_activate);
 }
 
 
-void gamepad::onDisConnect() {
+void ps3_controller::onDisConnect() {
   if (DEBUG) Serial.println("PS3 Controller Connected.");
   motor->setEnableMotor(false);
 }
 
 
-void gamepad::activate() {
+void ps3_controller::activate() {
   // callback for events
-  if (ps3Controller.event.button_down.select) {
+  if (Ps3.event.button_down.select) {
     IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
     motor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
-  if (ps3Controller.event.button_down.cross) {
+  if (Ps3.event.button_down.cross) {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to: ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
@@ -63,24 +52,24 @@ void gamepad::activate() {
 
 
   // LASER 1
-  if (ps3Controller.event.button_down.up) {
+  if (Ps3.event.button_down.up) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
     ledcWrite(laser->PWM_CHANNEL_LASER_2, 20000);
     delay(100); //Debounce?
   }
-  if (ps3Controller.event.button_down.down) {
+  if (Ps3.event.button_down.down) {
     if (DEBUG) Serial.print("Turning off LAser ");
     ledcWrite(laser->PWM_CHANNEL_LASER_2, 0);
     delay(100); //Debounce?
   }
 
   // LASER 2
-  if (ps3Controller.event.button_down.right) {
+  if (Ps3.event.button_down.right) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 20000);
     delay(100); //Debounce?
   }
-  if (ps3Controller.event.button_down.left) {
+  if (Ps3.event.button_down.left) {
     if (DEBUG) Serial.print("Turning off LAser ");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
@@ -89,12 +78,12 @@ void gamepad::activate() {
 
 }
 
-void gamepad::control() {
-  if (ps3Controller.isConnected() and IS_PSCONTROLER_ACTIVE) {
+void ps3_controller::control() {
+  if (Ps3.isConnected() and IS_PSCONTROLER_ACTIVE) {
     // Y-Direction
-    if ( abs(ps3Controller.data.analog.stick.ly) > offset_val) {
+    if ( abs(Ps3.data.analog.stick.ly) > offset_val) {
       // move_z
-      stick_ly = ps3Controller.data.analog.stick.ly;
+      stick_ly = Ps3.data.analog.stick.ly;
       stick_ly = stick_ly - sgn(stick_ly) * offset_val;
       if (abs(stick_ly) > 100)
         stick_ly *= 2;
@@ -109,9 +98,9 @@ void gamepad::control() {
     }
 
     // Z-Direction
-    if ( (abs(ps3Controller.data.analog.stick.rx) > offset_val)) {
+    if ( (abs(Ps3.data.analog.stick.rx) > offset_val)) {
       // move_x
-      stick_rx = ps3Controller.data.analog.stick.rx;
+      stick_rx = Ps3.data.analog.stick.rx;
       stick_rx = stick_rx - sgn(stick_rx) * offset_val;
 
       if (abs(stick_rx) > 100)
@@ -127,9 +116,9 @@ void gamepad::control() {
     }
 
     // X-direction
-    if ( (abs(ps3Controller.data.analog.stick.ry) > offset_val)) {
+    if ( (abs(Ps3.data.analog.stick.ry) > offset_val)) {
       // move_y
-      stick_ry = ps3Controller.data.analog.stick.ry;
+      stick_ry = Ps3.data.analog.stick.ry;
       stick_ry = stick_ry - sgn(stick_ry) * offset_val;
       if (abs(stick_ry) > 100)
         stick_ry *= 2;
@@ -161,26 +150,26 @@ void gamepad::control() {
     /*
        Keypad left
     */
-    if ( ps3Controller.data.button.left) {
+    if ( Ps3.data.button.left) {
       // fine lens -
       analog_val_1 -= 1;
       delay(100);
       ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
     }
-    if ( ps3Controller.data.button.right) {
+    if ( Ps3.data.button.right) {
       // fine lens +
       analog_val_1 += 1;
       delay(100);
       ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
     }
-    if ( ps3Controller.data.button.start) {
+    if ( Ps3.data.button.start) {
       // reset
       analog_val_1 = 0;
       ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
     }
 
     int offset_val_shoulder = 5;
-    if ( abs(ps3Controller.data.analog.button.r2) > offset_val_shoulder) {
+    if ( abs(Ps3.data.analog.button.r2) > offset_val_shoulder) {
       // analog_val_1++ coarse
       if ((analog_val_1 + 1000 < pwm_max)) {
         analog_val_1 += 1000;
@@ -190,7 +179,7 @@ void gamepad::control() {
       delay(100);
     }
 
-    if ( abs(ps3Controller.data.analog.button.l2) > offset_val_shoulder) {
+    if ( abs(Ps3.data.analog.button.l2) > offset_val_shoulder) {
       // analog_val_1-- coarse
       if ((analog_val_1 - 1000 > 0)) {
         analog_val_1 -= 1000;
@@ -201,7 +190,7 @@ void gamepad::control() {
     }
 
 
-    if ( abs(ps3Controller.data.analog.button.r1) > offset_val_shoulder) {
+    if ( abs(Ps3.data.analog.button.r1) > offset_val_shoulder) {
       // analog_val_1 + semi coarse
       if ((analog_val_1 + 100 < pwm_max)) {
         analog_val_1 += 100;
@@ -209,7 +198,7 @@ void gamepad::control() {
         delay(100);
       }
     }
-    if ( abs(ps3Controller.data.analog.button.l1) > offset_val_shoulder) {
+    if ( abs(Ps3.data.analog.button.l1) > offset_val_shoulder) {
       // analog_val_1 - semi coarse
       if ((analog_val_1 - 100 > 0)) {
         analog_val_1 -= 100;
@@ -234,3 +223,4 @@ void gamepad::control() {
   }
 
 }
+#endif

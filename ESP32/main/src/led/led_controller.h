@@ -64,6 +64,6 @@ class led_controller
 
 };
 
-led_controller * led;
+static led_controller * led;
 
 #endif

@@ -23,15 +23,7 @@ public:
     void get();
 };
 
-SensorController::SensorController(/* args */)
-{
-}
-
-SensorController::~SensorController()
-{
-}
-
-SensorController * sensor;
+static SensorController * sensor;
 
 
 #endif

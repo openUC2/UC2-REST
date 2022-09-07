@@ -1,3 +1,4 @@
+#ifdef IS_PS4
 #include "ps4_controller.h"
 #include "../motor/FocusMotor.h"
 #include "../led/led_controller.h"
@@ -5,61 +6,56 @@
 #include "../laser/LaserController.h"
 #include "../analog/AnalogController.h"
 
-PS4Controller pS4Controller;
 
-gamepad::gamepad()
-{
-}
-
-void gamepad::start()
+void ps4_controller::start()
 {
     Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-    pS4Controller.attach(gamepad_onAttach);
-    pS4Controller.begin("1a:2b:3c:01:01:01 - UNICAST!");
-    pS4Controller.attachOnConnect(gamepad_onConnect);
-    pS4Controller.attachOnDisconnect(gamepad_onDisConnect);
+    PS4.attach(ps4_onAttach);
+    PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
+    PS4.attachOnConnect(ps4_onConnect);
+    PS4.attachOnDisconnect(ps4_onDisConnect);
     const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
     Serial.println(PS4_MACADDESS);
     Serial.println("PS4 controler is set up.");
 }
 
-void gamepad::onConnect() {
+void ps4_controller::onConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
   motor->setEnableMotor(true);
 
-    if (pS4Controller.Charging())
+    if (PS4.Charging())
     {
         Serial.println("The controller is charging");
     }
 
-    Serial.printf("Battery Level : %d\n", pS4Controller.Battery());
+    Serial.printf("Battery Level : %d\n", PS4.Battery());
     Serial.println();
 }
 
-void gamepad::onAttach() {
-  pS4Controller.attach(gamepad_activate);
+void ps4_controller::onAttach() {
+  PS4.attach(ps4_activate);
 }
 
 
 
-void gamepad::onDisConnect() {
+void ps4_controller::onDisConnect() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   motor->setEnableMotor(false);
 }
 
 
 
-void gamepad::activate() {
+void ps4_controller::activate() {
   // callback for events
-  if (pS4Controller.event.button_down.share) {
+  if (PS4.event.button_down.share) {
     IS_PSCONTROLER_ACTIVE = !IS_PSCONTROLER_ACTIVE;
     if (DEBUG) Serial.print("Setting manual mode to: ");
     if (DEBUG) Serial.println(IS_PSCONTROLER_ACTIVE);
     motor->setEnableMotor(IS_PSCONTROLER_ACTIVE);
     delay(1000); //Debounce?
   }
-  if (pS4Controller.event.button_down.cross) {
+  if (PS4.event.button_down.cross) {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (cross): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
@@ -67,7 +63,7 @@ void gamepad::activate() {
     led->set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
-  if (pS4Controller.event.button_down.circle) {
+  if (PS4.event.button_down.circle) {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (circle): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
@@ -77,12 +73,12 @@ void gamepad::activate() {
 
   }
   // LASER
-  if (pS4Controller.event.button_down.triangle) {
+  if (PS4.event.button_down.triangle) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 10000);
     delay(100); //Debounce?
   }
-  if (pS4Controller.event.button_down.square) {
+  if (PS4.event.button_down.square) {
     if (DEBUG) Serial.print("Turning off LAser ");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
@@ -107,24 +103,24 @@ void gamepad::activate() {
 */
 
   // LASER 1
-  if (pS4Controller.event.button_down.up) {
+  if (PS4.event.button_down.up) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
     ledcWrite(laser->PWM_CHANNEL_LASER_2, 20000);
     delay(100); //Debounce?
   }
-  if (pS4Controller.event.button_down.down) {
+  if (PS4.event.button_down.down) {
     if (DEBUG) Serial.print("Turning off LAser ");
     ledcWrite(laser->PWM_CHANNEL_LASER_2, 0);
     delay(100); //Debounce?
   }
 
   // LASER 2
-  if (pS4Controller.event.button_down.right) {
+  if (PS4.event.button_down.right) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 20000);
     delay(100); //Debounce?
   }
-  if (pS4Controller.event.button_down.left) {
+  if (PS4.event.button_down.left) {
     if (DEBUG) Serial.print("Turning off LAser ");
     ledcWrite(laser->PWM_CHANNEL_LASER_1, 0);
     delay(100); //Debounce?
@@ -134,12 +130,12 @@ void gamepad::activate() {
 
 
 
-void gamepad::control() {
-  if (pS4Controller.isConnected() and IS_PSCONTROLER_ACTIVE) {
+void ps4_controller::control() {
+  if (PS4.isConnected() and IS_PSCONTROLER_ACTIVE) {
       // Y-Direction
-      if ( abs(pS4Controller.data.analog.stick.ly) > offset_val) {
+      if ( abs(PS4.data.analog.stick.ly) > offset_val) {
         // move_z
-        stick_ly = pS4Controller.data.analog.stick.ly;
+        stick_ly = PS4.data.analog.stick.ly;
         stick_ly = stick_ly - sgn(stick_ly) * offset_val;
         motor->mspeed2 =  stick_ly * 5 * global_speed;
         if (!motor->getEnableMotor())
@@ -151,7 +147,7 @@ void gamepad::control() {
       }
 
       // Z-Direction
-      if ( (abs(pS4Controller.data.analog.stick.rx) > offset_val)) {
+      if ( (abs(PS4.data.analog.stick.rx) > offset_val)) {
         // move_x
         stick_rx = PS4.data.analog.stick.rx;
         stick_rx = stick_rx - sgn(stick_rx) * offset_val;
@@ -165,9 +161,9 @@ void gamepad::control() {
       }
 
       // X-direction
-      if ( (abs(pS4Controller.data.analog.stick.ry) > offset_val)) {
+      if ( (abs(PS4.data.analog.stick.ry) > offset_val)) {
         // move_y
-        stick_ry = pS4Controller.data.analog.stick.ry;
+        stick_ry = PS4.data.analog.stick.ry;
         stick_ry = stick_ry - sgn(stick_ry) * offset_val;
         motor->mspeed1 = stick_ry * 5 * global_speed;
         if (!motor->getEnableMotor())
@@ -197,26 +193,26 @@ void gamepad::control() {
       /*
          Keypad left
       */
-      if (pS4Controller.data.button.left) {
+      if (PS4.data.button.left) {
         // fine lens -
         analog_val_1 -= 1;
         delay(100);
         ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
-      if (pS4Controller.data.button.right) {
+      if (PS4.data.button.right) {
         // fine lens +
         analog_val_1 += 1;
         delay(100);
         ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
-      if ( pS4Controller.data.button.start) {
+      if (PS4.data.button.start) {
         // reset
         analog_val_1 = 0;
         ledcWrite(analog->PWM_CHANNEL_analog_1, analog_val_1);
       }
 
       int offset_val_shoulder = 5;
-      if ( abs(pS4Controller.data.analog.button.r2) > offset_val_shoulder) {
+      if ( abs(PS4.data.analog.button.r2) > offset_val_shoulder) {
         // analog_val_1++ coarse
         if ((analog_val_1 + 1000 < pwm_max)) {
           analog_val_1 += 1000;
@@ -226,7 +222,7 @@ void gamepad::control() {
         delay(100);
       }
 
-      if ( abs(pS4Controller.data.analog.button.l2) > offset_val_shoulder) {
+      if ( abs(PS4.data.analog.button.l2) > offset_val_shoulder) {
         // analog_val_1-- coarse
         if ((analog_val_1 - 1000 > 0)) {
           analog_val_1 -= 1000;
@@ -237,7 +233,7 @@ void gamepad::control() {
       }
 
 
-      if ( abs(pS4Controller.data.analog.button.r1) > offset_val_shoulder) {
+      if ( abs(PS4.data.analog.button.r1) > offset_val_shoulder) {
         // analog_val_1 + semi coarse
         if ((analog_val_1 + 100 < pwm_max)) {
           analog_val_1 += 100;
@@ -245,7 +241,7 @@ void gamepad::control() {
           delay(100);
         }
       }
-      if ( abs(pS4Controller.data.analog.button.l1) > offset_val_shoulder) {
+      if ( abs(PS4.data.analog.button.l1) > offset_val_shoulder) {
         // analog_val_1 - semi coarse
         if ((analog_val_1 - 100 > 0)) {
           analog_val_1 -= 100;
@@ -270,3 +266,5 @@ void gamepad::control() {
     }
   
 }
+
+#endif

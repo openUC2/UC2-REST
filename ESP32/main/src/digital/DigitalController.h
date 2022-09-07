@@ -26,14 +26,14 @@ public:
     void setup();
 };
 
-DigitalController::DigitalController(/* args */)
+/*DigitalController::DigitalController()
 {
 }
 
 DigitalController::~DigitalController()
 {
-}
+}*/
 
-DigitalController * digital;
+static DigitalController * digital;
 
 #endif

@@ -88,6 +88,6 @@ class FocusMotor
 
 };
 
-FocusMotor * motor;
+static FocusMotor * motor;
 
 #endif
