@@ -124,10 +124,6 @@ void setup()
   preferences.putBool("setupComplete", false);
   preferences.end();
 
-
-
-
-
   // load config
   loadConfiguration();
 
@@ -153,13 +149,16 @@ void setup()
   setup_slm();
 #endif
 
+  // setup led matrix
   setup_matrix();
+  // setup motor
   setup_motor();
+  // setup laser
+  setup_laser();
 
   /*
     setting up playstation controller
   */
-
   clearBlueetoothDevice();
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
@@ -183,8 +182,7 @@ void setup()
   Serial.println("PS4 controler is set up.");
 #endif
 
-  // setup laser
-  setup_laser();
+
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");

@@ -149,6 +149,9 @@ class config(object):
         r = self.ESP32.post_json(path, payload, timeout=timeout)
         
         self.setDefaultConfig(r)
+        
+        if type(r) != dict:
+            r = self.loadDefaultConfig()
         return r
 
     def setConfigDevice(self, config, timeout=1):

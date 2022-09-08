@@ -3,7 +3,7 @@ bool IS_PS4_CONTROLER_LEDARRAY = false;
 void onConnectPS4() {
   if (DEBUG) Serial.println("PS4 Controller Connected.");
   IS_PSCONTROLER_ACTIVE = true;
-  setEnableMotor(true);
+  setEnableMotor(IS_PSCONTROLER_ACTIVE);
 
       if (PS4.Charging())
     {
@@ -19,7 +19,7 @@ void onAttachPS4() {
 }
 
 void onDisConnectPS4() {
-  if (DEBUG) Serial.println("PS4 Controller Connected.");
+  if (DEBUG) Serial.println("PS4 Controller disconnected.");
   setEnableMotor(false);
 }
 
