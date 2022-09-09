@@ -1,13 +1,11 @@
 #include "FocusMotor.h"
 #include <ArduinoJson.h>
 
-FocusMotor::FocusMotor(PINDEF * p)
+FocusMotor::FocusMotor()
 {
-    pins = p;
-    stepper_A = new AccelStepper(AccelStepper::DRIVER, pins->STEP_A, pins->DIR_A);
-    stepper_X = new AccelStepper(AccelStepper::DRIVER, pins->STEP_X, pins->DIR_X);
-    stepper_Y = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Y, pins->DIR_Y);
-    stepper_Z = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Z, pins->DIR_Z);
+};
+FocusMotor::~FocusMotor()
+{
 };
 
 void FocusMotor::act()
@@ -416,7 +414,10 @@ void FocusMotor::get()
 
 void FocusMotor::setup()
 {
-    
+    stepper_A = new AccelStepper(AccelStepper::DRIVER, pins->STEP_A, pins->DIR_A);
+    stepper_X = new AccelStepper(AccelStepper::DRIVER, pins->STEP_X, pins->DIR_X);
+    stepper_Y = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Y, pins->DIR_Y);
+    stepper_Z = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Z, pins->DIR_Z);
   /*
      Motor related settings
   */

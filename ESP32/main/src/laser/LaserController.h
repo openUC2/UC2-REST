@@ -55,8 +55,5 @@ public:
     void setup();
 
 };
-
-
-static LaserController * laser;
-
+static LaserController laser;
 #endif

@@ -1,30 +1,36 @@
+#include "../../config.h"
+#if defined IS_DAC || defined IS_DAC_FAKE
 #include "DacController.h"
 
+DacController::DacController()
+{
+   
+};
+DacController::~DacController()
+{
 
-
+};
 
 void DacController::setup()
 {
   #ifdef IS_DAC
-    dac->dac = new DAC_Module();
+    dacm = new DAC_Module();
+    dacm->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
+    dacm->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
   #endif
-    #ifdef IS_DAC
-    dac->dac->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
-    dac->dac->Setup(DAC_CHANNEL_2, 1000, 50, 0, 0, 2);
-    #endif
-    #ifdef IS_DAC_FAKE
-      pinMode(dac_fake_1, OUTPUT);
-      pinMode(dac_fake_2, OUTPUT);
-      frequency = 1;
-      xTaskCreate(
-        drive_galvo,    // Function that should be called
-        "drive_galvo",   // Name of the task (for debugging)
-        1000,            // Stack size (bytes)
-        NULL,            // Parameter to pass
-        1,               // Task priority
-        NULL             // Task handle
-      );
-    #endif
+  #ifdef IS_DAC_FAKE
+    pinMode(pins->dac_fake_1, OUTPUT);
+    pinMode(pins->dac_fake_2, OUTPUT);
+    frequency = 1;
+    xTaskCreate(
+      drive_galvo,    // Function that should be called
+      "drive_galvo",   // Name of the task (for debugging)
+      1000,            // Stack size (bytes)
+      NULL,            // Parameter to pass
+      1,               // Task priority
+      NULL             // Task handle
+    );
+  #endif
 }
 
 // Custom function accessible by the API
@@ -87,17 +93,17 @@ void DacController::act() {
   if (dac_is_running)
     if (frequency == 0) {
       dac_is_running = false;
-      dac->Stop(dac_channel);
+      dacm->Stop(dac_channel);
       dacWrite(dac_channel, offset);
     }
     else {
-      dac->Stop(dac_channel);
-      dac->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
+      dacm->Stop(dac_channel);
+      dacm->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
       dac_is_running = true;
     }
   else {
-    dac->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
-      dac->dac_offset_set(dac_channel, offset);
+    dacm->Setup(dac_channel, clk_div, frequency, scale, phase, invert);
+      dacm->dac_offset_set(dac_channel, offset);
   }
   #endif
 
@@ -146,13 +152,14 @@ void DacController::get() {
 
 
 
-static void drive_galvo(void * parameter){
+void DacController::drive_galvo(void * parameter){
   while(true){ // infinite loop
-    digitalWrite(dac->pins->dac_fake_1, HIGH);
-    digitalWrite(dac->pins->dac_fake_2, HIGH);
-    vTaskDelay(dac->frequency/portTICK_PERIOD_MS); // pause 1ms
-    digitalWrite(dac->pins->dac_fake_1, LOW);
-    digitalWrite(dac->pins->dac_fake_2, LOW);
-    vTaskDelay(dac->frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(dac.pins->dac_fake_1, HIGH);
+    digitalWrite(dac.pins->dac_fake_2, HIGH);
+    vTaskDelay(dac.frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(dac.pins->dac_fake_1, LOW);
+    digitalWrite(dac.pins->dac_fake_2, LOW);
+    vTaskDelay(dac.frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }
+#endif

@@ -9,6 +9,7 @@ class led_controller
 {
     public:
     led_controller();
+    ~led_controller();
     bool DEBUG = false;
     bool isBusy;
 
@@ -63,7 +64,5 @@ class led_controller
     DynamicJsonDocument * jsonDocument;
 
 };
-
-static led_controller * led;
-
+static led_controller led;
 #endif

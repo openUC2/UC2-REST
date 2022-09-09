@@ -1,4 +1,9 @@
+#include "../../config.h"
 #include "PidController.h"
+
+
+PidController::PidController(/* args */){};
+PidController::~PidController(){};
 
 // Custom function accessible by the API
 void PidController::act() {
@@ -20,12 +25,14 @@ void PidController::act() {
   if (jsonDocument->containsKey("PID_updaterate"))
     PID_updaterate = (int)(*jsonDocument)["PID_updaterate"];
 
-  if (not PID_active) {
+  if (!PID_active) {
     // force shutdown the motor
-    motor->mspeed1 = 0;
-    motor->stepper_X->setSpeed(motor->mspeed1);
-    motor->stepper_X->setMaxSpeed(motor->mspeed1);
-    motor->stepper_X->runSpeed();
+    #ifdef IS_MOTOR
+    motor.mspeed1 = 0;
+    motor.stepper_X->setSpeed(motor.mspeed1);
+    motor.stepper_X->setMaxSpeed(motor.mspeed1);
+    motor.stepper_X->runSpeed();
+    #endif
   }
 
 
@@ -53,12 +60,13 @@ void PidController::background() {
 
   sensorValueAvg = (float)sensorValueAvg / (float)N_sensor_avg;
   long motorValue = returnControlValue(PID_target, sensorValueAvg, PID_Kp, PID_Ki, PID_Kd);
-  motor->isforever = 1; // run motor at certain speed
-  motor->mspeed1 = motorValue;
-  motor->setEnableMotor(true);
-  motor->stepper_X->setSpeed(motor->mspeed1);
-  motor->stepper_X->setMaxSpeed(motor->mspeed1);
-
+  #ifdef IS_MOTOR
+  motor.isforever = 1; // run motor at certain speed
+  motor.mspeed1 = motorValue;
+  motor.setEnableMotor(true);
+  motor.stepper_X->setSpeed(motor.mspeed1);
+  motor.stepper_X->setMaxSpeed(motor.mspeed1);
+  #endif
 }
 
 

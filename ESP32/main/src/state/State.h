@@ -51,8 +51,9 @@ class State
     void get();
     void printInfo();
     void clearBlueetoothDevice();
+
+    void getDefaultPinDef(PINDEF pindef);
 };
 
-static State * state;
-
+static State state;
 #endif

@@ -8,7 +8,7 @@
 class FocusMotor
 {
     public:
-        FocusMotor(PINDEF * pins);
+        FocusMotor();
         ~FocusMotor();
 
         PINDEF * pins;
@@ -88,6 +88,5 @@ class FocusMotor
 
 };
 
-static FocusMotor * motor;
-
+static FocusMotor motor;
 #endif

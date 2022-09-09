@@ -1,6 +1,9 @@
 #include "AnalogController.h"
 
 
+AnalogController::AnalogController(){};
+AnalogController::~AnalogController(){};
+
 void AnalogController::setup()
 {
     Serial.println("Setting Up analog");

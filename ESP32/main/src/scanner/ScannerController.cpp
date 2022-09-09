@@ -1,25 +1,17 @@
 
+#include "../../config.h"
+#ifdef IS_SCANNER
 #include "ScannerController.h"
-//#include <FreeRTOS.h>
-#include "soc/timer_group_struct.h"
-#include "soc/timer_group_reg.h"
-#include "../laser/LaserController.h"
 
-void controlGalvoTask( void * parameter ) {
-  Serial.println("Starting Scanner Thread");
 
-  while (1) {
-    // loop forever
-
-    if (scanner->isScanRunning || scanner->scannernFrames > 0) {
-      scanner->background();
-    }
-    else {
-      vTaskDelay(100);
-    }
-  }
-  vTaskDelete(NULL);
-}
+ScannerController::ScannerController()
+{
+    
+};
+ScannerController::~ScannerController()
+{
+    
+};
 
 
 void ScannerController::background() {
@@ -70,10 +62,12 @@ void ScannerController::background() {
             //Serial.print("Y");Serial.println(scannerPosY);
             delayMicroseconds(scannerDelay);
             // expose Laser
-            ledcWrite(laser->PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
-            delayMicroseconds(scannerExposure);
-            ledcWrite(laser->PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
-            delayMicroseconds(scannerDelay);
+            #ifdef IS_LASER
+              ledcWrite(laser.PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
+              delayMicroseconds(scannerExposure);
+              ledcWrite(laser.PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
+              delayMicroseconds(scannerDelay);
+            #endif
           }
         }
       }
@@ -137,10 +131,12 @@ void ScannerController::act(DynamicJsonDocument * jsonDocument) {
         //Serial.print("Y");Serial.println(scannerPosY);
         delayMicroseconds(scannerDelay);
         // expose Laser
-        ledcWrite(laser->PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
-        delayMicroseconds(scannerExposure);
-        ledcWrite(laser->PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
-        delayMicroseconds(scannerDelay);
+        #ifdef IS_LASER
+          ledcWrite(laser.PWM_CHANNEL_LASER_1, scannerLaserVal); //digitalWrite(LASER_PIN_1, HIGH); //
+          delayMicroseconds(scannerExposure);
+          ledcWrite(laser.PWM_CHANNEL_LASER_1, 0); //             digitalWrite(LASER_PIN_1, LOW); //
+          delayMicroseconds(scannerDelay);
+        #endif
       }
     }
   }
@@ -266,4 +262,22 @@ void ScannerController::setup() {
   disableCore0WDT();
   xTaskCreate(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL);
 }
+
+void ScannerController::controlGalvoTask( void * parameter ) {
+    Serial.println("Starting Scanner Thread");
+
+    while (1) {
+        // loop forever
+
+        if (scanner.isScanRunning || scanner.scannernFrames > 0) {
+            scanner.background();
+        }
+        else {
+        vTaskDelay(100);
+        }
+    }
+    vTaskDelete(NULL);
+    }
+
+#endif
 

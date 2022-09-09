@@ -1,3 +1,5 @@
+#include "../../config.h"
+#if defined IS_DAC || defined IS_DAC_FAKE
 #ifndef DacController_h
 #define DacController_h
 
@@ -5,13 +7,15 @@
 #include "DAC_Module.h"
 #include "../../pinstruct.h"
 
+
+
 class DacController
 {
     private:
     #ifdef IS_DAC
-    DAC_Module * dac;
+    DAC_Module * dacm;
     #endif
-
+    
     public:
     DacController();
     ~DacController();
@@ -36,22 +40,10 @@ class DacController
     void act();
     void set();
     void get();
+    static void drive_galvo(void * parameter);
 
    
 };
-
-/*DacController::DacController()
-{
-  #ifdef IS_DAC
-    dac = new DAC_Module();
-  #endif
-}
-
-DacController::~DacController()
-{
-    
-}*/
-
-static DacController * dac;
-
+static DacController dac;
+#endif
 #endif

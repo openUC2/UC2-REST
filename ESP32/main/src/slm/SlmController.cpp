@@ -1,110 +1,95 @@
-#ifdef IS_SLM
+#include "SlmController.h"
 
-#include "parameters_slm.h"
-
-
-
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST);
-int NX = tft.height();
-int NY = tft.width();
-
+SlmController::SlmController(/* args */){};
+SlmController::~SlmController(){};
 
 // Custom function accessible by the API
-void slm_act_fct() {
+void SlmController::act() {
 
   // here you can do something
-  if (DEBUG) Serial.println("slm_act_fct");
+  if(DEBUG) Serial.println("slm_act_fct");
   isBusy = true;
 
-  const char* slmMode = jsonDocument["slmMode"]; // "ring", "clear"
+  const char* slmMode = (*jsonDocument)["slmMode"]; // "ring", "clear"
 
   // individual pattern gets adressed
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
-  if (strcmp(slmMode, "circle") == 0) {
+  if(strcmp(slmMode, "circle")) 
+  {
     if (DEBUG) Serial.println("circle");
     int posX = 0;
     int posY = 0;
     int radius = 0;
     uint16_t color = 0;
 
-    if (jsonDocument.containsKey("posX")) {
-      posX = jsonDocument["posX"];
-    }
-    if (jsonDocument.containsKey("posY")) {
-      posY = jsonDocument["posY"];
-    }
-    if (jsonDocument.containsKey("radius")) {
-      radius = jsonDocument["radius"];
-    }
-    if (jsonDocument.containsKey("color")) {
-      color = jsonDocument["color"];
-    }
+    if(jsonDocument->containsKey("posX"))
+      posX = (*jsonDocument)["posX"];
+    if(jsonDocument->containsKey("posY"))
+      posY = (*jsonDocument)["posY"];
+    if(jsonDocument->containsKey("radius"))
+      radius = (*jsonDocument)["radius"];
+    if(jsonDocument->containsKey("color"))
+      color = (*jsonDocument)["color"];
     tft.fillCircle(posX, posY, radius, color);
-    
   }
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
-  if (strcmp(slmMode, "rect") == 0) {
-    if (DEBUG) Serial.println("rect");
+  if(strcmp(slmMode, "rect")) 
+  {
+    if(DEBUG) Serial.println("rect");
     int posX = 0;
     int posY = 0;
     int nX = 0;
     int nY = 0;
     uint16_t color = 0;
 
-    if (jsonDocument.containsKey("posX")) {
-      posX = jsonDocument["posX"];
-    }
-    if (jsonDocument.containsKey("posY")) {
-      posY = jsonDocument["posY"];
-    }
-    if (jsonDocument.containsKey("nX")) {
-      nX = jsonDocument["nX"];
-    }
-    if (jsonDocument.containsKey("nY")) {
-      nY = jsonDocument["nY"];
-    }
-    if (jsonDocument.containsKey("color")) {
-      color = jsonDocument["color"];
-    }
+    if(jsonDocument->containsKey("posX"))
+      posX = (*jsonDocument)["posX"];
+    if(jsonDocument->containsKey("posY"))
+      posY = (*jsonDocument)["posY"];
+    if(jsonDocument->containsKey("nX"))
+      nX = (*jsonDocument)["nX"];
+    if(jsonDocument->containsKey("nY"))
+      nY = (*jsonDocument)["nY"];
+    if(jsonDocument->containsKey("color"))
+      color = (*jsonDocument)["color"];
     tft.drawRect(posX, posY, nX, nY, color);
-    
   }
 
-  if (strcmp(slmMode, "full") == 0) {
+  if (strcmp(slmMode, "full")) {
     if (DEBUG) Serial.println("full");
-    uint16_t color = jsonDocument["color"];
+    uint16_t color = (*jsonDocument)["color"];
     tft.fillScreen(color);
   }
-  if (strcmp(slmMode, "clear") == 0) {
+  if (strcmp(slmMode, "clear")) {
     if (DEBUG) Serial.println("clear");
     tft.fillScreen(ST77XX_BLACK);
   }
   // only if a single led will be updated, all others stay the same
   // PYTHON: send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), timeout=1)
-  else if (strcmp(slmMode, "image") == 0) {
+  else if (strcmp(slmMode, "image")) {
     if (DEBUG) Serial.println("image");
-    int startX = jsonDocument["startX"];
-    int startY = jsonDocument["startY"];
-    int endX = jsonDocument["endX"];
-    int endY = jsonDocument["endY"];
+    int startX = (*jsonDocument)["startX"];
+    int startY = (*jsonDocument)["startY"];
+    int endX = (*jsonDocument)["endX"];
+    int endY = (*jsonDocument)["endY"];
 
     int nX = endX-startX;
     int nY = endY-startY;
     for (int ix = 0; ix < nX; ix++) {
       for (int iy = 0; iy < nY; iy++) {
-        uint16_t color = jsonDocument["color"][ix*(nX)+iy];  //Implicit cast
+        uint16_t color = (*jsonDocument)["color"][ix*(nX)+iy];  //Implicit cast
         Serial.println(color);
         tft.drawPixel(iy+nY, ix+nX, color);
       }
     }
   }
 
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  jsonDocument->clear();
+  (*jsonDocument)["return"] = 1;
   isBusy = false;
 }
 
-void slm_set_fct() {
+void SlmController::set() {
   /*
     if (jsonDocument["LED_ARRAY_PIN"] != 0) {
     //if (DEBUG) Serial.print("LED_ARRAY_PIN "); Serial.println(jsonDocument["LED_ARRAY_PIN"]);
@@ -121,14 +106,14 @@ void slm_set_fct() {
     LED_N_Y = jsonDocument["LED_N_Y"];
     }
   */
-  jsonDocument.clear();
-  jsonDocument["return"] = 1;
+  (*jsonDocument).clear();
+  (*jsonDocument)["return"] = 1;
 }
 
 
 
 // Custom function accessible by the API
-void slm_get_fct() {
+void SlmController::get() {
   /*
     jsonDocument.clear();
     jsonDocument["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
@@ -144,39 +129,7 @@ void slm_get_fct() {
 /***************************************************************************************************/
 /*******************************FROM OCTOPI ********************************************************/
 
-/*
-   wrapper for HTTP requests
-*/
-
-#ifdef IS_WIFI
-void slm_act_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  slm_act_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void slm_get_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  slm_get_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-
-// wrapper for HTTP requests
-void slm_set_fct_http() {
-  String body = server.arg("plain");
-  deserializeJson(jsonDocument, body);
-  slm_set_fct();
-  serializeJson(jsonDocument, output);
-  server.send(200, "application/json", output);
-}
-#endif
-
-void setup_slm() {
+void SlmController::setup() {
   if(DEBUG) Serial.println("Initializing SLM");
   tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
   tft.fillScreen(ST77XX_WHITE);
@@ -194,14 +147,14 @@ void setup_slm() {
 //====================================================================================
 //   Opens the image file and prime the Jpeg decoder
 //====================================================================================
-void drawJpeg(String filename, int xpos, int ypos) {
+void SlmController::drawJpeg(String filename, int xpos, int ypos) {
 
   Serial.println("===========================");
   Serial.print("Drawing file: "); Serial.println(filename);
   Serial.println("===========================");
 
   // Open the named file (the Jpeg decoder library will close it after rendering image)
-  fs::File jpegFile = SPIFFS.open( filename, "r");    // File handle reference for SPIFFS
+  File jpegFile = SPIFFS.open( filename, "r");    // File handle reference for SPIFFS
   //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
   if ( !jpegFile ) {
@@ -229,7 +182,7 @@ void drawJpeg(String filename, int xpos, int ypos) {
 //====================================================================================
 //   Decode and render the Jpeg image onto the TFT screen
 //====================================================================================
-void jpegRender(int xpos, int ypos) {
+void SlmController::jpegRender(int xpos, int ypos) {
 
   // retrieve infomration about the image
   uint16_t  *pImg;
@@ -305,7 +258,7 @@ void jpegRender(int xpos, int ypos) {
 //====================================================================================
 //   Print information decoded from the Jpeg image
 //====================================================================================
-void jpegInfo() {
+void SlmController::jpegInfo() {
 
   Serial.println("===============");
   Serial.println("JPEG image info");
@@ -325,7 +278,7 @@ void jpegInfo() {
 //====================================================================================
 //   Open a Jpeg file and send it to the Serial port in a C array compatible format
 //====================================================================================
-void createArray(const char *filename) {
+void SlmController::createArray(const char *filename) {
 
   // Open the named file
   fs::File jpgFile = SPIFFS.open( filename, "r");    // File handle reference for SPIFFS
@@ -366,6 +319,3 @@ void createArray(const char *filename) {
   Serial.println("};\r\n");
   jpgFile.close();
 }
-
-
-#endif

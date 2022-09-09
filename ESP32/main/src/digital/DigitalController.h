@@ -25,15 +25,5 @@ public:
     void get(DynamicJsonDocument * jsonDocument);
     void setup();
 };
-
-/*DigitalController::DigitalController()
-{
-}
-
-DigitalController::~DigitalController()
-{
-}*/
-
-static DigitalController * digital;
-
+static DigitalController digital;
 #endif

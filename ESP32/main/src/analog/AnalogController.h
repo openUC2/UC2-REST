@@ -12,12 +12,11 @@
 class AnalogController
 {
     public:
+    AnalogController();
+    ~AnalogController();
     PINDEF * pins;
     DynamicJsonDocument * jsonDocument;
     bool DEBUG = false;
-
-    
-
     #define J1772_LEDC_TIMER       LEDC_TIMER_0
     #define J1772_LEDC_CHANNEL     LEDC_CHANNEL_0
     #define J1772_LEDC_TIMER_RES   LEDC_TIMER_9_BIT
@@ -48,7 +47,5 @@ class AnalogController
 
     void setup();    
 };
-
-static AnalogController * analog;
-
+static AnalogController analog;
 #endif

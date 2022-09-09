@@ -3,6 +3,9 @@
 
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+#ifdef IS_LASER
+#include "../laser/LaserController.h"
+#endif
 
 class SensorController
 {
@@ -23,7 +26,6 @@ public:
     void get();
 };
 
-static SensorController * sensor;
-
+static SensorController sensor;
 
 #endif

@@ -1,12 +1,22 @@
+
+#ifdef IS_SCANNER
 #ifndef ScannerController_h
 #define ScannerController_h
 
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+//#include <FreeRTOS.h>
+#include "soc/timer_group_struct.h"
+#include "soc/timer_group_reg.h"
+#ifdef IS_LASER
+    #include "../laser/LaserController.h"
+#endif
+
 
 class ScannerController
 {
 private:
+    
     /* data */
 public:
     ScannerController();
@@ -37,17 +47,16 @@ public:
     int  scannerLaserVal = 255;
     int scannerDelay = 0;
 
-int scannernFrames = 1;
+    int scannernFrames = 1;
 
     void act(DynamicJsonDocument * jsonDocument);
     void get(DynamicJsonDocument * jsonDocument);
     void set(DynamicJsonDocument * jsonDocument);
     void setup();
     void background();
+
+    static void controlGalvoTask(void * parameters);
 };
-
-static ScannerController *scanner;
-
-
-
+static ScannerController scanner;
+#endif
 #endif

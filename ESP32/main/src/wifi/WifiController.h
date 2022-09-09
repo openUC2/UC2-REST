@@ -1,6 +1,9 @@
+#include "../../config.h"
+#ifdef IS_WIFI
 #ifndef WifiController_h
 #define WifiController_h
 
+#include "config.h"
 #include <WiFi.h>
 #include <WebServer.h>
 #include <SPIFFS.h>
@@ -26,13 +29,17 @@ static const char* state_act_endpoint = "/state_act";
 static const char* state_set_endpoint = "/state_set";
 static const char* state_get_endpoint = "/state_get";
 
+#ifdef IS_LASER
 static const char* laser_act_endpoint = "/laser_act";
 static const char* laser_set_endpoint = "/laser_set";
 static const char* laser_get_endpoint = "/laser_get";
+#endif
 
+#ifdef IS_MOTOR
 static const char* motor_act_endpoint = "/motor_act";
 static const char* motor_set_endpoint = "/motor_set";
 static const char* motor_get_endpoint = "/motor_get";
+#endif
 
 #ifdef IS_DAC
 static const char* dac_act_endpoint = "/dac_act";
@@ -77,19 +84,12 @@ static const char* PID_get_endpoint = "/PID_get";
 class WifiController
 {
 private:
+    
     /* data */
 public:
-    WifiController(/* args */)
-    {
-    wm = new WiFiManager();
-    server = new WebServer(80);
-    };
-    ~WifiController(){
-    wm = nullptr;
-    server->close();
-    server = nullptr;
-    };
-
+    WifiController(/* args */);
+    ~WifiController();
+    
     DynamicJsonDocument * jsonDocument;
     WiFiManager * wm;
     WebServer * server;
@@ -103,192 +103,80 @@ public:
     void joinWifi(const char *ssid, const char *password);
     void autoconnectWifi(boolean isResetWifiSettings);
     void startserver();
-    
+
+    static bool loadFromSPIFFS(String path);
+    static void handleNotFound();
+    static void handleSwaggerYaml();
+    static void handleSwaggerUI();
+    static void handlestandalone();
+    static void handleswaggerbundle();
+    static void handleswaggercss();
+
+    static void deserialize();
+
+    static void serialize();
+
+#ifdef IS_MOTOR
+    static void FocusMotor_act();
+
+    static void FocusMotor_get();
+
+    static void FocusMotor_set();
+#endif
+
+#ifdef IS_LASER
+    static void Laser_act();
+
+    static void Laser_get();
+
+    static void Laser_set();
+#endif
+
+#ifdef IS_DAC
+    static void Dac_act();
+
+    static void Dac_get();
+
+    static void Dac_set();
+#endif
+#ifdef IS_LED
+    static void Led_act();
+
+    static void Led_get();
+
+    static void Led_set();
+#endif
+
+    static void State_act();
+
+    static void State_get();
+
+    static void State_set();
+#ifdef IS_ANALOG
+    static void Analog_act();
+
+    static void Analog_get();
+
+    static void Analog_set();
+#endif
+#ifdef IS_DIGITAL
+
+    static void Digital_act();
+
+    static void Digital_get();
+
+    static void Digital_set();
+#endif
+#ifdef IS_PID
+    static void Pid_act();
+
+    static void Pid_get();
+
+    static void Pid_set();
+#endif  
 };
+static WifiController wifi;
+#endif
 
-static WifiController * wifi;
-
-static void deserialize()
-{
-  String body = (*wifi->server).arg("plain");
-  deserializeJson((*wifi->jsonDocument), body);
-}
-
-static void serialize()
-{
-  serializeJson((*wifi->jsonDocument), wifi->output);
-  (*wifi->server).send(200, "application/json", wifi->output);
-}
-
-static void FocusMotor_act()
-{
-  deserialize();
-  motor->act();
-  serialize();
-}
-
-static void FocusMotor_get()
-{
-  deserialize();
-  motor->get();
-  serialize();
-}
-
-static void FocusMotor_set()
-{
-  deserialize();
-  motor->set();
-  serialize();
-}
-
-static void Laser_act()
-{
-  deserialize();
-  laser->act();
-  serialize();
-}
-
-static void Laser_get()
-{
-  deserialize();
-  laser->get();
-  serialize();
-}
-
-static void Laser_set()
-{
-  deserialize();
-  laser->set();
-  serialize();
-}
-
-static void Dac_act()
-{
-  deserialize();
-  dac->act();
-  serialize();
-}
-
-static void Dac_get()
-{
-  deserialize();
-  dac->get();
-  serialize();
-}
-
-static void Dac_set()
-{
-  deserialize();
-  dac->set();
-  serialize();
-}
-
-
-static void Led_act()
-{
-  deserialize();
-  led->act();
-  serialize();
-}
-
-static void Led_get()
-{
-  deserialize();
-  led->get();
-  serialize();
-}
-
-static void Led_set()
-{
-  deserialize();
-  led->set();
-  serialize();
-}
-
-
-static void State_act()
-{
-  deserialize();
-  state->act();
-  serialize();
-}
-
-static void State_get()
-{
-  deserialize();
-  state->get();
-  serialize();
-}
-
-static void State_set()
-{
-  deserialize();
-  state->set();
-  serialize();
-}
-
-static void Analog_act()
-{
-  deserialize();
-  analog->act();
-  serialize();
-}
-
-static void Analog_get()
-{
-  deserialize();
-  analog->get();
-  serialize();
-}
-
-static void Analog_set()
-{
-  deserialize();
-  analog->set();
-  serialize();
-}
-
-static void Digital_act()
-{
-  deserialize();
-  digital->act(wifi->jsonDocument);
-  serialize();
-}
-
-static void Digital_get()
-{
-  deserialize();
-  digital->get(wifi->jsonDocument);
-  serialize();
-}
-
-static void Digital_set()
-{
-  deserialize();
-  digital->set(wifi->jsonDocument);
-  serialize();
-}
-
-
-static void Pid_act()
-{
-  deserialize();
-  pid->act();
-  serialize();
-}
-
-static void Pid_get()
-{
-  deserialize();
-  pid->get();
-  serialize();
-}
-
-static void Pid_set()
-{
-  deserialize();
-  pid->set();
-  serialize();
-}
 
 #endif

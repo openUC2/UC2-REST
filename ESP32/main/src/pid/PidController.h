@@ -3,7 +3,9 @@
 
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+#ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
+#endif
 
 class PidController
 {
@@ -37,8 +39,6 @@ public:
     void set();
 };
 
-
-static PidController * pid;
-
+static PidController pid;
 
 #endif

@@ -1,4 +1,8 @@
 #include "DigitalController.h"
+
+  DigitalController::DigitalController(/* args */){};
+  DigitalController::~DigitalController(){};
+
 // Custom function accessible by the API
 void DigitalController::act(DynamicJsonDocument * jsonDocument) {
   // here you can do something

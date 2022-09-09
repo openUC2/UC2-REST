@@ -1,5 +1,10 @@
 #include "led_controller.h"
 
+
+led_controller::~led_controller(){
+  matrix = nullptr;
+};
+
 led_controller::led_controller()
 {
     matrix = new Adafruit_NeoPixel(LED_COUNT, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);

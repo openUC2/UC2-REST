@@ -1,5 +1,8 @@
 #include "SensorController.h"
 
+SensorController::SensorController(/* args */){};
+SensorController::~SensorController(){};
+
 // Custom function accessible by the API
 void SensorController::act() {
 
