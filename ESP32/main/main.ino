@@ -48,11 +48,7 @@
 
 
 //Where the JSON for the current instruction lives
-#ifdef IS_SLM
   DynamicJsonDocument jsonDocument(32784);
-#else
-  DynamicJsonDocument jsonDocument(4096);
-#endif
 
 
 // ensure motors switch off when PS3 controller is operating them
@@ -106,7 +102,7 @@ void setup()
   /*
      SETTING UP DEVICES
   */
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector 
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
   // for any timing related puposes..
   state.startMillis = millis();
@@ -233,6 +229,7 @@ void loop() {
   state.currentMillis = millis();
 
 #ifdef IS_SERIAL
+
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
     //free(Serial);
@@ -247,9 +244,9 @@ void loop() {
     #endif
 
 
-  String task_s = jsonDocument["task"];
-  char task[50];
-  task_s.toCharArray(task, 256);
+    String task_s = jsonDocument["task"];
+    char task[50];
+    task_s.toCharArray(task, 256);
 
 
     //jsonDocument.garbageCollect(); // memory leak?
