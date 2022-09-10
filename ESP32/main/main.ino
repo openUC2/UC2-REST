@@ -124,6 +124,10 @@ void setup()
   preferences.putBool("setupComplete", false);
   preferences.end();
 
+
+
+
+
   // load config
   loadConfiguration();
 
@@ -149,16 +153,13 @@ void setup()
   setup_slm();
 #endif
 
-  // setup led matrix
   setup_matrix();
-  // setup motor
   setup_motor();
-  // setup laser
-  setup_laser();
 
   /*
     setting up playstation controller
   */
+
   clearBlueetoothDevice();
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
@@ -174,15 +175,17 @@ void setup()
   Serial.println("PS3 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
   PS4.attach(onAttachPS4);
-  PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
+  const char*  PS4_MACADDESS = "1a:2b:4c:01:01:01";
+  Serial.println(PS4_MACADDESS);
+  PS4.begin("1a:2b:4c:01:01:01");
   PS4.attachOnConnect(onConnectPS4);
   PS4.attachOnDisconnect(onDisConnectPS4);
-  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
-  Serial.println(PS4_MACADDESS);
-  Serial.println("PS4 controler is set up.");
+  Serial.print("PS4 controler is set up.");
+  Serial.println(" - UNICAST!");
 #endif
 
-
+  // setup laser
+  setup_laser();
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
