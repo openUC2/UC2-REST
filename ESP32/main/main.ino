@@ -118,7 +118,7 @@ void setup()
     Serial.println("Setup not done, resetting config?"); //TODO not working!
     resetConfigurations();
   }
-  else{
+  else {
     Serial.println("Setup done, continue.");
   }
   preferences.putBool("setupComplete", false);
@@ -159,8 +159,12 @@ void setup()
   /*
     setting up playstation controller
   */
+  if(isFirstRun()) {
+    // 
+    clearBlueetoothDevice();
+    ESP.restart();
+  }
 
-  clearBlueetoothDevice();
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attach(onAttachPS3);
@@ -174,10 +178,10 @@ void setup()
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  PS4.attach(onAttachPS4);
-  const char*  PS4_MACADDESS = "1a:2b:4c:01:01:01";
+  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println(PS4_MACADDESS);
-  PS4.begin("1a:2b:4c:01:01:01");
+  PS4.begin(PS4_MACADDESS);
+  PS4.attach(onAttachPS4);
   PS4.attachOnConnect(onConnectPS4);
   PS4.attachOnDisconnect(onDisConnectPS4);
   Serial.print("PS4 controler is set up.");
@@ -513,7 +517,7 @@ void jsonProcessor(char task[]) {
   jsonDocument.clear();
   jsonDocument.garbageCollect();
 
-  if(DEBUG) Serial.println("JSON processed");
+  if (DEBUG) Serial.println("JSON processed");
 }
 
 
