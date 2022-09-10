@@ -265,10 +265,8 @@ void ScannerController::setup() {
 
 void ScannerController::controlGalvoTask( void * parameter ) {
     Serial.println("Starting Scanner Thread");
-
     while (1) {
         // loop forever
-
         if (scanner.isScanRunning || scanner.scannernFrames > 0) {
             scanner.background();
         }
@@ -279,5 +277,4 @@ void ScannerController::controlGalvoTask( void * parameter ) {
     vTaskDelete(NULL);
     }
 
-#endif
 

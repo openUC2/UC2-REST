@@ -20,13 +20,13 @@ const char* password =  "12345678";
 // motor stuff
 int glob_motor_steps[] = {0, 0, 0};
 #define ENABLE 13
-//A4988 stepper_x(MOTOR_STEPS, PIN_DIR_X, PIN_STEP_X, SLEEP, MS1, MS2, MS3);
+//A4988 stepper_x(MOTOR_STEPS, PIN_DIR_PIN_X, PIN_STEP_PIN_X, SLEEP, MS1, MS2, MS3);
 #define MOTOR_STEPS 200
-#define PIN_DIR_X 2
-#define PIN_STEP_X 3
+#define PIN_DIR_PIN_X 2
+#define PIN_STEP_PIN_X 3
 int speed = 1;
 int steps = 1;
-A4988 stepper_x(MOTOR_STEPS, PIN_DIR_X, PIN_STEP_X, 0, 0, 0, 0);
+A4988 stepper_x(MOTOR_STEPS, PIN_DIR_PIN_X, PIN_STEP_PIN_X, 0, 0, 0, 0);
   
 void setup() {
   Serial.begin(115200);

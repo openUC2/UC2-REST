@@ -25,9 +25,6 @@ static const char* mPASSWORD = "MurBen3128"; //"_lachmannUC2"; //"WIa2!DcJ"; //"
 static const char* mSSIDAP = "UC2";
 static const char* hostname = "youseetoo";
 
-
-
-
 static const char PROGMEM otaindex[] = R"rawliteral(
 <!DOCTYPE HTML>
 <html>

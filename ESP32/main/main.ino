@@ -1,5 +1,10 @@
 #include "config.h"
-
+#include <Ps3Controller.h>
+#include <PS4Controller.h>
+#include <ArduinoJson.h>
+#if defined(IS_DAC) || defined(IS_DAC_FAKE)
+#include "parameters_dac.h"
+#endif
 #ifdef IS_MOTOR
 #include "src/motor/FocusMotor.h"
 #endif
@@ -8,7 +13,6 @@
 #endif
 #ifdef IS_LASER
   #include "src/laser/LaserController.h"
-#endif
 #ifdef IS_ANALOG
   #include "src/analog/AnalogController.h"
 #endif
@@ -38,22 +42,14 @@
 #include "src/config/ConfigController.h"
 
 #include <ArduinoJson.h>
-
 /*
     IMPORTANT: ALL setup-specific settings can be found in the "pindef.h" files
 */
-
 // For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
-
-
-//Where the JSON for the current instruction lives
   DynamicJsonDocument jsonDocument(32784);
 
-
-// ensure motors switch off when PS3 controller is operating them
-bool override_overheating = false;
 
 PINDEF * pins;
 ConfigController configController;
@@ -63,20 +59,13 @@ ConfigController configController;
 #endif
 #if defined IS_DAC || defined IS_DAC_FAKE
     DacController dac;
-#endif
-#ifdef IS_ANALOG
     AnalogController analog;
-#endif
 #ifdef IS_LASER
     LaserController laser;
-#endif
 #ifdef IS_LED
     led_controller led;
-#endif
 #ifdef IS_MOTOR
     FocusMotor motor;
-#endif
-#ifdef IS_PID
     PidController pid;
 #endif
 #ifdef IS_SCANNER
@@ -90,11 +79,9 @@ ConfigController configController;
 #endif
 #ifdef IS_SLM
     SlmController slm;
-#endif
 #ifdef IS_WIFI
     WifiController wifi;
 #endif*/
-
 /* --------------------------------------------
    Setup
   --------------------------------------------
@@ -114,16 +101,20 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   state.printInfo();
+  // load config
+  loadPreferences();
+  
+  // display state
+  // reset jsonDocument
   jsonDocument.clear();
   configController.setup();
 
   // connect to wifi if necessary
-#ifdef IS_WIFI
   bool isResetWifiSettings = false;
   wifi.autoconnectWifi(isResetWifiSettings);
   wifi.setup_routing();
   wifi.init_Spiffs();
-#endif
+
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);
   Serial.println(state_set_endpoint);
@@ -288,10 +279,8 @@ void loop() {
 #if defined IS_PS4 || defined IS_PS3
   ps_c.control(); // if controller is operating motors, overheating protection is enabled
 #endif
-
-#ifdef IS_WIFI
   wifi.handelMessages();
-#endif
+
 
 /*
     continous control during loop
