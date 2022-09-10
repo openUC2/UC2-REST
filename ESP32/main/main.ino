@@ -102,7 +102,8 @@ void setup()
   config.pins = pins;
   config.jsonDocument = &jsonDocument;
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  if (config.isFirstRun()) {
+  bool firstrun = config.isFirstRun();
+  if (firstrun) {
     Serial.println("First Run, resetting config?");
     config.resetPreferences();
   }
@@ -149,7 +150,11 @@ void setup()
 #endif
 
 #if defined IS_PS4 || defined IS_PS3
-  state.clearBlueetoothDevice();
+  if(firstrun)
+  {
+    state.clearBlueetoothDevice();
+    ESP.restart();
+  }
   #ifdef DEBUG_GAMEPAD
     ps_c.DEBUG = true;
   #endif
