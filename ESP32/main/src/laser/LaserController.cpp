@@ -179,9 +179,10 @@ void LaserController::get() {
   (*jsonDocument)["LASERpin"] = LASERpin;
 }
 
-void LaserController::setup() {
+void LaserController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   Serial.println("Setting Up LASERs");
-
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   // switch of the LASER directly
   pinMode(pins->LASER_PIN_1, OUTPUT);
   pinMode(pins->LASER_PIN_2, OUTPUT);

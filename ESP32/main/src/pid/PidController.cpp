@@ -149,7 +149,9 @@ void PidController::get() {
 }
 
 
-void PidController::setup() {
+void PidController::setup(PINDEF * pins,DynamicJsonDocument * jsonDocument) {
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   if (DEBUG) Serial.println("Setting up sensors...");
 }
 

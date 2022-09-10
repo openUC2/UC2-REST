@@ -93,7 +93,9 @@ if (DEBUG) Serial.println("readsensor_get_fct");
 }
 
 
-void SensorController::setup(){
+void SensorController::setup(PINDEF *pins,DynamicJsonDocument * jsonDocument){
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   if(DEBUG) Serial.println("Setting up sensors...");
 }
 

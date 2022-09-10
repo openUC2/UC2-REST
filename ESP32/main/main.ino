@@ -48,7 +48,6 @@
 
 
 PINDEF * pins;
-ConfigController configController;
 /*State state;
 #if defined IS_PS3 || defined IS_PS4
     ps_3_4_controller ps_c;
@@ -95,24 +94,22 @@ void setup()
   state.startMillis = millis();
   pins = new PINDEF();
   state.getDefaultPinDef((*pins));
+  state.setup(pins,&jsonDocument);
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   state.printInfo();
-  config.pins = pins;
-  config.jsonDocument = &jsonDocument;
+  config.setup(pins,&jsonDocument);
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  bool firstrun = config.isFirstRun();
+  bool firstrun = configController.isFirstRun();
   if (firstrun) {
     Serial.println("First Run, resetting config?");
-    config.resetPreferences();
+    configController.resetPreferences();
   }
-  config.checkSetupCompleted();
+  configController.checkSetupCompleted();
   // check if setup went through after new config - avoid endless boot-loop
   // reset jsonDocument
   jsonDocument.clear();
-    // load config
-  configController.setup();
 
   // connect to wifi if necessary
   bool isResetWifiSettings = false;
@@ -127,26 +124,22 @@ void setup()
 
 #ifdef IS_SLM
   Serial.println("IS_SLM");
-  slm.jsonDocument = &jsonDocument;
-  slm.setup();
+  slm.setup(&jsonDocument);
 #endif
 #ifdef IS_LED
   Serial.println("IS_LED");
   #ifdef DEBUG_LED
     led.DEBUG = true;
   #endif
-  led.jsonDocument = &jsonDocument;
-  led.setup_matrix();
+  led.setup(pins,&jsonDocument);
 #endif
 
 #ifdef IS_MOTOR
   Serial.println("IS_MOTOR");
   #ifdef DEBUG_MOTOR
-    motor->DEBUG = true;
+    motor.DEBUG = true;
   #endif
-  motor.jsonDocument = &jsonDocument;
-  motor.pins = pins;
-  motor.setup();
+  motor.setup(pins, &jsonDocument);
 #endif
 
 #if defined IS_PS4 || defined IS_PS3
@@ -162,9 +155,7 @@ void setup()
 #endif
 
 #ifdef IS_LASER
-  laser.jsonDocument = &jsonDocument;
-  laser.pins = pins;
-  laser.setup();
+  laser.setup(pins,&jsonDocument);
 #endif
 
 #if defined IS_DAC || defined IS_DAC_FAKE
@@ -174,10 +165,7 @@ void setup()
   #if defined IS_DAC_FAKE
     Serial.println("IS_DAC_FAKE");
   #endif
-  dac.jsonDocument = &jsonDocument;
-  dac.pins = pins;
-  //wifi->dac = &dac;
-  dac.setup();
+  dac.setup(pins,&jsonDocument);
 #endif
 
 #ifdef IS_ANALOG
@@ -185,22 +173,16 @@ void setup()
   #ifdef DEBUG_ANALOG
     analog->DEBUG = true;
   #endif
-  analog.jsonDocument = &jsonDocument;
-  analog.pins = pins;
-  analog.setup();
+  analog.setup(pins,&jsonDocument);
 #endif
 
 #ifdef IS_DIGITAL
-  digital.pins = pins;
-  digital.setup();
+  digital.setup(pins);
 #endif
 
 #ifdef IS_READSENSOR
   Serial.println("IS_SENSOR");
-  sensor.jsonDocument = &jsonDocument;
-  sensor.pins = pins;
-  //wifi.sensor = &sensor;
-  sensor.setup();
+  sensor.setup(pins,&jsonDocument);
   Serial.println(readsensor_act_endpoint);
   Serial.println(readsensor_set_endpoint);
   Serial.println(readsensor_get_endpoint);
@@ -208,18 +190,14 @@ void setup()
 
 #ifdef IS_PID
   Serial.println("IS_PID");
-  pid.jsonDocument = &jsonDocument;
-  pid.pins = pins;
-  pid.setup();
+  pid.setup(pins,&jsonDocument);
   Serial.println(PID_act_endpoint);
   Serial.println(PID_set_endpoint);
   Serial.println(PID_get_endpoint);
 #endif
 #ifdef IS_SCANNER
   Serial.println("IS_SCANNER");
-  scanner.pins = pins;
-  //wifi.scanner = &scanner;
-  scanner.setup();
+  scanner.setup(pins);
 #endif
 }
 
@@ -234,7 +212,7 @@ void loop() {
   state.currentMillis = millis();
 
 #ifdef IS_SERIAL
-  configController.loop(); //make it sense to call this everyime?
+  config.loop(); //make it sense to call this everyime?
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
     //free(Serial);

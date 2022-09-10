@@ -51,6 +51,7 @@ class State
     void act();
     void set();
     void get();
+    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
     void printInfo();
     void clearBlueetoothDevice();
 

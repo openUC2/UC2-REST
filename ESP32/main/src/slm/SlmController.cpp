@@ -129,7 +129,8 @@ void SlmController::get() {
 /***************************************************************************************************/
 /*******************************FROM OCTOPI ********************************************************/
 
-void SlmController::setup() {
+void SlmController::setup(DynamicJsonDocument * jsonDocument) {
+  this->jsonDocument = jsonDocument;
   if(DEBUG) Serial.println("Initializing SLM");
   tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
   tft.fillScreen(ST77XX_WHITE);

@@ -21,7 +21,7 @@ public:
     PINDEF * pins;
     DynamicJsonDocument * jsonDocument;
 
-    void setup();
+    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
     bool resetPreferences();
     bool setPreferences();
     bool getPreferences();
@@ -34,6 +34,5 @@ public:
 };
 
 static ConfigController config;
-
 
 #endif

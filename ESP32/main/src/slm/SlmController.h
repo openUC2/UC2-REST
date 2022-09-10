@@ -51,7 +51,7 @@ public:
     void act();
     void set();
     void get();
-    void setup();
+    void setup(DynamicJsonDocument * jsonDocument);
 
     void createArray(const char *filename);
     void jpegInfo();

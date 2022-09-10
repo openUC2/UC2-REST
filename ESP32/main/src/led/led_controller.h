@@ -49,7 +49,7 @@ class led_controller
     void set();
     void get();
     void set_led_RGB(int iLed, int R, int G, int B);
-    void setup_matrix();
+    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
     void set_all(int R, int G, int B);
     void set_left(int NLed, int R, int G, int B);
     void set_right(int NLed, int R, int G, int B);

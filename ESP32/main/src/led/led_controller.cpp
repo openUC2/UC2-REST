@@ -135,8 +135,10 @@ void led_controller::set_led_RGB(int iLed, int R, int G, int B)  {
   matrix->show();                          //  Update strip to match
 }
 
-void led_controller::setup_matrix() {
+void led_controller::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   // LED Matrix
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   if(DEBUG) Serial.println("Setting up LED array");
   if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(pins->LED_ARRAY_PIN));

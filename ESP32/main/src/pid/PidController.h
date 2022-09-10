@@ -32,7 +32,7 @@ public:
 
     int N_sensor_avg = 50;
 
-    void setup();
+    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
     void background();
     void act();
     void get();

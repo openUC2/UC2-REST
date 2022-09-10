@@ -45,7 +45,7 @@ class AnalogController
     void set();
     void get();
 
-    void setup();    
+    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);    
 };
 static AnalogController analog;
 #endif

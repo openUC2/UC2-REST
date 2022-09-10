@@ -122,7 +122,8 @@ void DigitalController::get(DynamicJsonDocument * jsonDocument) {
   (*jsonDocument)["digitalpin"] = digitalpin;
 }
 
-void DigitalController::setup() {
+void DigitalController::setup(PINDEF * pins) {
+  this->pins = pins;
   Serial.println("Setting Up digital");
   /* setup the output nodes and reset them to 0*/
   pinMode(pins->digital_PIN_1, OUTPUT);

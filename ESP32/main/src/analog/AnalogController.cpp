@@ -4,8 +4,10 @@
 AnalogController::AnalogController(){};
 AnalogController::~AnalogController(){};
 
-void AnalogController::setup()
+void AnalogController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument)
 {
+    this->pins = pins;
+    this->jsonDocument = jsonDocument;
     Serial.println("Setting Up analog");
     /* setup the PWM ports and reset them to 0*/
     ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);

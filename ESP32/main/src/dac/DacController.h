@@ -35,7 +35,7 @@ class DacController
 
     boolean dac_is_running = false;
 
-    void setup();
+     void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
 
     void act();
     void set();

@@ -52,7 +52,7 @@ public:
     void act(DynamicJsonDocument * jsonDocument);
     void get(DynamicJsonDocument * jsonDocument);
     void set(DynamicJsonDocument * jsonDocument);
-    void setup();
+    void setup(PINDEF * pins);
     void background();
 
     static void controlGalvoTask(void * parameters);

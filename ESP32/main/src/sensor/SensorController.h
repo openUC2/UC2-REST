@@ -20,7 +20,7 @@ public:
 
     int N_sensor_avg; //no idea if it should be equal to that that one inside PidController.h 
 
-    void setup();
+    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
     void act();
     void set();
     void get();

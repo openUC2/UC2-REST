@@ -83,7 +83,7 @@ class FocusMotor
         bool getEnableMotor();
         void set();
         void get();
-        void setup();
+        void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
         bool background();
 
 };

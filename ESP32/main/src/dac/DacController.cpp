@@ -11,8 +11,10 @@ DacController::~DacController()
 
 };
 
-void DacController::setup()
+void DacController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument)
 {
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   #ifdef IS_DAC
     dacm = new DAC_Module();
     dacm->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);

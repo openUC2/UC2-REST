@@ -44,7 +44,9 @@ const char* prefNamespace = "UC2";
 
 
 
-void ConfigController::setup() {
+void ConfigController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
   Serial.begin(115200);
   getPreferences();
 }

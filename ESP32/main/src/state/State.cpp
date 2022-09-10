@@ -3,6 +3,12 @@
 State::State(){};
 State::~State(){};
 
+void State::setup(PINDEF * pins,DynamicJsonDocument * jsonDocument)
+{
+  this->pins = pins;
+  this->jsonDocument = jsonDocument;
+}
+
 // Custom function accessible by the API
 void State::act() {
   // here you can do something

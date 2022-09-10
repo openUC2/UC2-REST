@@ -412,8 +412,10 @@ void FocusMotor::get()
   (*jsonDocument)["sign"] = sign;
 }
 
-void FocusMotor::setup()
+void FocusMotor::setup(PINDEF * pins, DynamicJsonDocument * jsonDocumen)
 {
+    this->pins = pins;
+    this->jsonDocument = jsonDocumen;
     stepper_A = new AccelStepper(AccelStepper::DRIVER, pins->STEP_A, pins->DIR_A);
     stepper_X = new AccelStepper(AccelStepper::DRIVER, pins->STEP_X, pins->DIR_X);
     stepper_Y = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Y, pins->DIR_Y);

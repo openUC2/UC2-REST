@@ -257,7 +257,8 @@ void ScannerController::get(DynamicJsonDocument * jsonDocument) {
 /****************************************** ********************************************************/
 
 
-void ScannerController::setup() {
+void ScannerController::setup(PINDEF * pins) {
+  this->pins = pins;
   background(); // run not as a task
   disableCore0WDT();
   xTaskCreate(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL);

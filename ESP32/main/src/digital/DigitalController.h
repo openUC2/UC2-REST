@@ -23,7 +23,7 @@ public:
     void act(DynamicJsonDocument * jsonDocument);
     void set(DynamicJsonDocument * jsonDocument);
     void get(DynamicJsonDocument * jsonDocument);
-    void setup();
+    void setup(PINDEF * pins);
 };
 static DigitalController digital;
 #endif
