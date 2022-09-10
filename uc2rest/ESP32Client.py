@@ -15,8 +15,9 @@ from tempfile import NamedTemporaryFile
 import serial
 import serial.tools.list_ports
 
-from galvo import Galvo
-from config import config
+from .galvo import Galvo
+from .config import config
+
 
 try:
     import cv2
@@ -79,7 +80,9 @@ class ESP32Client(object):
     steps_last_2 = 0
     steps_last_3 = 0
 
-    def __init__(self, host=None, port=31950, serialport=None, baudrate=115200):
+    BAUDRATE = 115200
+    
+    def __init__(self, host=None, port=31950, serialport=None, baudrate=BAUDRATE):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -91,6 +94,8 @@ class ESP32Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
+        
+        
 
         if IS_IMSWITCH:
             self.__logger = initLogger(self, tryInheritParent=True)
@@ -101,8 +106,8 @@ class ESP32Client(object):
         self.galvo1 = Galvo(channel=1)
         self.galvo2 = Galvo(channel=2)
         
-        # initialize config object
-        self.config = config()
+        # initialize config
+        self.config = config(self)
 
         self.serialport = serialport
         self.baudrate = baudrate
@@ -126,13 +131,17 @@ class ESP32Client(object):
             self.is_connected = False
             if IS_IMSWITCH: self.__logger.error("No ESP32 device is connected - check IP or Serial port!")
 
+        self.pinConfig = self.config.loadConfigDevice()
         self.__logger.debug("We are connected: "+str(self.is_connected))
 
 
-    def initSerial(self,serialport,baudrate):
+    def initSerial(self,serialport,baudrate=None):
         # use client in wired mode
         self.serialport = serialport # e.g.'/dev/cu.SLAB_USBtoUART'
         self.is_serial = True
+        
+        if baudrate is None:
+           baudrate = self.baudrate 
 
         if IS_IMSWITCH: self.__logger.debug(f'Searching for SERIAL devices...')
         self.is_connected = False
@@ -167,6 +176,10 @@ class ESP32Client(object):
                             self.__logger.error(e)
                         self.is_connected = False
 
+
+    def closeSerial(self):
+        self.serialdevice.close()
+        
     def isConnected(self):
         # check if client is connected to the same network
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -302,29 +315,12 @@ class ESP32Client(object):
         return returnmessage
 
 
-    '''################################################################################################################################################
-    Set Configurations
-    ################################################################################################################################################'''
+    def loadConfig(self):
+        return self.config.loadConfig()
 
-    def loadConfig(self, timeout=1):
-        path = '/config_get'
-        payload = {
-        }
-        r = self.post_json(path, payload, timeout=timeout)
-        
-        self.config.setDefaultConfig(r)
-        return r
-
-    def setConfig(self, config, timeout=1):
-        path = '/config_set'
-        payload = {
-            "config": config
-        }
-        r = self.post_json(path, payload, timeout=timeout)
-        return r
-
-        
-
+    def setConfig(self,config={}):
+        return self.config.setConfig(config)
+            
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''

@@ -1,15 +1,16 @@
 import json
 
+
 class config(object):
-    def __init__(self, configFilePath=None):
-        
+    def __init__(self, ESP32, configFilePath=None): 
+        self.ESP32 = ESP32
         self.configFilePath = configFilePath
         
         if self.configFilePath is not None:
             self.configFilePath = "./config.json"
             #TODO: read file and load
             
-        self.configFile = self.getDummyConfig()
+        self.configFile = self.loadDefaultConfig()
         
     
     '''
@@ -89,29 +90,29 @@ class config(object):
     default Configuration
     '''     
         
-    def getDefaultConfig(self):
+    def loadDefaultConfig(self):
         self.defaultConfig = {
-            "motXstp": 1,
-            "motXdir": 2,
-            "motYstp": 3,
-            "motYdir": 4,
-            "motZstp": 5,
-            "motZdir": 6,
-            "motAstp": 7,
-            "motAdir": 8,
-            "motEnable": 9,
+            "motXstp": 0,
+            "motXdir": 0,
+            "motYstp": 0,
+            "motYdir": 0,
+            "motZstp": 0,
+            "motZdir": 0,
+            "motAstp": 0,
+            "motAdir": 0,
+            "motEnable": 0,
             "ledArrPin": 0,
             "ledArrNum": 64,
-            "digitalPin1":10,
-            "digitalPin2":11,
-            "analogPin1":12,
-            "analogPin2":13,
-            "analogPin3":14,
-            "laserPin1":15,
-            "laserPin2":16,
-            "laserPin3":17,
-            "dacFake1":18,
-            "dacFake2":19,
+            "digitalPin1":0,
+            "digitalPin2":0,
+            "analogPin1":0,
+            "analogPin2":0,
+            "analogPin3":0,
+            "laserPin1":0,
+            "laserPin2":0,
+            "laserPin3":0,
+            "dacFake1":0,
+            "dacFake2":0,
             "identifier": "TEST",
             "ssid": "ssid",
             "PW": "PW"
@@ -137,4 +138,30 @@ class config(object):
     send configuration to device
     '''
     
+    '''################################################################################################################################################
+    Set Configurations
+    ################################################################################################################################################'''
+
+    def loadConfigDevice(self, timeout=1):
+        path = '/config_get'
+        payload = {
+        }
+        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        
+        self.setDefaultConfig(r)
+        
+        if type(r) != dict:
+            r = self.loadDefaultConfig()
+        return r
+
+    def setConfigDevice(self, config, timeout=1):
+        path = '/config_set'
+        if type(config)==dict:
+            payload = config
+        else: 
+            return None
+        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        return r
+
+
     
