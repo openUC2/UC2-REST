@@ -305,6 +305,10 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
   wifi.server->on(ledarr_get_endpoint, HTTP_POST, Led_get);
   wifi.server->on(ledarr_set_endpoint, HTTP_POST, Led_set);
 #endif
+
+  wifi.server->on(config_act_endpoint, HTTP_POST, Config_act);
+  wifi.server->on(config_get_endpoint, HTTP_POST, Config_get);
+  wifi.server->on(config_set_endpoint, HTTP_POST, Config_set);
   // start server
   wifi.server->begin();
 }
@@ -500,6 +504,25 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
       serialize();
     }
 #endif  
+    void WifiController::Config_act()
+    {
+      deserialize();
+      config.act();
+      serialize();
+    }
 
+    void WifiController::Config_get()
+    {
+      deserialize();
+      config.get();
+      serialize();
+    }
+
+    void WifiController::Config_set()
+    {
+      deserialize();
+      config.set();
+      serialize();
+    }
 #endif
 

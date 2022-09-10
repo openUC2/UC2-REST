@@ -118,7 +118,6 @@ void setup()
   slm.jsonDocument = &jsonDocument;
   slm.setup();
 #endif
-
 #ifdef IS_LED
   Serial.println("IS_LED");
   #ifdef DEBUG_LED
@@ -273,7 +272,11 @@ void loop() {
 #if defined IS_PS4 || defined IS_PS3
   ps_c.control(); // if controller is operating motors, overheating protection is enabled
 #endif
+#ifdef IS_WIFI
   wifi.handelMessages();
+#endif
+
+  // handle any http requests
 
 
 /*
@@ -384,6 +387,15 @@ void jsonProcessor(char task[]) {
   if (strcmp(task, ledarr_get_endpoint) == 0)
     led.get();
 #endif
+  /*
+    Change Configuration
+  */
+  if (strcmp(task, config_act_endpoint) == 0)
+    config.act();
+  if (strcmp(task, config_set_endpoint) == 0)
+    config.set();
+  if (strcmp(task, config_get_endpoint) == 0)
+    config.get();
 
 /*
   Read the sensor

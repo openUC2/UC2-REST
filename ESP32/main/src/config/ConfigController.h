@@ -26,10 +26,13 @@ public:
     bool setPreferences();
     bool getPreferences();
     void loop();
+    void act();
+    void set();
+    void get();
 
 };
 
-
+static ConfigController config;
 
 
 #endif

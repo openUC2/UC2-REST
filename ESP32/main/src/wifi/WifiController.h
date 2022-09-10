@@ -19,6 +19,7 @@
 #include "../digital/DigitalController.h"
 #include "../pid/PidController.h"
 #include "../sensor/SensorController.h"
+#include "../config/ConfigController.h"
 
 
     /*
@@ -80,6 +81,10 @@ static const char* PID_act_endpoint = "/PID_act";
 static const char* PID_set_endpoint = "/PID_set";
 static const char* PID_get_endpoint = "/PID_get";
 #endif
+
+static const char* config_act_endpoint = "/config_act";
+static const char* config_set_endpoint = "/config_set";
+static const char* config_get_endpoint = "/config_get";
 
 class WifiController
 {
@@ -173,7 +178,10 @@ public:
     static void Pid_get();
 
     static void Pid_set();
-#endif  
+#endif
+    static void Config_act();
+    static void Config_get();
+    static void Config_set();
 };
 static WifiController wifi;
 #endif

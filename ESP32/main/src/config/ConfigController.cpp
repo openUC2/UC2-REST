@@ -59,8 +59,10 @@ bool ConfigController::resetPreferences() {
 bool ConfigController::setPreferences() {
   preferences.begin(prefNamespace , false);
 
-  preferences.putUInt(keyMotorXStepPin, (*jsonDocument)[keyMotorXStepPin]);
-  preferences.putUInt(keyMotorXDirPin, (*jsonDocument)[keyMotorXDirPin]);
+  if (jsonDocument->containsKey(keyMotorXStepPin))
+    preferences.putUInt(keyMotorXStepPin, (*jsonDocument)[keyMotorXStepPin]);
+  if (jsonDocument->containsKey(keyMotorXDirPin))
+    preferences.putUInt(keyMotorXDirPin, (*jsonDocument)[keyMotorXDirPin]);
 
   preferences.putUInt(keyMotorYStepPin, (*jsonDocument)[keyMotorYStepPin]);
   preferences.putUInt(keyMotorYDirPin, (*jsonDocument)[keyMotorYDirPin]);
@@ -208,4 +210,25 @@ void ConfigController::loop() {
       getPreferences();
     }
   }
+}
+
+void ConfigController::act()
+{
+    resetPreferences();
+    jsonDocument->clear();
+    (*jsonDocument)["return"] = 1;
+}
+
+void ConfigController::set()
+{
+    setPreferences();
+    jsonDocument->clear();
+    (*jsonDocument)["return"] = 1;
+}
+
+void ConfigController::get()
+{
+    getPreferences();
+    jsonDocument->clear();
+    (*jsonDocument)["return"] = 1;
 }
