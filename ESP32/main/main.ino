@@ -1,10 +1,5 @@
 #include "config.h"
-#include <Ps3Controller.h>
-#include <PS4Controller.h>
 #include <ArduinoJson.h>
-#if defined(IS_DAC) || defined(IS_DAC_FAKE)
-#include "parameters_dac.h"
-#endif
 #ifdef IS_MOTOR
 #include "src/motor/FocusMotor.h"
 #endif
@@ -13,6 +8,7 @@
 #endif
 #ifdef IS_LASER
   #include "src/laser/LaserController.h"
+#endif
 #ifdef IS_ANALOG
   #include "src/analog/AnalogController.h"
 #endif
@@ -101,12 +97,10 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   state.printInfo();
-  // load config
-  loadPreferences();
   
-  // display state
   // reset jsonDocument
   jsonDocument.clear();
+    // load config
   configController.setup();
 
   // connect to wifi if necessary

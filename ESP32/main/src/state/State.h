@@ -8,6 +8,7 @@
 
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+#include "../config/JsonKeys.h"
 
 static int8_t sgn(int val) {
   if (val < 0) return -1;
@@ -36,9 +37,10 @@ class State
     PINDEF * pins;
 
     const char*  identifier_name = "UC2_Feather";
-    const char*  identifier_id = "V0.1";
-    const char*  identifier_date = "2022-02-04";
+    const char*  identifier_id = "V1.2";
+    const char*  identifier_date = __DATE__ "" __TIME__;
     const char*  identifier_author = "BD";
+    const char* IDENTIFIER_NAME = "";
 
 
     // timing variables
