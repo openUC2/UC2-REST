@@ -101,12 +101,12 @@ void setup()
   state.printInfo();
   config.setup(pins,&jsonDocument);
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  bool firstrun = configController.isFirstRun();
+  bool firstrun = config.isFirstRun();
   if (firstrun) {
     Serial.println("First Run, resetting config?");
-    configController.resetPreferences();
+    config.resetPreferences();
   }
-  configController.checkSetupCompleted();
+  config.checkSetupCompleted();
   // check if setup went through after new config - avoid endless boot-loop
   // reset jsonDocument
   jsonDocument.clear();
