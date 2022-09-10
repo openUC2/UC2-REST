@@ -232,3 +232,44 @@ void ConfigController::get()
     jsonDocument->clear();
     (*jsonDocument)["return"] = 1;
 }
+
+bool ConfigController::isFirstRun() {
+  preferences.begin(prefNamespace, false);
+  // define preference name
+  const char* prefName = "firstRun";
+  preferences.begin(prefName, false);
+  static const char dateKey[] = "date";
+  const char *compiled_date = __DATE__ " " __TIME__;
+  String stored_date = preferences.getString(dateKey, "");  // FIXME
+
+  Serial.println("Stored date:");
+  Serial.println(stored_date);
+  Serial.println("Compiled date:");
+  Serial.println(compiled_date);
+
+  Serial.print("First run? ");
+  if (!stored_date.equals(compiled_date)) {
+    Serial.println("yes");
+  } else {
+    Serial.println("no");
+  }
+
+  preferences.putString(dateKey, compiled_date); // FIXME?
+  preferences.end();
+  return !stored_date.equals(compiled_date);
+}
+
+void ConfigController::checkSetupCompleted()
+{
+  // check if setup went through after new config - avoid endless boot-loop
+  preferences.begin("setup", false);
+  if (preferences.getBool("setupComplete", true) == false) {
+    Serial.println("Setup not done, resetting config?"); //TODO not working!
+    resetPreferences();
+  }
+  else{
+    Serial.println("Setup done, continue.");
+  }
+  preferences.putBool("setupComplete", false);
+  preferences.end();
+}

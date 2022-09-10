@@ -11,15 +11,35 @@
 #include <ArduinoJson.h>
 #include "parameters_wifi.h"
 #include "../state/State.h"
+#ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
+#endif 
+#ifdef IS_LASER
 #include "../laser/LaserController.h"
+#endif
+#if defined IS_DAC || defined IS_DAC_FAKE
 #include "../dac/DacController.h"
+#endif
+#ifdef IS_LED
 #include "../led/led_controller.h"
+#endif
+#ifdef IS_ANALOG
 #include "../analog/AnalogController.h"
+#endif
+#ifdef IS_DIGITAL
 #include "../digital/DigitalController.h"
+#endif
+#ifdef IS_PID
 #include "../pid/PidController.h"
+#endif
+#ifdef IS_READSENSOR
 #include "../sensor/SensorController.h"
+#endif
 #include "../config/ConfigController.h"
+
+#ifdef IS_SLM
+    #include "../slm/SlmController.h"
+#endif
 
 
     /*
@@ -108,6 +128,7 @@ public:
     void joinWifi(const char *ssid, const char *password);
     void autoconnectWifi(boolean isResetWifiSettings);
     void startserver();
+    static void getIdentity();
 
     static bool loadFromSPIFFS(String path);
     static void handleNotFound();
@@ -118,70 +139,53 @@ public:
     static void handleswaggercss();
 
     static void deserialize();
-
     static void serialize();
-
 #ifdef IS_MOTOR
     static void FocusMotor_act();
-
     static void FocusMotor_get();
-
     static void FocusMotor_set();
 #endif
-
 #ifdef IS_LASER
     static void Laser_act();
-
     static void Laser_get();
-
     static void Laser_set();
 #endif
-
 #ifdef IS_DAC
     static void Dac_act();
-
     static void Dac_get();
-
     static void Dac_set();
 #endif
 #ifdef IS_LED
     static void Led_act();
-
     static void Led_get();
-
     static void Led_set();
 #endif
-
     static void State_act();
-
     static void State_get();
-
     static void State_set();
 #ifdef IS_ANALOG
     static void Analog_act();
-
     static void Analog_get();
-
     static void Analog_set();
 #endif
 #ifdef IS_DIGITAL
-
     static void Digital_act();
-
     static void Digital_get();
-
     static void Digital_set();
 #endif
 #ifdef IS_PID
     static void Pid_act();
-
     static void Pid_get();
-
     static void Pid_set();
 #endif
     static void Config_act();
     static void Config_get();
     static void Config_set();
+#ifdef IS_SLM
+    static void Slm_act();
+    static void Slm_get();
+    static void Slm_set();
+#endif
 };
 static WifiController wifi;
 #endif

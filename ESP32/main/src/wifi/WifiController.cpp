@@ -232,10 +232,42 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
     //  server.on("/temperature", getTemperature);
     //server.on("/env", getEnv);
     // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
-
+    Serial.println("Setting up HTTP Routing");
     wifi.server->on(state_act_endpoint, HTTP_POST, State_act);
     wifi.server->on(state_get_endpoint, HTTP_POST, State_get);
     wifi.server->on(state_set_endpoint, HTTP_POST, State_set);
+
+    wifi.server->on("/identity", getIdentity);
+
+    server->on("/ota", HTTP_GET, []() {
+      wifi.server->sendHeader("Connection", "close");
+      wifi.server->send(200, "text/html", otaindex);
+    });
+  /*handling uploading firmware file */
+    server->on("/update", HTTP_POST, []() {
+      wifi.server->sendHeader("Connection", "close");
+      wifi.server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+      ESP.restart();
+    }, []() {
+      HTTPUpload& upload = wifi.server->upload();
+      if (upload.status == UPLOAD_FILE_START) {
+        Serial.printf("Update: %s\n", upload.filename.c_str());
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_WRITE) {
+        /* flashing firmware to ESP*/
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) { //true to set the size to the current progress
+          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else {
+          Update.printError(Serial);
+        }
+      }
+    });
 
     // Website
     wifi.server->on("/openapi.yaml", handleSwaggerYaml);
@@ -270,7 +302,6 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
     wifi.server->on(motor_set_endpoint, HTTP_POST, FocusMotor_set);
 #endif
 
-
 #ifdef IS_DAC
     wifi.server->on(dac_act_endpoint, HTTP_POST, Dac_act);
     wifi.server->on(dac_get_endpoint, HTTP_POST, Dac_get);
@@ -300,10 +331,17 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
     wifi.server->on(PID_get_endpoint, HTTP_POST, Pid_get);
     wifi.server->on(PID_set_endpoint, HTTP_POST, Pid_set);
 #endif
+
 #ifdef IS_LED
   wifi.server->on(ledarr_act_endpoint, HTTP_POST, Led_act);
   wifi.server->on(ledarr_get_endpoint, HTTP_POST, Led_get);
   wifi.server->on(ledarr_set_endpoint, HTTP_POST, Led_set);
+#endif
+
+#ifdef IS_SLM
+  wifi.server->on(slm_act_endpoint, HTTP_POST, Slm_act);
+  wifi.server->on(slm_get_endpoint, HTTP_POST, Slm_get);
+  wifi.server->on(slm_set_endpoint, HTTP_POST, Slm_set);
 #endif
 
   wifi.server->on(config_act_endpoint, HTTP_POST, Config_act);
@@ -311,6 +349,12 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
   wifi.server->on(config_set_endpoint, HTTP_POST, Config_set);
   // start server
   wifi.server->begin();
+}
+
+
+void WifiController::getIdentity() {
+  //if(DEBUG) Serial.println("Get Identity");
+    wifi.server->send(200, "application/json", state.identifier_name);
 }
 
     void WifiController::deserialize()
@@ -524,5 +568,27 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
       config.set();
       serialize();
     }
+#ifdef IS_SLM
+    void WifiController::Slm_act()
+    {
+      deserialize();
+      slm.act();
+      serialize();
+    }
+
+    void WifiController::Slm_get()
+    {
+      deserialize();
+      slm.get();
+      serialize();
+    }
+
+    void WifiController::Slm_set()
+    {
+      deserialize();
+      slm.set();
+      serialize();
+    }
+#endif
 #endif
 

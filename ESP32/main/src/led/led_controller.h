@@ -4,6 +4,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 #include <ArduinoJson.h>
+#include "../../pinstruct.h"
 
 class led_controller
 {
@@ -12,9 +13,6 @@ class led_controller
     ~led_controller();
     bool DEBUG = false;
     bool isBusy;
-
-    int LED_ARRAY_PIN;
-    int LED_COUNT = 64; // this is the maximum number of LEDs per matrix 
 
     int NLED4x4=16;
     int NLED8x8=64;
@@ -62,6 +60,7 @@ class led_controller
     // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
     Adafruit_NeoPixel * matrix;
     DynamicJsonDocument * jsonDocument;
+    PINDEF * pins;
 
 };
 static led_controller led;

@@ -29,7 +29,8 @@ public:
     void act();
     void set();
     void get();
-
+    bool isFirstRun();
+    void checkSetupCompleted();
 };
 
 static ConfigController config;

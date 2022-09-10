@@ -7,7 +7,6 @@ led_controller::~led_controller(){
 
 led_controller::led_controller()
 {
-    matrix = new Adafruit_NeoPixel(LED_COUNT, LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
 }
 
 // Custom function accessible by the API
@@ -25,7 +24,7 @@ void led_controller::act() {
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
   if (strcmp(LEDArrMode, "array") == 0) {
     if (DEBUG) Serial.println("pattern");
-    for (int iled = 0; iled < LED_COUNT; iled++) { //Iterate through results
+    for (int iled = 0; iled < pins->LED_ARRAY_NUM; iled++) { //Iterate through results
       int red = (*jsonDocument)["red"][iled];  //Implicit cast
       int green = (*jsonDocument)["green"][iled];  //Implicit cast
       int blue = (*jsonDocument)["blue"][iled];  //Implicit cast
@@ -121,7 +120,7 @@ void led_controller::set() {
 // Custom function accessible by the API
 void led_controller::get() {
   jsonDocument->clear();
-  (*jsonDocument)["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
+  (*jsonDocument)["LED_ARRAY_PIN"] = pins->LED_ARRAY_PIN;
 }
 
 
@@ -138,17 +137,20 @@ void led_controller::set_led_RGB(int iLed, int R, int G, int B)  {
 
 void led_controller::setup_matrix() {
   // LED Matrix
+  matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
+  if(DEBUG) Serial.println("Setting up LED array");
+  if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(pins->LED_ARRAY_PIN));
+  matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   matrix->begin();
   matrix->setBrightness(255);
-  for(int iLed=0; iLed<LED_COUNT;iLed++){
-    matrix->setPixelColor(iLed, matrix->Color(100,100,100));         //  Set pixel's color (in RAM)
-    matrix->show();
-  }
+  set_all(0,0,0);
+  delay(100);
+  set_all(100,100,100);
 }
 
 void led_controller::set_all(int R, int G, int B)
 {
-  for (int i = 0; i < (LED_COUNT); i++) {
+  for (int i = 0; i < (pins->LED_ARRAY_NUM); i++) {
     set_led_RGB(i, R, G, B);
   }
 }

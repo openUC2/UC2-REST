@@ -367,3 +367,5 @@ static const char PROGMEM swagger_ui_bundlejs[] = R"rawliteral(
 
 static const char PROGMEM swagger_ui_css[] = R"rawliteral(
 )rawliteral";
+
+#endif

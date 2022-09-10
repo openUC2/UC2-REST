@@ -8,18 +8,6 @@
 #endif
 #ifdef IS_LASER
   #include "src/laser/LaserController.h"
-#include "parameters_ledarr.h"
-#include "parameters_config.h"
-
-// We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
-Adafruit_NeoPixel* matrix = NULL;
-
-
-
-
-
-// define permanent flash object
-Preferences preferences;
 #endif
 #ifdef IS_ANALOG
   #include "src/analog/AnalogController.h"
@@ -111,30 +99,15 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   state.printInfo();
-
+  config.pins = pins;
+  config.jsonDocument = &jsonDocument;
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  if (isFirstRun()) {
+  if (config.isFirstRun()) {
     Serial.println("First Run, resetting config?");
-    resetConfigurations();
+    config.resetPreferences();
   }
-
+  config.checkSetupCompleted();
   // check if setup went through after new config - avoid endless boot-loop
-  preferences.begin("setup", false);
-  if (preferences.getBool("setupComplete", true) == false) {
-    Serial.println("Setup not done, resetting config?"); //TODO not working!
-    resetConfigurations();
-  }
-  else{
-    Serial.println("Setup done, continue.");
-  }
-  preferences.putBool("setupComplete", false);
-  preferences.end();
-
-
-
-
-
-  
   // reset jsonDocument
   jsonDocument.clear();
     // load config
@@ -145,7 +118,7 @@ void setup()
   wifi.autoconnectWifi(isResetWifiSettings);
   wifi.setup_routing();
   wifi.init_Spiffs();
-  startServer();
+  wifi.startserver();
 
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);
@@ -160,9 +133,7 @@ void setup()
   Serial.println("IS_LED");
   #ifdef DEBUG_LED
     led.DEBUG = true;
-  Serial.println(PS4_MACADDESS);
-  PS4.begin("1a:2b:4c:01:01:01");
-#endif
+  #endif
   led.jsonDocument = &jsonDocument;
   led.setup_matrix();
 #endif
@@ -252,7 +223,7 @@ void setup()
 
 void loop() {
   // handle any http requests
-  server.handleClient();
+  wifi.handelMessages();
 
   // for any timing-related purposes
   state.currentMillis = millis();
