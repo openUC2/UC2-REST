@@ -35,6 +35,7 @@
   #include "src/gamepads/ps_3_4_controller.h"
 #endif
 #include "src/wifi/WifiController.h"
+#include "src/config/ConfigController.h"
 
 #include <ArduinoJson.h>
 
@@ -55,6 +56,7 @@
 bool override_overheating = false;
 
 PINDEF * pins;
+ConfigController configController;
 /*State state;
 #if defined IS_PS3 || defined IS_PS4
     ps_3_4_controller ps_c;
@@ -112,8 +114,8 @@ void setup()
   Serial.begin(BAUDRATE);
   Serial.println("Start");
   state.printInfo();
-
   jsonDocument.clear();
+  configController.setup();
 
   // connect to wifi if necessary
 #ifdef IS_WIFI
@@ -230,6 +232,7 @@ void loop() {
 
 #ifdef IS_SERIAL
 
+  configController.loop(); //make it sense to call this everyime?
   if (Serial.available()) {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
     //free(Serial);

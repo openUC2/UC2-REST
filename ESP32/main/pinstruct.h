@@ -30,6 +30,7 @@ struct PINDEF{
 
     // ledarray
     int LED_ARRAY_PIN;
+    int LED_ARRAY_NUM;
 
     // GALVos are always connected to 25/26 
     int dac_fake_1; // RESET-ABORT just toggles between 1 and 0
