@@ -31,5 +31,11 @@ int DAC_FAKE_PIN_1 = 0;
 int DAC_FAKE_PIN_2 = 0;
 
 
-String PS3Mac = "01:02:03:04:05:06";
-String PS4Mac = "1a:2b:3c:01:01:01";
+const char* PS3Mac = "01:02:03:04:05:06";
+const char* PS4Mac = "1a:2b:3c:01:01:01";
+
+
+const char*  WifiSSID = "BenMur";//"UC2 - F8Team"; //"IPHT - Konf"; // "Blynk";
+const char*  WifiPW = "MurBen3128"; //"_lachmannUC2"; //"WIa2!DcJ"; //"12345678";
+const char*  WifiSSIDAP = "UC2";
+String hostname = "youseetoo";

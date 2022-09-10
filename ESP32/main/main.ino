@@ -178,9 +178,9 @@ void setup()
   //Serial.println(address);
   Serial.println("PS3 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
-  Serial.println(PS4_MACADDESS);
-  PS4.begin(PS4_MACADDESS);
+  //const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
+  Serial.println(PS4Mac);
+  PS4.begin(PS4Mac);
   PS4.attach(onAttachPS4);
   PS4.attachOnConnect(onConnectPS4);
   PS4.attachOnDisconnect(onDisConnectPS4);
