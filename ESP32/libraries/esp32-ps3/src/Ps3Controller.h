@@ -13,7 +13,7 @@ extern "C" {
 class Ps3Controller
 {
     public:
-        typedef void(*callback_t)();
+        typedef void(*callback_t)(void*);
 
         ps3_t data;
         ps3_event_t event;
@@ -31,9 +31,9 @@ class Ps3Controller
         void setPlayer(int player);
         void setRumble(float intensity, int duration = -1);
 
-        void attach(callback_t callback);
-        void attachOnConnect(callback_t callback);
-        void attachOnDisconnect(callback_t callback);
+        void attach(callback_t callback,void* callbackobject);
+        void attachOnConnect(callback_t callback,void* callbackobject);
+        void attachOnDisconnect(callback_t callback,void* callbackobject);
 
     private:
         static void _event_callback(void *object, ps3_t data, ps3_event_t event);
@@ -44,6 +44,7 @@ class Ps3Controller
         callback_t _callback_event = nullptr;
         callback_t _callback_connect = nullptr;
         callback_t _callback_disconnect = nullptr;
+        void * _callbackobject;
 
 };
 

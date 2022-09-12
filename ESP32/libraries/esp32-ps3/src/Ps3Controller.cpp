@@ -133,23 +133,23 @@ void Ps3Controller::setRumble(float intensity, int duration) {
 }
 
 
-void Ps3Controller::attach(callback_t callback)
+void Ps3Controller::attach(callback_t callback,void* callbackobject)
 {
     _callback_event = callback;
-
+    _callbackobject = callbackobject;
 }
 
 
-void Ps3Controller::attachOnConnect(callback_t callback)
+void Ps3Controller::attachOnConnect(callback_t callback,void* callbackobject)
 {
     _callback_connect = callback;
-
+    _callbackobject = callbackobject;
 }
 
-void Ps3Controller::attachOnDisconnect(callback_t callback)
+void Ps3Controller::attachOnDisconnect(callback_t callback,void* callbackobject)
 {
     _callback_disconnect = callback;
-
+    _callbackobject = callbackobject;
 }
 
 
@@ -161,7 +161,7 @@ void Ps3Controller::_event_callback(void *object, ps3_t data, ps3_event_t event)
     memcpy(&This->event, &event, sizeof(ps3_event_t));
 
     if (This->_callback_event){
-        This->_callback_event();
+        This->_callback_event(This->_callbackobject);
     }
 }
 
@@ -176,12 +176,12 @@ void Ps3Controller::_connection_callback(void *object, uint8_t is_connected)
         This->setPlayer(1);
 
         if (This->_callback_connect){
-            This->_callback_connect();
+            This->_callback_connect(This->_callbackobject);
         }
     }else
     {
         if (This->_callback_disconnect){
-            This->_callback_disconnect();
+            This->_callback_disconnect(This->_callbackobject);
         }
     }
 

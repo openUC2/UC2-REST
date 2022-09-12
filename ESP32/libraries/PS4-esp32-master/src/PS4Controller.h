@@ -9,7 +9,7 @@ extern "C" {
 
 class PS4Controller {
  public:
-  typedef void (*callback_t)();
+  typedef void (*callback_t)(void*);
 
   ps4_t data;
   ps4_event_t event;
@@ -29,9 +29,9 @@ class PS4Controller {
 
   void sendToController();
 
-  void attach(callback_t callback);
-  void attachOnConnect(callback_t callback);
-  void attachOnDisconnect(callback_t callback);
+  void attach(callback_t callback, void *callbackobject);
+  void attachOnConnect(callback_t callback, void *callbackobject);
+  void attachOnDisconnect(callback_t callback, void *callbackobject);
 
   uint8_t* LatestPacket() { return data.latestPacket; }
 
@@ -84,6 +84,7 @@ public:
   callback_t _callback_event = nullptr;
   callback_t _callback_connect = nullptr;
   callback_t _callback_disconnect = nullptr;
+  void * _callbackobject;
 };
 
 #ifndef NO_GLOBAL_INSTANCES
