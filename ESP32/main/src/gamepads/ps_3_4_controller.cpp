@@ -237,16 +237,16 @@ void ps_3_4_controller::start()
 {
     Serial.println("Connnecting to the PS4 controller, please please press the magic round button in the center..");
     #ifdef IS_PS4
-      PS4.attach(ps_onAttach);
+      PS4.attach(ps_onAttach,this);
       PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
-      PS4.attachOnConnect(ps_onConnect);
-      PS4.attachOnDisconnect(ps_onDisConnect);
+      PS4.attachOnConnect(ps_onConnect,this);
+      PS4.attachOnDisconnect(ps_onDisConnect,this);
     #endif
     #ifdef IS_PS3
-      Ps3.attach(ps_onAttach);
+      Ps3.attach(ps_onAttach,this);
       Ps3.begin("1a:2b:3c:01:01:01 - UNICAST!");
-      Ps3.attachOnConnect(ps_onConnect);
-      Ps3.attachOnDisconnect(ps_onDisConnect);
+      Ps3.attachOnConnect(ps_onConnect,this);
+      Ps3.attachOnDisconnect(ps_onDisConnect,this);
     #endif
     const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
     Serial.println(PS4_MACADDESS);
@@ -273,10 +273,10 @@ void ps_3_4_controller::onConnect() {
 
 void ps_3_4_controller::onAttach() {
   #ifdef IS_PS4
-    PS4.attach(ps_activate);
+    PS4.attach(ps_activate,this);
   #endif
   #ifdef IS_PS3
-    Ps3.attach(ps_activate);
+    Ps3.attach(ps_activate,this);
   #endif
 }
 
@@ -519,18 +519,22 @@ void ps_3_4_controller::control() {
 
 }
 
-void ps_3_4_controller::ps_onAttach()
-{
-    ps_c.onAttach();
+void ps_3_4_controller::ps_onAttach(void * parameter)
+{   
+    ps_3_4_controller * psx = (ps_3_4_controller*)parameter;
+    psx->onAttach();
 };
 
-void ps_3_4_controller::ps_onConnect(){
-    ps_c.onConnect();
+void ps_3_4_controller::ps_onConnect(void * parameter){
+    ps_3_4_controller * psx = (ps_3_4_controller*)parameter;
+    psx->onConnect();
 };
-void ps_3_4_controller::ps_onDisConnect(){
-    ps_c.onDisConnect();
+void ps_3_4_controller::ps_onDisConnect(void * parameter){
+    ps_3_4_controller * psx = (ps_3_4_controller*)parameter;
+    psx->onDisConnect();
 };
-void ps_3_4_controller::ps_activate(){
-    ps_c.activate();
+void ps_3_4_controller::ps_activate(void * parameter){
+    ps_3_4_controller * psx = (ps_3_4_controller*)parameter;
+    psx->activate();
 };
 

@@ -54,7 +54,6 @@ public:
     void set(DynamicJsonDocument * jsonDocument);
     void setup(PINDEF * pins);
     void background();
-
     static void controlGalvoTask(void * parameters);
 };
 static ScannerController scanner;

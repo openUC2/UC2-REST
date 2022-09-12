@@ -36,9 +36,11 @@
 #include "../sensor/SensorController.h"
 #endif
 #include "../config/ConfigController.h"
-
 #ifdef IS_SLM
     #include "../slm/SlmController.h"
+#endif
+#if defined IS_DAC || defined IS_DAC_FAKE
+    #include "../dac/DacController.h"
 #endif
 
 

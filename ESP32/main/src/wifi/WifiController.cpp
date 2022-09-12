@@ -112,7 +112,6 @@ void WifiController::autoconnectWifi(boolean isResetWifiSettings) {
 
   Serial.print(F("Connected. IP: "));
   Serial.println(WiFi.localIP());
-
 }
 
 
@@ -152,7 +151,7 @@ void WifiController::startserver() {
   });
   server->begin();
   Serial.println(F("Starting OTA server on port: '82'"));
-  Serial.println(F("Visit http://IPADDRESS_SCOPE:82"));
+  Serial.println(("Visit http://%s:82", WiFi.localIP()));
 }
 
 

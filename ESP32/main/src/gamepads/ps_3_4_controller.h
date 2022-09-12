@@ -84,10 +84,10 @@ class ps_3_4_controller
         void activate();
         void control();
         
-        static void ps_onAttach();
-        static void ps_onConnect();
-        static void ps_onDisConnect();
-        static void ps_activate();
+        static void ps_onAttach(void *ob);
+        static void ps_onConnect(void * parameter);
+        static void ps_onDisConnect(void * parameter);
+        static void ps_activate(void * parameter);
 };
 static ps_3_4_controller ps_c;
 #endif

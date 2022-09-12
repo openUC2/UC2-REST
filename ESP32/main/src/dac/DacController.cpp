@@ -24,11 +24,11 @@ void DacController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument)
     pinMode(pins->dac_fake_1, OUTPUT);
     pinMode(pins->dac_fake_2, OUTPUT);
     frequency = 1;
-    xTaskCreate(
+     (
       drive_galvo,    // Function that should be called
       "drive_galvo",   // Name of the task (for debugging)
       1000,            // Stack size (bytes)
-      NULL,            // Parameter to pass
+      this,            // Parameter to pass
       1,               // Task priority
       NULL             // Task handle
     );
@@ -155,13 +155,16 @@ void DacController::get() {
 
 
 void DacController::drive_galvo(void * parameter){
+
+  DacController * d = (DacController*)parameter;
+
   while(true){ // infinite loop
-    digitalWrite(dac.pins->dac_fake_1, HIGH);
-    digitalWrite(dac.pins->dac_fake_2, HIGH);
-    vTaskDelay(dac.frequency/portTICK_PERIOD_MS); // pause 1ms
-    digitalWrite(dac.pins->dac_fake_1, LOW);
-    digitalWrite(dac.pins->dac_fake_2, LOW);
-    vTaskDelay(dac.frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(d->pins->dac_fake_1, HIGH);
+    digitalWrite(d->pins->dac_fake_2, HIGH);
+    vTaskDelay(d->frequency/portTICK_PERIOD_MS); // pause 1ms
+    digitalWrite(d->pins->dac_fake_1, LOW);
+    digitalWrite(d->pins->dac_fake_2, LOW);
+    vTaskDelay(d->frequency/portTICK_PERIOD_MS); // pause 1ms
    }
 }
 #endif

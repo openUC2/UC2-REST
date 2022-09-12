@@ -256,26 +256,27 @@ void ScannerController::get(DynamicJsonDocument * jsonDocument) {
 /***************************************************************************************************/
 /****************************************** ********************************************************/
 
-
 void ScannerController::setup(PINDEF * pins) {
   this->pins = pins;
   background(); // run not as a task
   disableCore0WDT();
-  xTaskCreate(controlGalvoTask, "controlGalvoTask", 10000, NULL, 1, NULL);
+  xTaskCreate(ScannerController::controlGalvoTask, "controlGalvoTask", 10000, this, 1, NULL);
 }
 
 void ScannerController::controlGalvoTask( void * parameter ) {
+    ScannerController * sc = (ScannerController*)parameter;
     Serial.println("Starting Scanner Thread");
     while (1) {
         // loop forever
-        if (scanner.isScanRunning || scanner.scannernFrames > 0) {
-            scanner.background();
+        if (sc->isScanRunning || sc->scannernFrames > 0) {
+            sc->background();
         }
         else {
         vTaskDelay(100);
         }
     }
     vTaskDelete(NULL);
-    }
+}
+
 #endif
 
