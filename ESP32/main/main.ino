@@ -124,10 +124,6 @@ void setup()
   preferences.putBool("setupComplete", false);
   preferences.end();
 
-
-
-
-
   // load config
   loadConfiguration();
 
@@ -155,6 +151,7 @@ void setup()
 
   setup_matrix();
   setup_motor();
+  setup_laser();
 
   /*
     setting up playstation controller
@@ -171,25 +168,25 @@ void setup()
   Ps3.attachOnConnect(onConnectPS3);
   Ps3.attachOnDisconnect(onDisConnectPS3);
   const char* PS3_MACADDESS = "01:02:03:04:05:06";
+  Serial.println("PS3 controler is set up.");
   Ps3.begin("01:02:03:04:05:06");
   Serial.println(PS3_MACADDESS);
 #else
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
-  Serial.println("PS3 controler is set up.");
+  Serial.println("PS4 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
-  //const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
+  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01"; // TODO not working with adaptive address
   Serial.println(PS4Mac);
-  PS4.begin(PS4Mac);
+  Serial.println(PS4_MACADDESS);
+  PS4.begin(PS4_MACADDESS);
   PS4.attach(onAttachPS4);
   PS4.attachOnConnect(onConnectPS4);
   PS4.attachOnDisconnect(onDisConnectPS4);
-  Serial.print("PS4 controler is set up.");
-  Serial.println(" - UNICAST!");
+  Serial.print("PS4 controler is set up. - UNICAST!");
 #endif
 
-  // setup laser
-  setup_laser();
+
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
