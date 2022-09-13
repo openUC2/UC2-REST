@@ -1,6 +1,6 @@
 #ifndef LaserController_h
 #define LaserController_h
-
+#include "../../config.h"
 #include "../../pinstruct.h"
 #include <ArduinoJson.h>
 

@@ -142,8 +142,8 @@ void FocusMotor::act()
 
 
 #if defined IS_PS3 || defined IS_PS4  
-  if(gp_controller.IS_PSCONTROLER_ACTIVE)
-    gp_controller.IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
+  if(ps_c.IS_PSCONTROLER_ACTIVE)
+    ps_c.IS_PSCONTROLER_ACTIVE=false; // override PS controller settings #TODO: Somehow reset it later?
 #endif
   // prepare motor to run
   setEnableMotor(true);

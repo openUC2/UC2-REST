@@ -142,7 +142,6 @@ void led_controller::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   if(DEBUG) Serial.println("Setting up LED array");
   if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(pins->LED_ARRAY_PIN));
-  matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   matrix->begin();
   matrix->setBrightness(255);
   set_all(0,0,0);

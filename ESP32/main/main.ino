@@ -91,7 +91,8 @@ void setup()
   // for any timing related puposes..
   state.startMillis = millis();
   pins = new PINDEF();
-  state.getDefaultPinDef((*pins));
+  state.getDefaultPinDef(pins);
+  printPinDef();
   state.setup(pins,&jsonDocument);
   
   state.printInfo();
@@ -102,6 +103,7 @@ void setup()
     config.resetPreferences();
   }
   config.checkSetupCompleted();
+  printPinDef();
   // check if setup went through after new config - avoid endless boot-loop
   // reset jsonDocument
   jsonDocument.clear();
@@ -464,3 +466,65 @@ void tableProcessor() {
   motor.isactive = false;
 #endif
 }
+
+void printPinDef()
+    {
+      Serial.print("Indentifier:");
+      Serial.println(pins->identifier_setup);
+      Serial.print("analogPin1:");
+      Serial.println(pins->analog_PIN_1);
+      Serial.print("analogPin2:");
+      Serial.println(pins->analog_PIN_2);
+      Serial.print("analogPin3:");
+      Serial.println(pins->analog_PIN_3);
+
+      Serial.print("STEP_A:");
+      Serial.println(pins->STEP_A);
+      Serial.print("STEP_X:");
+      Serial.println(pins->STEP_X);
+      Serial.print("STEP_Y:");
+      Serial.println(pins->STEP_Y);
+      Serial.print("STEP_Z:");
+      Serial.println(pins->STEP_Z);
+      Serial.print("DIR_A:");
+      Serial.println(pins->DIR_A);
+      Serial.print("DIR_X:");
+      Serial.println(pins->DIR_X);
+      Serial.print("DIR_Y:");
+      Serial.println(pins->DIR_Y);
+      Serial.print("DIR_Z:");
+      Serial.println(pins->DIR_Z);
+      Serial.print("ENABLE:");
+      Serial.println(pins->ENABLE);
+
+      Serial.print("LASER_PIN_1:");
+      Serial.println(pins->LASER_PIN_1);
+      Serial.print("LASER_PIN_2:");
+      Serial.println(pins->LASER_PIN_2);
+      Serial.print("LASER_PIN_3:");
+      Serial.println(pins->LASER_PIN_3);
+
+      Serial.print("digital_PIN_1:");
+      Serial.println(pins->digital_PIN_1);
+      Serial.print("digital_PIN_2:");
+      Serial.println(pins->digital_PIN_2);
+      Serial.print("digital_PIN_3:");
+      Serial.println(pins->digital_PIN_3);
+
+      Serial.print("LED_ARRAY_PIN:");
+      Serial.println(pins->LED_ARRAY_PIN);
+      Serial.print("LED_ARRAY_NUM:");
+      Serial.println(pins->LED_ARRAY_NUM);
+
+      Serial.print("dac_fake_1:");
+      Serial.println(pins->dac_fake_1);
+      Serial.print("dac_fake_2:");
+      Serial.println(pins->dac_fake_2);
+
+      Serial.print("ADC_pin_0:");
+      Serial.println(pins->ADC_pin_0);
+      Serial.print("ADC_pin_1:");
+      Serial.println(pins->ADC_pin_1);
+      Serial.print("ADC_pin_2:");
+      Serial.println(pins->ADC_pin_2);
+    }

@@ -1,9 +1,12 @@
 #ifndef FocusMotor_h
 #define FocusMotor_h
-
+#include "../../config.h"
 #include "AccelStepper.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+#if defined IS_PS3 || defined IS_PS4
+    #include "../gamepads/ps_3_4_controller.h"
+#endif
 
 class FocusMotor
 {

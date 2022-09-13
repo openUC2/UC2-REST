@@ -1,6 +1,6 @@
 #ifndef led_controller_h
 #define led_controller_h
-
+#include "../../config.h"
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 #include <ArduinoJson.h>

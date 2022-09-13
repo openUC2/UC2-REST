@@ -1,6 +1,6 @@
 #ifndef DigitalController_h
 #define DigitalController_h
-
+#include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 

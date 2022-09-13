@@ -1,6 +1,6 @@
 #ifndef AnalogController_h
 #define AnalogController_h
-
+#include "../../config.h"
 #include "../../pinstruct.h"
 #include <ArduinoJson.h>
 #include "esp_err.h"

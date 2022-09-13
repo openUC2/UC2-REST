@@ -2,7 +2,7 @@
 #ifdef IS_SCANNER
 #ifndef ScannerController_h
 #define ScannerController_h
-
+#include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 //#include <FreeRTOS.h>

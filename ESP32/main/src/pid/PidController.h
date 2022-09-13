@@ -1,6 +1,6 @@
 #ifndef PidController_h
 #define PidController_h
-
+#include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 #ifdef IS_MOTOR
