@@ -83,11 +83,9 @@ PINDEF * pins;
 */
 void setup()
 {
-  /*
-     SETTING UP DEVICES
-  */
-
-
+  // Start Serial
+  Serial.begin(BAUDRATE);
+  Serial.println("Start setup");
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
   // for any timing related puposes..
@@ -95,15 +93,12 @@ void setup()
   pins = new PINDEF();
   state.getDefaultPinDef((*pins));
   state.setup(pins,&jsonDocument);
-  // Start Serial
-  Serial.begin(BAUDRATE);
-  Serial.println("Start");
+  
   state.printInfo();
   config.setup(pins,&jsonDocument);
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  bool firstrun = config.isFirstRun();
-  if (firstrun) {
-    Serial.println("First Run, resetting config?");
+  if (config.isFirstRun()) {
+    Serial.println("First Run, resetting config");
     config.resetPreferences();
   }
   config.checkSetupCompleted();
@@ -143,7 +138,7 @@ void setup()
 #endif
 
 #if defined IS_PS4 || defined IS_PS3
-  if(firstrun)
+  if(config.isFirstRun())
   {
     state.clearBlueetoothDevice();
     ESP.restart();
@@ -199,6 +194,8 @@ void setup()
   Serial.println("IS_SCANNER");
   scanner.setup(pins);
 #endif
+
+Serial.println("End setup");
 }
 
 //char *task = strdup("");
