@@ -1,5 +1,4 @@
-#ifndef PidController_h
-#define PidController_h
+#pragma once
 #include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
@@ -40,5 +39,3 @@ public:
 };
 
 static PidController pid;
-
-#endif

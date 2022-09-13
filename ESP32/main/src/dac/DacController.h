@@ -1,7 +1,6 @@
 #include "../../config.h"
 #if defined IS_DAC || defined IS_DAC_FAKE
-#ifndef DacController_h
-#define DacController_h
+#pragma once
 
 #include <ArduinoJson.h>
 #include "DAC_Module.h"
@@ -45,5 +44,4 @@ class DacController
    
 };
 static DacController dac;
-#endif
 #endif

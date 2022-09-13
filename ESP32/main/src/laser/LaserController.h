@@ -1,5 +1,4 @@
-#ifndef LaserController_h
-#define LaserController_h
+#pragma once
 #include "../../config.h"
 #include "../../pinstruct.h"
 #include <ArduinoJson.h>
@@ -56,4 +55,3 @@ public:
 
 };
 static LaserController laser;
-#endif

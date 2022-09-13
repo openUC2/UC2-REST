@@ -1,5 +1,4 @@
-#ifndef SensorController_h
-#define SensorController_h
+#pragma once
 #include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
@@ -27,5 +26,3 @@ public:
 };
 
 static SensorController sensor;
-
-#endif

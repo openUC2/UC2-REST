@@ -111,8 +111,8 @@ void setup()
   // connect to wifi if necessary
   bool isResetWifiSettings = false;
   wifi.autoconnectWifi(isResetWifiSettings);
-  wifi.setup_routing();
   wifi.init_Spiffs();
+  wifi.setup_routing();
   wifi.startserver();
 
   Serial.println(state_act_endpoint);

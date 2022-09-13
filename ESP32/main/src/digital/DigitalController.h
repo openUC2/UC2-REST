@@ -1,5 +1,4 @@
-#ifndef DigitalController_h
-#define DigitalController_h
+#pragma once
 #include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
@@ -26,4 +25,3 @@ public:
     void setup(PINDEF * pins);
 };
 static DigitalController digital;
-#endif

@@ -1,5 +1,4 @@
-#ifndef ConfigController_h
-#define ConfigController_h
+#pragma once
 
 #include <Preferences.h>
 #include <ArduinoJson.h>
@@ -35,5 +34,3 @@ public:
 };
 
 static ConfigController config;
-
-#endif

@@ -1,6 +1,4 @@
-#ifndef State_h
-#define State_h
-
+#pragma once
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"
@@ -59,4 +57,3 @@ class State
 };
 
 static State state;
-#endif

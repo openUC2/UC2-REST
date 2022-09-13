@@ -1,5 +1,4 @@
-#ifndef led_controller_h
-#define led_controller_h
+#pragma once
 #include "../../config.h"
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
@@ -64,4 +63,3 @@ class led_controller
 
 };
 static led_controller led;
-#endif

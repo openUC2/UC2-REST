@@ -1,7 +1,6 @@
 
 #ifdef IS_SCANNER
-#ifndef ScannerController_h
-#define ScannerController_h
+#pragma once
 #include "../../config.h"
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
@@ -57,5 +56,4 @@ public:
     static void controlGalvoTask(void * parameters);
 };
 static ScannerController scanner;
-#endif
 #endif

@@ -1,5 +1,4 @@
-#ifndef JsonKeys_h
-#define JsonKeys_h
+#pragma once
 
 static const char* keyMotorXStepPin = "motXstp";
 static const char* keyMotorXDirPin = "motXdir";
@@ -32,5 +31,3 @@ static const char* keyIdentifier = "identifier";
 
 static const char* keyWifiSSID = "ssid";
 static const char* keyWifiPW = "PW";
-
-#endif

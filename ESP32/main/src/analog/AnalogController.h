@@ -1,5 +1,4 @@
-#ifndef AnalogController_h
-#define AnalogController_h
+#pragma once
 #include "../../config.h"
 #include "../../pinstruct.h"
 #include <ArduinoJson.h>
@@ -48,4 +47,3 @@ class AnalogController
     void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);    
 };
 static AnalogController analog;
-#endif

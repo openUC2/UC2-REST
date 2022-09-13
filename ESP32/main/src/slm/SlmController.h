@@ -1,5 +1,4 @@
-#ifndef Slm_h
-#define Slm_h
+#pragma once
 #include "../../config.h"
 #include <JPEGDecoder.h>
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
@@ -60,6 +59,3 @@ public:
 };
 
 static SlmController slm;
-
-
-#endif

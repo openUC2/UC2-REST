@@ -1,5 +1,4 @@
-#ifndef ps_3_4_controller_h
-#define ps_3_4_controller_h
+#pragma once
 #include "../../config.h"
 #ifdef IS_MOTOR
     #include "../motor/FocusMotor.h"
@@ -90,4 +89,3 @@ class ps_3_4_controller
         static void ps_activate(void * parameter);
 };
 static ps_3_4_controller ps_c;
-#endif

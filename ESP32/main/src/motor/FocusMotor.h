@@ -1,5 +1,4 @@
-#ifndef FocusMotor_h
-#define FocusMotor_h
+#pragma once
 #include "../../config.h"
 #include "AccelStepper.h"
 #include <ArduinoJson.h>
@@ -92,4 +91,3 @@ class FocusMotor
 };
 
 static FocusMotor motor;
-#endif
