@@ -238,35 +238,9 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
 
     wifi.server->on("/identity", getIdentity);
 
-    server->on("/ota", HTTP_GET, []() {
-      wifi.server->sendHeader("Connection", "close");
-      wifi.server->send(200, "text/html", otaindex);
-    });
+    server->on("/ota", HTTP_GET, ota);
   /*handling uploading firmware file */
-    server->on("/update", HTTP_POST, []() {
-      wifi.server->sendHeader("Connection", "close");
-      wifi.server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-      ESP.restart();
-    }, []() {
-      HTTPUpload& upload = wifi.server->upload();
-      if (upload.status == UPLOAD_FILE_START) {
-        Serial.printf("Update: %s\n", upload.filename.c_str());
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-          Update.printError(Serial);
-        }
-      } else if (upload.status == UPLOAD_FILE_WRITE) {
-        /* flashing firmware to ESP*/
-        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-          Update.printError(Serial);
-        }
-      } else if (upload.status == UPLOAD_FILE_END) {
-        if (Update.end(true)) { //true to set the size to the current progress
-          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-        } else {
-          Update.printError(Serial);
-        }
-      }
-    });
+    server->on("/update", HTTP_POST, update, upload);
 
     // Website
     wifi.server->on("/openapi.yaml", handleSwaggerYaml);
@@ -350,7 +324,6 @@ void WifiController::handleSwaggerYaml() { //Handler for the body path
   wifi.server->begin();
 }
 
-
 void WifiController::getIdentity() {
   //if(DEBUG) Serial.println("Get Identity");
     wifi.server->send(200, "application/json", state.identifier_name);
@@ -366,6 +339,41 @@ void WifiController::getIdentity() {
     {
       serializeJson((*wifi.jsonDocument), wifi.output);
       (*wifi.server).send(200, "application/json", wifi.output);
+    }
+
+    void WifiController::ota()
+    {
+      wifi.server->sendHeader("Connection", "close");
+      wifi.server->send(200, "text/html", otaindex);
+    }
+
+    void WifiController::update()
+    {
+      wifi.server->sendHeader("Connection", "close");
+      wifi.server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+      ESP.restart();
+    }
+
+    void WifiController::upload()
+    {
+      HTTPUpload& upload = wifi.server->upload();
+      if (upload.status == UPLOAD_FILE_START) {
+        Serial.printf("Update: %s\n", upload.filename.c_str());
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_WRITE) {
+        /* flashing firmware to ESP*/
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) { //true to set the size to the current progress
+          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else {
+          Update.printError(Serial);
+        }
+      }
     }
 
 #ifdef IS_MOTOR

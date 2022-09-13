@@ -111,35 +111,10 @@ static const char* config_get_endpoint = "/config_get";
 class WifiController
 {
 private:
-    
-    /* data */
-public:
-    WifiController(/* args */);
-    ~WifiController();
-    
-    DynamicJsonDocument * jsonDocument;
-    WiFiManager * wm;
-    WebServer * server;
-    
-    char output[1000];
 
-    void setup_routing();
-    void handelMessages();
-    void init_Spiffs();
-    void initWifiAP(const char *ssid);
-    void joinWifi(const char *ssid, const char *password);
-    void autoconnectWifi(boolean isResetWifiSettings);
-    void startserver();
-    static void getIdentity();
-
-    static bool loadFromSPIFFS(String path);
-    static void handleNotFound();
-    static void handleSwaggerYaml();
-    static void handleSwaggerUI();
-    static void handlestandalone();
-    static void handleswaggerbundle();
-    static void handleswaggercss();
-
+    static void ota();
+    static void update();
+    static void upload();
     static void deserialize();
     static void serialize();
 #ifdef IS_MOTOR
@@ -188,6 +163,35 @@ public:
     static void Slm_get();
     static void Slm_set();
 #endif
+    /* data */
+public:
+    WifiController(/* args */);
+    ~WifiController();
+    
+    DynamicJsonDocument * jsonDocument;
+    WiFiManager * wm;
+    WebServer * server;
+    
+    char output[1000];
+
+    void setup_routing();
+    void handelMessages();
+    void init_Spiffs();
+    void initWifiAP(const char *ssid);
+    void joinWifi(const char *ssid, const char *password);
+    void autoconnectWifi(boolean isResetWifiSettings);
+    void startserver();
+    static void getIdentity();
+
+    static bool loadFromSPIFFS(String path);
+    static void handleNotFound();
+    static void handleSwaggerYaml();
+    static void handleSwaggerUI();
+    static void handlestandalone();
+    static void handleswaggerbundle();
+    static void handleswaggercss();
+
+
 };
 static WifiController wifi;
 #endif
