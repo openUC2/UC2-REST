@@ -42,12 +42,25 @@ const char* prefNamespace = "UC2";
 */
 
 
+void ConfigController::setJsonToPref(const char * key)
+{
+  if (jsonDocument->containsKey(key))
+    preferences.putUInt(key, (*jsonDocument)[key]);
+}
 
+void ConfigController::setPrefToPins(const char * key, int* val)
+{
+  *val = preferences.getUInt(key,*val);
+}
+
+void ConfigController::setPinsToJson(const char * key, int val)
+{
+  (*jsonDocument)[key] = val;
+}
 
 void ConfigController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   this->pins = pins;
   this->jsonDocument = jsonDocument;
-  Serial.begin(115200);
   getPreferences();
 }
 
@@ -61,38 +74,36 @@ bool ConfigController::resetPreferences() {
 bool ConfigController::setPreferences() {
   preferences.begin(prefNamespace , false);
 
-  if (jsonDocument->containsKey(keyMotorXStepPin))
-    preferences.putUInt(keyMotorXStepPin, (*jsonDocument)[keyMotorXStepPin]);
-  if (jsonDocument->containsKey(keyMotorXDirPin))
-    preferences.putUInt(keyMotorXDirPin, (*jsonDocument)[keyMotorXDirPin]);
+  setJsonToPref(keyMotorXStepPin);
+  setJsonToPref(keyMotorXDirPin);
 
-  preferences.putUInt(keyMotorYStepPin, (*jsonDocument)[keyMotorYStepPin]);
-  preferences.putUInt(keyMotorYDirPin, (*jsonDocument)[keyMotorYDirPin]);
+  setJsonToPref(keyMotorYStepPin);
+  setJsonToPref(keyMotorYDirPin);
 
-  preferences.putUInt(keyMotorZStepPin, (*jsonDocument)[keyMotorZStepPin]);
-  preferences.putUInt(keyMotorZDirPin, (*jsonDocument)[keyMotorZDirPin]);
+  setJsonToPref(keyMotorZStepPin);
+  setJsonToPref(keyMotorZDirPin);
 
-  preferences.putUInt(keyMotorAStepPin, (*jsonDocument)[keyMotorAStepPin]);
-  preferences.putUInt(keyMotorADirPin, (*jsonDocument)[keyMotorADirPin]);
+  setJsonToPref(keyMotorAStepPin);
+  setJsonToPref(keyMotorADirPin);
 
-  preferences.putUInt(keyMotorEnable, (*jsonDocument)[keyMotorEnable]);
+  setJsonToPref(keyMotorEnable);
 
-  preferences.putUInt(keyLEDArray, (*jsonDocument)[keyLEDArray]);
-  preferences.putUInt(keyLEDNumLEDArray, (*jsonDocument)[keyLEDNumLEDArray]);
+  setJsonToPref(keyLEDArray);
+  setJsonToPref(keyLEDNumLEDArray);
 
-  preferences.putUInt(keyDigital1Pin, (*jsonDocument)[keyDigital1Pin]);
-  preferences.putUInt(keyDigital2Pin, (*jsonDocument)[keyDigital2Pin]);
+  setJsonToPref(keyDigital1Pin);
+  setJsonToPref(keyDigital2Pin);
 
-  preferences.putUInt(keyAnalog1Pin, (*jsonDocument)[keyAnalog1Pin]);
-  preferences.putUInt(keyAnalog2Pin, (*jsonDocument)[keyAnalog2Pin]);
-  preferences.putUInt(keyAnalog3Pin, (*jsonDocument)[keyAnalog3Pin]);
+  setJsonToPref(keyAnalog1Pin);
+  setJsonToPref(keyAnalog2Pin);
+  setJsonToPref(keyAnalog3Pin);
 
-  preferences.putUInt(keyLaser1Pin, (*jsonDocument)[keyLaser1Pin]);
-  preferences.putUInt(keyLaser2Pin, (*jsonDocument)[keyLaser2Pin]);
-  preferences.putUInt(keyLaser3Pin, (*jsonDocument)[keyLaser3Pin]);
+  setJsonToPref(keyLaser1Pin);
+  setJsonToPref(keyLaser2Pin);
+  setJsonToPref(keyLaser3Pin);
 
-  preferences.putUInt(keyDACfake1Pin, (*jsonDocument)[keyDACfake1Pin]);
-  preferences.putUInt(keyDACfake2Pin, (*jsonDocument)[keyDACfake2Pin]);
+  setJsonToPref(keyDACfake1Pin);
+  setJsonToPref(keyDACfake2Pin);
 
   preferences.putString(keyIdentifier,  (const char*)(*jsonDocument)[keyIdentifier]);
   preferences.putString(keyWifiSSID, (const char*)(*jsonDocument)[keyWifiSSID]);
@@ -106,92 +117,102 @@ bool ConfigController::setPreferences() {
 bool ConfigController::getPreferences() {
 
   preferences.begin(prefNamespace, false);
-  pins->STEP_X = preferences.getUInt(keyMotorXStepPin, pins->STEP_X);
-  pins->DIR_X = preferences.getUInt(keyMotorXDirPin, pins->DIR_X);
+  setPrefToPins(keyMotorXStepPin, &pins->STEP_X);
+  setPrefToPins(keyMotorXDirPin, &pins->DIR_X);
   Serial.println(pins->STEP_X);
   Serial.println(pins->DIR_X);
 
-  pins->STEP_Y = preferences.getUInt(keyMotorYStepPin, pins->STEP_Y);
-  pins->DIR_Y = preferences.getUInt(keyMotorYDirPin, pins->DIR_Y);
+  setPrefToPins(keyMotorYStepPin, &pins->STEP_Y);
+  setPrefToPins(keyMotorYDirPin, &pins->DIR_Y); 
   Serial.println(pins->STEP_Y);
   Serial.println(pins->DIR_Y);
 
-  pins->STEP_Z = preferences.getUInt(keyMotorZStepPin, pins->STEP_Z);
-  pins->DIR_Z = preferences.getUInt(keyMotorZDirPin, pins->DIR_Z);
+  setPrefToPins(keyMotorZStepPin, &pins->STEP_Z);
+  setPrefToPins(keyMotorZDirPin, &pins->DIR_Z); 
   Serial.println(pins->STEP_Z);
   Serial.println(pins->DIR_Z);
 
-  pins->STEP_A = preferences.getUInt(keyMotorAStepPin, pins->STEP_A);
-  pins->DIR_A = preferences.getUInt(keyMotorADirPin, pins->DIR_A);
+  setPrefToPins(keyMotorAStepPin, &pins->STEP_A);
+  setPrefToPins(keyMotorADirPin, &pins->DIR_A); 
   Serial.println(pins->STEP_A);
   Serial.println(pins->DIR_A);
 
-  pins->ENABLE = preferences.getUInt(keyMotorEnable, pins->ENABLE);
+  setPrefToPins(keyMotorEnable, &pins->ENABLE); 
   Serial.println(pins->ENABLE);
 
-  pins->LED_ARRAY_PIN = preferences.getUInt(keyMotorEnable, pins->LED_ARRAY_PIN);
-  pins->LED_ARRAY_NUM = preferences.getUInt(keyMotorEnable, pins->LED_ARRAY_NUM);
+  setPrefToPins(keyLEDArray, &pins->LED_ARRAY_PIN);
+  setPrefToPins(keyLEDNumLEDArray, &pins->LED_ARRAY_NUM); 
   Serial.println(pins->LED_ARRAY_PIN);
   Serial.println(pins->LED_ARRAY_NUM);
 
-  pins->digital_PIN_1 = preferences.getUInt(keyDigital1Pin, pins->digital_PIN_1);
-  pins->digital_PIN_2 = preferences.getUInt(keyDigital2Pin, pins->digital_PIN_2);
+  setPrefToPins(keyDigital1Pin, &pins->digital_PIN_1);
+  setPrefToPins(keyDigital2Pin, &pins->digital_PIN_2); 
   Serial.println(pins->digital_PIN_1);
   Serial.println(pins->digital_PIN_2);
 
-  pins->analog_PIN_1 = preferences.getUInt(keyAnalog1Pin, pins->analog_PIN_1);
-  pins->analog_PIN_2 = preferences.getUInt(keyAnalog2Pin, pins->analog_PIN_2);
-  pins->analog_PIN_3 = preferences.getUInt(keyAnalog3Pin, pins->analog_PIN_3);
+  setPrefToPins(keyAnalog1Pin, &pins->analog_PIN_1);
+  setPrefToPins(keyAnalog2Pin, &pins->analog_PIN_2);
+  setPrefToPins(keyAnalog3Pin, &pins->analog_PIN_3);
   Serial.println(pins->analog_PIN_1);
   Serial.println(pins->analog_PIN_2);
   Serial.println(pins->analog_PIN_3);
 
-  pins->LASER_PIN_1 = preferences.getUInt(keyLaser1Pin, pins->LASER_PIN_1);
-  pins->LASER_PIN_2 = preferences.getUInt(keyLaser2Pin, pins->LASER_PIN_2);
-  pins->LASER_PIN_3 = preferences.getUInt(keyLaser3Pin, pins->LASER_PIN_3);
+  setPrefToPins(keyLaser1Pin, &pins->LASER_PIN_1);
+  setPrefToPins(keyLaser2Pin, &pins->LASER_PIN_2);
+  setPrefToPins(keyLaser3Pin, &pins->LASER_PIN_3);
   Serial.println(pins->analog_PIN_1);
   Serial.println(pins->analog_PIN_2);
   Serial.println(pins->analog_PIN_3);
 
-  pins->dac_fake_1 = preferences.getUInt(keyDACfake1Pin, pins->dac_fake_1);
-  pins->dac_fake_2 = preferences.getUInt(keyDACfake2Pin, pins->dac_fake_2);
+  setPrefToPins(keyDACfake1Pin, &pins->dac_fake_1);
+  setPrefToPins(keyDACfake2Pin, &pins->dac_fake_2);
   Serial.println(pins->dac_fake_1);
   Serial.println(pins->dac_fake_2);
 
-  identifier_setup = preferences.getString(keyDACfake1Pin, identifier_setup);
-  wifiSSID = preferences.getString(keyWifiSSID, wifiSSID);
-  wifiPW = preferences.getString(keyWifiPW, wifiPW);
-  Serial.println(identifier_setup);
-  Serial.println(wifiSSID);
-  Serial.println(wifiPW);
+  pins->identifier_setup = preferences.getString(keyIdentifier, pins->identifier_setup).c_str();
+  pins->mSSID = preferences.getString(keyWifiSSID, pins->mSSID).c_str();
+  pins->mPWD = preferences.getString(keyWifiPW, pins->mPWD).c_str();
+  Serial.println(pins->identifier_setup);
+  Serial.println(pins->mSSID);
+  Serial.println(pins->mPWD);
 
   jsonDocument->clear();
   
   // Assign to JSON jsonDocumentument
-  (*jsonDocument)["motXstp"] = pins->STEP_X;
-  (*jsonDocument)["motXdir"] = pins->DIR_X;
-  (*jsonDocument)["motYstp"] = pins->STEP_Y;
-  (*jsonDocument)["motYdir"] = pins->DIR_Y;
-  (*jsonDocument)["motZstp"] = pins->STEP_Z;
-  (*jsonDocument)["motZdir"] = pins->DIR_Z;
-  (*jsonDocument)["motAstp"] = pins->STEP_A;
-  (*jsonDocument)["motAdir"] = pins->DIR_A;
-  (*jsonDocument)["motEnable"] = pins->ENABLE;
-  (*jsonDocument)["ledArrPin"] = pins->LED_ARRAY_PIN;
-  (*jsonDocument)["ledArrNum"] = pins->LED_ARRAY_NUM;
-  (*jsonDocument)["digitalPin1"] = pins->digital_PIN_1;
-  (*jsonDocument)["digitalPin2"] = pins->digital_PIN_2;
-  (*jsonDocument)["analogPin1"] = pins->analog_PIN_1;
-  (*jsonDocument)["analogPin2"] = pins->analog_PIN_2;
-  (*jsonDocument)["analogPin3"] = pins->analog_PIN_3;
-  (*jsonDocument)["laserPin1"] = pins->LASER_PIN_1;
-  (*jsonDocument)["laserPin2"] = pins->LASER_PIN_2;
-  (*jsonDocument)["laserPin3"] = pins->LASER_PIN_3;
-  (*jsonDocument)["dacFake1"] = pins->dac_fake_1;
-  (*jsonDocument)["dacFake2"] = pins->dac_fake_2;
-  (*jsonDocument)["identifier"] = identifier_setup;
-  (*jsonDocument)["ssid"] = wifiSSID;
-  (*jsonDocument)["PW"] = wifiPW;
+  setPinsToJson(keyMotorXStepPin, pins->STEP_X);
+  setPinsToJson(keyMotorXDirPin, pins->DIR_X);
+
+  setPinsToJson(keyMotorYStepPin, pins->STEP_Y);
+  setPinsToJson(keyMotorYDirPin, pins->DIR_Y);
+
+  setPinsToJson(keyMotorZStepPin, pins->STEP_Z);
+  setPinsToJson(keyMotorZDirPin, pins->DIR_Z);
+
+  setPinsToJson(keyMotorAStepPin, pins->STEP_A);
+  setPinsToJson(keyMotorADirPin, pins->DIR_A);
+
+  setPinsToJson(keyMotorEnable, pins->ENABLE);
+
+  setPinsToJson(keyLEDArray, pins->LED_ARRAY_PIN);
+  setPinsToJson(keyLEDNumLEDArray, pins->LED_ARRAY_NUM);
+
+  setPinsToJson(keyDigital1Pin, pins->digital_PIN_1);
+  setPinsToJson(keyDigital2Pin, pins->digital_PIN_2);
+
+  setPinsToJson(keyAnalog1Pin, pins->analog_PIN_1);
+  setPinsToJson(keyAnalog2Pin, pins->analog_PIN_2);
+  setPinsToJson(keyAnalog3Pin, pins->analog_PIN_3);
+
+  setPinsToJson(keyLaser1Pin, pins->LASER_PIN_1);
+  setPinsToJson(keyLaser2Pin, pins->LASER_PIN_2);
+  setPinsToJson(keyLaser3Pin, pins->LASER_PIN_3);
+
+  setPinsToJson(keyDACfake1Pin, pins->dac_fake_1);
+  setPinsToJson(keyDACfake2Pin, pins->dac_fake_2);
+
+  (*jsonDocument)[keyIdentifier] = pins->identifier_setup;
+  (*jsonDocument)[keyWifiSSID] = pins->mSSID;
+  (*jsonDocument)[keyWifiPW] = pins->mPWD;
 
   serializeJson(*jsonDocument, Serial);
 
@@ -240,7 +261,7 @@ bool ConfigController::isFirstRun() {
   // define preference name
   const char* prefName = "firstRun";
   preferences.begin(prefName, false);
-  static const char dateKey[] = "date";
+  const char * dateKey = "date";
   const char *compiled_date = __DATE__ " " __TIME__;
   String stored_date = preferences.getString(dateKey, "");  // FIXME
 

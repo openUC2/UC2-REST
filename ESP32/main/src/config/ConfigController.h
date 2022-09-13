@@ -10,16 +10,17 @@ class ConfigController
 {
 private:
     Preferences preferences;
+    DynamicJsonDocument * jsonDocument;
+    void setJsonToPref(const char * key);
+    void setPrefToPins(const char * key, int* val);
+    void setPinsToJson(const char * key, int val);
     /* data */
 public:
     ConfigController(/* args */);
     ~ConfigController();
 
-    String identifier_setup = "pindef_multicolour_wemos_lena";
-    String wifiSSID = "SSID";
-    String wifiPW = "PW";
     PINDEF * pins;
-    DynamicJsonDocument * jsonDocument;
+    
 
     void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
     bool resetPreferences();
