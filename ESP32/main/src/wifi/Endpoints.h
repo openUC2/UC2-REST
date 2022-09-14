@@ -1,62 +1,64 @@
 #pragma once
 #include "../../config.h"
-static const char* state_act_endpoint = "/state_act";
-static const char* state_set_endpoint = "/state_set";
-static const char* state_get_endpoint = "/state_get";
+static const String state_act_endpoint = F("/state_act");
+static const String state_set_endpoint = F("/state_set");
+static const String state_get_endpoint = F("/state_get");
 
 #ifdef IS_LASER
-static const char* laser_act_endpoint = "/laser_act";
-static const char* laser_set_endpoint = "/laser_set";
-static const char* laser_get_endpoint = "/laser_get";
+static const String laser_act_endpoint = F("/laser_act");
+static const String laser_set_endpoint = F("/laser_set");
+static const String laser_get_endpoint = F("/laser_get");
 #endif
 
 #ifdef IS_MOTOR
-static const char* motor_act_endpoint = "/motor_act";
-static const char* motor_set_endpoint = "/motor_set";
-static const char* motor_get_endpoint = "/motor_get";
+static const String motor_act_endpoint = F("/motor_act");
+static const String motor_set_endpoint = F("/motor_set");
+static const String motor_get_endpoint = F("/motor_get");
 #endif
 
 #ifdef IS_DAC
-static const char* dac_act_endpoint = "/dac_act";
-static const char* dac_set_endpoint = "/dac_set";
-static const char* dac_get_endpoint = "/dac_get";
+static const String dac_act_endpoint = F("/dac_act");
+static const String dac_set_endpoint = F("/dac_set");
+static const String dac_get_endpoint = F("/dac_get");
 #endif
 
 #ifdef IS_ANALOG
-static const char* analog_act_endpoint = "/analog_act";
-static const char* analog_set_endpoint = "/analog_set";
-static const char* analog_get_endpoint = "/analog_get";
+static const String analog_act_endpoint = F("/analog_act");
+static const String analog_set_endpoint = F("/analog_set");
+static const String analog_get_endpoint = F("/analog_get");
 #endif
 
 #ifdef IS_DIGITAL
-static const char* digital_act_endpoint = "/digital_act";
-static const char* digital_set_endpoint = "/digital_set";
-static const char* digital_get_endpoint = "/digital_get";
+static const String digital_act_endpoint = F("/digital_act");
+static const String digital_set_endpoint = F("/digital_set");
+static const String digital_get_endpoint = F("/digital_get");
 #endif
 
-static const char* ledarr_act_endpoint = "/ledarr_act";
-static const char* ledarr_set_endpoint = "/ledarr_set";
-static const char* ledarr_get_endpoint = "/ledarr_get";
+#ifdef IS_LED
+static const String ledarr_act_endpoint = F("/ledarr_act");
+static const String ledarr_set_endpoint = F("/ledarr_set");
+static const String ledarr_get_endpoint = F("/ledarr_get");
+#endif
 
 #ifdef IS_SLM
-static const char* slm_act_endpoint = "/slm_act";
-static const char* slm_set_endpoint = "/slm_set";
-static const char* slm_get_endpoint = "/slm_get";
+static const String slm_act_endpoint = F("/slm_act");
+static const String slm_set_endpoint = F("/slm_set");
+static const String slm_get_endpoint = F("/slm_get");
 #endif
 
 #ifdef IS_READSENSOR
-static const char* readsensor_act_endpoint = "/readsensor_act";
-static const char* readsensor_set_endpoint = "/readsensor_set";
-static const char* readsensor_get_endpoint = "/readsensor_get";
+static const String readsensor_act_endpoint = F("/readsensor_act");
+static const String readsensor_set_endpoint = F("/readsensor_set");
+static const String readsensor_get_endpoint = F("/readsensor_get");
 #endif
 
 #ifdef IS_PID
-static const char* PID_act_endpoint = "/PID_act";
-static const char* PID_set_endpoint = "/PID_set";
-static const char* PID_get_endpoint = "/PID_get";
+static const String PID_act_endpoint = F("/PID_act");
+static const String PID_set_endpoint = F("/PID_set");
+static const String PID_get_endpoint = F("/PID_get");
 #endif
 
-static const char* config_act_endpoint = "/config_act";
-static const char* config_set_endpoint = "/config_set";
-static const char* config_get_endpoint = "/config_get";
+static const String config_act_endpoint = F("/config_act");
+static const String config_set_endpoint = F("/config_set");
+static const String config_get_endpoint = F("/config_get");
 

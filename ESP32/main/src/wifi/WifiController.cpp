@@ -39,22 +39,22 @@ void WifiController::init_Spiffs()
   }
 }
 
-void WifiController::initWifiAP(const char *ssid)
+void WifiController::initWifiAP(String ssid)
 {
   Serial.print(F("Network SSID (AP): "));
   Serial.println(ssid);
 
-  WiFi.softAP(ssid);
+  WiFi.softAP(ssid.c_str());
   Serial.print(F("AP IP address: "));
   Serial.println(WiFi.softAPIP());
 }
 
-void WifiController::joinWifi(const char *ssid, const char *password)
+void WifiController::joinWifi(String ssid, String password)
 {
   Serial.print(F("Connecting to "));
   Serial.println(ssid);
 
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid.c_str(), password.c_str());
 
   int nConnectTrials = 0;
   while (WiFi.status() != WL_CONNECTED)
@@ -96,7 +96,7 @@ void WifiController::autoconnectWifi(boolean isResetWifiSettings)
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm->autoConnect(mSSIDAP); // password protected ap
+  res = wm->autoConnect(mSSIDAP.c_str()); // password protected ap
 
   if (!res)
   {

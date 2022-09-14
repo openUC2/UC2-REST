@@ -286,27 +286,27 @@ void loop() {
 #endif
 }
 
-void jsonProcessor(char task[]) {
+void jsonProcessor(String task) {
 /*
     Return state
 */
-  if (strcmp(task, state_act_endpoint) == 0)
+  if (task == state_act_endpoint)
     state.act();
-  if (strcmp(task, state_set_endpoint) == 0)
+  if (task == state_set_endpoint)
     state.set();
-  if (strcmp(task, state_get_endpoint) == 0)
+  if (task == state_get_endpoint)
     state.get();
 /*
   Drive Motors
 */
 #ifdef IS_MOTOR
-  if (strcmp(task, motor_act_endpoint) == 0) {
+  if (task == motor_act_endpoint) {
     motor.act();
   }
-  if (strcmp(task, motor_set_endpoint) == 0) {
+  if (task == motor_set_endpoint) {
     motor.set();
   }
-  if (strcmp(task, motor_get_endpoint) == 0) {
+  if (task == motor_get_endpoint) {
     motor.get();
   }
 #endif
@@ -314,13 +314,13 @@ void jsonProcessor(char task[]) {
   Operate SLM
 */
 #ifdef IS_SLM
-  if (strcmp(task, slm_act_endpoint) == 0) {
+  if (task == slm_act_endpoint) {
     slm.act();
   }
-  if (strcmp(task, slm_set_endpoint) == 0) {
+  if (task == slm_set_endpoint) {
     slm.set();
   }
-  if (strcmp(task, slm_get_endpoint) == 0) {
+  if (task == slm_get_endpoint) {
     slm.get();
   }
 #endif
@@ -328,76 +328,76 @@ void jsonProcessor(char task[]) {
   Drive DAC
 */
 #ifdef IS_DAC
-  if (strcmp(task, dac_act_endpoint) == 0)
+  if (task == dac_act_endpoint)
     dac.act();
-  if (strcmp(task, dac_set_endpoint) == 0)
+  if (task == dac_set_endpoint)
     dac.set();
-  if (strcmp(task, dac_get_endpoint) == 0)
+  if (task == dac_get_endpoint)
     dac.get();
 #endif
 /*
   Drive Laser
 */
 #ifdef IS_LASER
-  if (strcmp(task, laser_act_endpoint) == 0)
+  if (task == laser_act_endpoint)
     laser.act();
-  if (strcmp(task, laser_set_endpoint) == 0)
+  if (task == laser_set_endpoint)
     laser.get();
-  if (strcmp(task, laser_get_endpoint) == 0)
+  if (task == laser_get_endpoint)
     laser.set();
 #endif
 /*
   Drive analog
 */
 #ifdef IS_ANALOG
-  if (strcmp(task, analog_act_endpoint) == 0)
+  if (task == analog_act_endpoint)
     analog.act();
-  if (strcmp(task, analog_set_endpoint) == 0)
+  if (task == analog_set_endpoint)
     analog.set();
-  if (strcmp(task, analog_get_endpoint) == 0)
+  if (task == analog_get_endpoint)
     analog.get();
 #endif
 /*
   Drive digital
 */
 #ifdef IS_DIGITAL
-  if (strcmp(task, digital_act_endpoint) == 0)
+  if (task == digital_act_endpoint)
    digital.act(&jsonDocument);
-  if (strcmp(task, digital_set_endpoint) == 0)
+  if (task == digital_set_endpoint)
     digital.set(&jsonDocument);
-  if (strcmp(task, digital_get_endpoint) == 0)
+  if (task == digital_get_endpoint)
     digital.get(&jsonDocument);
 #endif
 /*
   Drive LED Matrix
 */
 #ifdef IS_LED
-  if (strcmp(task, ledarr_act_endpoint) == 0)
+  if (task == ledarr_act_endpoint)
     led.act();
-  if (strcmp(task, ledarr_set_endpoint) == 0)
+  if (task == ledarr_set_endpoint)
     led.set();
-  if (strcmp(task, ledarr_get_endpoint) == 0)
+  if (task == ledarr_get_endpoint)
     led.get();
 #endif
   /*
     Change Configuration
   */
-  if (strcmp(task, config_act_endpoint) == 0)
+  if (task == config_act_endpoint)
     config.act();
-  if (strcmp(task, config_set_endpoint) == 0)
+  if (task == config_set_endpoint)
     config.set();
-  if (strcmp(task, config_get_endpoint) == 0)
+  if (task == config_get_endpoint)
     config.get();
 
 /*
   Read the sensor
 */
 #ifdef IS_READSENSOR
-  if (strcmp(task, readsensor_act_endpoint) == 0)
+  if (task == readsensor_act_endpoint)
     sensor.act();
-  if (strcmp(task, readsensor_set_endpoint) == 0)
+  if (task == readsensor_set_endpoint)
     sensor.set();
-  if (strcmp(task, readsensor_get_endpoint) == 0)
+  if (task == readsensor_get_endpoint)
     sensor.get();
 #endif
 
@@ -405,11 +405,11 @@ void jsonProcessor(char task[]) {
   Control PID controller
 */
 #ifdef IS_PID
-  if (strcmp(task, PID_act_endpoint) == 0)
+  if (task == PID_act_endpoint)
     pid.act();
-  if (strcmp(task, PID_set_endpoint) == 0)
+  if (task == PID_set_endpoint)
     pid.set();
-  if (strcmp(task, PID_get_endpoint) == 0)
+  if (task == PID_get_endpoint)
     pid.get();
 #endif
   // Send JSON information back

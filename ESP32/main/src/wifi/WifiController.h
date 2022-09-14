@@ -47,8 +47,8 @@
 class WifiController
 {
 private:
-    const char* mSSIDAP = "UC2";
-    const char* hostname = "youseetoo";
+    const String mSSIDAP = F("UC2");
+    const String hostname = F("youseetoo");
 
     /* data */
 public:
@@ -64,8 +64,8 @@ public:
     void setup_routing();
     void handelMessages();
     void init_Spiffs();
-    void initWifiAP(const char *ssid);
-    void joinWifi(const char *ssid, const char *password);
+    void initWifiAP(String ssid);
+    void joinWifi(String ssid, String password);
     void autoconnectWifi(boolean isResetWifiSettings);
     void startserver();
     
