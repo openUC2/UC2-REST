@@ -157,7 +157,7 @@ void FocusMotor::act()
   stepper_Z->setMaxSpeed(mspeed3);
 
   
-  if(not isforever){
+  if(!isforever){
   if (isabs) {
     // absolute position coordinates
     stepper_A->moveTo(SIGN_A * mposition0);

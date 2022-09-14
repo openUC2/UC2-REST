@@ -34,6 +34,9 @@
    #define TFT_DC   10
 #endif
 
+/**
+ * control Adafruit_ST7735 tft display with json
+ */
 class SlmController
 {
 private:
@@ -58,4 +61,7 @@ public:
     void drawJpeg(String filename, int xpos, int ypos);
 };
 
+/**
+ * control Adafruit_ST7735 tft display with json
+ */
 static SlmController slm;
