@@ -4,35 +4,35 @@
 #include "src/motor/FocusMotor.h"
 #endif
 #ifdef IS_LED
-  #include "src/led/led_controller.h"
+#include "src/led/led_controller.h"
 #endif
 #ifdef IS_LASER
-  #include "src/laser/LaserController.h"
+#include "src/laser/LaserController.h"
 #endif
 #ifdef IS_ANALOG
-  #include "src/analog/AnalogController.h"
+#include "src/analog/AnalogController.h"
 #endif
 #include "src/state/State.h"
 #ifdef IS_SCANNER
-  #include "src/scanner/ScannerController.h"
+#include "src/scanner/ScannerController.h"
 #endif
 #ifdef IS_PID
-  #include "src/pid/PidController.h"
+#include "src/pid/PidController.h"
 #endif
 #ifdef IS_DIGITAL
-  #include "src/digital/DigitalController.h"
-  #endif
+#include "src/digital/DigitalController.h"
+#endif
 #ifdef IS_READSENSOR
-  #include "src/sensor/SensorController.h"
+#include "src/sensor/SensorController.h"
 #endif
 #if defined IS_DAC || defined IS_DAC_FAKE
-  #include "src/dac/DacController.h"
+#include "src/dac/DacController.h"
 #endif
 #ifdef IS_SLM
-  #include "src/slm/SlmController.h"
+#include "src/slm/SlmController.h"
 #endif
 #if defined IS_PS4 || defined IS_PS3
-  #include "src/gamepads/ps_3_4_controller.h"
+#include "src/gamepads/ps_3_4_controller.h"
 #endif
 #include "src/wifi/WifiController.h"
 #include "src/config/ConfigController.h"
@@ -44,10 +44,9 @@
 // For PS4 support, please install this library https://github.com/beniroquai/PS4-esp32/
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
-  DynamicJsonDocument jsonDocument(32784);
+DynamicJsonDocument jsonDocument(32784);
 
-
-PINDEF * pins;
+PINDEF *pins;
 /*State state;
 #if defined IS_PS3 || defined IS_PS4
     ps_3_4_controller ps_c;
@@ -86,19 +85,20 @@ void setup()
   // Start Serial
   Serial.begin(BAUDRATE);
   Serial.println("Start setup");
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
   // for any timing related puposes..
   state.startMillis = millis();
   pins = new PINDEF();
   state.getDefaultPinDef(pins);
   printPinDef();
-  state.setup(pins,&jsonDocument);
-  
+  state.setup(pins, &jsonDocument);
+
   state.printInfo();
-  config.setup(pins,&jsonDocument);
+  config.setup(pins, &jsonDocument);
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
-  if (config.isFirstRun()) {
+  if (config.isFirstRun())
+  {
     Serial.println("First Run, resetting config");
     config.resetPreferences();
   }
@@ -111,7 +111,6 @@ void setup()
   // connect to wifi if necessary
   bool isResetWifiSettings = false;
   wifi.autoconnectWifi(isResetWifiSettings);
-  wifi.init_Spiffs();
   wifi.setup_routing();
   wifi.startserver();
 
@@ -125,52 +124,52 @@ void setup()
 #endif
 #ifdef IS_LED
   Serial.println("IS_LED");
-  #ifdef DEBUG_LED
-    led.DEBUG = true;
-  #endif
-  led.setup(pins,&jsonDocument);
+#ifdef DEBUG_LED
+  led.DEBUG = true;
+#endif
+  led.setup(pins, &jsonDocument);
 #endif
 
 #ifdef IS_MOTOR
   Serial.println("IS_MOTOR");
-  #ifdef DEBUG_MOTOR
-    motor.DEBUG = true;
-  #endif
+#ifdef DEBUG_MOTOR
+  motor.DEBUG = true;
+#endif
   motor.setup(pins, &jsonDocument);
 #endif
 
 #if defined IS_PS4 || defined IS_PS3
-  if(config.isFirstRun())
+  if (config.isFirstRun())
   {
     state.clearBlueetoothDevice();
     ESP.restart();
   }
-  #ifdef DEBUG_GAMEPAD
-    ps_c.DEBUG = true;
-  #endif
+#ifdef DEBUG_GAMEPAD
+  ps_c.DEBUG = true;
+#endif
   ps_c.start();
 #endif
 
 #ifdef IS_LASER
-  laser.setup(pins,&jsonDocument);
+  laser.setup(pins, &jsonDocument);
 #endif
 
 #if defined IS_DAC || defined IS_DAC_FAKE
-  #if defined IS_DAC
-    Serial.println("IS_DAC");
-  #endif
-  #if defined IS_DAC_FAKE
-    Serial.println("IS_DAC_FAKE");
-  #endif
-  dac.setup(pins,&jsonDocument);
+#if defined IS_DAC
+  Serial.println("IS_DAC");
+#endif
+#if defined IS_DAC_FAKE
+  Serial.println("IS_DAC_FAKE");
+#endif
+  dac.setup(pins, &jsonDocument);
 #endif
 
 #ifdef IS_ANALOG
   Serial.println("IS_ANALOG");
-  #ifdef DEBUG_ANALOG
-    analog->DEBUG = true;
-  #endif
-  analog.setup(pins,&jsonDocument);
+#ifdef DEBUG_ANALOG
+  analog->DEBUG = true;
+#endif
+  analog.setup(pins, &jsonDocument);
 #endif
 
 #ifdef IS_DIGITAL
@@ -179,7 +178,7 @@ void setup()
 
 #ifdef IS_READSENSOR
   Serial.println("IS_SENSOR");
-  sensor.setup(pins,&jsonDocument);
+  sensor.setup(pins, &jsonDocument);
   Serial.println(readsensor_act_endpoint);
   Serial.println(readsensor_set_endpoint);
   Serial.println(readsensor_get_endpoint);
@@ -187,7 +186,7 @@ void setup()
 
 #ifdef IS_PID
   Serial.println("IS_PID");
-  pid.setup(pins,&jsonDocument);
+  pid.setup(pins, &jsonDocument);
   Serial.println(PID_act_endpoint);
   Serial.println(PID_set_endpoint);
   Serial.println(PID_get_endpoint);
@@ -197,13 +196,11 @@ void setup()
   scanner.setup(pins);
 #endif
 
-Serial.println("End setup");
+  Serial.println("End setup");
 }
 
-//char *task = strdup("");
-//char* task = "";
-
-void loop() {
+void loop()
+{
   // handle any http requests
   wifi.handelMessages();
 
@@ -211,43 +208,44 @@ void loop() {
   state.currentMillis = millis();
 
 #ifdef IS_SERIAL
-  config.loop(); //make it sense to call this everyime?
-  if (Serial.available()) {
+  config.loop(); // make it sense to call this everyime?
+  if (Serial.available())
+  {
     DeserializationError error = deserializeJson(jsonDocument, Serial);
-    //free(Serial);
-    if (error) {
+    // free(Serial);
+    if (error)
+    {
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.f_str());
       return;
     }
     Serial.flush();
-    #ifdef DEBUG_MAIN
-      serializeJsonPretty(jsonDocument, Serial);
-    #endif
-
+#ifdef DEBUG_MAIN
+    serializeJsonPretty(jsonDocument, Serial);
+#endif
 
     String task_s = jsonDocument["task"];
     char task[50];
     task_s.toCharArray(task, 256);
 
-
-    //jsonDocument.garbageCollect(); // memory leak?
-    /*if (task == "null") return;*/
-    #ifdef DEBUG_MAIN
-      Serial.print("TASK: ");
-      Serial.println(task);
-    #endif
+// jsonDocument.garbageCollect(); // memory leak?
+/*if (task == "null") return;*/
+#ifdef DEBUG_MAIN
+    Serial.print("TASK: ");
+    Serial.println(task);
+#endif
 
     // do the processing based on the incoming stream
-    if (strcmp(task, "multitable") == 0) {
+    if (strcmp(task, "multitable") == 0)
+    {
       // multiple tasks
       tableProcessor();
     }
-    else {
+    else
+    {
       // Process individual tasks
       jsonProcessor(task);
     }
-
   }
 #endif
 
@@ -271,25 +269,28 @@ void loop() {
   wifi.handelMessages();
 #endif
 
-/*
-    continous control during loop
-*/
-  if (!motor.isstop) {
+  /*
+      continous control during loop
+  */
+  if (!motor.isstop)
+  {
     motor.isactive = true;
     motor.background();
   }
 #ifdef IS_PID
-  if (pid.PID_active && (state.currentMillis - state.startMillis >= pid.PID_updaterate)) {
+  if (pid.PID_active && (state.currentMillis - state.startMillis >= pid.PID_updaterate))
+  {
     pid.background();
     state.startMillis = millis();
   }
 #endif
 }
 
-void jsonProcessor(String task) {
-/*
-    Return state
-*/
+void jsonProcessor(String task)
+{
+  /*
+      Return state
+  */
   if (task == state_act_endpoint)
     state.act();
   if (task == state_set_endpoint)
@@ -300,13 +301,16 @@ void jsonProcessor(String task) {
   Drive Motors
 */
 #ifdef IS_MOTOR
-  if (task == motor_act_endpoint) {
+  if (task == motor_act_endpoint)
+  {
     motor.act();
   }
-  if (task == motor_set_endpoint) {
+  if (task == motor_set_endpoint)
+  {
     motor.set();
   }
-  if (task == motor_get_endpoint) {
+  if (task == motor_get_endpoint)
+  {
     motor.get();
   }
 #endif
@@ -314,13 +318,16 @@ void jsonProcessor(String task) {
   Operate SLM
 */
 #ifdef IS_SLM
-  if (task == slm_act_endpoint) {
+  if (task == slm_act_endpoint)
+  {
     slm.act();
   }
-  if (task == slm_set_endpoint) {
+  if (task == slm_set_endpoint)
+  {
     slm.set();
   }
-  if (task == slm_get_endpoint) {
+  if (task == slm_get_endpoint)
+  {
     slm.get();
   }
 #endif
@@ -362,7 +369,7 @@ void jsonProcessor(String task) {
 */
 #ifdef IS_DIGITAL
   if (task == digital_act_endpoint)
-   digital.act(&jsonDocument);
+    digital.act(&jsonDocument);
   if (task == digital_set_endpoint)
     digital.set(&jsonDocument);
   if (task == digital_get_endpoint)
@@ -421,8 +428,8 @@ void jsonProcessor(String task) {
   jsonDocument.garbageCollect();
 }
 
-
-void tableProcessor() {
+void tableProcessor()
+{
 #ifdef IS_MOTOR
   motor.isactive = true;
 #endif
@@ -439,8 +446,10 @@ void tableProcessor() {
   Serial.println("N_repeats");
   Serial.println(N_repeats);
 
-  for (int irepeats = 0; irepeats < N_repeats; irepeats++) {
-    for (int itask = 0; itask < N_tasks; itask++) {
+  for (int irepeats = 0; irepeats < N_repeats; irepeats++)
+  {
+    for (int itask = 0; itask < N_tasks; itask++)
+    {
       char json_string[256];
       // Hacky, but should work
       Serial.println(itask);
@@ -452,12 +461,12 @@ void tableProcessor() {
       char task[50];
       task_s.toCharArray(task, 256);
 
-      //jsonDocument.garbageCollect(); // memory leak?
-      /*if (task == "null") return;*/
-      #ifdef DEBUG_MAIN
-        Serial.print("TASK: ");
-        Serial.println(task);
-      #endif
+// jsonDocument.garbageCollect(); // memory leak?
+/*if (task == "null") return;*/
+#ifdef DEBUG_MAIN
+      Serial.print("TASK: ");
+      Serial.println(task);
+#endif
       jsonProcessor(task);
     }
   }
@@ -468,63 +477,63 @@ void tableProcessor() {
 }
 
 void printPinDef()
-    {
-      Serial.print("Indentifier:");
-      Serial.println(pins->identifier_setup);
-      Serial.print("analogPin1:");
-      Serial.println(pins->analog_PIN_1);
-      Serial.print("analogPin2:");
-      Serial.println(pins->analog_PIN_2);
-      Serial.print("analogPin3:");
-      Serial.println(pins->analog_PIN_3);
+{
+  Serial.print("Indentifier:");
+  Serial.println(pins->identifier_setup);
+  Serial.print("analogPin1:");
+  Serial.println(pins->analog_PIN_1);
+  Serial.print("analogPin2:");
+  Serial.println(pins->analog_PIN_2);
+  Serial.print("analogPin3:");
+  Serial.println(pins->analog_PIN_3);
 
-      Serial.print("STEP_A:");
-      Serial.println(pins->STEP_A);
-      Serial.print("STEP_X:");
-      Serial.println(pins->STEP_X);
-      Serial.print("STEP_Y:");
-      Serial.println(pins->STEP_Y);
-      Serial.print("STEP_Z:");
-      Serial.println(pins->STEP_Z);
-      Serial.print("DIR_A:");
-      Serial.println(pins->DIR_A);
-      Serial.print("DIR_X:");
-      Serial.println(pins->DIR_X);
-      Serial.print("DIR_Y:");
-      Serial.println(pins->DIR_Y);
-      Serial.print("DIR_Z:");
-      Serial.println(pins->DIR_Z);
-      Serial.print("ENABLE:");
-      Serial.println(pins->ENABLE);
+  Serial.print("STEP_A:");
+  Serial.println(pins->STEP_A);
+  Serial.print("STEP_X:");
+  Serial.println(pins->STEP_X);
+  Serial.print("STEP_Y:");
+  Serial.println(pins->STEP_Y);
+  Serial.print("STEP_Z:");
+  Serial.println(pins->STEP_Z);
+  Serial.print("DIR_A:");
+  Serial.println(pins->DIR_A);
+  Serial.print("DIR_X:");
+  Serial.println(pins->DIR_X);
+  Serial.print("DIR_Y:");
+  Serial.println(pins->DIR_Y);
+  Serial.print("DIR_Z:");
+  Serial.println(pins->DIR_Z);
+  Serial.print("ENABLE:");
+  Serial.println(pins->ENABLE);
 
-      Serial.print("LASER_PIN_1:");
-      Serial.println(pins->LASER_PIN_1);
-      Serial.print("LASER_PIN_2:");
-      Serial.println(pins->LASER_PIN_2);
-      Serial.print("LASER_PIN_3:");
-      Serial.println(pins->LASER_PIN_3);
+  Serial.print("LASER_PIN_1:");
+  Serial.println(pins->LASER_PIN_1);
+  Serial.print("LASER_PIN_2:");
+  Serial.println(pins->LASER_PIN_2);
+  Serial.print("LASER_PIN_3:");
+  Serial.println(pins->LASER_PIN_3);
 
-      Serial.print("digital_PIN_1:");
-      Serial.println(pins->digital_PIN_1);
-      Serial.print("digital_PIN_2:");
-      Serial.println(pins->digital_PIN_2);
-      Serial.print("digital_PIN_3:");
-      Serial.println(pins->digital_PIN_3);
+  Serial.print("digital_PIN_1:");
+  Serial.println(pins->digital_PIN_1);
+  Serial.print("digital_PIN_2:");
+  Serial.println(pins->digital_PIN_2);
+  Serial.print("digital_PIN_3:");
+  Serial.println(pins->digital_PIN_3);
 
-      Serial.print("LED_ARRAY_PIN:");
-      Serial.println(pins->LED_ARRAY_PIN);
-      Serial.print("LED_ARRAY_NUM:");
-      Serial.println(pins->LED_ARRAY_NUM);
+  Serial.print("LED_ARRAY_PIN:");
+  Serial.println(pins->LED_ARRAY_PIN);
+  Serial.print("LED_ARRAY_NUM:");
+  Serial.println(pins->LED_ARRAY_NUM);
 
-      Serial.print("dac_fake_1:");
-      Serial.println(pins->dac_fake_1);
-      Serial.print("dac_fake_2:");
-      Serial.println(pins->dac_fake_2);
+  Serial.print("dac_fake_1:");
+  Serial.println(pins->dac_fake_1);
+  Serial.print("dac_fake_2:");
+  Serial.println(pins->dac_fake_2);
 
-      Serial.print("ADC_pin_0:");
-      Serial.println(pins->ADC_pin_0);
-      Serial.print("ADC_pin_1:");
-      Serial.println(pins->ADC_pin_1);
-      Serial.print("ADC_pin_2:");
-      Serial.println(pins->ADC_pin_2);
-    }
+  Serial.print("ADC_pin_0:");
+  Serial.println(pins->ADC_pin_0);
+  Serial.print("ADC_pin_1:");
+  Serial.println(pins->ADC_pin_1);
+  Serial.print("ADC_pin_2:");
+  Serial.println(pins->ADC_pin_2);
+}

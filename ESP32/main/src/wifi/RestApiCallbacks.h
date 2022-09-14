@@ -87,11 +87,4 @@ namespace RestApi
 #endif
 
     void getIdentity();
-    bool loadFromSPIFFS(String path);
-    void handleNotFound();
-    void handleSwaggerYaml();
-    void handleSwaggerUI();
-    void handlestandalone();
-    void handleswaggerbundle();
-    void handleswaggercss();
 }

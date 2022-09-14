@@ -19,26 +19,6 @@ void WifiController::handelMessages()
   wifi.server->handleClient();
 }
 
-void WifiController::init_Spiffs()
-{
-  if (!SPIFFS.begin()) /* Démarrage du gestionnaire de fichiers SPIFFS */
-  {
-    Serial.println(F("Erreur SPIFFS..."));
-    return;
-  }
-
-  /* Détection des fichiers présents sur l'Esp32 */
-  File root = SPIFFS.open("/");    /* Ouverture de la racine */
-  File file = root.openNextFile(); /* Ouverture du 1er fichier */
-  while (file)                     /* Boucle de test de présence des fichiers - Si plus de fichiers la boucle s'arrête*/
-  {
-    Serial.print(F("File: "));
-    Serial.println(file.name());
-    file.close();
-    file = root.openNextFile(); /* Lecture du fichier suivant */
-  }
-}
-
 void WifiController::initWifiAP(String ssid)
 {
   Serial.print(F("Network SSID (AP): "));
@@ -182,32 +162,6 @@ void WifiController::setup_routing()
   server->on("/ota", HTTP_GET, RestApi::ota);
   /*handling uploading firmware file */
   server->on("/update", HTTP_POST, RestApi::update, RestApi::upload);
-
-  // Website
-  SPIFFS.begin();
-  wifi.server->on("/openapi.yaml", RestApi::handleSwaggerYaml);
-  wifi.server->on("/index.html", RestApi::handleSwaggerUI);
-  wifi.server->on("/swagger_standalone.js", RestApi::handlestandalone);
-  wifi.server->on("/swagger-ui-bundle.js", RestApi::handleswaggerbundle);
-  wifi.server->on("/swagger-ui.css", RestApi::handleswaggercss);
-  SPIFFS.end();
-
-  /*
-  * server.on("/backbone-min.js", handlebackbone);
-  server.on("/handlebars.min.js", handlehandlebars);
-  server.on("/highlight.min.js", handlehighlight);
-  server.on("/images/throbber.gif", handlethrobber);
-  server.on("/jquery-1.8.0.min.js", handlejquery);
-  server.on("/jquery.ba-bbq.min.js", handlejquerybbq);
-  server.on("/json.min.js", handlejson);
-  server.on("/jsoneditor.min.js", handlejsoneditor);
-  server.on("/lodash.min.js", handlelodash);
-  server.on("/logo_small.png", handlelogo_small);
-  server.on("/marked.min.js", handlemarked);
-  server.on("/reset.min.css", handlereset);
-  server.on("/screen.css", handlescreen);
-  server.on("/swagger-ui.min.js", handleswaggerui);
-  */
 
   // POST
 #ifdef IS_MOTOR

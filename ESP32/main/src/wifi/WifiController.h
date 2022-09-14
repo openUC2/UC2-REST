@@ -63,7 +63,6 @@ public:
 
     void setup_routing();
     void handelMessages();
-    void init_Spiffs();
     void initWifiAP(String ssid);
     void joinWifi(String ssid, String password);
     void autoconnectWifi(boolean isResetWifiSettings);
