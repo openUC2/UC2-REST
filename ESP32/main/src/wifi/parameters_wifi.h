@@ -22,8 +22,6 @@ static boolean hostWifiAP = false; // set this variable if you want the ESP32 to
 static boolean isCaptivePortal = true; // want to autoconnect to wifi networks?
 static const char* mSSID = "BenMur";//"UC2 - F8Team"; //"IPHT - Konf"; // "Blynk";
 static const char* mPASSWORD = "MurBen3128"; //"_lachmannUC2"; //"WIa2!DcJ"; //"12345678";
-static const char* mSSIDAP = "UC2";
-static const char* hostname = "youseetoo";
 
 static const char PROGMEM otaindex[] = R"rawliteral(
 <!DOCTYPE HTML>

@@ -2,7 +2,6 @@
 #ifdef IS_WIFI
 #include "WifiController.h"
 
-
 WifiController::WifiController(/* args */)
 {
   wm = new WiFiManager();
@@ -101,7 +100,8 @@ void WifiController::autoconnectWifi(boolean isResetWifiSettings)
 
   if (!res)
   {
-    Serial.println(F("Failed to connect"));
+    Serial.println(F("Failed to connect, start access point"));
+    WiFi.mode(WIFI_AP);
     initWifiAP(mSSIDAP);
   }
   else

@@ -47,8 +47,8 @@
 class WifiController
 {
 private:
-
-    
+    const char* mSSIDAP = "UC2";
+    const char* hostname = "youseetoo";
 
     /* data */
 public:
