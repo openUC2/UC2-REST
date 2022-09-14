@@ -13,106 +13,73 @@ led_controller::led_controller()
 void led_controller::act() {
 
   // here you can do something
-  if (DEBUG) Serial.println("ledarr_act_fct");
+  if (DEBUG) Serial.println(F("ledarr_act_fct"));
   //TODO: figure out what its blocking
   //isBusy = true;
 
+  JsonObject ledNode = (*jsonDocument)[keyLed];
 
-  const char* LEDArrMode = (*jsonDocument)["LEDArrMode"]; // "array", "full", "full", "single", "off", "left", "right", "top", "bottom",
-
+  LedModes LEDArrMode = ledNode[keyLEDArrMode]; // "array", "full", "single", "off", "left", "right", "top", "bottom",
+  int NLeds = ledNode[keyNLeds];
+  JsonArray ledcolorArray = ledNode[F("led_array")];
+  if (DEBUG) Serial.println(LEDArrMode);
   // individual pattern gets adressed
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
-  if (strcmp(LEDArrMode, "array") == 0) {
-    if (DEBUG) Serial.println("pattern");
-    for (int iled = 0; iled < pins->LED_ARRAY_NUM; iled++) { //Iterate through results
-      int red = (*jsonDocument)["red"][iled];  //Implicit cast
-      int green = (*jsonDocument)["green"][iled];  //Implicit cast
-      int blue = (*jsonDocument)["blue"][iled];  //Implicit cast
-      set_led_RGB(iled, red, green, blue);
+  if (LEDArrMode == LedModes::array || LEDArrMode == LedModes::multi) {
+    for(int i = 0; i < ledcolorArray.size(); i++)
+    {
+      JsonObject cobj = ledcolorArray[i];
+      set_led_RGB(cobj[keyid], cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
     }
   }
   // only if a single led will be updated, all others stay the same
   // PYTHON: send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), timeout=1)
-  else if (strcmp(LEDArrMode, "single") == 0) {
-    if (DEBUG) Serial.println("single");
-    int indexled = (*jsonDocument)["indexled"];
-    int red = (*jsonDocument)["red"];  //Implicit cast
-    int green = (*jsonDocument)["green"];  //Implicit cast
-    int blue = (*jsonDocument)["blue"];  //Implicit cast
-    //if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
-    set_led_RGB(indexled, red, green, blue);
-  }
-  // only few leds will be updated, all others stay the same
-  // PYTHON: send_LEDMatrix_multi(self, indexled=(0), intensity=((255,255,255)), Nleds=8*8, timeout=1)
-  else if (strcmp(LEDArrMode, "multi") == 0) {
-    if (DEBUG) Serial.println("multi");
-    int Nleds = (*jsonDocument)["Nleds"];
-    for (int i = 0; i < Nleds; i++) { //Iterate through results
-      int indexled = (*jsonDocument)["indexled"][i];
-      int red = (*jsonDocument)["red"][indexled];  //Implicit cast
-      int green = (*jsonDocument)["green"][indexled];  //Implicit cast
-      int blue = (*jsonDocument)["blue"][indexled];  //Implicit cast
-      //if (DEBUG) Serial.print(red); Serial.print(green); Serial.println(blue);
-      set_led_RGB(indexled, red, green, blue);    }
+  else if (LEDArrMode == LedModes::single) {
+      JsonObject cobj = ledcolorArray[0];
+      set_led_RGB(cobj[keyid], cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
   }
   // turn on all LEDs
   // PYTHON: send_LEDMatrix_full(self, intensity = (255,255,255),timeout=1)
-  else if (strcmp(LEDArrMode, "full") == 0) {
-    if (DEBUG) Serial.println("full");
-    int red = (*jsonDocument)["red"];
-    int green = (*jsonDocument)["green"];
-    int blue = (*jsonDocument)["blue"];
-    set_all(red, green, blue);
+  else if (LEDArrMode == LedModes::full) {
+      JsonObject cobj = ledcolorArray[0];
+      set_all(cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
   }
   // turn off all LEDs
-  else if (strcmp(LEDArrMode, "left") == 0) {
-    if (DEBUG) Serial.println("left");
-    int red = (*jsonDocument)["red"];
-    int green = (*jsonDocument)["green"];
-    int blue = (*jsonDocument)["blue"];
-    int NLeds = (*jsonDocument)["NLeds"];
-    set_left(NLeds, red, green, blue);
+  else if (LEDArrMode == LedModes::left) {
+    JsonObject cobj = ledcolorArray[0];
+    set_left(NLeds, cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
   }
   // turn off all LEDs
-  else if (strcmp(LEDArrMode, "right") == 0) {
-    if (DEBUG) Serial.println("right");
-    int red = (*jsonDocument)["red"];
-    int green = (*jsonDocument)["green"];
-    int blue =(*jsonDocument)["blue"];
-    int NLeds = (*jsonDocument)["NLeds"];
-    set_right(NLeds, red, green, blue);
+  else if (LEDArrMode == LedModes::right) {
+    JsonObject cobj = ledcolorArray[0];
+    set_right(NLeds,cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
   }
   // turn off all LEDs
-  else if (strcmp(LEDArrMode, "top") == 0) {
-    if (DEBUG) Serial.println("top");
-    int red = (*jsonDocument)["red"];
-    int green = (*jsonDocument)["green"];
-    int blue = (*jsonDocument)["blue"];
-    int NLeds = (*jsonDocument)["NLeds"];
-    set_top(NLeds, red, green, blue);
+  else if (LEDArrMode == LedModes::top) {
+    JsonObject cobj = ledcolorArray[0];
+    set_top(NLeds, cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
   }
   // turn off all LEDs
-  else if (strcmp(LEDArrMode, "bottom") == 0) {
-    if (DEBUG) Serial.println("bottom");
-    int red = (*jsonDocument)["red"];
-    int green = (*jsonDocument)["green"];
-    int blue = (*jsonDocument)["blue"];
-    int NLeds = (*jsonDocument)["NLeds"];
-    set_bottom(NLeds, red, green, blue);
+  else if (LEDArrMode == LedModes::bottom) {
+    JsonObject cobj = ledcolorArray[0];
+    set_bottom(NLeds, cobj[keyRed],cobj[keyGreen],cobj[keyBlue]);
+  }
+  else if (LEDArrMode == LedModes::bottom) {
+    matrix->clear();
   }
   jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
-  (*jsonDocument)["LEDArrMode"] = LEDArrMode;
+  (*jsonDocument)[F("return")] = 1;
+  (*jsonDocument)[keyLEDArrMode] = LEDArrMode;
   isBusy = false;
 
 }
 
 void led_controller::set() {
 
-  Serial.println("Updating Hardware config of LED Array");
+  Serial.println(F("Updating Hardware config of LED Array"));
 
   jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  (*jsonDocument)[F("return")] = 1;
 }
 
 
@@ -120,7 +87,7 @@ void led_controller::set() {
 // Custom function accessible by the API
 void led_controller::get() {
   jsonDocument->clear();
-  (*jsonDocument)["LED_ARRAY_PIN"] = pins->LED_ARRAY_PIN;
+  (*jsonDocument)[F("LED_ARRAY_PIN")] = pins->LED_ARRAY_PIN;
 }
 
 
@@ -140,8 +107,8 @@ void led_controller::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   this->pins = pins;
   this->jsonDocument = jsonDocument;
   matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
-  if(DEBUG) Serial.println("Setting up LED array");
-  if(DEBUG) Serial.println("LED_ARRAY_PIN: " + String(pins->LED_ARRAY_PIN));
+  if(DEBUG) Serial.println(F("Setting up LED array"));
+  if(DEBUG){ Serial.print(F("LED_ARRAY_PIN: "));  Serial.println(pins->LED_ARRAY_PIN);}
   matrix->begin();
   matrix->setBrightness(255);
   set_all(0,0,0);

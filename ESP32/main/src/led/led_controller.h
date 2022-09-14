@@ -4,9 +4,13 @@
 #include <Adafruit_NeoMatrix.h>
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
+#include "../config/JsonKeys.h"
 
 class led_controller
 {
+
+    private:
+
     public:
     led_controller();
     ~led_controller();
@@ -55,6 +59,19 @@ class led_controller
     void set_top(int NLed, int R, int G, int B);
     void set_bottom(int NLed, int R, int G, int B);
     void set_center(int R, int G, int B);
+
+    enum LedModes
+    {
+        array, 
+        full, 
+        single,
+        off,
+        left,
+        right,
+        top,
+        bottom,
+        multi
+    };
 
     // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
     Adafruit_NeoPixel * matrix;

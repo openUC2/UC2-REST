@@ -2,7 +2,7 @@
 {
     "led":
     {
-        "LEDArrMode" : "array", // "array", "full", "full", "single", "off", "left", "right", "top", "bottom"
+        "LEDArrMode" : 0, //enum "array", "full",  "single", "off", "left", "right", "top", "bottom"
         "Nleds" : 64, // leds available
         "led_array" : [
             {
