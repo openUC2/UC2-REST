@@ -1,4 +1,4 @@
-name: Build
+name: Build wheel
 
 on: [push, pull_request]
 
@@ -16,11 +16,11 @@ jobs:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v3
 
-      - name: Install cibuildwheel
+      - name: Install UC2-Rest
         run: python -m pip install .
 
       - name: Build wheels
-        run: python -m uc2rest --output-dir uc2rest
+        run: python -m pip install --target=./ uc2-rest
         # to supply options, put them in 'env', like:
         # env:
         #   CIBW_SOME_OPTION: value
