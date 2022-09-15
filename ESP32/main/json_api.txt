@@ -247,5 +247,4 @@
         "analogid" : 1,
         "analogval" : 1
     }
-
 }

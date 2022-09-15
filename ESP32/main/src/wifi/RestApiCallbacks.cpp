@@ -288,6 +288,7 @@ namespace RestApi
 #endif
     void getEndpoints()
     {
+        Serial.println("getEndpoints");
         deserialize();
         wifi.jsonDocument->clear();
         JsonArray ar = wifi.jsonDocument->to<JsonArray>();
