@@ -52,6 +52,7 @@ public:
     void set();
     void get();
     void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+    void loop();
 
 };
 static LaserController laser;

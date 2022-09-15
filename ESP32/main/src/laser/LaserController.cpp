@@ -210,3 +210,14 @@ void LaserController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
   delay(500);
   ledcWrite(PWM_CHANNEL_LASER_3, 0);
 }
+
+void LaserController::loop()
+{
+  // attempting to despeckle by wiggeling the temperature-dependent modes of the laser?
+  if (LASER_despeckle_1 > 0 && LASER_val_1 > 0)
+    LASER_despeckle(LASER_despeckle_1, 1, LASER_despeckle_period_1);
+  if (LASER_despeckle_2 > 0 && LASER_val_2 > 0)
+    LASER_despeckle(LASER_despeckle_2, 2, LASER_despeckle_period_2);
+  if (LASER_despeckle_3 > 0 && LASER_val_3 > 0)
+    LASER_despeckle(laser.LASER_despeckle_3, 3, LASER_despeckle_period_3);
+}
