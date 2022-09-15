@@ -87,4 +87,5 @@ namespace RestApi
 #endif
 
     void getIdentity();
+    void getEndpoints();
 }

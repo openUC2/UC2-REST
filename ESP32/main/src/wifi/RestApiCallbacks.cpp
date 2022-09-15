@@ -286,5 +286,63 @@ namespace RestApi
         serialize();
     }
 #endif
+    void getEndpoints()
+    {
+        deserialize();
+        wifi.jsonDocument->clear();
+        JsonArray ar = wifi.jsonDocument->to<JsonArray>();
+        ar.add(ota_endpoint);
+        ar.add(update_endpoint);
+        ar.add(identity_endpoint);
 
+        ar.add(config_act_endpoint);
+        ar.add(config_set_endpoint);
+        ar.add(config_get_endpoint);
+
+        ar.add(state_act_endpoint);
+        ar.add(state_set_endpoint);
+        ar.add(state_get_endpoint);
+
+#ifdef IS_LASER
+        ar.add(laser_act_endpoint);
+        ar.add(laser_set_endpoint);
+        ar.add(laser_get_endpoint);
+#endif
+#ifdef IS_MOTOR
+        ar.add(motor_act_endpoint);
+        ar.add(motor_set_endpoint);
+        ar.add(motor_get_endpoint);
+#endif
+#ifdef IS_PID
+        ar.add(PID_act_endpoint);
+        ar.add(PID_set_endpoint);
+        ar.add(PID_get_endpoint);
+#endif
+#ifdef IS_ANALOG
+        ar.add(analog_act_endpoint);
+        ar.add(analog_set_endpoint);
+        ar.add(analog_get_endpoint);
+#endif
+#ifdef IS_DIGITAL
+        ar.add(digital_act_endpoint);
+        ar.add(digital_set_endpoint);
+        ar.add(digital_get_endpoint);
+#endif
+#ifdef IS_DAC
+        ar.add(dac_act_endpoint);
+        ar.add(dac_set_endpoint);
+        ar.add(dac_get_endpoint);
+#endif
+#ifdef IS_SLM
+        ar.add(slm_act_endpoint);
+        ar.add(slm_set_endpoint);
+        ar.add(slm_get_endpoint);
+#endif
+#ifdef IS_LED
+        ar.add(ledarr_act_endpoint);
+        ar.add(ledarr_set_endpoint);
+        ar.add(ledarr_get_endpoint);
+#endif
+        serialize();
+    }
 }

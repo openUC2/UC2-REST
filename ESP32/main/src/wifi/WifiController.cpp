@@ -101,20 +101,18 @@ void WifiController::startserver()
 
 void WifiController::setup_routing()
 {
-  // GET
-  //  server.on("/temperature", getTemperature);
-  // server.on("/env", getEnv);
-  // https://www.survivingwithandroid.com/esp32-rest-api-esp32-api-server/
   Serial.println("Setting up HTTP Routing");
   wifi.server->on(state_act_endpoint, HTTP_POST, RestApi::State_act);
   wifi.server->on(state_get_endpoint, HTTP_POST, RestApi::State_get);
   wifi.server->on(state_set_endpoint, HTTP_POST, RestApi::State_set);
 
-  wifi.server->on("/identity", RestApi::getIdentity);
+  wifi.server->on(identity_endpoint, RestApi::getIdentity);
 
-  server->on("/ota", HTTP_GET, RestApi::ota);
+  server->on(ota_endpoint, HTTP_GET, RestApi::ota);
   /*handling uploading firmware file */
-  server->on("/update", HTTP_POST, RestApi::update, RestApi::upload);
+  server->on(update_endpoint, HTTP_POST, RestApi::update, RestApi::upload);
+
+  server->on(features_endpoint,HTTP_GET, RestApi::getEndpoints);
 
   // POST
 #ifdef IS_MOTOR
@@ -168,8 +166,6 @@ void WifiController::setup_routing()
   wifi.server->on(config_act_endpoint, HTTP_POST, RestApi::Config_act);
   wifi.server->on(config_get_endpoint, HTTP_POST, RestApi::Config_get);
   wifi.server->on(config_set_endpoint, HTTP_POST, RestApi::Config_set);
-  // start server
-  
 }
 
 #endif
