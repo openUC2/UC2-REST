@@ -96,54 +96,7 @@ void WifiController::autoconnectWifi(boolean isResetWifiSettings)
 
 void WifiController::startserver()
 {
-  /*return index page which is stored in serverIndex */
-
-  Serial.println(F("Spinning up OTA server"));
-  server->on("/", HTTP_GET, []()
-             {
-    wifi.server->sendHeader(F("Connection"), F("close"));
-    wifi.server->send(200, "text/html", otaindex); });
-  /*handling uploading firmware file */
-  server->on(
-      "/update", HTTP_POST, []()
-      {
-    wifi.server->sendHeader("Connection", "close");
-    wifi.server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart(); },
-      []()
-      {
-        HTTPUpload &upload = wifi.server->upload();
-        if (upload.status == UPLOAD_FILE_START)
-        {
-          Serial.printf("Update: %s\n", upload.filename.c_str());
-          if (!Update.begin(UPDATE_SIZE_UNKNOWN))
-          { // start with max available size
-            Update.printError(Serial);
-          }
-        }
-        else if (upload.status == UPLOAD_FILE_WRITE)
-        {
-          /* flashing firmware to ESP*/
-          if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
-          {
-            Update.printError(Serial);
-          }
-        }
-        else if (upload.status == UPLOAD_FILE_END)
-        {
-          if (Update.end(true))
-          { // true to set the size to the current progress
-            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-          }
-          else
-          {
-            Update.printError(Serial);
-          }
-        }
-      });
-  server->begin();
-  Serial.println(F("Starting OTA server on port: '82'"));
-  Serial.println(("Visit http://%s:82", WiFi.localIP()));
+  wifi.server->begin();
 }
 
 void WifiController::setup_routing()
@@ -216,7 +169,7 @@ void WifiController::setup_routing()
   wifi.server->on(config_get_endpoint, HTTP_POST, RestApi::Config_get);
   wifi.server->on(config_set_endpoint, HTTP_POST, RestApi::Config_set);
   // start server
-  wifi.server->begin();
+  
 }
 
 #endif
