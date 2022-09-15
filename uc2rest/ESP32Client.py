@@ -9,7 +9,6 @@ Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 import json
 import time
 import numpy as np
-import requests
 import socket
 from tempfile import NamedTemporaryFile
 import serial
@@ -18,6 +17,11 @@ import serial.tools.list_ports
 from .galvo import Galvo
 from .config import config
 
+try:
+    import requests
+    is_requests = True
+except:
+    is_requests = False
 
 try:
     import cv2

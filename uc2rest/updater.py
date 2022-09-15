@@ -1,5 +1,10 @@
 import esptool
-import requests
+try:
+    import requests
+    is_requests = True
+except:
+    is_requests = False
+
 import subprocess
 import os 
 class updater(object):
@@ -72,28 +77,29 @@ class updater(object):
         print("Downloading Firmware")
         # download the firmware from github
         fileCounter = 0
-        for filename in self.filenames:
-            response = requests.get(self.firmwareDownloadPath+filename)
-            # check if folder exists and create it if not
-            if response.status_code == 200:
-                
-                try:
-                    if not os.path.exists(self.firmwarePath):
-                        os.makedirs(self.firmwarePath)
-                    # remove file if exists
-                    if os.path.exists(self.firmwarePath+filename):
-                        os.remove(self.firmwarePath+filename)    
-                    open(self.firmwarePath+filename, "wb").write(response.content) 
-                    print("Succesfully downloaded file: "+self.firmwarePath+filename)
-                    fileCounter+=1
-                except Exception as e:
-                    print(e)
-                    print("Firmware download failed"+filename)
+        if is_requests:
+            for filename in self.filenames:
+                response = requests.get(self.firmwareDownloadPath+filename)
+                # check if folder exists and create it if not
+                if response.status_code == 200:
+                    
+                    try:
+                        if not os.path.exists(self.firmwarePath):
+                            os.makedirs(self.firmwarePath)
+                        # remove file if exists
+                        if os.path.exists(self.firmwarePath+filename):
+                            os.remove(self.firmwarePath+filename)    
+                        open(self.firmwarePath+filename, "wb").write(response.content) 
+                        print("Succesfully downloaded file: "+self.firmwarePath+filename)
+                        fileCounter+=1
+                    except Exception as e:
+                        print(e)
+                        print("Firmware download failed"+filename)
 
-        if fileCounter == len(self.filenames):
-            return True
-        else:
-            return False
+            if fileCounter == len(self.filenames):
+                return True
+            else:
+                return False
                     
     def removeFirmware(self):
         for filename in self.filenames:
