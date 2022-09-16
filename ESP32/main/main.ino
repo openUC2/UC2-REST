@@ -115,8 +115,14 @@ void setup()
   // check if setup went through after new config - avoid endless boot-loop
   preferences.begin("setup", false);
   if (preferences.getBool("setupComplete", true) == false) {
+    
+    // make sure next time no bootloop is created
+    preferences.putBool("setupComplete", false);
+    preferences.end();
+    
     Serial.println("Setup not done, resetting config?"); //TODO not working!
     resetConfigurations();
+
   }
   else {
     Serial.println("Setup done, continue.");

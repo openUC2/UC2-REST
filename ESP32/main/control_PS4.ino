@@ -50,15 +50,15 @@ void activate_PS4() {
     delay(1000); //Debounce?
 
   }
-  // LASER
+  // LASER 3
   if (PS4.event.button_down.triangle) {
     if (DEBUG) Serial.print("Turning on LAser 10000");
-    ledcWrite(PWM_CHANNEL_LASER_1, 10000);
+    ledcWrite(PWM_CHANNEL_LASER_3, 10000);
     delay(100); //Debounce?
   }
   if (PS4.event.button_down.square) {
     if (DEBUG) Serial.print("Turning off LAser ");
-    ledcWrite(PWM_CHANNEL_LASER_1, 0);
+    ledcWrite(PWM_CHANNEL_LASER_3, 0);
     delay(100); //Debounce?
     }
 
@@ -169,26 +169,26 @@ void control_PS4() {
       */
 
 
-#ifdef IS_ANALOG
       /*
          Keypad left
       */
+      #ifdef NO
       if ( PS4.data.button.left) {
         // fine lens -
         analog_val_1 -= 1;
         delay(100);
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
       }
       if ( PS4.data.button.right) {
         // fine lens +
         analog_val_1 += 1;
         delay(100);
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
       }
       if ( PS4.data.button.start) {
         // reset
         analog_val_1 = 0;
-        ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+        ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
       }
 
       int offset_val_shoulder = 5;
@@ -196,7 +196,7 @@ void control_PS4() {
         // analog_val_1++ coarse
         if ((analog_val_1 + 1000 < pwm_max)) {
           analog_val_1 += 1000;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
         }
         if (DEBUG) Serial.println(analog_val_1);
         delay(100);
@@ -206,7 +206,7 @@ void control_PS4() {
         // analog_val_1-- coarse
         if ((analog_val_1 - 1000 > 0)) {
           analog_val_1 -= 1000;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
         }
         if (DEBUG) Serial.println(analog_val_1);
         delay(100);
@@ -217,7 +217,7 @@ void control_PS4() {
         // analog_val_1 + semi coarse
         if ((analog_val_1 + 100 < pwm_max)) {
           analog_val_1 += 100;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
           delay(100);
         }
       }
@@ -225,12 +225,11 @@ void control_PS4() {
         // analog_val_1 - semi coarse
         if ((analog_val_1 - 100 > 0)) {
           analog_val_1 -= 100;
-          ledcWrite(PWM_CHANNEL_analog_1, analog_val_1);
+          ledcWrite(PWM_CHANNEL_LASER_1, analog_val_1);
           delay(50);
         }
       }
-
-#endif
+  #endif
 
       // run all motors simultaneously
       stepper_X.setSpeed(mspeed1);
