@@ -76,11 +76,7 @@ void setup()
   wifi.jsonDocument->clear();
 
   // connect to wifi if necessary
-  wifi.setup(pins->mSSID,pins->mPWD);
-  //bool isResetWifiSettings = false;
-  //wifi.autoconnectWifi(isResetWifiSettings);
-  //wifi.setup_routing();
-  //wifi.startserver();
+  wifi.setup(pins->mSSID,pins->mPWD,pins->mAP);
 
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);

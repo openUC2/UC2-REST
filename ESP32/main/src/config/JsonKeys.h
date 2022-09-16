@@ -31,6 +31,7 @@ static const PROGMEM char* keyIdentifier = "identifier";
 
 static const PROGMEM char* keyWifiSSID = "ssid";
 static const PROGMEM char* keyWifiPW = "PW";
+static const PROGMEM char* keyWifiAP = "AP";
 
 static const PROGMEM char* keyLed = "led";
 static const PROGMEM char* keyLEDArrMode = "LEDArrMode";

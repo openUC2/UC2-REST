@@ -3,13 +3,10 @@
 #pragma once
 
 #include <WiFi.h>
-#include "esp_http_server.h"
 #include <HardwareSerial.h>
 #include "parameters_wifi.h"
 #include "../state/State.h"
-
 #include "RestApiCallbacks.h"
-#include <IPAddress.h>
 
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"

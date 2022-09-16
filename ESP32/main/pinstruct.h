@@ -41,5 +41,6 @@ struct PINDEF{
 
     //Wifi
     const char *mSSID;
-    const char *mPWD; 
+    const char *mPWD;
+    bool mAP;
 };

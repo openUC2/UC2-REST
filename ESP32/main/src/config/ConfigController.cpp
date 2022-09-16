@@ -108,6 +108,7 @@ bool ConfigController::setPreferences() {
   preferences.putString(keyIdentifier,  (const char*)(*jsonDocument)[keyIdentifier]);
   preferences.putString(keyWifiSSID, (const char*)(*jsonDocument)[keyWifiSSID]);
   preferences.putString(keyWifiPW, (const char*)(*jsonDocument)[keyWifiPW]);
+  preferences.putBool(keyWifiAP, (const char*)(*jsonDocument)[keyWifiAP]);
 
   preferences.end();
   return true;
@@ -172,6 +173,7 @@ bool ConfigController::getPreferences() {
   pins->identifier_setup = preferences.getString(keyIdentifier, pins->identifier_setup).c_str();
   pins->mSSID = preferences.getString(keyWifiSSID, pins->mSSID).c_str();
   pins->mPWD = preferences.getString(keyWifiPW, pins->mPWD).c_str();
+  pins->mAP = preferences.getBool(keyWifiPW, pins->mAP);
   Serial.println(pins->identifier_setup);
   Serial.println(pins->mSSID);
   Serial.println(pins->mPWD);
