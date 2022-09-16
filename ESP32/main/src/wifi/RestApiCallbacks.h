@@ -1,6 +1,9 @@
 #pragma once
 #include "../../config.h"
-#include "WifiController.h"
+#include <ArduinoJson.h>
+#include <WebServer.h>
+#include "Endpoints.h"
+#include "parameters_wifi.h"
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
 #endif 
@@ -34,11 +37,16 @@
 #endif
 namespace RestApi
 {
+    void handleNotFound();
     void ota();
     void update();
     void upload();
     void deserialize();
     void serialize();
+    void setup(WebServer *ser, DynamicJsonDocument * jDoc);
+    void getIdentity();
+    void getEndpoints();
+    void scanWifi();
 #ifdef IS_MOTOR
     void FocusMotor_act();
     void FocusMotor_get();
@@ -86,6 +94,5 @@ namespace RestApi
     void Slm_set();
 #endif
 
-    void getIdentity();
-    void getEndpoints();
+    
 }

@@ -2,41 +2,95 @@
 
 namespace RestApi
 {
+    WebServer * server;
+    DynamicJsonDocument * jsonDocument;
+    char output[1000];
+
+    void setup(WebServer *ser, DynamicJsonDocument * jDoc)
+    {
+        server = ser;
+        jsonDocument = jDoc;
+
+        Serial.print("setup server nullptr:");
+        Serial.println(server == nullptr);
+
+        Serial.print("setup jsondoc nullptr:");
+        Serial.println(jsonDocument == nullptr);
+    }
 
     void getIdentity()
     {
         // if(DEBUG) Serial.println("Get Identity");
-        wifi.server->send(200, "application/json", state.identifier_name);
+        server->send(200, "application/json", state.identifier_name);
+    }
+
+    void handleNotFound() {
+        Serial.print("handleNotFound server nullptr:");
+        Serial.println(server == nullptr);
+        String message = "File Not Found\n\n";
+        message += "URI: ";
+        message += (*server).uri();
+        message += "\nMethod: ";
+        message += ((*server).method() == HTTP_GET) ? "GET" : "POST";
+        message += "\nArguments: ";
+        message += (*server).args();
+        message += "\n";
+        for (uint8_t i = 0; i < (*server).args(); i++) {
+            message += " " + (*server).argName(i) + ": " + (*server).arg(i) + "\n";
+        }
+        (*server).send(404, "text/plain", message);
     }
 
     void deserialize()
     {
-        String body = (*wifi.server).arg("plain");
-        deserializeJson((*wifi.jsonDocument), body);
+        if (server == nullptr)
+            Serial.println("deserialize server is null");
+        if(jsonDocument == nullptr)
+            Serial.println("deserialize jsonDocument is null");
+        String body = server->arg("plain");
+        deserializeJson((*jsonDocument), body);
     }
 
     void serialize()
     {
-        serializeJson((*wifi.jsonDocument), wifi.output);
-        (*wifi.server).send(200, "application/json", wifi.output);
+        if(jsonDocument == nullptr)
+            Serial.println("serialize jsonDocument is null");
+        Serial.print("serialize");
+        serializeJson((*jsonDocument), output);
+        server->send(200, "application/json", output);
     }
 
     void ota()
     {
-        wifi.server->sendHeader("Connection", "close");
-        wifi.server->send(200, "text/html", otaindex);
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/html", otaindex);
     }
 
     void update()
     {
-        wifi.server->sendHeader("Connection", "close");
-        wifi.server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+        server->sendHeader("Connection", "close");
+        server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
         ESP.restart();
+    }
+
+    void scanWifi()
+    {
+        int networkcount = WiFi.scanNetworks();
+        if (networkcount == -1) {
+            while (true);
+        }
+        jsonDocument->clear();
+        JsonArray ar = jsonDocument->createNestedArray();
+        for (int i = 0; i < networkcount; i++) {
+            ar.add(WiFi.SSID(i));
+        }
+        serializeJson((*jsonDocument), output);
+        server->send(200, "application/json", output);
     }
 
     void upload()
     {
-        HTTPUpload &upload = wifi.server->upload();
+        HTTPUpload &upload = server->upload();
         if (upload.status == UPLOAD_FILE_START)
         {
             Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -204,21 +258,21 @@ namespace RestApi
     void Digital_act()
     {
         deserialize();
-        digital.act(wifi.jsonDocument);
+        digital.act(jsonDocument);
         serialize();
     }
 
     void Digital_get()
     {
         deserialize();
-        digital.get(wifi.jsonDocument);
+        digital.get(jsonDocument);
         serialize();
     }
 
     void Digital_set()
     {
         deserialize();
-        digital.set(wifi.jsonDocument);
+        digital.set(jsonDocument);
         serialize();
     }
 #endif
@@ -288,10 +342,14 @@ namespace RestApi
 #endif
     void getEndpoints()
     {
-        Serial.println("getEndpoints");
+        if (jsonDocument == nullptr)
+        {
+            Serial.println("getEndpoints failed jsondoc null");
+        }
+        
         deserialize();
-        wifi.jsonDocument->clear();
-        JsonArray ar = wifi.jsonDocument->to<JsonArray>();
+        jsonDocument->clear();
+        JsonArray ar = jsonDocument->createNestedArray();
         ar.add(ota_endpoint);
         ar.add(update_endpoint);
         ar.add(identity_endpoint);
@@ -344,6 +402,7 @@ namespace RestApi
         ar.add(ledarr_set_endpoint);
         ar.add(ledarr_get_endpoint);
 #endif
+        
         serialize();
     }
 }

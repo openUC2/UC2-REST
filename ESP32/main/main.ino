@@ -42,7 +42,6 @@
 
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
-DynamicJsonDocument jsonDocument(32784);
 
 PINDEF *pins;
 
@@ -58,10 +57,11 @@ void setup()
   pins = new PINDEF();
   state.getDefaultPinDef(pins);
   printPinDef();
-  state.setup(pins, &jsonDocument);
+  wifi.createJsonDoc();
+  state.setup(pins, wifi.jsonDocument);
 
   state.printInfo();
-  config.setup(pins, &jsonDocument);
+  config.setup(pins, wifi.jsonDocument);
   // if we boot for the first time => reset the preferences! // TODO: Smart? If not, we may have the problem that a wrong pin will block bootup
   if (config.isFirstRun())
   {
@@ -73,13 +73,14 @@ void setup()
   printPinDef();
   
   // reset jsonDocument
-  jsonDocument.clear();
+  wifi.jsonDocument->clear();
 
   // connect to wifi if necessary
-  bool isResetWifiSettings = false;
-  wifi.autoconnectWifi(isResetWifiSettings);
-  wifi.setup_routing();
-  wifi.startserver();
+  wifi.setup(pins->mSSID,pins->mPWD);
+  //bool isResetWifiSettings = false;
+  //wifi.autoconnectWifi(isResetWifiSettings);
+  //wifi.setup_routing();
+  //wifi.startserver();
 
   Serial.println(state_act_endpoint);
   Serial.println(state_get_endpoint);
@@ -87,14 +88,14 @@ void setup()
 
 #ifdef IS_SLM
   Serial.println("IS_SLM");
-  slm.setup(&jsonDocument);
+  slm.setup(jsonDocument);
 #endif
 #ifdef IS_LED
   Serial.println("IS_LED");
 #ifdef DEBUG_LED
   led.DEBUG = true;
 #endif
-  led.setup(pins, &jsonDocument);
+  led.setup(pins, wifi.jsonDocument);
 #endif
 
 #ifdef IS_MOTOR
@@ -102,7 +103,7 @@ void setup()
 #ifdef DEBUG_MOTOR
   motor.DEBUG = true;
 #endif
-  motor.setup(pins, &jsonDocument);
+  motor.setup(pins, wifi.jsonDocument);
 #endif
 
 #if defined IS_PS4 || defined IS_PS3
@@ -118,7 +119,7 @@ void setup()
 #endif
 
 #ifdef IS_LASER
-  laser.setup(pins, &jsonDocument);
+  laser.setup(pins, wifi.jsonDocument);
 #endif
 
 #if defined IS_DAC || defined IS_DAC_FAKE
@@ -128,7 +129,7 @@ void setup()
 #if defined IS_DAC_FAKE
   Serial.println("IS_DAC_FAKE");
 #endif
-  dac.setup(pins, &jsonDocument);
+  dac.setup(pins, wifi.jsonDocument);
 #endif
 
 #ifdef IS_ANALOG
@@ -136,7 +137,7 @@ void setup()
 #ifdef DEBUG_ANALOG
   analog->DEBUG = true;
 #endif
-  analog.setup(pins, &jsonDocument);
+  analog.setup(pins, wifi.jsonDocument);
 #endif
 
 #ifdef IS_DIGITAL
@@ -145,7 +146,7 @@ void setup()
 
 #ifdef IS_READSENSOR
   Serial.println("IS_SENSOR");
-  sensor.setup(pins, &jsonDocument);
+  sensor.setup(pins, wifi.jsonDocument);
   Serial.println(readsensor_act_endpoint);
   Serial.println(readsensor_set_endpoint);
   Serial.println(readsensor_get_endpoint);
@@ -153,7 +154,7 @@ void setup()
 
 #ifdef IS_PID
   Serial.println("IS_PID");
-  pid.setup(pins, &jsonDocument);
+  pid.setup(pins, wifi.jsonDocument);
   Serial.println(PID_act_endpoint);
   Serial.println(PID_set_endpoint);
   Serial.println(PID_get_endpoint);
@@ -174,7 +175,7 @@ void loop()
   // for any timing-related purposes
   state.currentMillis = millis();
 #ifdef IS_SERIAL
-  serial.loop(&jsonDocument);
+  serial.loop(wifi.jsonDocument);
 #endif
   /*
      continous control during loop

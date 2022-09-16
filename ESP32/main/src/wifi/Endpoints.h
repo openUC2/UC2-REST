@@ -66,4 +66,5 @@ static const PROGMEM String features_endpoint = "/features_get";
 static const PROGMEM String identity_endpoint = "/identity";
 static const PROGMEM String ota_endpoint = "/ota";
 static const PROGMEM String update_endpoint = "/update";
+static const PROGMEM String scanwifi_endpoint = "/wifi/scan";
 

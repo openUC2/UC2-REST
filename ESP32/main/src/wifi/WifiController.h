@@ -3,14 +3,13 @@
 #pragma once
 
 #include <WiFi.h>
-#include <WebServer.h>
-#include <SPIFFS.h>
+#include "esp_http_server.h"
 #include <HardwareSerial.h>
-#include <ArduinoJson.h>
 #include "parameters_wifi.h"
 #include "../state/State.h"
-#include "Endpoints.h"
+
 #include "RestApiCallbacks.h"
+#include <IPAddress.h>
 
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
@@ -49,26 +48,19 @@ class WifiController
 private:
     const String mSSIDAP = F("UC2");
     const String hostname = F("youseetoo");
-
+    void createAp(String ssid, String password);
     /* data */
 public:
     WifiController(/* args */);
     ~WifiController();
     
-    DynamicJsonDocument * jsonDocument;
-    WiFiManager * wm;
-    WebServer * server;
-    
-    char output[1000];
-
+    WebServer * server = nullptr;
     void setup_routing();
     void handelMessages();
-    void initWifiAP(String ssid);
-    void joinWifi(String ssid, String password);
-    void autoconnectWifi(boolean isResetWifiSettings);
-    void startserver();
+    void createJsonDoc();
+    DynamicJsonDocument * jsonDocument = nullptr;
     
-
+    void setup(String ssid, String password,bool ap);
 
 };
 static WifiController wifi;
