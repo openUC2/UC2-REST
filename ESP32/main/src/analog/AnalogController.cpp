@@ -4,10 +4,9 @@
 AnalogController::AnalogController(){};
 AnalogController::~AnalogController(){};
 
-void AnalogController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument)
+void AnalogController::setup(PINDEF * pins)
 {
     this->pins = pins;
-    this->jsonDocument = jsonDocument;
     Serial.println("Setting Up analog");
     /* setup the PWM ports and reset them to 0*/
     ledcSetup(PWM_CHANNEL_analog_1, pwm_frequency, pwm_resolution);
@@ -24,8 +23,8 @@ void AnalogController::act() {
   // here you can do something
   Serial.println("analog_act_fct");
 
-  int analogid = (*jsonDocument)["analogid"];
-  int analogval = (*jsonDocument)["analogval"];
+  int analogid = (*WifiController::getJDoc())["analogid"];
+  int analogval = (*WifiController::getJDoc())["analogval"];
 
   if (DEBUG) {
     Serial.print("analogid "); Serial.println(analogid);
@@ -44,21 +43,21 @@ void AnalogController::act() {
     analog_val_3 = analogval;
     ledcWrite(PWM_CHANNEL_analog_3, analogval);
   }
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 }
 
 void AnalogController::set() {
   // here you can set parameters
   
   int analogid = 0;
-  if (jsonDocument->containsKey("analogid")) {
-    analogid = (*jsonDocument)["analogid"];
+  if (WifiController::getJDoc()->containsKey("analogid")) {
+    analogid = (*WifiController::getJDoc())["analogid"];
   }
 
   int analogpin = 0;
-  if (jsonDocument->containsKey("analogpin")) {
-    int analogpin = (*jsonDocument)["analogpin"];
+  if (WifiController::getJDoc()->containsKey("analogpin")) {
+    int analogpin = (*WifiController::getJDoc())["analogpin"];
   }
 
   if (DEBUG) Serial.print("analogid "); Serial.println(analogid);
@@ -99,15 +98,15 @@ void AnalogController::set() {
 
 }
 
-jsonDocument->clear();
-(*jsonDocument)["return"] = 1;
+WifiController::getJDoc()->clear();
+(*WifiController::getJDoc())["return"] = 1;
 
 }
 
 // Custom function accessible by the API
 void AnalogController::get() {
   // GET SOME PARAMETERS HERE
-  int analogid = (*jsonDocument)["analogid"];
+  int analogid = (*WifiController::getJDoc())["analogid"];
   int analogpin = 0;
   int analogval = 0;
 
@@ -129,8 +128,8 @@ void AnalogController::get() {
     analogval = analog_val_3;
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["analogid"] = analogid;
-  (*jsonDocument)["analogval"] = analogval;
-  (*jsonDocument)["analogpin"] = analogpin;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["analogid"] = analogid;
+  (*WifiController::getJDoc())["analogval"] = analogval;
+  (*WifiController::getJDoc())["analogpin"] = analogpin;
 }

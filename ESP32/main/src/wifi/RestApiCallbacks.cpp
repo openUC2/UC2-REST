@@ -2,98 +2,114 @@
 
 namespace RestApi
 {
-    WebServer * server;
-    DynamicJsonDocument * jsonDocument;
     char output[1000];
+    const char*TAG="RestApi";
 
-    void setup(WebServer *ser, DynamicJsonDocument * jDoc)
+    void resetNvFLash()
     {
-        server = ser;
-        jsonDocument = jDoc;
-
-        Serial.print("setup server nullptr:");
-        Serial.println(server == nullptr);
-
-        Serial.print("setup jsondoc nullptr:");
-        Serial.println(jsonDocument == nullptr);
+        int erase = nvs_flash_erase(); // erase the NVS partition and...
+        int init = nvs_flash_init(); // initialize the NVS partition.
+        ESP_LOGI(TAG, "erased:%s init:%s", erase, init);
+        delay(500);
     }
 
     void getIdentity()
     {
         // if(DEBUG) Serial.println("Get Identity");
-        server->send(200, "application/json", state.identifier_name);
+        WifiController::getServer()->send(200, "application/json", state.identifier_name);
     }
 
     void handleNotFound() {
-        Serial.print("handleNotFound server nullptr:");
-        Serial.println(server == nullptr);
         String message = "File Not Found\n\n";
         message += "URI: ";
-        message += (*server).uri();
+        message += (*WifiController::getServer()).uri();
         message += "\nMethod: ";
-        message += ((*server).method() == HTTP_GET) ? "GET" : "POST";
+        message += ((*WifiController::getServer()).method() == HTTP_GET) ? "GET" : "POST";
         message += "\nArguments: ";
-        message += (*server).args();
+        message += (*WifiController::getServer()).args();
         message += "\n";
-        for (uint8_t i = 0; i < (*server).args(); i++) {
-            message += " " + (*server).argName(i) + ": " + (*server).arg(i) + "\n";
+        for (uint8_t i = 0; i < (*WifiController::getServer()).args(); i++) {
+            message += " " + (*WifiController::getServer()).argName(i) + ": " + (*WifiController::getServer()).arg(i) + "\n";
         }
-        (*server).send(404, "text/plain", message);
+        (*WifiController::getServer()).send(404, "text/plain", message);
     }
 
     void deserialize()
     {
-        if (server == nullptr)
-            Serial.println("deserialize server is null");
-        if(jsonDocument == nullptr)
-            Serial.println("deserialize jsonDocument is null");
-        String body = server->arg("plain");
-        deserializeJson((*jsonDocument), body);
+        int argcount = WifiController::getServer()->args();
+        for (int i = 0; i < argcount; i++)
+        {
+            ESP_LOGI(TAG, "%s", WifiController::getServer()->arg(i));
+        }
+        String body = WifiController::getServer()->arg("plain");
+        if (body != "")
+        {
+            deserializeJson(*WifiController::getJDoc(), body);
+        }
     }
 
     void serialize()
     {
-        if(jsonDocument == nullptr)
-            Serial.println("serialize jsonDocument is null");
-        Serial.print("serialize");
-        serializeJson((*jsonDocument), output);
-        server->send(200, "application/json", output);
+        serializeJsonPretty((*WifiController::getJDoc()),Serial);
+        serializeJson((*WifiController::getJDoc()), output);
+        WifiController::getServer()->send(200, "application/json", output);
     }
 
     void ota()
     {
-        server->sendHeader("Connection", "close");
-        server->send(200, "text/html", otaindex);
+        WifiController::getServer()->sendHeader("Connection", "close");
+        WifiController::getServer()->send(200, "text/html", otaindex);
     }
 
     void update()
     {
-        server->sendHeader("Connection", "close");
-        server->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+        WifiController::getServer()->sendHeader("Connection", "close");
+        WifiController::getServer()->send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
         ESP.restart();
     }
 
     void scanWifi()
     {
+        ESP_LOGI(TAG,"scanWifi");
         int networkcount = WiFi.scanNetworks();
         if (networkcount == -1) {
             while (true);
         }
-        jsonDocument->clear();
-        JsonArray ar = jsonDocument->createNestedArray();
+        WifiController::getJDoc()->clear();
         for (int i = 0; i < networkcount; i++) {
-            ar.add(WiFi.SSID(i));
+            (*WifiController::getJDoc()).add(WiFi.SSID(i));
         }
-        serializeJson((*jsonDocument), output);
-        server->send(200, "application/json", output);
+        serializeJson((*WifiController::getJDoc()), output);
+        WifiController::getServer()->send(200, "application/json", output);
+    }
+
+    void connectToWifi()
+    {
+        deserialize();
+        ESP_LOGI(TAG,"connectToWifi");
+        bool ap = (*WifiController::getJDoc())[keyWifiAP];
+        String ssid = (*WifiController::getJDoc())[keyWifiSSID];
+        String pw = (*WifiController::getJDoc())[keyWifiPW];
+        ESP_LOGI(TAG,"ssid json: %s wifi:%s", ssid, WifiController::getSsid());
+        ESP_LOGI(TAG,"pw json: %s wifi:%s", pw, WifiController::getPw());
+        ESP_LOGI(TAG,"ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
+        WifiController::setWifiConfig(ssid,pw,ap);
+        ESP_LOGI(TAG,"ssid json: %s wifi:%s", ssid, WifiController::getSsid());
+        ESP_LOGI(TAG,"pw json: %s wifi:%s", pw, WifiController::getPw());
+        ESP_LOGI(TAG,"ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
+        Config::setWifiConfig(ssid,pw,ap,false);
+        serializeJson((*WifiController::getJDoc()), output);
+        WifiController::getServer()->send(200, "application/json", output);
+        WifiController::setup();
+        //ESP.restart();
     }
 
     void upload()
     {
-        HTTPUpload &upload = server->upload();
+        HTTPUpload &upload = WifiController::getServer()->upload();
         if (upload.status == UPLOAD_FILE_START)
         {
-            Serial.printf("Update: %s\n", upload.filename.c_str());
+            ESP_LOGI(TAG,"Update: %s\n", upload.filename.c_str());
             if (!Update.begin(UPDATE_SIZE_UNKNOWN))
             { // start with max available size
                 Update.printError(Serial);
@@ -111,7 +127,7 @@ namespace RestApi
         {
             if (Update.end(true))
             { // true to set the size to the current progress
-                Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+                ESP_LOGI(TAG,"Update Success: %u\nRebooting...\n", upload.totalSize);
             }
             else
             {
@@ -258,21 +274,21 @@ namespace RestApi
     void Digital_act()
     {
         deserialize();
-        digital.act(jsonDocument);
+        digital.act(WifiController::getJDoc());
         serialize();
     }
 
     void Digital_get()
     {
         deserialize();
-        digital.get(jsonDocument);
+        digital.get(WifiController::getJDoc());
         serialize();
     }
 
     void Digital_set()
     {
         deserialize();
-        digital.set(jsonDocument);
+        digital.set(WifiController::getJDoc());
         serialize();
     }
 #endif
@@ -301,21 +317,21 @@ namespace RestApi
     void Config_act()
     {
         deserialize();
-        config.act();
+        Config::act();
         serialize();
     }
 
     void Config_get()
     {
         deserialize();
-        config.get();
+        Config::get();
         serialize();
     }
 
     void Config_set()
     {
         deserialize();
-        config.set();
+        Config::set();
         serialize();
     }
 #ifdef IS_SLM
@@ -342,65 +358,63 @@ namespace RestApi
 #endif
     void getEndpoints()
     {
-        if (jsonDocument == nullptr)
-        {
-            Serial.println("getEndpoints failed jsondoc null");
-        }
         
         deserialize();
-        jsonDocument->clear();
-        JsonArray ar = jsonDocument->createNestedArray();
-        ar.add(ota_endpoint);
-        ar.add(update_endpoint);
-        ar.add(identity_endpoint);
+        WifiController::getJDoc()->clear();
+        (*WifiController::getJDoc()).add(ota_endpoint);
+        (*WifiController::getJDoc()).add(update_endpoint);
+        (*WifiController::getJDoc()).add(identity_endpoint);
 
-        ar.add(config_act_endpoint);
-        ar.add(config_set_endpoint);
-        ar.add(config_get_endpoint);
+        (*WifiController::getJDoc()).add(config_act_endpoint);
+        (*WifiController::getJDoc()).add(config_set_endpoint);
+        (*WifiController::getJDoc()).add(config_get_endpoint);
 
-        ar.add(state_act_endpoint);
-        ar.add(state_set_endpoint);
-        ar.add(state_get_endpoint);
+        (*WifiController::getJDoc()).add(state_act_endpoint);
+        (*WifiController::getJDoc()).add(state_set_endpoint);
+        (*WifiController::getJDoc()).add(state_get_endpoint);
+
+        (*WifiController::getJDoc()).add(scanwifi_endpoint);
+        (*WifiController::getJDoc()).add(connectwifi_endpoint);
 
 #ifdef IS_LASER
-        ar.add(laser_act_endpoint);
-        ar.add(laser_set_endpoint);
-        ar.add(laser_get_endpoint);
+        (*WifiController::getJDoc()).add(laser_act_endpoint);
+        (*WifiController::getJDoc()).add(laser_set_endpoint);
+        (*WifiController::getJDoc()).add(laser_get_endpoint);
 #endif
 #ifdef IS_MOTOR
-        ar.add(motor_act_endpoint);
-        ar.add(motor_set_endpoint);
-        ar.add(motor_get_endpoint);
+        (*WifiController::getJDoc()).add(motor_act_endpoint);
+        (*WifiController::getJDoc()).add(motor_set_endpoint);
+        (*WifiController::getJDoc()).add(motor_get_endpoint);
 #endif
 #ifdef IS_PID
-        ar.add(PID_act_endpoint);
-        ar.add(PID_set_endpoint);
-        ar.add(PID_get_endpoint);
+        (*WifiController::getJDoc()).add(PID_act_endpoint);
+        (*WifiController::getJDoc()).add(PID_set_endpoint);
+        (*WifiController::getJDoc()).add(PID_get_endpoint);
 #endif
 #ifdef IS_ANALOG
-        ar.add(analog_act_endpoint);
-        ar.add(analog_set_endpoint);
-        ar.add(analog_get_endpoint);
+        (*WifiController::getJDoc()).add(analog_act_endpoint);
+        (*WifiController::getJDoc()).add(analog_set_endpoint);
+        (*WifiController::getJDoc()).add(analog_get_endpoint);
 #endif
 #ifdef IS_DIGITAL
-        ar.add(digital_act_endpoint);
-        ar.add(digital_set_endpoint);
-        ar.add(digital_get_endpoint);
+        (*WifiController::getJDoc()).add(digital_act_endpoint);
+        (*WifiController::getJDoc()).add(digital_set_endpoint);
+        (*WifiController::getJDoc()).add(digital_get_endpoint);
 #endif
 #ifdef IS_DAC
-        ar.add(dac_act_endpoint);
-        ar.add(dac_set_endpoint);
-        ar.add(dac_get_endpoint);
+        (*WifiController::getJDoc()).add(dac_act_endpoint);
+        (*WifiController::getJDoc()).add(dac_set_endpoint);
+        (*WifiController::getJDoc()).add(dac_get_endpoint);
 #endif
 #ifdef IS_SLM
-        ar.add(slm_act_endpoint);
-        ar.add(slm_set_endpoint);
-        ar.add(slm_get_endpoint);
+        (*WifiController::getJDoc()).add(slm_act_endpoint);
+        (*WifiController::getJDoc()).add(slm_set_endpoint);
+        (*WifiController::getJDoc()).add(slm_get_endpoint);
 #endif
 #ifdef IS_LED
-        ar.add(ledarr_act_endpoint);
-        ar.add(ledarr_set_endpoint);
-        ar.add(ledarr_get_endpoint);
+        (*WifiController::getJDoc()).add(ledarr_act_endpoint);
+        (*WifiController::getJDoc()).add(ledarr_set_endpoint);
+        (*WifiController::getJDoc()).add(ledarr_get_endpoint);
 #endif
         
         serialize();

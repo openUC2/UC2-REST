@@ -4,33 +4,27 @@
 #include <ArduinoJson.h>
 #include "JsonKeys.h"
 #include "../../pinstruct.h"
+#include "../wifi/WifiController.h"
+#include "esp_log.h"
 
-class ConfigController
+namespace Config
 {
-private:
-    Preferences preferences;
-    DynamicJsonDocument * jsonDocument;
-    void setJsonToPref(const char * key);
-    void setPrefToPins(const char * key, int* val);
-    void setPinsToJson(const char * key, int val);
-    /* data */
-public:
-    ConfigController(/* args */);
-    ~ConfigController();
-
-    PINDEF * pins;
     
-
-    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+    void setJsonToPref(const char * key);
+    void setPinsToJson(const char * key, int val);
+    void setup(PINDEF * pins);
     bool resetPreferences();
     bool setPreferences();
     bool getPreferences();
+    void initempty();
+    void savePreferencesFromPins();
+    void applyPreferencesToPins();
     void loop();
     void act();
     void set();
     void get();
     bool isFirstRun();
     void checkSetupCompleted();
-};
-
-static ConfigController config;
+    void setWifiConfig(String ssid,String pw, bool ap,bool prefopen);
+    void increaseSetupCounter();
+}

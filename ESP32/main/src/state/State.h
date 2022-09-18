@@ -1,4 +1,5 @@
 #pragma once
+#include "../../config.h"
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"
@@ -7,6 +8,10 @@
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 #include "../config/JsonKeys.h"
+#include "esp_log.h"
+#if defined IS_PS3 || defined IS_PS4
+#include "../gamepads/ps_3_4_controller.h"
+#endif
 
 static int8_t sgn(int val) {
   if (val < 0) return -1;
@@ -26,7 +31,7 @@ class State
     uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
     char bda_str[18];
     #define REMOVE_BONDED_DEVICES 1   // <- Set to 0 to view all bonded devices addresses, set to 1 to remove
-
+    const char* TAG = "State";
     public:
     State();
     ~State();

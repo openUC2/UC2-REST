@@ -11,10 +11,9 @@ DacController::~DacController()
 
 };
 
-void DacController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument)
+void DacController::setup(PINDEF * pins)
 {
   this->pins = pins;
-  this->jsonDocument = jsonDocument;
   #ifdef IS_DAC
     dacm = new DAC_Module();
     dacm->Setup(DAC_CHANNEL_1, 1000, 50, 0, 0, 2);
@@ -44,37 +43,37 @@ void DacController::act() {
   // apply default parameters
   // DAC Channel
   dac_channel = DAC_CHANNEL_1;
-  if (jsonDocument->containsKey("dac_channel")) {
-    dac_channel = (*jsonDocument)["dac_channel"];
+  if (WifiController::getJDoc()->containsKey("dac_channel")) {
+    dac_channel = (*WifiController::getJDoc())["dac_channel"];
   }
 
   // DAC Frequency
   frequency = 1000;
-  if (jsonDocument->containsKey("frequency")) {
-    frequency = (*jsonDocument)["frequency"];
+  if (WifiController::getJDoc()->containsKey("frequency")) {
+    frequency = (*WifiController::getJDoc())["frequency"];
   }
 
   // DAC offset
   int offset = 0;
-  if (jsonDocument->containsKey("offset")) {
-    int offset = (*jsonDocument)["offset"];
+  if (WifiController::getJDoc()->containsKey("offset")) {
+    int offset = (*WifiController::getJDoc())["offset"];
   }
 
   // DAC amplitude
   int amplitude = 0;
-  if (jsonDocument->containsKey("amplitude")) {
-    int amplitude = (*jsonDocument)["amplitude"];
+  if (WifiController::getJDoc()->containsKey("amplitude")) {
+    int amplitude = (*WifiController::getJDoc())["amplitude"];
   }
 
   // DAC clk_div
   int clk_div = 0;
-  if (jsonDocument->containsKey("clk_div")) {
-    int clk_div = (*jsonDocument)["clk_div"];
+  if (WifiController::getJDoc()->containsKey("clk_div")) {
+    int clk_div = (*WifiController::getJDoc())["clk_div"];
   }
 
-  if ((*jsonDocument)["dac_channel"] == 1)
+  if ((*WifiController::getJDoc())["dac_channel"] == 1)
     dac_channel = DAC_CHANNEL_1;
-  else if ((*jsonDocument)["dac_channel"] == 2)
+  else if ((*WifiController::getJDoc())["dac_channel"] == 2)
     dac_channel = DAC_CHANNEL_2;
 
   //Scale output of a DAC channel using two bit pattern:
@@ -109,27 +108,27 @@ void DacController::act() {
   }
   #endif
 
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 }
 
 void DacController::set() {
   // here you can set parameters
-  int value = (*jsonDocument)["value"];
+  int value = (*WifiController::getJDoc())["value"];
 
   if (DEBUG) {
     Serial.print("value "); Serial.println(value);
   }
 
-  int dac_set = (*jsonDocument)["dac_set"];
+  int dac_set = (*WifiController::getJDoc())["dac_set"];
 
   if (dac_set != NULL) {
     if (DEBUG) Serial.print("dac_set "); Serial.println(dac_set);
     // SET SOMETHING
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 
 }
 
@@ -142,8 +141,8 @@ void DacController::get() {
   // GET SOME PARAMETERS HERE
   int dac_variable = 12343;
 
-  jsonDocument->clear();
-  (*jsonDocument)["dac_variable"] = dac_variable;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["dac_variable"] = dac_variable;
 }
 
 

@@ -7,6 +7,7 @@
 #include "driver/ledc.h"
 #include "driver/periph_ctrl.h"
 #include "soc/ledc_reg.h"
+#include "../wifi/WifiController.h"
 
 class AnalogController
 {
@@ -14,7 +15,6 @@ class AnalogController
     AnalogController();
     ~AnalogController();
     PINDEF * pins;
-    DynamicJsonDocument * jsonDocument;
     bool DEBUG = false;
     #define J1772_LEDC_TIMER       LEDC_TIMER_0
     #define J1772_LEDC_CHANNEL     LEDC_CHANNEL_0
@@ -44,6 +44,6 @@ class AnalogController
     void set();
     void get();
 
-    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);    
+    void setup(PINDEF * pins);    
 };
 static AnalogController analog;

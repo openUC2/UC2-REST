@@ -1,90 +1,143 @@
 #include "../../config.h"
 #ifdef IS_WIFI
 #include "WifiController.h"
-
-WifiController::WifiController(/* args */)
+namespace WifiController
 {
-}
-WifiController::~WifiController()
+
+    const String mSSIDAP = F("UC2");
+    const String hostname = F("youseetoo");
+    const char * TAG = "Wifi";
+    String mSSID = "Uc2";
+    String mPWD = "";
+    bool mAP = true;
+    WebServer * server = nullptr;
+    DynamicJsonDocument * jsonDocument;
+
+DynamicJsonDocument * getJDoc()
 {
+  return jsonDocument;
 }
 
-void WifiController::handelMessages()
+String getSsid()
+{
+  return mSSID;
+}
+String getPw()
+{
+  return mPWD;
+}
+bool getAp()
+{
+  return mAP;
+}
+
+WebServer * getServer()
+{
+  return server;
+}
+
+void handelMessages()
 {
   if(server != nullptr)
     server->handleClient();
 }
 
-void WifiController::createJsonDoc()
+void createJsonDoc()
 {
   jsonDocument = new DynamicJsonDocument(32784);
-  Serial.print("WifiController::createJsonDoc is null:");
-  Serial.print(jsonDocument == nullptr);
+  ESP_LOGI(TAG,"WifiController::createJsonDoc is null:%s", boolToChar(jsonDocument == nullptr));
 }
 
-void WifiController::createAp(String ssid, String password)
+void setWifiConfig(String SSID,String PWD,bool ap)
 {
-  Serial.println("Ssid empty start softap");
+    ESP_LOGI(TAG,"mssid:%s pw:%s ap:%s", mSSID,mPWD,boolToChar(ap));
+    mSSID = SSID;
+    mPWD = PWD;
+    mAP = ap;
+}
+
+void createAp(String ssid, String password)
+{
     WiFi.disconnect();
-    if (ssid == "")
+    ESP_LOGI(TAG,"Ssid %s pw %s",ssid,password);
+    
+    if (ssid.isEmpty())
     {
+      ESP_LOGI(TAG,"Ssid empty, start Uc2 open softap");
       WiFi.softAP(mSSIDAP.c_str());
     }
-    else if (password == "")
+    else if (password.isEmpty())
     {
+      ESP_LOGI(TAG,"Ssid start %s open softap",ssid);
       WiFi.softAP(ssid.c_str());
     }
     else
     {
+      ESP_LOGI(TAG,"Ssid start %s close softap",ssid);
       WiFi.softAP(ssid.c_str(), password.c_str());
     }
-    Serial.print(F("Connected. IP: "));
-    Serial.println(WiFi.softAPIP());
+    ESP_LOGI(TAG,"Connected. IP: %s",WiFi.softAPIP().toString());
+    //server = new WebServer(WiFi.softAPIP(),80);
 }
 
-void WifiController::setup(String ssid, String password,bool ap)
+void setup()
 {
-  if (ssid == "" || ap)
+  if (mSSID != nullptr)
+    ESP_LOGI(TAG,"mssid:%s pw:%s ap:%s", mSSID,mPWD,boolToChar(mAP));
+  if (server !=  nullptr)
   {
-    createAp(ssid,password);
+     server->close();
+     server = nullptr;
+  }
+  if(mSSID == "")
+  {
+    mAP = true;
+    createAp(mSSIDAP,mPWD);
+  }
+  else if(mAP){
+    createAp(mSSID,mPWD);
   }
   else
   {
-    Serial.print("Connect to:");Serial.print(ssid);
-    WiFi.softAPdisconnect(true);
-    WiFi.begin(ssid.c_str(), password.c_str());
+    WiFi.softAPdisconnect();
+    ESP_LOGI(TAG,"Connect to:%s",mSSID);
+    WiFi.begin(mSSID.c_str(), mPWD.c_str());
 
     int nConnectTrials = 0;
-    while (WiFi.status() != WL_CONNECTED <= nConnectTrials)
+    while (WiFi.status() != WL_CONNECTED && nConnectTrials <=10)
     {
-      Serial.print(".");
-      delay(500);
+      ESP_LOGI(TAG,"Wait for connection");
+      delay(200);
       nConnectTrials += 1;
       // we can even make the ESP32 to sleep
     }
     if (nConnectTrials == 10)
     {
-      Serial.print("failed to connect,Start softap");
-      createAp(mSSIDAP,"password");
+      ESP_LOGI(TAG,"failed to connect,Start softap");
+      mAP = true;
+      mSSID = mSSIDAP;
+      mPWD = "";
+      createAp(mSSIDAP,"");
     }
     else
     {
-      Serial.print(F("Connected. IP: "));
-      Serial.println(WiFi.localIP());
+      ESP_LOGI(TAG,"Connected. IP: %s",WiFi.localIP());
+      //server = new WebServer(WiFi.localIP(),80);
     }
   }
   server = new WebServer(80);
-  RestApi::setup(server,jsonDocument);
+  if (jsonDocument == nullptr)
+  {
+    createJsonDoc();
+  }
   setup_routing();
   server->begin();
-  Serial.print("HTTP Running server jsondoc nullptr:");
-  Serial.print(server == nullptr);
-  Serial.print(jsonDocument == nullptr);
+  ESP_LOGI(TAG,"HTTP Running server  nullptr: %s jsondoc  nullptr: %s", boolToChar(server == nullptr),boolToChar(jsonDocument == nullptr));
 }
 
-void WifiController::setup_routing()
+void setup_routing()
 {
-  Serial.println("Setting up HTTP Routing");
+  ESP_LOGI(TAG,"Setting up HTTP Routing");
   server->onNotFound(RestApi::handleNotFound);
   server->on(state_act_endpoint, HTTP_POST, RestApi::State_act);
   server->on(state_get_endpoint, HTTP_POST, RestApi::State_get);
@@ -98,6 +151,8 @@ void WifiController::setup_routing()
 
   server->on("/",HTTP_GET, RestApi::getEndpoints);
   server->on(scanwifi_endpoint, HTTP_GET, RestApi::scanWifi);
+  server->on(connectwifi_endpoint, HTTP_POST, RestApi::connectToWifi);
+  server->on(reset_nv_flash_endpoint, HTTP_GET, RestApi::resetNvFLash);
 
   // POST
 #ifdef IS_MOTOR
@@ -138,7 +193,7 @@ void WifiController::setup_routing()
 
 #ifdef IS_LED
   server->on(ledarr_act_endpoint, HTTP_POST, RestApi::Led_act);
-  server->on(ledarr_get_endpoint, HTTP_POST, RestApi::Led_get);
+  server->on(ledarr_get_endpoint, HTTP_GET, RestApi::Led_get);
   server->on(ledarr_set_endpoint, HTTP_POST, RestApi::Led_set);
 #endif
 
@@ -152,7 +207,7 @@ void WifiController::setup_routing()
   server->on(config_get_endpoint, HTTP_POST, RestApi::Config_get);
   server->on(config_set_endpoint, HTTP_POST, RestApi::Config_set);
 
-  Serial.println("Setting up HTTP Routing END");
+  ESP_LOGI(TAG,"Setting up HTTP Routing END");
 }
-
+}
 #endif

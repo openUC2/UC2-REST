@@ -8,10 +8,10 @@ void SensorController::act() {
 
   // here you can do something
   if (DEBUG) Serial.println("readsensor_act_fct");
-  int readsensorID = (int)(*jsonDocument)["readsensorID"];
+  int readsensorID = (int)(*WifiController::getJDoc())["readsensorID"];
   int mN_sensor_avg = N_sensor_avg;
-  if (jsonDocument->containsKey("N_sensor_avg"))
-    mN_sensor_avg = (int)(*jsonDocument)["N_sensor_avg"];
+  if (WifiController::getJDoc()->containsKey("N_sensor_avg"))
+    mN_sensor_avg = (int)(*WifiController::getJDoc())["N_sensor_avg"];
   int sensorpin = 0 ;
 
   if (DEBUG) Serial.print("readsensorID "); Serial.println(readsensorID);
@@ -33,10 +33,10 @@ void SensorController::act() {
   }
   float returnValue = (float)sensorValueAvg / (float)N_sensor_avg;
 
-  jsonDocument->clear();
-  (*jsonDocument)["sensorValue"] = returnValue;
-  (*jsonDocument)["sensorpin"] = sensorpin;
-  (*jsonDocument)["N_sensor_avg"] = N_sensor_avg;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["sensorValue"] = returnValue;
+  (*WifiController::getJDoc())["sensorpin"] = sensorpin;
+  (*WifiController::getJDoc())["N_sensor_avg"] = N_sensor_avg;
 
 }
 
@@ -44,10 +44,10 @@ void SensorController::act() {
 
 void SensorController::get() {
   if (DEBUG) Serial.println("readsensor_set_fct");
-  int readsensorID = (int)(*jsonDocument)["readsensorID"];
-  int readsensorPIN = (int)(*jsonDocument)["readsensorPIN"];
-  if (jsonDocument->containsKey("N_sensor_avg"))
-    N_sensor_avg = (int)(*jsonDocument)["N_sensor_avg"];
+  int readsensorID = (int)(*WifiController::getJDoc())["readsensorID"];
+  int readsensorPIN = (int)(*WifiController::getJDoc())["readsensorPIN"];
+  if (WifiController::getJDoc()->containsKey("N_sensor_avg"))
+    N_sensor_avg = (int)(*WifiController::getJDoc())["N_sensor_avg"];
 
   switch (readsensorID) {
     case 0:
@@ -62,9 +62,9 @@ void SensorController::get() {
   }
 
 
-  jsonDocument->clear();
-  (*jsonDocument)["readsensorPIN"] = readsensorPIN;
-  (*jsonDocument)["readsensorID"] = readsensorID;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["readsensorPIN"] = readsensorPIN;
+  (*WifiController::getJDoc())["readsensorID"] = readsensorID;
 }
 
 
@@ -72,7 +72,7 @@ void SensorController::get() {
 // Custom function accessible by the API
 void SensorController::set() {
 if (DEBUG) Serial.println("readsensor_get_fct");
-  int readsensorID = (int)(*jsonDocument)["readsensorID"];
+  int readsensorID = (int)(*WifiController::getJDoc())["readsensorID"];
   int readsensorPIN = 0;
   switch (readsensorID) {
     case 0:
@@ -86,16 +86,15 @@ if (DEBUG) Serial.println("readsensor_get_fct");
       break;
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["N_sensor_avg"] = N_sensor_avg;
-  (*jsonDocument)["readsensorPIN"] = readsensorPIN;
-  (*jsonDocument)["readsensorID"] = readsensorID;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["N_sensor_avg"] = N_sensor_avg;
+  (*WifiController::getJDoc())["readsensorPIN"] = readsensorPIN;
+  (*WifiController::getJDoc())["readsensorID"] = readsensorID;
 }
 
 
-void SensorController::setup(PINDEF *pins,DynamicJsonDocument * jsonDocument){
+void SensorController::setup(PINDEF *pins){
   this->pins = pins;
-  this->jsonDocument = jsonDocument;
   if(DEBUG) Serial.println("Setting up sensors...");
 }
 

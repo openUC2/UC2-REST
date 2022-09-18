@@ -7,6 +7,7 @@
 #include "parameters_wifi.h"
 #include "../state/State.h"
 #include "RestApiCallbacks.h"
+#include "esp_log.h"
 
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
@@ -40,25 +41,27 @@
     #include "../dac/DacController.h"
 #endif
 
-class WifiController
+namespace WifiController
 {
-private:
-    const String mSSIDAP = F("UC2");
-    const String hostname = F("youseetoo");
-    void createAp(String ssid, String password);
-    /* data */
-public:
-    WifiController(/* args */);
-    ~WifiController();
     
-    WebServer * server = nullptr;
+    void createAp(String ssid, String password);
+    
+    /* data */
+
+    
+    
     void setup_routing();
     void handelMessages();
     void createJsonDoc();
-    DynamicJsonDocument * jsonDocument = nullptr;
     
-    void setup(String ssid, String password,bool ap);
-
-};
-static WifiController wifi;
+    //Wifi
+    
+    void setWifiConfig(String mSSID,String mPWD,bool ap);
+    String getSsid();
+    String getPw();
+    bool getAp();
+    void setup();
+    DynamicJsonDocument * getJDoc();
+    WebServer * getServer();
+}
 #endif

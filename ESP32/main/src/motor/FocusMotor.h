@@ -6,6 +6,7 @@
 #if defined IS_PS3 || defined IS_PS4
     #include "../gamepads/ps_3_4_controller.h"
 #endif
+#include "../wifi/WifiController.h"
 
 class FocusMotor
 {
@@ -78,14 +79,13 @@ class FocusMotor
         AccelStepper * stepper_Y;
         AccelStepper * stepper_Z;
 
-        DynamicJsonDocument * jsonDocument;
 
         void act();
         void setEnableMotor(bool enable);
         bool getEnableMotor();
         void set();
         void get();
-        void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+        void setup(PINDEF * pins);
         bool background();
 
 };

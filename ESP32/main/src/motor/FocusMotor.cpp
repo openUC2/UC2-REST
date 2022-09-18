@@ -14,94 +14,94 @@ void FocusMotor::act()
 
 
   // assign default values to thhe variables
-  if (jsonDocument->containsKey("speed0")) {
-    mspeed0 = (*jsonDocument)["speed0"];
+  if (WifiController::getJDoc()->containsKey("speed0")) {
+    mspeed0 = (*WifiController::getJDoc())["speed0"];
   }
-  else if (jsonDocument->containsKey("speed")) {
-    mspeed0 = (*jsonDocument)["speed"];
+  else if (WifiController::getJDoc()->containsKey("speed")) {
+    mspeed0 = (*WifiController::getJDoc())["speed"];
   }
-  if (jsonDocument->containsKey("speed1")) {
-    mspeed1 = (*jsonDocument)["speed1"];
+  if (WifiController::getJDoc()->containsKey("speed1")) {
+    mspeed1 = (*WifiController::getJDoc())["speed1"];
   }
-  else if (jsonDocument->containsKey("speed")) {
-    mspeed1 = (*jsonDocument)["speed"];
+  else if (WifiController::getJDoc()->containsKey("speed")) {
+    mspeed1 = (*WifiController::getJDoc())["speed"];
   }
-  if (jsonDocument->containsKey("speed2")) {
-    mspeed2 = (*jsonDocument)["speed2"];
+  if (WifiController::getJDoc()->containsKey("speed2")) {
+    mspeed2 = (*WifiController::getJDoc())["speed2"];
   }
-  else if (jsonDocument->containsKey("speed")) {
-    mspeed2 = (*jsonDocument)["speed"];
+  else if (WifiController::getJDoc()->containsKey("speed")) {
+    mspeed2 = (*WifiController::getJDoc())["speed"];
   }
-  if (jsonDocument->containsKey("speed3")) {
-    mspeed3 = (*jsonDocument)["speed3"];
+  if (WifiController::getJDoc()->containsKey("speed3")) {
+    mspeed3 = (*WifiController::getJDoc())["speed3"];
   }
-  else if (jsonDocument->containsKey("speed")) {
-    mspeed3 = (*jsonDocument)["speed"];
+  else if (WifiController::getJDoc()->containsKey("speed")) {
+    mspeed3 = (*WifiController::getJDoc())["speed"];
   }
 
-  if (jsonDocument->containsKey("pos0")) {
-    mposition0 = (*jsonDocument)["pos0"];
+  if (WifiController::getJDoc()->containsKey("pos0")) {
+    mposition0 = (*WifiController::getJDoc())["pos0"];
   }
   else {
     mposition0 = 0;
   }
-  if (jsonDocument->containsKey("pos1")) {
-    mposition1 = (*jsonDocument)["pos1"];
+  if (WifiController::getJDoc()->containsKey("pos1")) {
+    mposition1 = (*WifiController::getJDoc())["pos1"];
   }
   else {
     mposition1 = 0;
   }
 
-  if (jsonDocument->containsKey("pos2")) {
-    mposition2 = (*jsonDocument)["pos2"];
+  if (WifiController::getJDoc()->containsKey("pos2")) {
+    mposition2 = (*WifiController::getJDoc())["pos2"];
   }
   else {
     mposition2 = 0;
   }
 
-  if (jsonDocument->containsKey("pos3")) {
-    mposition3 = (*jsonDocument)["pos3"];
+  if (WifiController::getJDoc()->containsKey("pos3")) {
+    mposition3 = (*WifiController::getJDoc())["pos3"];
   }
   else {
     mposition3 = 0;
   }
 
-  if (jsonDocument->containsKey("isabs")) {
-    isabs = (*jsonDocument)["isabs"];
+  if (WifiController::getJDoc()->containsKey("isabs")) {
+    isabs = (*WifiController::getJDoc())["isabs"];
   }
   else {
     isabs = 0;
   }
 
-  if (jsonDocument->containsKey("isstop")) {
-    isstop = (*jsonDocument)["isstop"];
+  if (WifiController::getJDoc()->containsKey("isstop")) {
+    isstop = (*WifiController::getJDoc())["isstop"];
   }
   else {
     isstop = 0;
   }
 
-  if (jsonDocument->containsKey("isaccel")) {
-    isaccel = (*jsonDocument)["isaccel"];
+  if (WifiController::getJDoc()->containsKey("isaccel")) {
+    isaccel = (*WifiController::getJDoc())["isaccel"];
   }
   else {
     isaccel = 1;
   }
 
-  if (jsonDocument->containsKey("isen")) {
-    isen = (*jsonDocument)["isen"];
+  if (WifiController::getJDoc()->containsKey("isen")) {
+    isen = (*WifiController::getJDoc())["isen"];
   }
   else {
     isen = 0;
   }
 
-  if (jsonDocument->containsKey("isforever")) {
-    isforever = (*jsonDocument)["isforever"];
+  if (WifiController::getJDoc()->containsKey("isforever")) {
+    isforever = (*WifiController::getJDoc())["isforever"];
   }
   else {
     isforever = 0;
   }
 
-  jsonDocument->clear();
+  WifiController::getJDoc()->clear();
 
   if (DEBUG) {
     Serial.print("speed0 "); Serial.println(mspeed0);
@@ -133,10 +133,10 @@ void FocusMotor::act()
     POSITION_MOTOR_Y = stepper_Y->currentPosition();
     POSITION_MOTOR_Z = stepper_Z->currentPosition();
 
-    (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
-    (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
-    (*jsonDocument)["POSY"] = POSITION_MOTOR_Y;
-    (*jsonDocument)["POSZ"] = POSITION_MOTOR_Z;
+    (*WifiController::getJDoc())["POSA"] = POSITION_MOTOR_A;
+    (*WifiController::getJDoc())["POSX"] = POSITION_MOTOR_X;
+    (*WifiController::getJDoc())["POSY"] = POSITION_MOTOR_Y;
+    (*WifiController::getJDoc())["POSZ"] = POSITION_MOTOR_Z;
     return;
   }
 
@@ -181,10 +181,10 @@ void FocusMotor::act()
   POSITION_MOTOR_Y = stepper_Y->currentPosition();
   POSITION_MOTOR_Z = stepper_Z->currentPosition();
 
-  (*jsonDocument)["POSA"] = POSITION_MOTOR_A;
-  (*jsonDocument)["POSX"] = POSITION_MOTOR_X;
-  (*jsonDocument)["POSY"] = POSITION_MOTOR_Y;
-  (*jsonDocument)["POSZ"] = POSITION_MOTOR_Z;
+  (*WifiController::getJDoc())["POSA"] = POSITION_MOTOR_A;
+  (*WifiController::getJDoc())["POSX"] = POSITION_MOTOR_X;
+  (*WifiController::getJDoc())["POSY"] = POSITION_MOTOR_Y;
+  (*WifiController::getJDoc())["POSZ"] = POSITION_MOTOR_Z;
 }
 
 void FocusMotor::setEnableMotor(bool enable)
@@ -203,43 +203,43 @@ void FocusMotor::set()
 {
     // default value handling
   int axis = -1;
-  if (jsonDocument->containsKey("axis")) {
-    axis = (*jsonDocument)["axis"];
+  if (WifiController::getJDoc()->containsKey("axis")) {
+    axis = (*WifiController::getJDoc())["axis"];
   }
 
   int currentposition = NULL;
-  if (jsonDocument->containsKey("currentposition")) {
-    currentposition = (*jsonDocument)["currentposition"];
+  if (WifiController::getJDoc()->containsKey("currentposition")) {
+    currentposition = (*WifiController::getJDoc())["currentposition"];
   }
 
   int maxspeed = NULL;
-  if (jsonDocument->containsKey("maxspeed")) {
-    maxspeed = (*jsonDocument)["maxspeed"];
+  if (WifiController::getJDoc()->containsKey("maxspeed")) {
+    maxspeed = (*WifiController::getJDoc())["maxspeed"];
   }
 
   int accel = NULL;
-  if (jsonDocument->containsKey("accel")) {
-    accel = (*jsonDocument)["accel"];
+  if (WifiController::getJDoc()->containsKey("accel")) {
+    accel = (*WifiController::getJDoc())["accel"];
   }
 
   int pinstep = -1;
-  if (jsonDocument->containsKey("pinstep")) {
-    pinstep = (*jsonDocument)["pinstep"];
+  if (WifiController::getJDoc()->containsKey("pinstep")) {
+    pinstep = (*WifiController::getJDoc())["pinstep"];
   }
 
   int pindir = -1;
-  if (jsonDocument->containsKey("pindir")) {
-    pindir = (*jsonDocument)["pindir"];
+  if (WifiController::getJDoc()->containsKey("pindir")) {
+    pindir = (*WifiController::getJDoc())["pindir"];
   }
 
   int isen = -1;
-  if (jsonDocument->containsKey("isen")) {
-    isen = (*jsonDocument)["isen"];
+  if (WifiController::getJDoc()->containsKey("isen")) {
+    isen = (*WifiController::getJDoc())["isen"];
   }
 
   int sign = NULL;
-  if (jsonDocument->containsKey("sign")) {
-    sign = (*jsonDocument)["sign"];
+  if (WifiController::getJDoc()->containsKey("sign")) {
+    sign = (*WifiController::getJDoc())["sign"];
   }
 
   // DEBUG printing
@@ -351,13 +351,13 @@ void FocusMotor::set()
   else if (isen != 0 and not isen) {
     digitalWrite(pins->ENABLE, 1);
   }
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 }
 
 void FocusMotor::get()
 {
-    int axis = (*jsonDocument)["axis"];
+    int axis = (*WifiController::getJDoc())["axis"];
   if (DEBUG) Serial.println("motor_get_fct");
   if (DEBUG) Serial.println(axis);
 
@@ -403,19 +403,18 @@ void FocusMotor::get()
       break;
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["position"] = mposition;
-  (*jsonDocument)["speed"] = mspeed;
-  (*jsonDocument)["maxspeed"] = mmaxspeed;
-  (*jsonDocument)["pinstep"] = pinstep;
-  (*jsonDocument)["pindir"] = pindir;
-  (*jsonDocument)["sign"] = sign;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["position"] = mposition;
+  (*WifiController::getJDoc())["speed"] = mspeed;
+  (*WifiController::getJDoc())["maxspeed"] = mmaxspeed;
+  (*WifiController::getJDoc())["pinstep"] = pinstep;
+  (*WifiController::getJDoc())["pindir"] = pindir;
+  (*WifiController::getJDoc())["sign"] = sign;
 }
 
-void FocusMotor::setup(PINDEF * pins, DynamicJsonDocument * jsonDocumen)
+void FocusMotor::setup(PINDEF * pins)
 {
     this->pins = pins;
-    this->jsonDocument = jsonDocumen;
     stepper_A = new AccelStepper(AccelStepper::DRIVER, pins->STEP_A, pins->DIR_A);
     stepper_X = new AccelStepper(AccelStepper::DRIVER, pins->STEP_X, pins->DIR_X);
     stepper_Y = new AccelStepper(AccelStepper::DRIVER, pins->STEP_Y, pins->DIR_Y);

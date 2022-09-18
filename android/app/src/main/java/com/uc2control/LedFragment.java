@@ -83,34 +83,28 @@ public class LedFragment extends Fragment {
             public void onClick(View view) {
                 features.setText("");
                 RestClient restClient = new RestClient("http://" +url.getText().toString());
-
-
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                String[] fetures;
-                                fetures = restClient.getFeatures();
-                                features.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        features.setText(Arrays.toString(fetures));
-                                    }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String[] fetures;
+                            fetures = restClient.getFeatures();
+                            features.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    features.setText(Arrays.toString(fetures));
+                                }
+                        });
+                        } catch (Exception e) {
+                            features.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    features.setText(e.getMessage());
+                                }
                             });
-                            } catch (Exception e) {
-                                features.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        features.setText(e.getMessage());
-                                    }
-                                });
-                            }
                         }
-                    }).start();
-
-
-
-
+                    }
+                }).start();
             }
         });
     }

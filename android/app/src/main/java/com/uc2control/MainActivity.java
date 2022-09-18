@@ -12,7 +12,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace( R.id.mainlayout,LedFragment.newInstance(null,null));
+        transaction.replace( R.id.mainlayout,WifiSettingsFragment.newInstance(null,null));
         transaction.commit();
     }
 }

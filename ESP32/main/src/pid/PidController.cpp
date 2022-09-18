@@ -12,18 +12,18 @@ void PidController::act() {
   if (DEBUG) Serial.println("PID_act_fct");
 
 
-  if (jsonDocument->containsKey("PIDactive"))
-    PID_active = (int)(*jsonDocument)["PIDactive"];
-  if (jsonDocument->containsKey("Kp"))
-    PID_Kp = (*jsonDocument)["Kp"];
-  if ((*jsonDocument).containsKey("Ki"))
-    PID_Ki = (*jsonDocument)["Ki"];
-  if (jsonDocument->containsKey("Kd"))
-    PID_Kd = (*jsonDocument)["Kd"];
-  if (jsonDocument->containsKey("target"))
-    PID_target = (*jsonDocument)["target"];
-  if (jsonDocument->containsKey("PID_updaterate"))
-    PID_updaterate = (int)(*jsonDocument)["PID_updaterate"];
+  if (WifiController::getJDoc()->containsKey("PIDactive"))
+    PID_active = (int)(*WifiController::getJDoc())["PIDactive"];
+  if (WifiController::getJDoc()->containsKey("Kp"))
+    PID_Kp = (*WifiController::getJDoc())["Kp"];
+  if ((*WifiController::getJDoc()).containsKey("Ki"))
+    PID_Ki = (*WifiController::getJDoc())["Ki"];
+  if (WifiController::getJDoc()->containsKey("Kd"))
+    PID_Kd = (*WifiController::getJDoc())["Kd"];
+  if (WifiController::getJDoc()->containsKey("target"))
+    PID_target = (*WifiController::getJDoc())["target"];
+  if (WifiController::getJDoc()->containsKey("PID_updaterate"))
+    PID_updaterate = (int)(*WifiController::getJDoc())["PID_updaterate"];
 
   if (!PID_active) {
     // force shutdown the motor
@@ -37,13 +37,13 @@ void PidController::act() {
 
 
 
-  jsonDocument->clear();
-  (*jsonDocument)["Kp"] = PID_Kp;
-  (*jsonDocument)["Ki"] = PID_Ki;
-  (*jsonDocument)["Kd"] = PID_Kd;
-  (*jsonDocument)["PID_updaterate"] = PID_updaterate;
-  (*jsonDocument)["PID"] = PID_active;
-  (*jsonDocument)["target"] = PID_target;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["Kp"] = PID_Kp;
+  (*WifiController::getJDoc())["Ki"] = PID_Ki;
+  (*WifiController::getJDoc())["Kd"] = PID_Kd;
+  (*WifiController::getJDoc())["PID_updaterate"] = PID_updaterate;
+  (*WifiController::getJDoc())["PID"] = PID_active;
+  (*WifiController::getJDoc())["target"] = PID_target;
 
 }
 
@@ -100,10 +100,10 @@ long PidController::returnControlValue(float controlTarget, float sensorValue, f
 
 void PidController::set() {
   if (DEBUG) Serial.println("PID_set_fct");
-  int PIDID = (int)(*jsonDocument)["PIDID"];
-  int PIDPIN = (int)(*jsonDocument)["PIDPIN"];
-  if (jsonDocument->containsKey("N_sensor_avg"))
-    N_sensor_avg = (int)(*jsonDocument)["N_sensor_avg"];
+  int PIDID = (int)(*WifiController::getJDoc())["PIDID"];
+  int PIDPIN = (int)(*WifiController::getJDoc())["PIDPIN"];
+  if (WifiController::getJDoc()->containsKey("N_sensor_avg"))
+    N_sensor_avg = (int)(*WifiController::getJDoc())["N_sensor_avg"];
 
   switch (PIDID) {
     case 0:
@@ -118,9 +118,9 @@ void PidController::set() {
   }
 
 
-  jsonDocument->clear();
-  (*jsonDocument)["PIDPIN"] = PIDPIN;
-  (*jsonDocument)["PIDID"] = PIDID;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["PIDPIN"] = PIDPIN;
+  (*WifiController::getJDoc())["PIDID"] = PIDID;
 }
 
 
@@ -128,7 +128,7 @@ void PidController::set() {
 // Custom function accessible by the API
 void PidController::get() {
   if (DEBUG) Serial.println("PID_get_fct");
-  int PIDID = (int)(*jsonDocument)["PIDID"];
+  int PIDID = (int)(*WifiController::getJDoc())["PIDID"];
   int PIDPIN = 0;
   switch (PIDID) {
     case 0:
@@ -142,16 +142,15 @@ void PidController::get() {
       break;
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["N_sensor_avg"] = N_sensor_avg;
-  (*jsonDocument)["PIDPIN"] = PIDPIN;
-  (*jsonDocument)["PIDID"] = PIDID;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["N_sensor_avg"] = N_sensor_avg;
+  (*WifiController::getJDoc())["PIDPIN"] = PIDPIN;
+  (*WifiController::getJDoc())["PIDID"] = PIDID;
 }
 
 
-void PidController::setup(PINDEF * pins,DynamicJsonDocument * jsonDocument) {
+void PidController::setup(PINDEF * pins) {
   this->pins = pins;
-  this->jsonDocument = jsonDocument;
   if (DEBUG) Serial.println("Setting up sensors...");
 }
 

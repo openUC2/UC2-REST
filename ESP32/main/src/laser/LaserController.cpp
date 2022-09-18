@@ -54,12 +54,12 @@ void LaserController::act() {
 
   isBusy = true;
 
-  int LASERid = (*jsonDocument)["LASERid"];
-  int LASERval = (*jsonDocument)["LASERval"];
-  int LASERdespeckle = (*jsonDocument)["LASERdespeckle"];
+  int LASERid = (*WifiController::getJDoc())["LASERid"];
+  int LASERval = (*WifiController::getJDoc())["LASERval"];
+  int LASERdespeckle = (*WifiController::getJDoc())["LASERdespeckle"];
   int LASERdespecklePeriod = 20;
-  if (jsonDocument->containsKey("LASERdespecklePeriod")) {
-    LASERdespecklePeriod = (*jsonDocument)["LASERdespecklePeriod"];
+  if (WifiController::getJDoc()->containsKey("LASERdespecklePeriod")) {
+    LASERdespecklePeriod = (*WifiController::getJDoc())["LASERdespecklePeriod"];
   }
 
   if (DEBUG) {
@@ -100,16 +100,16 @@ void LaserController::act() {
     ledcWrite(PWM_CHANNEL_LASER_3, LASERval);
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 
   isBusy = false;
 }
 
 void LaserController::set() {
   // here you can set parameters
-  int LASERid = (*jsonDocument)["LASERid"];
-  int LASERpin = (*jsonDocument)["LASERpin"];
+  int LASERid = (*WifiController::getJDoc())["LASERid"];
+  int LASERpin = (*WifiController::getJDoc())["LASERpin"];
 
   if (DEBUG) Serial.print("LASERid "); Serial.println(LASERid);
   if (DEBUG) Serial.print("LASERpin "); Serial.println(LASERpin);
@@ -144,14 +144,14 @@ void LaserController::set() {
     }
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
 }
 
 // Custom function accessible by the API
 void LaserController::get() {
   // GET SOME PARAMETERS HERE
-  int LASERid = (*jsonDocument)["LASERid"];
+  int LASERid = (*WifiController::getJDoc())["LASERid"];
   int LASERpin = 0;
   int LASERval = 0;
 
@@ -173,16 +173,15 @@ void LaserController::get() {
     LASERval = LASER_val_3;
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["LASERid"] = LASERid;
-  (*jsonDocument)["LASERval"] = LASERval;
-  (*jsonDocument)["LASERpin"] = LASERpin;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["LASERid"] = LASERid;
+  (*WifiController::getJDoc())["LASERval"] = LASERval;
+  (*WifiController::getJDoc())["LASERpin"] = LASERpin;
 }
 
-void LaserController::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
+void LaserController::setup(PINDEF * pins) {
   Serial.println("Setting Up LASERs");
   this->pins = pins;
-  this->jsonDocument = jsonDocument;
   // switch of the LASER directly
   pinMode(pins->LASER_PIN_1, OUTPUT);
   pinMode(pins->LASER_PIN_2, OUTPUT);

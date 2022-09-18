@@ -11,7 +11,7 @@ SerialProcess::~SerialProcess()
 void SerialProcess::loop(DynamicJsonDocument * jsonDocument)
 {
 #ifdef IS_SERIAL
-    config.loop(); // make it sense to call this everyime?
+    //Config::loop(); // make it sense to call this everyime?
     if (Serial.available())
     {
         DeserializationError error = deserializeJson((*jsonDocument), Serial);
@@ -157,11 +157,11 @@ void SerialProcess::jsonProcessor(String task,DynamicJsonDocument * jsonDocument
     Change Configuration
   */
   if (task == config_act_endpoint)
-    config.act();
+    Config::act();
   if (task == config_set_endpoint)
-    config.set();
+    Config::set();
   if (task == config_get_endpoint)
-    config.get();
+    Config::get();
 
 /*
   Read the sensor

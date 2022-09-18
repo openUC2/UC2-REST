@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="wifimodel"
+            type="com.uc2control.WifiSettingsModel" />
+    </data>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".WifiSettingsFragment">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="URL" />
+
+    <EditText
+        android:id="@+id/editTextUrl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="@={wifimodel.url}" />
+
+    <Button
+        android:id="@+id/button_connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        android:onClick="@{()->wifimodel.onConnectButtonClick()}"/>
+
+    <TextView
+        android:id="@+id/textView_connection_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@{wifimodel.message}" />
+
+    <Button
+        android:id="@+id/button_scanwifi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="scan wifi"
+        android:onClick="@{()->wifimodel.onScanWifiClick()}"/>
+
+    <ListView
+        android:id="@+id/listview_wifissids"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ssid" />
+
+    <EditText
+        android:id="@+id/editssid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="@{wifimodel.ssid}"
+        android:onTextChanged="@{wifimodel.onSsidTextChanged}"/>
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Password" />
+
+    <EditText
+        android:id="@+id/editpw"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="@{wifimodel.pw}"
+        android:onTextChanged="@{wifimodel.onPwTextChanged}"/>
+
+    <CheckBox
+        android:id="@+id/checkBox_ap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Access Point"
+        android:checked="@={wifimodel.ap}"/>
+
+    <Button
+        android:id="@+id/button_connecttowifi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect to Wifi"
+        android:onClick="@{()->wifimodel.onConnectToWifiClick()}"/>
+
+    <Button
+        android:id="@+id/button_resetNv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reset Nv Flash"
+        android:onClick="@{()->wifimodel.onResetNvFlashClick()}"/>
+
+</LinearLayout>
+</layout>

@@ -17,7 +17,7 @@ void led_controller::act() {
   //TODO: figure out what its blocking
   //isBusy = true;
 
-  JsonObject ledNode = (*jsonDocument)[keyLed];
+  JsonObject ledNode = (*WifiController::getJDoc())[keyLed];
 
   LedModes LEDArrMode = ledNode[keyLEDArrMode]; // "array", "full", "single", "off", "left", "right", "top", "bottom",
   int NLeds = ledNode[keyNLeds];
@@ -67,9 +67,9 @@ void led_controller::act() {
   else if (LEDArrMode == LedModes::bottom) {
     matrix->clear();
   }
-  jsonDocument->clear();
-  (*jsonDocument)[F("return")] = 1;
-  (*jsonDocument)[keyLEDArrMode] = LEDArrMode;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())[F("return")] = 1;
+  (*WifiController::getJDoc())[keyLEDArrMode] = LEDArrMode;
   isBusy = false;
 
 }
@@ -78,16 +78,27 @@ void led_controller::set() {
 
   Serial.println(F("Updating Hardware config of LED Array"));
 
-  jsonDocument->clear();
-  (*jsonDocument)[F("return")] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())[F("return")] = 1;
 }
 
 
 
 // Custom function accessible by the API
 void led_controller::get() {
-  jsonDocument->clear();
-  (*jsonDocument)[F("LED_ARRAY_PIN")] = pins->LED_ARRAY_PIN;
+  Serial.print(F("led_controller::get() jsondoc null "));
+  Serial.println(WifiController::getJDoc() == nullptr);
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())[keyNLeds] = pins->LED_ARRAY_NUM;
+  (*WifiController::getJDoc())[keyLEDArrMode].add(0);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(1);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(2);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(3);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(4);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(5);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(6);
+  (*WifiController::getJDoc())[keyLEDArrMode].add(7);
+  //(*jsonDocument)[F("LED_ARRAY_PIN")] = pins->LED_ARRAY_PIN;
 }
 
 
@@ -102,10 +113,9 @@ void led_controller::set_led_RGB(int iLed, int R, int G, int B)  {
   matrix->show();                          //  Update strip to match
 }
 
-void led_controller::setup(PINDEF * pins, DynamicJsonDocument * jsonDocument) {
+void led_controller::setup(PINDEF * pi) {
   // LED Matrix
-  this->pins = pins;
-  this->jsonDocument = jsonDocument;
+  pins = pi;
   matrix = new Adafruit_NeoPixel(pins->LED_ARRAY_NUM, pins->LED_ARRAY_PIN, NEO_GRB + NEO_KHZ800);
   if(DEBUG) Serial.println(F("Setting up LED array"));
   if(DEBUG){ Serial.print(F("LED_ARRAY_PIN: "));  Serial.println(pins->LED_ARRAY_PIN);}

@@ -5,6 +5,7 @@
 #ifdef IS_LASER
 #include "../laser/LaserController.h"
 #endif
+#include "../wifi/WifiController.h"
 
 class SensorController
 {
@@ -14,12 +15,11 @@ public:
     SensorController(/* args */);
     ~SensorController();
     bool DEBUG = false;
-    DynamicJsonDocument * jsonDocument;
     PINDEF * pins;
 
     int N_sensor_avg; //no idea if it should be equal to that that one inside PidController.h 
 
-    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
+    void setup(PINDEF * pins);
     void act();
     void set();
     void get();

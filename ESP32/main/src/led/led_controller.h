@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "../../pinstruct.h"
 #include "../config/JsonKeys.h"
+#include "../wifi/WifiController.h"
 
 class led_controller
 {
@@ -52,7 +53,7 @@ class led_controller
     void set();
     void get();
     void set_led_RGB(int iLed, int R, int G, int B);
-    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+    void setup(PINDEF * pins);
     void set_all(int R, int G, int B);
     void set_left(int NLed, int R, int G, int B);
     void set_right(int NLed, int R, int G, int B);
@@ -75,7 +76,6 @@ class led_controller
 
     // We use the strip instead of the matrix to ensure different dimensions; Convesion of the pattern has to be done on the cliet side!
     Adafruit_NeoPixel * matrix;
-    DynamicJsonDocument * jsonDocument;
     PINDEF * pins;
 
 };

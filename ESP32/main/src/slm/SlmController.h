@@ -4,6 +4,7 @@
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 #include <SPI.h>
 #include <ArduinoJson.h>
+#include "../wifi/WifiController.h"
 
 // Return the minimum of two values a and b
 #define minimum(a,b)     (((a) < (b)) ? (a) : (b))
@@ -47,13 +48,12 @@ public:
     SlmController(/* args */);
     ~SlmController();
     bool DEBUG = false;
-    DynamicJsonDocument * jsonDocument = nullptr;
     bool isBusy;
 
     void act();
     void set();
     void get();
-    void setup(DynamicJsonDocument * jsonDocument);
+    void setup();
 
     void createArray(const char *filename);
     void jpegInfo();

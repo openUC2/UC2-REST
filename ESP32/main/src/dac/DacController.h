@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "DAC_Module.h"
 #include "../../pinstruct.h"
+#include "../wifi/WifiController.h"
 
 
 
@@ -19,7 +20,6 @@ class DacController
     DacController();
     ~DacController();
     bool DEBUG = false;
-    DynamicJsonDocument * jsonDocument;
     PINDEF * pins;
 
     // DAC-specific parameters
@@ -34,7 +34,7 @@ class DacController
 
     boolean dac_is_running = false;
 
-     void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+     void setup(PINDEF * pins);
 
     void act();
     void set();

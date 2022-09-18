@@ -1,4 +1,5 @@
 #pragma once
+#include <String.h>
 struct PINDEF{
     // analog out (e.g. Lenses)
     int analog_PIN_1;
@@ -25,7 +26,7 @@ struct PINDEF{
     int digital_PIN_1;
     int digital_PIN_2;
     int digital_PIN_3;
-    const char * identifier_setup;
+    const char* identifier_setup;
 
     // ledarray
     int LED_ARRAY_PIN;
@@ -39,8 +40,5 @@ struct PINDEF{
     int ADC_pin_1;
     int ADC_pin_2;
 
-    //Wifi
-    const char *mSSID;
-    const char *mPWD;
-    bool mAP;
+    
 };

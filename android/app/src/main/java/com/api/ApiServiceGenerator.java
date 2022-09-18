@@ -1,6 +1,8 @@
 package com.api;
 
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.TimeUnit;
@@ -41,17 +43,19 @@ public class ApiServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    public static <T> T executeSync(Call<T> call) throws Exception {
+    public static <T> T executeSync(Call<T> call) {
         try {
             Response<T> response = call.execute();
             if (response.isSuccessful()) {
                 return response.body();
             } else {
+                Log.e(ApiServiceGenerator.class.getSimpleName(), response.toString());
                 RestError err =  getRestError(response);
-                throw new Exception(err.getMsg());
+                throw new RestApiException(err);
             }
         } catch (IOException e) {
-            throw new Exception(e);
+            e.printStackTrace();
+            throw new RestApiException(e);
         }
     }
 

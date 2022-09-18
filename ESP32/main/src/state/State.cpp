@@ -1,8 +1,4 @@
 #include "State.h"
-#include "../../config.h"
-#if defined IS_PS3 || defined IS_PS4
-#include "../gamepads/ps_3_4_controller.h"
-#endif
 
 State::State(){};
 State::~State(){};
@@ -16,7 +12,7 @@ void State::setup(PINDEF * pins,DynamicJsonDocument * jsonDocument)
 // Custom function accessible by the API
 void State::act() {
   // here you can do something
-  if (DEBUG) Serial.println("state_act_fct");
+  if (DEBUG) ESP_LOGI(TAG,"state_act_fct");
 
   // assign default values to thhe variables
   if (jsonDocument->containsKey("restart")) {
@@ -76,9 +72,9 @@ void State::get() {
 }
 
 void State::printInfo() {
-  if (DEBUG) Serial.println("You can use this software by sending JSON strings, A full documentation can be found here:");
-  if (DEBUG) Serial.println("https://github.com/openUC2/UC2-REST/");
-  //Serial.println("A first try can be: \{\"task\": \"/state_get\"");
+  if (DEBUG) ESP_LOGI(TAG,"You can use this software by sending JSON strings, A full documentation can be found here:");
+  if (DEBUG) ESP_LOGI(TAG,"https://github.com/openUC2/UC2-REST/");
+  //ESP_LOGI(TAG,"A first try can be: \{\"task\": \"/state_get\"");
 }
 
 char *State::bda2str(const uint8_t* bda, char *str, size_t size)
@@ -91,30 +87,28 @@ char *State::bda2str(const uint8_t* bda, char *str, size_t size)
   return str;
 }
 void State::clearBlueetoothDevice() {
-  Serial.print("ESP32 bluetooth address: "); Serial.println(bda2str(esp_bt_dev_get_address(), bda_str, 18));
+  ESP_LOGI(TAG,"ESP32 bluetooth address: %s",bda2str(esp_bt_dev_get_address(), bda_str, 18));
   // Get the numbers of bonded/paired devices in the BT module
   int count = esp_bt_gap_get_bond_device_num();
   if (!count) {
-    Serial.println("No bonded device found.");
+    ESP_LOGI(TAG,"No bonded device found.");
   } else {
-    Serial.print("Bonded device count: "); Serial.println(count);
+    ESP_LOGI(TAG,"Bonded device count: %d",count);
     if (PAIR_MAX_DEVICES < count) {
       count = PAIR_MAX_DEVICES;
-      Serial.print("Reset bonded device count: "); Serial.println(count);
+      ESP_LOGI(TAG,"Reset bonded device count: %d",count);
     }
     esp_err_t tError =  esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
     if (ESP_OK == tError) {
       for (int i = 0; i < count; i++) {
-        Serial.print("Found bonded device # "); Serial.print(i); Serial.print(" -> ");
-        Serial.println(bda2str(pairedDeviceBtAddr[i], bda_str, 18));
+        ESP_LOGI(TAG,"Found bonded device # %d  ->  %s",i, bda2str(pairedDeviceBtAddr[i], bda_str, 18));
         if (REMOVE_BONDED_DEVICES) {
           esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
           if (ESP_OK == tError) {
-            Serial.print("Removed bonded device # ");
+            ESP_LOGI(TAG,"Removed bonded device # %d",i);
           } else {
-            Serial.print("Failed to remove bonded device # ");
+            ESP_LOGI(TAG,"Failed to remove bonded device # %d",i);
           }
-          Serial.println(i);
         }
       }
     }
@@ -124,6 +118,34 @@ void State::clearBlueetoothDevice() {
 
 void State::getDefaultPinDef(PINDEF * pindef)
 {
+    #ifdef empty
+        pindef->identifier_setup = "emtpy"; 
+        // analog out (e.g. Lenses)
+        pindef->analog_PIN_1 = 0;
+        pindef->analog_PIN_2 = 0;
+        pindef->analog_PIN_3 = 0;
+        // Definition cellSTORM
+        pindef->STEP_X = 0;
+        pindef->STEP_Y = 0;
+        pindef->STEP_Z = 0;
+        pindef->DIR_X = 0;
+        pindef->DIR_Y = 0;
+        pindef->DIR_Z = 0;
+        pindef->ENABLE = 0;
+        // Laser PWM pins
+        pindef->LASER_PIN_1 = 0;
+        pindef->LASER_PIN_2 = 0;
+        pindef->LASER_PIN_3 = 0;
+        // ledarray
+        pindef->LED_ARRAY_PIN = 0;
+        pindef->LED_ARRAY_NUM = 0;
+
+        pindef->digital_PIN_1 = 0;
+        pindef->digital_PIN_2 = 0;
+        pindef->digital_PIN_3 = 0;
+        pindef->dac_fake_1 = 0; // RESET-ABORT just toggles between 1 and 0
+        pindef->dac_fake_2 = 0; // Coolant
+    #endif
     #ifdef cellSTORM_cellphone
         #define IS_ANALOG// ESP32-only
         pindef->identifier_setup = "cellSTORM_cellphone"; 

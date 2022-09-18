@@ -5,6 +5,7 @@
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
 #endif
+#include "../wifi/WifiController.h"
 
 class PidController
 {
@@ -14,8 +15,6 @@ private:
 public:
     PidController(/* args */);
     ~PidController();
-
-    DynamicJsonDocument * jsonDocument;
     PINDEF * pins;
     bool DEBUG = false;
 
@@ -31,7 +30,7 @@ public:
 
     int N_sensor_avg = 50;
 
-    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
+    void setup(PINDEF * pins);
     void background();
     void act();
     void get();

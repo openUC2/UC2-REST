@@ -10,7 +10,7 @@ void SlmController::act() {
   if(DEBUG) Serial.println("slm_act_fct");
   isBusy = true;
 
-  const char* slmMode = (*jsonDocument)["slmMode"]; // "ring", "clear"
+  const char* slmMode = (*WifiController::getJDoc())["slmMode"]; // "ring", "clear"
 
   // individual pattern gets adressed
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
@@ -22,14 +22,14 @@ void SlmController::act() {
     int radius = 0;
     uint16_t color = 0;
 
-    if(jsonDocument->containsKey("posX"))
-      posX = (*jsonDocument)["posX"];
-    if(jsonDocument->containsKey("posY"))
-      posY = (*jsonDocument)["posY"];
-    if(jsonDocument->containsKey("radius"))
-      radius = (*jsonDocument)["radius"];
-    if(jsonDocument->containsKey("color"))
-      color = (*jsonDocument)["color"];
+    if(WifiController::getJDoc()->containsKey("posX"))
+      posX = (*WifiController::getJDoc())["posX"];
+    if(WifiController::getJDoc()->containsKey("posY"))
+      posY = (*WifiController::getJDoc())["posY"];
+    if(WifiController::getJDoc()->containsKey("radius"))
+      radius = (*WifiController::getJDoc())["radius"];
+    if(WifiController::getJDoc()->containsKey("color"))
+      color = (*WifiController::getJDoc())["color"];
     tft.fillCircle(posX, posY, radius, color);
   }
   // PYTHON: send_LEDMatrix_array(self, led_pattern, timeout=1)
@@ -42,22 +42,22 @@ void SlmController::act() {
     int nY = 0;
     uint16_t color = 0;
 
-    if(jsonDocument->containsKey("posX"))
-      posX = (*jsonDocument)["posX"];
-    if(jsonDocument->containsKey("posY"))
-      posY = (*jsonDocument)["posY"];
-    if(jsonDocument->containsKey("nX"))
-      nX = (*jsonDocument)["nX"];
-    if(jsonDocument->containsKey("nY"))
-      nY = (*jsonDocument)["nY"];
-    if(jsonDocument->containsKey("color"))
-      color = (*jsonDocument)["color"];
+    if(WifiController::getJDoc()->containsKey("posX"))
+      posX = (*WifiController::getJDoc())["posX"];
+    if(WifiController::getJDoc()->containsKey("posY"))
+      posY = (*WifiController::getJDoc())["posY"];
+    if(WifiController::getJDoc()->containsKey("nX"))
+      nX = (*WifiController::getJDoc())["nX"];
+    if(WifiController::getJDoc()->containsKey("nY"))
+      nY = (*WifiController::getJDoc())["nY"];
+    if(WifiController::getJDoc()->containsKey("color"))
+      color = (*WifiController::getJDoc())["color"];
     tft.drawRect(posX, posY, nX, nY, color);
   }
 
   if (strcmp(slmMode, "full")) {
     if (DEBUG) Serial.println("full");
-    uint16_t color = (*jsonDocument)["color"];
+    uint16_t color = (*WifiController::getJDoc())["color"];
     tft.fillScreen(color);
   }
   if (strcmp(slmMode, "clear")) {
@@ -68,46 +68,46 @@ void SlmController::act() {
   // PYTHON: send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), timeout=1)
   else if (strcmp(slmMode, "image")) {
     if (DEBUG) Serial.println("image");
-    int startX = (*jsonDocument)["startX"];
-    int startY = (*jsonDocument)["startY"];
-    int endX = (*jsonDocument)["endX"];
-    int endY = (*jsonDocument)["endY"];
+    int startX = (*WifiController::getJDoc())["startX"];
+    int startY = (*WifiController::getJDoc())["startY"];
+    int endX = (*WifiController::getJDoc())["endX"];
+    int endY = (*WifiController::getJDoc())["endY"];
 
     int nX = endX-startX;
     int nY = endY-startY;
     for (int ix = 0; ix < nX; ix++) {
       for (int iy = 0; iy < nY; iy++) {
-        uint16_t color = (*jsonDocument)["color"][ix*(nX)+iy];  //Implicit cast
+        uint16_t color = (*WifiController::getJDoc())["color"][ix*(nX)+iy];  //Implicit cast
         Serial.println(color);
         tft.drawPixel(iy+nY, ix+nX, color);
       }
     }
   }
 
-  jsonDocument->clear();
-  (*jsonDocument)["return"] = 1;
+  WifiController::getJDoc()->clear();
+  (*WifiController::getJDoc())["return"] = 1;
   isBusy = false;
 }
 
 void SlmController::set() {
   /*
-    if (jsonDocument["LED_ARRAY_PIN"] != 0) {
-    //if (DEBUG) Serial.print("LED_ARRAY_PIN "); Serial.println(jsonDocument["LED_ARRAY_PIN"]);
-    LED_ARRAY_PIN = jsonDocument["LED_ARRAY_PIN"];
+    if (WifiController::getJDoc()["LED_ARRAY_PIN"] != 0) {
+    //if (DEBUG) Serial.print("LED_ARRAY_PIN "); Serial.println(WifiController::getJDoc()["LED_ARRAY_PIN"]);
+    LED_ARRAY_PIN = WifiController::getJDoc()["LED_ARRAY_PIN"];
     }
 
-    if (jsonDocument["LED_N_X"] != 0) {
-    //if (DEBUG) Serial.print("LED_N_X "); Serial.println(jsonDocument["LED_N_X"]);
-    LED_N_X = jsonDocument["LED_N_X"];
+    if (WifiController::getJDoc()["LED_N_X"] != 0) {
+    //if (DEBUG) Serial.print("LED_N_X "); Serial.println(WifiController::getJDoc()["LED_N_X"]);
+    LED_N_X = WifiController::getJDoc()["LED_N_X"];
     }
 
-    if (jsonDocument["LED_N_Y"] != 0) {
-    //if (DEBUG) Serial.print("LED_N_Y "); Serial.println(jsonDocument["LED_N_Y"]);
-    LED_N_Y = jsonDocument["LED_N_Y"];
+    if (WifiController::getJDoc()["LED_N_Y"] != 0) {
+    //if (DEBUG) Serial.print("LED_N_Y "); Serial.println(WifiController::getJDoc()["LED_N_Y"]);
+    LED_N_Y = WifiController::getJDoc()["LED_N_Y"];
     }
   */
-  (*jsonDocument).clear();
-  (*jsonDocument)["return"] = 1;
+  (*WifiController::getJDoc()).clear();
+  (*WifiController::getJDoc())["return"] = 1;
 }
 
 
@@ -115,10 +115,10 @@ void SlmController::set() {
 // Custom function accessible by the API
 void SlmController::get() {
   /*
-    jsonDocument.clear();
-    jsonDocument["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
-    jsonDocument["LED_N_X"] = LED_N_X;
-    jsonDocument["LED_N_Y"] = LED_N_Y;
+    WifiController::getJDoc().clear();
+    WifiController::getJDoc()["LED_ARRAY_PIN"] = LED_ARRAY_PIN;
+    WifiController::getJDoc()["LED_N_X"] = LED_N_X;
+    WifiController::getJDoc()["LED_N_Y"] = LED_N_Y;
   */
 }
 
@@ -129,8 +129,7 @@ void SlmController::get() {
 /***************************************************************************************************/
 /*******************************FROM OCTOPI ********************************************************/
 
-void SlmController::setup(DynamicJsonDocument * jsonDocument) {
-  this->jsonDocument = jsonDocument;
+void SlmController::setup() {
   if(DEBUG) Serial.println("Initializing SLM");
   tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
   tft.fillScreen(ST77XX_WHITE);

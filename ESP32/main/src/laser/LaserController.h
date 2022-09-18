@@ -2,6 +2,8 @@
 #include "../../config.h"
 #include "../../pinstruct.h"
 #include <ArduinoJson.h>
+#include <String.h>
+#include "../wifi/WifiController.h"
 
 class LaserController
 {
@@ -12,7 +14,6 @@ public:
     ~LaserController();
 
     PINDEF * pins;
-    DynamicJsonDocument * jsonDocument;
     bool isBusy;
     
     int LASER_val_1 = 0;
@@ -51,7 +52,7 @@ public:
     void act();
     void set();
     void get();
-    void setup(PINDEF * pins, DynamicJsonDocument * jsonDocument);
+    void setup(PINDEF * pins);
     void loop();
 
 };

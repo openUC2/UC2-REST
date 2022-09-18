@@ -2,8 +2,12 @@
 #include "../../config.h"
 #include <ArduinoJson.h>
 #include <WebServer.h>
+#include <nvs_flash.h>
 #include "Endpoints.h"
 #include "parameters_wifi.h"
+#include "../config/ConfigController.h"
+#include "../wifi/WifiController.h"
+#include <esp_log.h>
 #ifdef IS_MOTOR
 #include "../motor/FocusMotor.h"
 #endif 
@@ -28,7 +32,6 @@
 #ifdef IS_READSENSOR
 #include "../sensor/SensorController.h"
 #endif
-#include "../config/ConfigController.h"
 #ifdef IS_SLM
     #include "../slm/SlmController.h"
 #endif
@@ -43,10 +46,11 @@ namespace RestApi
     void upload();
     void deserialize();
     void serialize();
-    void setup(WebServer *ser, DynamicJsonDocument * jDoc);
     void getIdentity();
     void getEndpoints();
     void scanWifi();
+    void connectToWifi();
+    void resetNvFLash();
 #ifdef IS_MOTOR
     void FocusMotor_act();
     void FocusMotor_get();
