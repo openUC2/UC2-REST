@@ -23,9 +23,6 @@ void SerialProcess::loop(DynamicJsonDocument * jsonDocument)
             return;
         }
         Serial.flush();
-#ifdef DEBUG_MAIN
-        serializeJsonPretty((*jsonDocument), Serial);
-#endif
 
         String task_s = (*jsonDocument)["task"];
         char task[50];
@@ -186,6 +183,20 @@ void SerialProcess::jsonProcessor(String task,DynamicJsonDocument * jsonDocument
   if (task == PID_get_endpoint)
     pid.get();
 #endif
+  if (task == scanwifi_endpoint)
+  {
+    RestApi::scanWifi();
+  }
+  if (task == connectwifi_endpoint)
+  {
+    RestApi::connectToWifi();
+  }
+  if (task == reset_nv_flash_endpoint)
+  {
+    RestApi::resetNvFLash();
+  }
+  
+  
   // Send JSON information back
   Serial.println("++");
   serializeJson((*jsonDocument), Serial);

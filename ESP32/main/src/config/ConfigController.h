@@ -24,7 +24,5 @@ namespace Config
     void set();
     void get();
     bool isFirstRun();
-    void checkSetupCompleted();
     void setWifiConfig(String ssid,String pw, bool ap,bool prefopen);
-    void increaseSetupCounter();
 }

@@ -3,12 +3,12 @@
 namespace RestApi
 {
     char output[1000];
-    const char*TAG="RestApi";
+    const char *TAG = "RestApi";
 
     void resetNvFLash()
     {
         int erase = nvs_flash_erase(); // erase the NVS partition and...
-        int init = nvs_flash_init(); // initialize the NVS partition.
+        int init = nvs_flash_init();   // initialize the NVS partition.
         ESP_LOGI(TAG, "erased:%s init:%s", erase, init);
         delay(500);
     }
@@ -19,7 +19,8 @@ namespace RestApi
         WifiController::getServer()->send(200, "application/json", state.identifier_name);
     }
 
-    void handleNotFound() {
+    void handleNotFound()
+    {
         String message = "File Not Found\n\n";
         message += "URI: ";
         message += (*WifiController::getServer()).uri();
@@ -28,7 +29,8 @@ namespace RestApi
         message += "\nArguments: ";
         message += (*WifiController::getServer()).args();
         message += "\n";
-        for (uint8_t i = 0; i < (*WifiController::getServer()).args(); i++) {
+        for (uint8_t i = 0; i < (*WifiController::getServer()).args(); i++)
+        {
             message += " " + (*WifiController::getServer()).argName(i) + ": " + (*WifiController::getServer()).arg(i) + "\n";
         }
         (*WifiController::getServer()).send(404, "text/plain", message);
@@ -50,7 +52,7 @@ namespace RestApi
 
     void serialize()
     {
-        serializeJsonPretty((*WifiController::getJDoc()),Serial);
+        serializeJsonPretty((*WifiController::getJDoc()), Serial);
         serializeJson((*WifiController::getJDoc()), output);
         WifiController::getServer()->send(200, "application/json", output);
     }
@@ -68,40 +70,65 @@ namespace RestApi
         ESP.restart();
     }
 
+    /*
+        start a wifiscan and return the results 
+        endpoint:/wifi/scan
+        input []
+        output
+        [
+            "ssid1",
+            "ssid2",
+            ....
+        ]
+    */
     void scanWifi()
     {
-        ESP_LOGI(TAG,"scanWifi");
+        ESP_LOGI(TAG, "scanWifi");
         int networkcount = WiFi.scanNetworks();
-        if (networkcount == -1) {
-            while (true);
+        if (networkcount == -1)
+        {
+            while (true)
+                ;
         }
         WifiController::getJDoc()->clear();
-        for (int i = 0; i < networkcount; i++) {
+        for (int i = 0; i < networkcount; i++)
+        {
             (*WifiController::getJDoc()).add(WiFi.SSID(i));
         }
         serializeJson((*WifiController::getJDoc()), output);
         WifiController::getServer()->send(200, "application/json", output);
     }
 
+    /*
+        connect to a wifi network or create ap
+        endpoint:/wifi/connect
+        input
+        [
+            "ssid": "networkid"
+            "PW" : "password"
+            "AP" : 0
+        ]
+        output[]
+    */
     void connectToWifi()
     {
         deserialize();
-        ESP_LOGI(TAG,"connectToWifi");
+        ESP_LOGI(TAG, "connectToWifi");
         bool ap = (*WifiController::getJDoc())[keyWifiAP];
         String ssid = (*WifiController::getJDoc())[keyWifiSSID];
         String pw = (*WifiController::getJDoc())[keyWifiPW];
-        ESP_LOGI(TAG,"ssid json: %s wifi:%s", ssid, WifiController::getSsid());
-        ESP_LOGI(TAG,"pw json: %s wifi:%s", pw, WifiController::getPw());
-        ESP_LOGI(TAG,"ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
-        WifiController::setWifiConfig(ssid,pw,ap);
-        ESP_LOGI(TAG,"ssid json: %s wifi:%s", ssid, WifiController::getSsid());
-        ESP_LOGI(TAG,"pw json: %s wifi:%s", pw, WifiController::getPw());
-        ESP_LOGI(TAG,"ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
-        Config::setWifiConfig(ssid,pw,ap,false);
-        serializeJson((*WifiController::getJDoc()), output);
-        WifiController::getServer()->send(200, "application/json", output);
+        ESP_LOGI(TAG, "ssid json: %s wifi:%s", ssid, WifiController::getSsid());
+        ESP_LOGI(TAG, "pw json: %s wifi:%s", pw, WifiController::getPw());
+        ESP_LOGI(TAG, "ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
+        WifiController::setWifiConfig(ssid, pw, ap);
+        ESP_LOGI(TAG, "ssid json: %s wifi:%s", ssid, WifiController::getSsid());
+        ESP_LOGI(TAG, "pw json: %s wifi:%s", pw, WifiController::getPw());
+        ESP_LOGI(TAG, "ap json: %s wifi:%s", boolToChar(ap), boolToChar(WifiController::getAp()));
+        Config::setWifiConfig(ssid, pw, ap, false);
+        WifiController::getJDoc()->clear();
+        serialize();
         WifiController::setup();
-        //ESP.restart();
+        // ESP.restart();
     }
 
     void upload()
@@ -109,7 +136,7 @@ namespace RestApi
         HTTPUpload &upload = WifiController::getServer()->upload();
         if (upload.status == UPLOAD_FILE_START)
         {
-            ESP_LOGI(TAG,"Update: %s\n", upload.filename.c_str());
+            ESP_LOGI(TAG, "Update: %s\n", upload.filename.c_str());
             if (!Update.begin(UPDATE_SIZE_UNKNOWN))
             { // start with max available size
                 Update.printError(Serial);
@@ -127,7 +154,7 @@ namespace RestApi
         {
             if (Update.end(true))
             { // true to set the size to the current progress
-                ESP_LOGI(TAG,"Update Success: %u\nRebooting...\n", upload.totalSize);
+                ESP_LOGI(TAG, "Update Success: %u\nRebooting...\n", upload.totalSize);
             }
             else
             {
@@ -356,9 +383,33 @@ namespace RestApi
         serialize();
     }
 #endif
+
+    /* returns an array that contains the endpoints
+    endpoint:/features_get or /
+    input[]
+    output
+    [
+      "/ota",
+      "/update",
+      "/identity",
+      "/config_act",
+      "/config_set",
+      "/config_get",
+      "/state_act",
+      "/state_set",
+      "/state_get",
+      "/wifi/scan",
+      "/wifi/connect",
+      "/motor_act",
+      "/motor_set",
+      "/motor_get",
+      "/ledarr_act",
+      "/ledarr_set",
+      "/ledarr_get"
+    ]
+    */
     void getEndpoints()
     {
-        
         deserialize();
         WifiController::getJDoc()->clear();
         (*WifiController::getJDoc()).add(ota_endpoint);
@@ -416,7 +467,6 @@ namespace RestApi
         (*WifiController::getJDoc()).add(ledarr_set_endpoint);
         (*WifiController::getJDoc()).add(ledarr_get_endpoint);
 #endif
-        
         serialize();
     }
 }

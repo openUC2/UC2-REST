@@ -37,20 +37,6 @@ namespace Config
   }
 */
 
-void increaseSetupCounter()
-{
-  /*preferences.begin(prefNamespace , false);
-  int counter = preferences.getInt("setupcounter");
-  const char * s = preferences.getString("setupchar").c_str();
-  s = (const char*)counter;
-  Serial.print("SetupCounter:");ESP_LOGI(TAG,counter);
-  Serial.print("setupchar:");ESP_LOGI(TAG,s);
-  counter++;
-  preferences.putInt("setupcounter",counter);
-  preferences.putString("setupchar",s);
-  preferences.end();*/
-}
-
 void setWifiConfig(String ssid,String pw, bool ap,bool prefopen)
 {
   bool open = prefopen;
@@ -119,29 +105,6 @@ bool isFirstRun() {
   preferences.end();
   ESP_LOGI(TAG,"isFirstRun End datetest:%s",datetest);
   return !stored_date.equals(compiled_date);
-}
-
-void checkSetupCompleted()
-{
-  ESP_LOGI(TAG,"checkSetupCompleted Start");
-  // check if setup went through after new config - avoid endless boot-loop
-  preferences.begin("setup", false);
-  if (preferences.getBool("setupComplete", true) == false) {
-    ESP_LOGI(TAG,"Setup not done, resetting config?"); //TODO not working!
-    resetPreferences();
-  }
-  else{
-    ESP_LOGI(TAG,"Setup done, continue.");
-  }
-  preferences.putBool("setupComplete", false);
-  preferences.end();
-  ESP_LOGI(TAG,"checkSetupCompleted End");
-}
-
-bool resetPreferences() {
-  ESP_LOGI(TAG,"resetPreferences");
-  preferences.clear();
-  return true;
 }
 
 void savePreferencesFromPins()
