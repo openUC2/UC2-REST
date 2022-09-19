@@ -17,11 +17,14 @@ import android.widget.TextView;
 
 import com.uc2control.databinding.FragmentWifiSettingsBinding;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link WifiSettingsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
+@AndroidEntryPoint
 public class WifiSettingsFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
@@ -51,10 +54,12 @@ public class WifiSettingsFragment extends Fragment {
     // TODO: Rename and change types and number of parameters
     public static WifiSettingsFragment newInstance(String param1, String param2) {
         WifiSettingsFragment fragment = new WifiSettingsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
+        if (param1 != null && param2 != null) {
+            Bundle args = new Bundle();
+            args.putString(ARG_PARAM1, param1);
+            args.putString(ARG_PARAM2, param2);
+            fragment.setArguments(args);
+        }
         return fragment;
     }
 

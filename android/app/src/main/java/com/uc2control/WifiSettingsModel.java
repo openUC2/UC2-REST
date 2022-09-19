@@ -7,28 +7,30 @@ import androidx.databinding.Bindable;
 
 import com.api.ApiServiceCallback;
 import com.api.RestClient;
+import com.api.RestController;
 import com.api.response.WifiConnectRequest;
 
 import java.util.Arrays;
 
 
 public class WifiSettingsModel extends BaseObservable {
-    private RestClient restClient;
     private String[] supportedEndtpoints;
     String url = "http://192.168.4.1";
     String message;
     private WifiConnectRequest wifiConnectRequest = new WifiConnectRequest();
     private String[] wifi_ssids = new String[0];
+    private RestController restController;
 
-    public WifiSettingsModel()
+    public WifiSettingsModel(RestController restController)
     {
+        this.restController = restController;
         setUrl(url);
     }
 
     public void onConnectButtonClick()
     {
-        restClient = new RestClient(url);
-        restClient.getFeaturesAsync(getFeatureCallback);
+        restController.setUrl(url);
+        restController.getRestClient().getFeaturesAsync(getFeatureCallback);
         setMessage("Loading Endpoints");
     }
 
@@ -42,7 +44,7 @@ public class WifiSettingsModel extends BaseObservable {
 
     public void onScanWifiClick()
     {
-        restClient.getSsids(getWifiScanCallback);
+        restController.getRestClient().getSsids(getWifiScanCallback);
         setMessage("Loading Ssids");
     }
 
@@ -55,7 +57,7 @@ public class WifiSettingsModel extends BaseObservable {
 
     public void onResetNvFlashClick()
     {
-        restClient.resetNvFLash(new ApiServiceCallback<Void>() {
+        restController.getRestClient().resetNvFLash(new ApiServiceCallback<Void>() {
             @Override
             public void onResponse(Void response) {
                 Log.d(WifiSettingsModel.class.getSimpleName(),"nv flash response");
@@ -97,7 +99,7 @@ public class WifiSettingsModel extends BaseObservable {
 
     public void onConnectToWifiClick()
     {
-        restClient.connectToWifi(wifiConnectRequest,wificonnectCallback);
+        restController.getRestClient().connectToWifi(wifiConnectRequest,wificonnectCallback);
     }
 
     private ApiServiceCallback<String> wificonnectCallback = new ApiServiceCallback<String>() {

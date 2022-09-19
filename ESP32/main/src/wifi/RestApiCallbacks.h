@@ -40,15 +40,71 @@
 #endif
 namespace RestApi
 {
+    /*
+        handle invalide requests with a error message 
+    */
     void handleNotFound();
     void ota();
     void update();
     void upload();
+    /*
+        load the body data from the client request into the jsondoc
+    */
     void deserialize();
+    /*
+        fill the output from the jsondoc and send a response to the client
+    */
     void serialize();
     void getIdentity();
+    /* 
+        returns an array that contains the endpoints
+        endpoint:/features_get or /
+        input[]
+        output
+        [
+        "/ota",
+        "/update",
+        "/identity",
+        "/config_act",
+        "/config_set",
+        "/config_get",
+        "/state_act",
+        "/state_set",
+        "/state_get",
+        "/wifi/scan",
+        "/wifi/connect",
+        "/motor_act",
+        "/motor_set",
+        "/motor_get",
+        "/ledarr_act",
+        "/ledarr_set",
+        "/ledarr_get"
+        ]
+    */
     void getEndpoints();
+    /*
+        start a wifiscan and return the results 
+        endpoint:/wifi/scan
+        input []
+        output
+        [
+            "ssid1",
+            "ssid2",
+            ....
+        ]
+    */
     void scanWifi();
+    /*
+        connect to a wifi network or create ap
+        endpoint:/wifi/connect
+        input
+        [
+            "ssid": "networkid"
+            "PW" : "password"
+            "AP" : 0
+        ]
+        output[]
+    */
     void connectToWifi();
     void resetNvFLash();
 #ifdef IS_MOTOR

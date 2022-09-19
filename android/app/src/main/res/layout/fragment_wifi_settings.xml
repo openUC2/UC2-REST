@@ -10,8 +10,7 @@
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".WifiSettingsFragment">
+    android:orientation="vertical">
 
     <TextView
         android:layout_width="wrap_content"
@@ -64,7 +63,7 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:text="@{wifimodel.ssid}"
-        android:onTextChanged="@{wifimodel.onSsidTextChanged}"/>
+        android:onTextChanged="@{wifimodel::onSsidTextChanged}"/>
 
     <TextView
         android:id="@+id/textView2"
@@ -79,7 +78,7 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:text="@{wifimodel.pw}"
-        android:onTextChanged="@{wifimodel.onPwTextChanged}"/>
+        android:onTextChanged="@{wifimodel::onPwTextChanged}"/>
 
     <CheckBox
         android:id="@+id/checkBox_ap"

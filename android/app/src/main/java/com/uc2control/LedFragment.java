@@ -49,10 +49,12 @@ public class LedFragment extends Fragment {
     // TODO: Rename and change types and number of parameters
     public static LedFragment newInstance(String param1, String param2) {
         LedFragment fragment = new LedFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
+        if (param1 != null && param2 != null) {
+            Bundle args = new Bundle();
+            args.putString(ARG_PARAM1, param1);
+            args.putString(ARG_PARAM2, param2);
+            fragment.setArguments(args);
+        }
         return fragment;
     }
 

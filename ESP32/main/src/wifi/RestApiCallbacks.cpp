@@ -70,17 +70,6 @@ namespace RestApi
         ESP.restart();
     }
 
-    /*
-        start a wifiscan and return the results 
-        endpoint:/wifi/scan
-        input []
-        output
-        [
-            "ssid1",
-            "ssid2",
-            ....
-        ]
-    */
     void scanWifi()
     {
         ESP_LOGI(TAG, "scanWifi");
@@ -99,17 +88,6 @@ namespace RestApi
         WifiController::getServer()->send(200, "application/json", output);
     }
 
-    /*
-        connect to a wifi network or create ap
-        endpoint:/wifi/connect
-        input
-        [
-            "ssid": "networkid"
-            "PW" : "password"
-            "AP" : 0
-        ]
-        output[]
-    */
     void connectToWifi()
     {
         deserialize();
@@ -384,30 +362,7 @@ namespace RestApi
     }
 #endif
 
-    /* returns an array that contains the endpoints
-    endpoint:/features_get or /
-    input[]
-    output
-    [
-      "/ota",
-      "/update",
-      "/identity",
-      "/config_act",
-      "/config_set",
-      "/config_get",
-      "/state_act",
-      "/state_set",
-      "/state_get",
-      "/wifi/scan",
-      "/wifi/connect",
-      "/motor_act",
-      "/motor_set",
-      "/motor_get",
-      "/ledarr_act",
-      "/ledarr_set",
-      "/ledarr_get"
-    ]
-    */
+    
     void getEndpoints()
     {
         deserialize();
