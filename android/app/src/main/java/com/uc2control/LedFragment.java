@@ -4,7 +4,9 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,14 +17,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.api.RestClient;
+import com.uc2control.databinding.FragmentLedBinding;
 
 import java.util.Arrays;
+
+import dagger.hilt.android.AndroidEntryPoint;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link LedFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
+@AndroidEntryPoint
 public class LedFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
@@ -33,6 +39,10 @@ public class LedFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private final String TAG = LedFragment.class.getSimpleName();
+    private LedModelView ledModelView;
+    private FragmentLedBinding ledBinding;
 
     public LedFragment() {
         // Required empty public constructor
@@ -70,44 +80,21 @@ public class LedFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        ledModelView = new ViewModelProvider(this).get(LedModelView.class);
+        ledBinding =  DataBindingUtil.inflate(inflater, R.layout.fragment_wifi_settings, container, false);
+        ledBinding.setLedmodel(ledBinding.getLedmodel());
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_led, container, false);
+        return ledBinding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Button requestFeaturesButton = view.findViewById(R.id.button_getFeatures);
-        EditText url = view.findViewById(R.id.editTextUrl);
-        TextView features = view.findViewById(R.id.textView_features);
-        requestFeaturesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                features.setText("");
-                RestClient restClient = new RestClient("http://" +url.getText().toString());
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            String[] fetures;
-                            fetures = restClient.getFeatures();
-                            features.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    features.setText(Arrays.toString(fetures));
-                                }
-                        });
-                        } catch (Exception e) {
-                            features.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    features.setText(e.getMessage());
-                                }
-                            });
-                        }
-                    }
-                }).start();
-            }
-        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume");
     }
 }
