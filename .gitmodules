@@ -1,0 +1,4 @@
+[submodule "uc2-control-android"]
+	path = uc2-control-android
+	url = https://github.com/youseetoo/uc2-control-android.git
+	branch = main
