@@ -22,8 +22,8 @@ public class ApiServiceGenerator {
 
     static {
         Dispatcher dispatcher = new Dispatcher();
-        dispatcher.setMaxRequestsPerHost(500);
-        dispatcher.setMaxRequests(500);
+        dispatcher.setMaxRequestsPerHost(2);
+        dispatcher.setMaxRequests(2);
         sharedClient = new OkHttpClient.Builder()
                 .dispatcher(dispatcher)
                 .pingInterval(20, TimeUnit.SECONDS)

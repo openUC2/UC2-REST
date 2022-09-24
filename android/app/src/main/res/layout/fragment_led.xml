@@ -1,39 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <variable
-            name="ledmodel"
+            name="led"
             type="com.uc2control.LedModel" />
     </data>
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".LedFragment">
-
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Led Count:" />
+
+            <TextView
+                android:id="@+id/textView_ledcount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:text="" />
+
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/checkBox_enableLed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:checked="@={led.ledsOn}"
+            android:text="Led Enable" />
 
         <TextView
-            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Led Count:" />
+            android:text="Red:" />
 
+        <SeekBar
+            android:id="@+id/seekBar_red"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progressBackgroundTint="#FF0000"
+            android:progress="@={led.red}" />
         <TextView
-            android:id="@+id/textView_ledcount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@{ledmodel.ledcount}" />
+            android:text="Green:" />
+
+        <SeekBar
+            android:id="@+id/seekBar_green"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progressBackgroundTint="#00FF6A"
+            android:progress="@={led.green}" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Blue:" />
+
+        <SeekBar
+            android:id="@+id/seekBar_blue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="255"
+            android:progressBackgroundTint="#0026FF"
+            android:progress="@={led.blue}" />
+
     </LinearLayout>
-
-</LinearLayout>
 </layout>

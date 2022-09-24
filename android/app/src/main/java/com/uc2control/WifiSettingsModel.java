@@ -113,14 +113,6 @@ public class WifiSettingsModel extends BaseObservable {
         return wifiConnectRequest;
     }
 
-    public void onSsidTextChanged(CharSequence s, int start, int before, int count) {
-        wifiConnectRequest.ssid = s.toString();
-    }
-
-    public void onPwTextChanged(CharSequence s, int start, int before, int count) {
-        wifiConnectRequest.PW = s.toString();
-    }
-
     @Bindable
     public boolean getAp() {
         return wifiConnectRequest.AP;

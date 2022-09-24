@@ -1,5 +1,6 @@
 package com.api;
 
+import com.api.response.LedArrRequest;
 import com.api.response.LedArrResponse;
 import com.api.response.WifiConnectRequest;
 
@@ -17,6 +18,9 @@ public interface ApiService {
 
     @GET("/ledarr_get")
     Call<LedArrResponse> ledGet();
+
+    @POST("/ledarr_act")
+    Call<String> ledAct(@Body LedArrRequest request);
 
     @GET("/wifi/scan")
     Call<String[]> getSsids();

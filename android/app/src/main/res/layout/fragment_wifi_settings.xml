@@ -62,8 +62,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="@{wifimodel.ssid}"
-        android:onTextChanged="@{wifimodel::onSsidTextChanged}"/>
+        android:text="@={wifimodel.ssid}" />
 
     <TextView
         android:id="@+id/textView2"
@@ -77,8 +76,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="@{wifimodel.pw}"
-        android:onTextChanged="@{wifimodel::onPwTextChanged}"/>
+        android:text="@={wifimodel.pw}" />
 
     <CheckBox
         android:id="@+id/checkBox_ap"

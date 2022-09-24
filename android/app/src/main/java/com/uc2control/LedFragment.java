@@ -81,8 +81,8 @@ public class LedFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         ledModelView = new ViewModelProvider(this).get(LedModelView.class);
-        ledBinding =  DataBindingUtil.inflate(inflater, R.layout.fragment_wifi_settings, container, false);
-        ledBinding.setLedmodel(ledBinding.getLedmodel());
+        ledBinding =  DataBindingUtil.inflate(inflater, R.layout.fragment_led, container, false);
+        ledBinding.setLed(ledModelView.getLedModel());
         // Inflate the layout for this fragment
         return ledBinding.getRoot();
     }
