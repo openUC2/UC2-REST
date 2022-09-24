@@ -44,7 +44,7 @@ void handelMessages()
 
 void createJsonDoc()
 {
-  jsonDocument = new DynamicJsonDocument(32784);
+  jsonDocument = new DynamicJsonDocument(16128);
   ESP_LOGI(TAG,"WifiController::createJsonDoc is null:%s", boolToChar(jsonDocument == nullptr));
 }
 

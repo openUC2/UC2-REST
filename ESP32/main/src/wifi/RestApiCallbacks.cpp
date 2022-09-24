@@ -38,15 +38,16 @@ namespace RestApi
 
     void deserialize()
     {
-        int argcount = WifiController::getServer()->args();
-        for (int i = 0; i < argcount; i++)
+        //int argcount = WifiController::getServer()->args();
+        /*for (int i = 0; i < argcount; i++)
         {
             ESP_LOGI(TAG, "%s", WifiController::getServer()->arg(i));
-        }
+        }*/
         String body = WifiController::getServer()->arg("plain");
         if (body != "")
         {
             deserializeJson(*WifiController::getJDoc(), body);
+            serializeJsonPretty((*WifiController::getJDoc()), Serial);
         }
     }
 
@@ -213,21 +214,21 @@ namespace RestApi
     void Led_act()
     {
         deserialize();
-        led.act();
+        LedController::act();
         serialize();
     }
 
     void Led_get()
     {
         deserialize();
-        led.get();
+        LedController::get();
         serialize();
     }
 
     void Led_set()
     {
         deserialize();
-        led.set();
+        LedController::set();
         serialize();
     }
 #endif

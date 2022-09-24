@@ -5,7 +5,7 @@
 #include "src/motor/FocusMotor.h"
 #endif
 #ifdef IS_LED
-#include "src/led/led_controller.h"
+#include "src/led/LedController.h"
 #endif
 #ifdef IS_LASER
 #include "src/laser/LaserController.h"
@@ -64,7 +64,7 @@ void setup()
   WifiController::createJsonDoc();
 
   ESP_LOGI(TAG,"state.setup");
-  state.setup(pins, WifiController::getJDoc());
+  state.setup(pins);
   state.printInfo();
 
   ESP_LOGI(TAG,"Config::setup");
@@ -80,10 +80,7 @@ void setup()
 #endif
 #ifdef IS_LED
   ESP_LOGI(TAG,"IS_LED");
-#ifdef DEBUG_LED
-  led.DEBUG = true;
-#endif
-  led.setup(pins);
+  LedController::setup(pins,false);
 #endif
 
 #ifdef IS_MOTOR

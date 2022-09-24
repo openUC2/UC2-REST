@@ -36,7 +36,6 @@ class State
     State();
     ~State();
     bool DEBUG = false;
-    DynamicJsonDocument * jsonDocument;
     PINDEF * pins;
 
     const char*  identifier_name = "UC2_Feather";
@@ -54,7 +53,7 @@ class State
     void act();
     void set();
     void get();
-    void setup(PINDEF * pins,DynamicJsonDocument * jsonDocument);
+    void setup(PINDEF * pins);
     void printInfo();
     void clearBlueetoothDevice();
 

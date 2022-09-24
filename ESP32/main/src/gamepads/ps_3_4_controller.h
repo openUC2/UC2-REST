@@ -4,7 +4,7 @@
     #include "../motor/FocusMotor.h"
 #endif
 #ifdef IS_LED
-#include "../led/led_controller.h"
+#include "../led/LedController.h"
 #endif
     #include "../state/State.h"
 #ifdef IS_LASER

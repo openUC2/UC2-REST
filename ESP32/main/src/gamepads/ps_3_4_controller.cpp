@@ -307,14 +307,14 @@ void ps_3_4_controller::activate() {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (cross): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
-    led.set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
+    LedController::set_all(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
   }
   if (is_circle()) {
     IS_PS_CONTROLER_LEDARRAY = !IS_PS_CONTROLER_LEDARRAY;
     if (DEBUG) Serial.print("Turning LED Matrix to (circle): ");
     if (DEBUG) Serial.println(IS_PS_CONTROLER_LEDARRAY);
-    led.set_center(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
+    LedController::set_center(255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY,255*IS_PS_CONTROLER_LEDARRAY);
     delay(1000); //Debounce?
 
   }

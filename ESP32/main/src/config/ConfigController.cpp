@@ -107,6 +107,12 @@ bool isFirstRun() {
   return !stored_date.equals(compiled_date);
 }
 
+bool resetPreferences() {
+  ESP_LOGI(TAG,"resetPreferences");
+  preferences.clear();
+  return true;
+}
+
 void savePreferencesFromPins()
 {
   preferences.putInt(keyAnalog1Pin,(*pins).analog_PIN_1);
@@ -334,7 +340,7 @@ bool getPreferences() {
 
 void loop() {
   if (Serial.available()) {
-    DeserializationError error = deserializeJson(*WifiController::getJDoc(), Serial);
+    DeserializationError error = deserializeJson((*WifiController::getJDoc()), Serial);
 
     if (error) {
       ESP_LOGI(TAG,"%s",error);

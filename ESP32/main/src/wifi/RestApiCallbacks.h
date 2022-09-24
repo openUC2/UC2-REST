@@ -18,7 +18,7 @@
 #include "../dac/DacController.h"
 #endif
 #ifdef IS_LED
-#include "../led/led_controller.h"
+#include "../led/LedController.h"
 #endif
 #ifdef IS_ANALOG
 #include "../analog/AnalogController.h"
