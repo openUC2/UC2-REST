@@ -19,3 +19,4 @@ docs/build_*
 /build/*
 /ESP32/main/.vs/*
 /android/.idea/*
+/.vscode/*

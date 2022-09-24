@@ -2,11 +2,3 @@
 	path = uc2-control-android
 	url = https://github.com/youseetoo/uc2-control-android.git
 	branch = main
-[submodule "ESP32/libraries/PS4-esp32"]
-	path = ESP32/libraries/PS4-esp32
-	url = https://github.com/youseetoo/PS4-esp32.git
-	branch = master
-[submodule "ESP32/libraries/esp32-ps3"]
-	path = ESP32/libraries/esp32-ps3
-	url = https://github.com/youseetoo/esp32-ps3.git
-	branch = master
