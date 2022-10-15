@@ -14,7 +14,7 @@ class State(object):
         payload = {
             "task":path
         }
-        r = self.post_json(path, payload, isInit=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
     def set_state(self, debug=False, timeout=1):
@@ -24,7 +24,7 @@ class State(object):
             "task":path,
             "isdebug":int(debug)
         }
-        r = self.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
     def isControllerMode(self, timeout=1):
@@ -34,7 +34,7 @@ class State(object):
             "task":path,
             "pscontroller": 1
         }
-        r = self.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         try:
             return r["pscontroller"]
         except:
@@ -46,7 +46,7 @@ class State(object):
         payload = {
             "restart":1
             }
-        r = self.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
     def setControllerMode(self, isController=False, timeout=1):
@@ -56,7 +56,7 @@ class State(object):
             "task":path,
             "pscontroller": isController
         }
-        r = self.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
     def isBusy(self, timeout=1):
@@ -65,7 +65,7 @@ class State(object):
             "task":path,
             "isBusy": 1
         }
-        r = self.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         try:
             return r["isBusy"]
         except:

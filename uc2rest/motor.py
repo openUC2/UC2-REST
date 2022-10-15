@@ -2,6 +2,16 @@ import numpy as np
 import time 
 
 class Motor(object):
+    
+    microsteppingfactor_filter=16 # run more smoothly
+    filter_pos_1 = 1000*microsteppingfactor_filter # GFP
+    filter_pos_2 = 0*microsteppingfactor_filter # AF647/SIR
+    filter_pos_3 = 500*microsteppingfactor_filter
+    filter_pos_LED = filter_pos_1 # GFP / Brightfield
+    filter_pos_init = -1250*microsteppingfactor_filter
+    filter_speed = microsteppingfactor_filter * 500
+    filter_position_now = 0
+
 
     def __init__(self, parent=None):
         self.steps_last_0 = 0
@@ -238,7 +248,8 @@ class Motor(object):
             "axis": axis
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
-        _position = r["position"]
+        try: _position = r["position"]
+        except: _position = None
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):

@@ -52,7 +52,7 @@ class Serial(object):
     def checkFirmware(self, serialdevice, timeout=1):
         """Check if the firmware is correct"""
         path = "/state_get"
-        _state = self.post_json(path, {"task":path}, isInit=True, timeout=timeout)
+        _state = self.post_json(path, {"task":path}, timeout=timeout)
         if _state["identifier_name"] == "UC2_Feather": 
             return True
         else: return False
@@ -76,7 +76,7 @@ class Serial(object):
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
 
-    def post_json(self, path, payload={}, headers=None, isInit=False, timeout=1):
+    def post_json(self, path, payload={}, headers=None, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         try:
             payload["task"]
@@ -178,7 +178,7 @@ class SerialDummy(object):
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
 
-    def post_json(self, path, payload={}, headers=None, isInit=False, timeout=1):
+    def post_json(self, path, payload={}, headers=None, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         try:
             payload["task"]

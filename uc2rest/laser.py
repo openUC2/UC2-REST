@@ -42,5 +42,5 @@ class Laser(object):
 
         }
 
-        r = self.post_json(path, payload)
+        r = self._parent.post_json(path, payload)
         return r

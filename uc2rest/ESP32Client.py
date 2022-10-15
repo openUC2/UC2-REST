@@ -41,31 +41,8 @@ class ESP32Client(object):
     getmessage = ""
     is_connected = False
 
-    microsteppingfactor_filter=16 # run more smoothly
-    filter_pos_1 = 1000*microsteppingfactor_filter # GFP
-    filter_pos_2 = 0*microsteppingfactor_filter # AF647/SIR
-    filter_pos_3 = 500*microsteppingfactor_filter
-    filter_pos_LED = filter_pos_1 # GFP / Brightfield
-    filter_pos_init = -1250*microsteppingfactor_filter
-    filter_speed = microsteppingfactor_filter * 500
-    filter_position_now = 0
-
-
-    is_driving = False
-    is_sending = False
-
-    is_enabled = True
-
     is_wifi = False
     is_serial = False
-
-    is_filter_init = False
-    filter_position = 0
-
-    steps_last_0 = 0
-    steps_last_1 = 0
-    steps_last_2 = 0
-    steps_last_3 = 0
 
     BAUDRATE = 115200
     

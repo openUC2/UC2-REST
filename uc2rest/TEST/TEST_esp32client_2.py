@@ -1,5 +1,6 @@
 import uc2rest
 import numpy as np
+import time
 
 esp32 = uc2rest.ESP32Client(serialport="Unknown")
 
@@ -25,3 +26,21 @@ esp32.motor.set_motor_enable(is_enable=1)
 esp32.motor.set_direction(axis=1, sign=1, timeout=1)
 position = esp32.motor.get_position(axis=1, timeout=1)
 esp32.motor.set_position(axis=1, position=0, timeout=1)
+
+# test laser 
+esp32.laser.set_laser(channel=1, value=1000, despeckleAmplitude=0.5, despecklePeriod=10, timeout=20, is_blocking = True)
+esp32.laser.set_laser(channel=1, value=1000, despeckleAmplitude=0.5, despecklePeriod=10, timeout=20, is_blocking = True)
+esp32.laser.set_laser(channel=1, value=1000, despeckleAmplitude=0.5, despecklePeriod=10, timeout=20, is_blocking = True)
+
+
+# test state
+_state = esp32.state.get_state()
+print(_state)
+esp32.state.set_state(debug=False)
+_mode = esp32.state.isControllerMode()
+print(_mode)
+esp32.state.espRestart()
+time.sleep(5)
+esp32.state.setControllerMode(isController=True)
+_busy = esp32.state.isBusy()
+print(_busy)
