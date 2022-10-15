@@ -1,5 +1,5 @@
-//#define IS_PS3
-#define IS_PS4
+#define IS_PS3
+//#define IS_PS4
 
 // external headers
 #include "soc/soc.h"
@@ -9,7 +9,7 @@
 #else
 #include <PS4Controller.h>
 #endif
-#include <ArduinoJson.h>
+#include <Arduino.h>
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"
@@ -24,7 +24,8 @@
 #include "parameters_laser.h"
 #include "parameters_motor.h"
 #include "parameters_ledarr.h"
-#include "pindef.h" // for pin definitions
+//#include "pindef.h" // for pin definitions
+#include "pindefUC2Standalone.h"
 #include "parameters_ps.h" // playstation parameters
 #include "parameters_config.h"
 
@@ -173,9 +174,9 @@ void setup()
   Ps3.attach(onAttachPS3);
   Ps3.attachOnConnect(onConnectPS3);
   Ps3.attachOnDisconnect(onDisConnectPS3);
-  const char* PS3_MACADDESS = "01:02:03:04:05:06";
+  const char* PS3_MACADDESS = "1a:2b:3c:01:01:01";
   Serial.println("PS3 controler is set up.");
-  Ps3.begin("01:02:03:04:05:06");
+  Ps3.begin("1a:2b:3c:01:01:01");
   Serial.println(PS3_MACADDESS);
 #else
   //String address = Ps3.getAddress(); // have arbitrary address?
