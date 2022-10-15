@@ -2,8 +2,8 @@ import json
 
 
 class config(object):
-    def __init__(self, ESP32, configFilePath=None): 
-        self.ESP32 = ESP32
+    def __init__(self, parent, configFilePath=None): 
+        self._parent = parent
         self.configFilePath = configFilePath
         
         if self.configFilePath is not None:
@@ -146,7 +146,7 @@ class config(object):
         path = '/config_get'
         payload = {
         }
-        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         
         self.setDefaultConfig(r)
         
@@ -160,7 +160,7 @@ class config(object):
             payload = config
         else: 
             return None
-        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
 
