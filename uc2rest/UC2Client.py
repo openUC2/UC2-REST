@@ -19,6 +19,7 @@ from .ledmatrix import LedMatrix
 from .motor import Motor
 from .state import State
 from .laser import Laser
+from .wifi import Wifi
 
 
 try:
@@ -35,7 +36,7 @@ except:
     IS_IMSWITCH = False
 
 
-class ESP32Client(object):
+class UC2Client(object):
     # headers = {'ESP32-version': '*'}
     headers={"Content-Type":"application/json"}
     getmessage = ""
@@ -109,10 +110,8 @@ class ESP32Client(object):
         
         self.laser = Laser(self)
         
+        self.wifi = Wifi(self)
         
-   
-   
-
 
     def post_json(self, path, payload, timeout=1):
         if self.is_wifi:
@@ -133,7 +132,7 @@ class ESP32Client(object):
             r = requests.get(url, headers=self.headers)
             return r.json()
         elif self.is_serial:
-            self.serial.send_json(path, {}, timeout=timeout)
+            self.serial.get_json(self, path)
             return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")

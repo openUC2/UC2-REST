@@ -35,8 +35,10 @@ class config(object):
         self.configFile["analogPin" + str(pin)] = value
         
     def setLEDArrayConfig(self, ledArrPin, ledArrNum):
-        self.configFile["ledArrPin"] = ledArrPin
-        self.configFile["ledArrNum"] = ledArrNum
+        configFile = {}
+        configFile["ledArrPin"] = ledArrPin
+        configFile["ledArrNum"] = ledArrNum
+        self.setConfigDevice(configFile, timeout=1)
         
     def setLaserPinConfig(self, pin1, pin2, pin3):
         self.configFile["laserPin1"] = pin1

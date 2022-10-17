@@ -6,7 +6,7 @@ class updater(object):
     
     def __init__(self, ESP32=None, port=None, firmwarePath="./", firmwareDownloadPath=None):
         if ESP32 is not None:
-            self.port = ESP32.serialport
+            self.port = ESP32.serial.serialport
         if port is not None:
             self.port = port
             

@@ -180,7 +180,7 @@ class Motor(object):
         # wait until job has been done
         time0=time.time()
         if is_blocking:
-            while self.isBusy():
+            while self._parent.state.isBusy():
                 time.sleep(0.1)
                 if time.time()-time0>timeout:
                     break

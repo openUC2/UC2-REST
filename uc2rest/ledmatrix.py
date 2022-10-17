@@ -116,8 +116,6 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
-
-        
     def setSingle(self, indexled, state):
         # Update the intensity of a single LED in a cartesian grid        
         ix = indexled//self.Nx
@@ -126,19 +124,15 @@ class LedMatrix(object):
         # forward backward enumaration
         if ix%2 != 0:
            indexled = (ix*self.Nx)+(self.Ny-iy-1)
-        self._parent.send_LEDMatrix_single(indexled=indexled, intensity=np.array(state)*np.array(self.intensity), timeout=self.timeout)
+        self.send_LEDMatrix_single(indexled=indexled, intensity=np.array(state)*np.array(self.intensity), timeout=self.timeout)
 
-        return self.ledpattern
-    
-    def pattern(self, ledpattern):
-        self._parent.send_LEDMatrix_array(ledpattern, timeout=self.timeout)
-        self.ledpattern = ledpattern
         return self.ledpattern
     
     def setAll(self, state):
         # fast addressing
+        # turns on all LEDs at a certain intensity
         intensity2display = np.array(self.intensity)*np.array(state)
-        self._parent.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
+        self.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
         self.ledpattern = intensity2display*np.ones((self.Nx, self.Ny, 3))
         return self.ledpattern
     
@@ -146,10 +140,16 @@ class LedMatrix(object):
         self.intensity = intensity
         self.setPattern()
     
-    def setPattern(self):
+    def setPattern(self, ledpattern=None):
         # sends pattern with proper intensity
+        if ledpattern is not None:
+            self.ledpattern = ledpattern
         pattern2send = self.ledpattern*self.intensity
-        self._parent.send_LEDMatrix_array(pattern2send, timeout=self.timeout)
+        self.send_LEDMatrix_array(pattern2send, timeout=self.timeout)
+        return self.ledpattern
+    
+    def getPattern(self):
+        return self.ledpattern
         
     def set_led(self, colour=(0,0,0)):
         payload = {
@@ -161,4 +161,6 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload)
         return r
 
+    def setLEDArrayConfig(self, ledArrPin=4, ledArrNum=25):
+        return self._parent.config.setLEDArrayConfig(ledArrPin=4, ledArrNum=25)
         

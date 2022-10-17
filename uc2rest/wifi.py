@@ -1,4 +1,9 @@
     
+class Wifi(object):
+    
+    def __init__(self, parent):
+        self._parent = parent
+        
     def isConnected(self):
         # check if client is connected to the same network
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -13,26 +18,23 @@
     
     def get_json(self, path):
         if self.is_connected and self.is_wifi:
-        if not path.startswith("http"):
-            path = self.base_uri + path
-        try:
-            r = requests.get(path)
-            r.raise_for_status()
-            self.is_connected = True
+            if not path.startswith("http"):
+                path = self.base_uri + path
+            try:
+                r = requests.get(path)
+                r.raise_for_status()
+                self.is_connected = True
 
-            self.getmessage = r.json()
-            self.is_sending = False
-            return self.getmessage
+                self.getmessage = r.json()
+                self.is_sending = False
+                return self.getmessage
 
-        except Exception as e:
-            if IS_IMSWITCH: self.__logger.error(e)
-            self.is_connected = False
-            self.is_sending = False
-            # not connected
-            return None
-        
-    
-
+            except Exception as e:
+                if IS_IMSWITCH: self.__logger.error(e)
+                self.is_connected = False
+                self.is_sending = False
+                # not connected
+                return None
 
     def post_json(self, path, payload={}, headers=None, isInit=False, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
@@ -61,9 +63,6 @@
         return f"http://{self.host}:{self.port}"
 
 
-
-
-
     def send_jpeg(self, image):
         if is_cv2:
             temp = NamedTemporaryFile()
@@ -86,3 +85,11 @@
             if self.is_connected:
                 requests.post(self.base_uri + path, files=files)
 
+
+
+    def scanWifi(self):
+        path = '/wifi/scan'
+        r = self._parent.get_json(path)
+        return r
+
+        

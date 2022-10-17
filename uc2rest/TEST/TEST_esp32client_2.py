@@ -2,13 +2,15 @@ import uc2rest
 import numpy as np
 import time
 
-esp32 = uc2rest.ESP32Client(serialport="Unknown")
+esp32 = uc2rest.UC2Client(serialport="Unknown")
 
 # test LED
+esp32.led.setLEDArrayConfig(ledArrPin=4, ledArrNum=25)
 led_pattern = np.zeros((1, 5, 5, 3), dtype=np.uint8)
 esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
 esp32.led.send_LEDMatrix_full(intensity=(255, 0, 0), timeout=1)
 esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
+esp32.led.get
 
 # test Motor
 esp32.motor.move_x(steps=1000, speed=1000)
@@ -44,3 +46,9 @@ time.sleep(5)
 esp32.state.setControllerMode(isController=True)
 _busy = esp32.state.isBusy()
 print(_busy)
+
+
+# wifi
+esp32.wifi.scanWifi()
+
+

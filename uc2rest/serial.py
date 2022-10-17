@@ -21,7 +21,7 @@ class Serial(object):
         serialdevice = None
         try:
             # most simple case: We know all parameters
-            serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
+            self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
             time.sleep(2) # let it warm up
         except:
