@@ -128,9 +128,11 @@ class LedMatrix(object):
 
         return self.ledpattern
     
-    def setAll(self, state):
+    def setAll(self, state, intensity=None):
         # fast addressing
         # turns on all LEDs at a certain intensity
+        if intensity is not None:
+            self.intensity = intensity
         intensity2display = np.array(self.intensity)*np.array(state)
         self.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
         self.ledpattern = state*np.ones((self.Nx, self.Ny, 3))
