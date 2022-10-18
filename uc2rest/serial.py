@@ -7,7 +7,7 @@ import json
 class Serial(object):
     
     def __init__(self, port, baudrate, timeout=1, parent=None):
-        self.port = port
+        self.serialport = port
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
@@ -27,6 +27,12 @@ class Serial(object):
         except:
             # try to find the PORT
             _available_ports = serial.tools.list_ports.comports(include_links=False)
+            if len(_available_ports)==0:
+                self.serialport = "NotConnected"
+                self.serialdevice = SerialDeviceDummy()
+                self._parent.logger.debug("No USB device connected! Using DUMMY!")
+                return self.serialdevice
+
             for iport in _available_ports:
                 # list of possible serial ports
                 self._parent.logger.debug(iport.device)
@@ -94,6 +100,9 @@ class Serial(object):
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
+            if self.serialport == "NotConnected":
+                # try to reconnect
+                self.open()
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:

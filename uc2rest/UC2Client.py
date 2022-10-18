@@ -97,7 +97,7 @@ class UC2Client(object):
         
         # initialize LED matrix
         try: NLeds = self.pinConfig["ledArrNum"]
-        except: NLeds=None
+        except: NLeds=64
         self.led = LedMatrix(self, NLeds=NLeds)
         
         # initilize motor
