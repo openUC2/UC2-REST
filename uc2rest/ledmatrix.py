@@ -133,7 +133,7 @@ class LedMatrix(object):
         # turns on all LEDs at a certain intensity
         intensity2display = np.array(self.intensity)*np.array(state)
         self.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
-        self.ledpattern = intensity2display*np.ones((self.Nx, self.Ny, 3))
+        self.ledpattern = state*np.ones((self.Nx, self.Ny, 3))
         return self.ledpattern
     
     def setIntensity(self, intensity):
@@ -144,7 +144,7 @@ class LedMatrix(object):
         # sends pattern with proper intensity
         if ledpattern is not None:
             self.ledpattern = ledpattern
-        pattern2send = self.ledpattern*self.intensity
+        pattern2send = (self.ledpattern>=1)*self.intensity
         self.send_LEDMatrix_array(pattern2send, timeout=self.timeout)
         return self.ledpattern
     
