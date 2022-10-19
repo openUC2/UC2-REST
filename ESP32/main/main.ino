@@ -9,7 +9,7 @@
 #else
 #include <PS4Controller.h>
 #endif
-#include <ArduinoJson.h>
+#include <Arduino.h>
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"
@@ -25,6 +25,7 @@
 #include "parameters_motor.h"
 #include "parameters_ledarr.h"
 #include "pindef.h" // for pin definitions
+//#include "pindefUC2Standalone.h"
 #include "parameters_ps.h" // playstation parameters
 #include "parameters_config.h"
 
@@ -115,18 +116,20 @@ void setup()
   // check if setup went through after new config - avoid endless boot-loop
   preferences.begin("setup", false);
   if (preferences.getBool("setupComplete", true) == false) {
+    
+    // make sure next time no bootloop is created
+    preferences.putBool("setupComplete", false);
+    preferences.end();
+    
     Serial.println("Setup not done, resetting config?"); //TODO not working!
     resetConfigurations();
+
   }
-  else{
+  else {
     Serial.println("Setup done, continue.");
   }
   preferences.putBool("setupComplete", false);
   preferences.end();
-
-
-
-
 
   // load config
   loadConfiguration();
@@ -155,36 +158,42 @@ void setup()
 
   setup_matrix();
   setup_motor();
+  setup_laser();
 
   /*
     setting up playstation controller
   */
+  if(isFirstRun()) {
+    // 
+    clearBlueetoothDevice();
+    ESP.restart();
+  }
 
-  clearBlueetoothDevice();
 #ifdef IS_PS3
   Serial.println("Connnecting to the PS3 controller, please please the magic round button in the center..");
   Ps3.attach(onAttachPS3);
   Ps3.attachOnConnect(onConnectPS3);
   Ps3.attachOnDisconnect(onDisConnectPS3);
-  const char* PS3_MACADDESS = "01:02:03:04:05:06";
-  Ps3.begin("01:02:03:04:05:06");
+  const char* PS3_MACADDESS = "1a:2b:3c:01:01:01";
+  Serial.println("PS3 controler is set up.");
+  Ps3.begin("1a:2b:3c:01:01:01");
   Serial.println(PS3_MACADDESS);
 #else
   //String address = Ps3.getAddress(); // have arbitrary address?
   //Serial.println(address);
-  Serial.println("PS3 controler is set up.");
+  Serial.println("PS4 controler is set up.");
   Serial.println("Connnecting to the PS4 controller, please please the magic round button in the center..");
+  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01"; // TODO not working with adaptive address
+  Serial.println(PS4Mac);
+  Serial.println(PS4_MACADDESS);
+  PS4.begin(PS4_MACADDESS);
   PS4.attach(onAttachPS4);
-  PS4.begin("1a:2b:3c:01:01:01 - UNICAST!");
   PS4.attachOnConnect(onConnectPS4);
   PS4.attachOnDisconnect(onDisConnectPS4);
-  const char*  PS4_MACADDESS = "1a:2b:3c:01:01:01";
-  Serial.println(PS4_MACADDESS);
-  Serial.println("PS4 controler is set up.");
+  Serial.print("PS4 controler is set up. - UNICAST!");
 #endif
 
-  // setup laser
-  setup_laser();
+
 
 #ifdef IS_DAC
   Serial.println("Setting Up DAC");
@@ -512,7 +521,7 @@ void jsonProcessor(char task[]) {
   jsonDocument.clear();
   jsonDocument.garbageCollect();
 
-  if(DEBUG) Serial.println("JSON processed");
+  if (DEBUG) Serial.println("JSON processed");
 }
 
 

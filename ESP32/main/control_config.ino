@@ -46,32 +46,32 @@ bool setConfigurations() {
   preferences.begin(prefNamespace , false);
 
   // MOTOR X
-  if (jsonDocument.containsKey(keyMotorXStepPin))
-    preferences.putUInt(keyMotorXStepPin, jsonDocument[keyMotorXStepPin]);
-  if (jsonDocument.containsKey(keyMotorXDirPin))
-    preferences.putUInt(keyMotorXDirPin, jsonDocument[keyMotorXDirPin]);
+  if (jsonDocument.containsKey(keyMotXStepPin))
+    preferences.putUInt(keyMotXStepPin, jsonDocument[keyMotXStepPin]);
+  if (jsonDocument.containsKey(keyMotXDirPin))
+    preferences.putUInt(keyMotXDirPin, jsonDocument[keyMotXDirPin]);
 
   // MOTOR Y
-  if (jsonDocument.containsKey(keyMotorYStepPin))
-    preferences.putUInt(keyMotorYStepPin, jsonDocument[keyMotorYStepPin]);
-  if (jsonDocument.containsKey(keyMotorYDirPin))
-    preferences.putUInt(keyMotorYDirPin, jsonDocument[keyMotorYDirPin]);
+  if (jsonDocument.containsKey(keyMotYStepPin))
+    preferences.putUInt(keyMotYStepPin, jsonDocument[keyMotYStepPin]);
+  if (jsonDocument.containsKey(keyMotYDirPin))
+    preferences.putUInt(keyMotYDirPin, jsonDocument[keyMotYDirPin]);
 
   // MOTOR Z
-  if (jsonDocument.containsKey(keyMotorZStepPin))
-    preferences.putUInt(keyMotorZStepPin, jsonDocument[keyMotorZStepPin]);
-  if (jsonDocument.containsKey(keyMotorZDirPin))
-    preferences.putUInt(keyMotorZDirPin, jsonDocument[keyMotorZDirPin]);
+  if (jsonDocument.containsKey(keyMotZStepPin))
+    preferences.putUInt(keyMotZStepPin, jsonDocument[keyMotZStepPin]);
+  if (jsonDocument.containsKey(keyMotZDirPin))
+    preferences.putUInt(keyMotZDirPin, jsonDocument[keyMotZDirPin]);
 
   // MOTOR A
-  if (jsonDocument.containsKey(keyMotorAStepPin))
-    preferences.putUInt(keyMotorAStepPin, jsonDocument[keyMotorAStepPin]);
-  if (jsonDocument.containsKey(keyMotorADirPin))
-    preferences.putUInt(keyMotorADirPin, jsonDocument[keyMotorADirPin]);
+  if (jsonDocument.containsKey(keyMotAStepPin))
+    preferences.putUInt(keyMotAStepPin, jsonDocument[keyMotAStepPin]);
+  if (jsonDocument.containsKey(keyMotADirPin))
+    preferences.putUInt(keyMotADirPin, jsonDocument[keyMotADirPin]);
 
   // MOTOR ENABLE
-  if (jsonDocument.containsKey(keyMotorEnable))
-    preferences.putUInt(keyMotorEnable, jsonDocument[keyMotorEnable]);
+  if (jsonDocument.containsKey(keyMotEnable))
+    preferences.putUInt(keyMotEnable, jsonDocument[keyMotEnable]);
  
   // LEDARRAY
   if (jsonDocument.containsKey(keyLEDArray))
@@ -125,12 +125,12 @@ bool setConfigurations() {
 
   // Playstation
   if (jsonDocument.containsKey(keyPS3Mac)) {
-    String PS3Mac = jsonDocument[keyPS3Mac];
-    preferences.putString(keyPS3Mac, PS3Mac);
+    String PS3MacTmp = jsonDocument[keyPS3Mac];
+    preferences.putString(keyPS3Mac, PS3MacTmp);
   }
   if (jsonDocument.containsKey(keyPS4Mac)) {
-    String PS4Mac = jsonDocument[keyPS4Mac];
-    preferences.putString(keyPS4Mac, PS4Mac);
+    String PS4MacTmp = jsonDocument[keyPS4Mac];
+    preferences.putString(keyPS4Mac, PS4MacTmp);
   }
   preferences.end();
 
@@ -152,19 +152,19 @@ bool loadConfiguration() {
     and returns a JSON document. */
 
   preferences.begin(prefNamespace, false);
-  STEP_PIN_X = preferences.getUInt(keyMotorXStepPin, STEP_PIN_X);
-  DIR_PIN_X = preferences.getUInt(keyMotorXDirPin, DIR_PIN_X);
+  STEP_PIN_X = preferences.getUInt(keyMotXStepPin, STEP_PIN_X);
+  DIR_PIN_X = preferences.getUInt(keyMotXDirPin, DIR_PIN_X);
 
-  STEP_PIN_Y = preferences.getUInt(keyMotorYStepPin, STEP_PIN_Y);
-  DIR_PIN_Y = preferences.getUInt(keyMotorYDirPin, DIR_PIN_Y);
+  STEP_PIN_Y = preferences.getUInt(keyMotYStepPin, STEP_PIN_Y);
+  DIR_PIN_Y = preferences.getUInt(keyMotYDirPin, DIR_PIN_Y);
 
-  STEP_PIN_Z = preferences.getUInt(keyMotorZStepPin, STEP_PIN_Z);
-  DIR_PIN_Z = preferences.getUInt(keyMotorZDirPin, DIR_PIN_Z);
+  STEP_PIN_Z = preferences.getUInt(keyMotZStepPin, STEP_PIN_Z);
+  DIR_PIN_Z = preferences.getUInt(keyMotZDirPin, DIR_PIN_Z);
 
-  STEP_PIN_A = preferences.getUInt(keyMotorAStepPin, STEP_PIN_A);
-  DIR_PIN_A = preferences.getUInt(keyMotorADirPin, DIR_PIN_A);
+  STEP_PIN_A = preferences.getUInt(keyMotAStepPin, STEP_PIN_A);
+  DIR_PIN_A = preferences.getUInt(keyMotADirPin, DIR_PIN_A);
 
-  ENABLE_PIN = preferences.getUInt(keyMotorEnable, ENABLE_PIN);
+  ENABLE_PIN = preferences.getUInt(keyMotEnable, ENABLE_PIN);
 
   LED_ARRAY_PIN = preferences.getUInt(keyLEDArray , LED_ARRAY_PIN);
   LED_ARRAY_NUM = preferences.getUInt(keyLEDNumLEDArray, LED_ARRAY_NUM);
@@ -213,15 +213,15 @@ void config2json() {
   // Assign to JSON jsonDocumentument
   jsonDocument.clear();
 
-  jsonDocument[keyMotorXStepPin] = STEP_PIN_X;
-  jsonDocument[keyMotorXDirPin] = DIR_PIN_X;
-  jsonDocument[keyMotorYStepPin] = STEP_PIN_Y;
-  jsonDocument[keyMotorYDirPin] = DIR_PIN_Y;
-  jsonDocument[keyMotorZStepPin] = STEP_PIN_Z;
-  jsonDocument[keyMotorZDirPin] = DIR_PIN_Z;
-  jsonDocument[keyMotorAStepPin] = STEP_PIN_A;
-  jsonDocument[keyMotorADirPin] = DIR_PIN_A;
-  jsonDocument[keyMotorEnable] = ENABLE_PIN;
+  jsonDocument[keyMotXStepPin] = STEP_PIN_X;
+  jsonDocument[keyMotXDirPin] = DIR_PIN_X;
+  jsonDocument[keyMotYStepPin] = STEP_PIN_Y;
+  jsonDocument[keyMotYDirPin] = DIR_PIN_Y;
+  jsonDocument[keyMotZStepPin] = STEP_PIN_Z;
+  jsonDocument[keyMotZDirPin] = DIR_PIN_Z;
+  jsonDocument[keyMotAStepPin] = STEP_PIN_A;
+  jsonDocument[keyMotADirPin] = DIR_PIN_A;
+  jsonDocument[keyMotEnable] = ENABLE_PIN;
   jsonDocument[keyLEDArray] = LED_ARRAY_PIN;
   jsonDocument[keyLEDNumLEDArray] = LED_ARRAY_NUM;
   jsonDocument[keyDigital1Pin] = DIGITAL_PIN_1;

@@ -41,7 +41,6 @@ bool PS4Controller::begin() {
   return true;
 }
 
-#define ESP_BD_ADDR_STR         "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx"
 bool PS4Controller::begin(const char* mac) {
   esp_bd_addr_t addr;
     

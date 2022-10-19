@@ -11,7 +11,7 @@ class updater(object):
     
     def __init__(self, ESP32=None, port=None, firmwarePath="./", firmwareDownloadPath=None):
         if ESP32 is not None:
-            self.port = ESP32.serialport
+            self.port = ESP32.serial.serialport
         if port is not None:
             self.port = port
             
@@ -51,21 +51,40 @@ class updater(object):
             # 0x8000 ./ESP32/build/main.ino.partitions.bin 
             # 0xe000 ./ESP32/build/boot_app0.bin 
             # 0x10000 ./ESP32/build/main.ino.bin 
-            cmd = ["esptool.py", 
-                    "--chip", "esp32",
-                    "--port", self.port, 
-                    "--baud", "921600", 
-                    "write_flash",
-                    "--flash_freq", "80m",
-                    "--flash_mode", "dio", 
-                    "--flash_size", "detect", 
-                    "0xe000", self.filenames[4],
-                    "0x1000", self.filenames[1], 
-                    "0x8000", self.filenames[3], 
-                    "0x10000", self.filenames[0]]
-            print('Using command %s' % ' '.join(cmd))
-            process = subprocess.Popen(cmd)
-            process.wait()
+            try:
+                cmd = ["esptool.py", 
+                        "--chip", "esp32",
+                        "--port", self.port, 
+                        "--baud", "921600", 
+                        "write_flash",
+                        "--flash_freq", "80m",
+                        "--flash_mode", "dio", 
+                        "--flash_size", "detect", 
+                        "0xe000", self.filenames[4],
+                        "0x1000", self.filenames[1], 
+                        "0x8000", self.filenames[3], 
+                        "0x10000", self.filenames[0]]
+                print('Using command %s' % ' '.join(cmd))
+                process = subprocess.Popen(cmd)
+                process.wait()
+            except Exception as e:
+                print(e)
+                print("We will try an alternative route:")
+                cmd = ["python -m esptool", 
+                        "--chip", "esp32",
+                        "--port", self.port, 
+                        "--baud", "921600", 
+                        "write_flash",
+                        "--flash_freq", "80m",
+                        "--flash_mode", "dio", 
+                        "--flash_size", "detect", 
+                        "0xe000", self.filenames[4],
+                        "0x1000", self.filenames[1], 
+                        "0x8000", self.filenames[3], 
+                        "0x10000", self.filenames[0]]
+                print('Using command %s' % ' '.join(cmd))
+                process = subprocess.Popen(cmd)
+                process.wait()
             print("Firmware flashed")
             return True
         except Exception as e:

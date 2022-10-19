@@ -6,10 +6,7 @@
 // setting up wifi parameters
 boolean hostWifiAP = false; // set this variable if you want the ESP32 to be the host
 boolean isCaptivePortal = true; // want to autoconnect to wifi networks?
-const char*  WifiSSID = "BenMur";//"UC2 - F8Team"; //"IPHT - Konf"; // "Blynk";
-const char*  WifiPW = "MurBen3128"; //"_lachmannUC2"; //"WIa2!DcJ"; //"12345678";
-const char*  WifiSSIDAP = "UC2";
-String hostname = "youseetoo";
+
 
 static const char PROGMEM otaindex[] = R"rawliteral(
 <!DOCTYPE HTML>

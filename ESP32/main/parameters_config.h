@@ -57,25 +57,103 @@ laser2 -> LIMZ
   "dacFake2":0,
   "identifier": "UC2Standalone",
   "ssid": "Blynk",
-  "PW": "12345678"
+  "PW": "12345678", 
+  "PS4Mac": "1a:2b:3c:01:01:01"
   }
   {"task":"/config_act", "applyConfig":1}
   {"task":"/config_get"}
   
 
+
+sample config file for Uc2 Standalone  1,1
+
+  {
+  "task":"/config_set", 
+  "motXstp": 2,
+  "motXdir": 33,
+  "motYstp": 27,
+  "motYdir": 16,
+  "motZstp": 12,
+  "motZdir": 14,
+  "motAstp": 22,
+  "motAdir": 21,
+  "motXLim": -1,
+  "motYLim": 34,
+  "motZLim": 35,
+  "motEnable": 13,
+  "ledArrPin": 32,
+  "ledArrNum": 16,
+  "digitalPin1":0,
+  "digitalPin2":0,
+  "analogPin1":0,
+  "analogPin2":0,
+  "analogPin3":0,
+  "laserPin1":17,
+  "laserPin2":4,
+  "laserPin3":15,
+  "dacFake1":0,
+  "dacFake2":0,
+  "identifier": "UC2Standalone",
+  "ssid": "Blynk",
+  "PW": "12345678", 
+  "PS4Mac": "1a:2b:3c:01:01:01"
+  }
+  {"task":"/config_act", "applyConfig":1}
+  {"task":"/config_get"}
+
+  
+// for cellstorm
+led -> LIMX
+lens1 -> LIMY
+lens2 -> LIMZ
+laser -> xlim
+
+  {
+  "task":"/config_set", 
+  "motXstp": 2,
+  "motXdir": 33,
+  "motYstp": 27,
+  "motYdir": 16,
+  "motZstp": 12,
+  "motZdir": 14,
+  "motAstp": 22,
+  "motAdir": 21,
+  "motEnable": 13,
+  "ledArrPin": 0,
+  "ledArrNum": 16,
+  "digitalPin1":10,
+  "digitalPin2":11,
+  "analogPin1":0,
+  "analogPin2":0,
+  "analogPin3":0,
+  "laserPin1":4,
+  "laserPin2":15,
+  "laserPin3":17,
+  "dacFake1":0,
+  "dacFake2":0,
+  "identifier": "UC2Standalone",
+  "ssid": "Blynk",
+  "PW": "12345678", 
+  "PS4Mac": "1a:2b:3c:01:01:01"
+  }
+  {"task":"/config_act", "applyConfig":1}
+  {"task":"/config_get"}
+  
+
+
 */
 
 const char* prefNamespace = "UC2";
 
-const char* keyMotorXStepPin = "motXstp";
-const char* keyMotorXDirPin = "motXdir";
-const char* keyMotorYStepPin = "motYstp";
-const char* keyMotorYDirPin = "motYdir";
-const char* keyMotorZStepPin = "motZstp";
-const char* keyMotorZDirPin = "motZdir";
-const char* keyMotorAStepPin = "motAstp";
-const char* keyMotorADirPin = "motAdir";
-const char* keyMotorEnable = "motEnable";
+const char* keyMotXStepPin = "motXstp";
+const char* keyMotXDirPin = "motXdir";
+const char* keyMotYStepPin = "motYstp";
+const char* keyMotYDirPin = "motYdir";
+const char* keyMotZStepPin = "motZstp";
+const char* keyMotZDirPin = "motZdir";
+const char* keyMotAStepPin = "motAstp";
+const char* keyMotADirPin = "motAdir";
+const char* keyMotEnable = "motEnable";
 
 const char* keyLEDArray = "ledArrPin";
 const char* keyLEDNumLEDArray = "ledArrNum";
@@ -101,4 +179,3 @@ const char* keyWifiPW = "PW";
 
 const char* keyPS3Mac = "PS3Mac";
 const char* keyPS4Mac = "PS4Mac";
-

@@ -2,8 +2,8 @@ import json
 
 
 class config(object):
-    def __init__(self, ESP32, configFilePath=None): 
-        self.ESP32 = ESP32
+    def __init__(self, parent, configFilePath=None): 
+        self._parent = parent
         self.configFilePath = configFilePath
         
         if self.configFilePath is not None:
@@ -35,8 +35,10 @@ class config(object):
         self.configFile["analogPin" + str(pin)] = value
         
     def setLEDArrayConfig(self, ledArrPin, ledArrNum):
-        self.configFile["ledArrPin"] = ledArrPin
-        self.configFile["ledArrNum"] = ledArrNum
+        configFile = {}
+        configFile["ledArrPin"] = ledArrPin
+        configFile["ledArrNum"] = ledArrNum
+        self.setConfigDevice(configFile, timeout=1)
         
     def setLaserPinConfig(self, pin1, pin2, pin3):
         self.configFile["laserPin1"] = pin1
@@ -146,9 +148,12 @@ class config(object):
         path = '/config_get'
         payload = {
         }
-        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         
         self.setDefaultConfig(r)
+        
+        if type(r) != dict:
+            r = self.loadDefaultConfig()
         return r
 
     def setConfigDevice(self, config, timeout=1):
@@ -157,7 +162,7 @@ class config(object):
             payload = config
         else: 
             return None
-        r = self.ESP32.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
 
