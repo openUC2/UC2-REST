@@ -2,8 +2,7 @@
 # coding: utf-8
 #%%
 """
-Simple client code for the ESP32 in Python - adapted from OFM Client
-Copyright 2020 Richard Bowman, released under LGPL 3.0 or later
+Simple client code for the ESP32 in Python
 Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
 

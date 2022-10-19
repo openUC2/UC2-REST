@@ -16,9 +16,8 @@ class Serial(object):
         
     def open(self):
         '''Open the serial port'''
-
         self.is_connected = False
-        serialdevice = None
+        self.serialdevice = None
         try:
             # most simple case: We know all parameters
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
@@ -27,11 +26,6 @@ class Serial(object):
         except:
             # try to find the PORT
             _available_ports = serial.tools.list_ports.comports(include_links=False)
-            if len(_available_ports)==0:
-                self.serialport = "NotConnected"
-                self.serialdevice = SerialDeviceDummy()
-                self._parent.logger.debug("No USB device connected! Using DUMMY!")
-                return self.serialdevice
 
             for iport in _available_ports:
                 # list of possible serial ports
@@ -47,12 +41,15 @@ class Serial(object):
                         if correctFirmware:
                             self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+iport.device)
-                            break
+                            return self.serialdevice
                     except Exception as e:
                         self._parent.logger.debug("Trying out port "+iport.device+" failed")
                         self._parent.logger.error(e)
                         self.is_connected = False
-        
+        # last resort: we are not connected
+        self.serialport = "NotConnected"
+        self.serialdevice = SerialDeviceDummy()
+        self._parent.logger.debug("No USB device connected! Using DUMMY!")
         return self.serialdevice                
 
     def checkFirmware(self, serialdevice, timeout=1):
