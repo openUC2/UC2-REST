@@ -19,10 +19,10 @@ class Motor(object):
         self.steps_last_2 = 0
         self.steps_last_3 = 0
         
-        self.backlash_x = 0
-        self.backlash_y = 0
-        self.backlash_z = 0
-        self.backlash_t = 0
+        self.backlashX = 0
+        self.backlashY = 0
+        self.backlashZ = 0
+        self.backlashT = 0
 
         self._parent = parent
         
@@ -30,21 +30,68 @@ class Motor(object):
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''
+    def setup_motor(self, axis, minPos, maxPos, stepSize, backlash):
+        if axis == "X":
+            self.minPosX = minPos
+            self.maxPosX = maxPos
+            self.stepSizeX = stepSize
+            self.backlashX = backlash
+        elif axis == "Y":
+            self.minPosY = minPos
+            self.maxPosY = maxPos
+            self.stepSizeY = stepSize
+            self.backlashY = backlash
+        elif axis == "Z":
+            self.minPosZ = minPos
+            self.maxPosZ = maxPos
+            self.stepSizeZ = stepSize
+            self.backlashZ = backlash
+        elif axis == "T":
+            self.minPosT = minPos
+            self.maxPosT = maxPos
+            self.stepSizeT = stepSize
+            self.backlashT = backlash            
+            
+    def home_x(self):
+        r = self.home(axis="X")
+        return r
+    
+    def home_y(self):
+        r = self.home(axis="Y")
+        return r
+    
+    def home_z(self):
+        r = self.home(axis="Z")
+        return r
+    
+    def home_xyz(self):
+        r = self.home(axis="XYZ")
+        return r
+
+    def home(self, axis="X"):
+        path = "/motor_act",
+        payload = {
+            "task": path,
+            "axis": axis
+        }
+        r = self._parent.post_json(path, payload)
+        return r
+        
 
     def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(steps,0,0,0), speed=speed, timeout=1, backlash=(self.backlash_x,0,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=(steps,0,0,0), speed=speed, timeout=1, backlash=(self.backlashX,0,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
     def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,steps,0,0), speed=speed, timeout=1, backlash=(0,self.backlash_y,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=(0,steps,0,0), speed=speed, timeout=1, backlash=(0,self.backlashY,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
     def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,0,steps,0), speed=speed, timeout=1, backlash=(0,0,self.backlash_z,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=(0,0,steps,0), speed=speed, timeout=1, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
     def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,0,0,steps), speed=speed, timeout=1, backlash=(0,0,self.backlash_z,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=(0,0,0,steps), speed=speed, timeout=1, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
     
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True):
@@ -61,7 +108,7 @@ class Motor(object):
             steps = (steps,steps,steps,steps)
         
 
-        r = self.move_stepper(steps=steps, speed=speed, timeout=1, backlash=(self.backlash_x,self.backlash_y,self.backlash_z,self.backlash_t), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=steps, speed=speed, timeout=1, backlash=(self.backlashX,self.backlashY,self.backlashZ,self.backlashT), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
     def init_filter(self, nSteps, speed=250, filter_axis=-1, is_blocking = True, is_enabled=False):
@@ -152,13 +199,35 @@ class Motor(object):
             # we want to overshoot a bit
             steps_3 =  steps[3] + (np.sign(steps[3])*backlash[3])
         else: steps_3 = steps[3]
+        
+        # get current position
+        pos_0 = self.get_position(3)
+        pos_1 = self.get_position(0)
+        pos_2 = self.get_position(1)
+        pos_3 = self.get_position(2)
 
+        # convert to physical units
+        steps_0 *= self.stepSizeX
+        steps_1 *= self.stepSizeY
+        steps_2 *= self.stepSizeZ
+        steps_3 *= self.stepSizeT
+        
+        # check if within limits
+        if pos_0+steps_0 > self.maxStepX or pos_0+steps_0 < self.minStepX:
+            steps_0=0
+        if pos_1+steps_1 > self.maxStepY or pos_1+steps_1 < self.minStepY:
+            steps_1=0
+        if pos_2+steps_2 > self.maxStepZ or pos_2+steps_2 < self.minStepZ:
+            steps_2 = 0
+        if pos_3+steps_3 > self.maxStepT or pos_3+steps_3 < self.minStepT:
+            steps_3 = 0
+        
         payload = {
             "task":"/motor_act",
-            "pos0": np.int(steps_3),
             "pos1": np.int(steps_0),
             "pos2": np.int(steps_1),
             "pos3": np.int(steps_2),
+            "pos0": np.int(steps_3),
             "isblock": int(is_blocking),
             "isabs": int(is_absolute),
             "speed0": np.int(speed[3]),
@@ -167,6 +236,8 @@ class Motor(object):
             "speed3": np.int(speed[2]),
             "isen": np.int(is_enabled)
         }
+        
+        # safe steps to track direction for backlash compensatio
         self.steps_last_0 = steps_0
         self.steps_last_1 = steps_1
         self.steps_last_2 = steps_2

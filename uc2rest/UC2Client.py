@@ -22,7 +22,7 @@ from .wifi import Wifi
 
 
 try:
-    import cv2
+    import cv2#
     is_cv2 = True
 except:
     is_cv2 = False
