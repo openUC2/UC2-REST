@@ -35,9 +35,11 @@ class Serial(object):
                 if iport.device.startswith(portslist) or iport.description.find(descriptionlist) != -1:
                     try:
                         self.serialdevice = serial.Serial(port=iport.device, baudrate=self.baudrate, timeout=1)
+                        self.serialdevice.write_timeout=1
+                        
                         self.is_connected = True # attempting to initiliaze connection
                         time.sleep(2)
-                        correctFirmware = self.checkFirmware(serialdevice)
+                        correctFirmware = self.checkFirmware(self.serialdevice)
                         if correctFirmware:
                             self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+iport.device)
