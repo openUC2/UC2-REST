@@ -24,6 +24,19 @@ class Motor(object):
         self.backlashZ = 0
         self.backlashT = 0
 
+        self.stepSizeX = 1
+        self.stepSizeY = 1
+        self.stepSizeZ = 1
+        self.stepSizeT = 1
+
+        self.maxStepX = np.inf
+        self.minStepX = -np.inf
+        self.maxStepY = np.inf
+        self.minStepY = -np.inf
+        self.maxStepZ = np.inf
+        self.minStepZ = -np.inf
+        self.maxStepT = np.inf
+        self.minStepT = -np.inf
         self._parent = parent
         
         
@@ -207,10 +220,10 @@ class Motor(object):
         pos_3 = self.get_position(2)
 
         # convert to physical units
-        steps_0 *= self.stepSizeX
-        steps_1 *= self.stepSizeY
-        steps_2 *= self.stepSizeZ
-        steps_3 *= self.stepSizeT
+        steps_0 = steps_0*self.stepSizeX
+        steps_1 = steps_1*self.stepSizeY
+        steps_2 = steps_2*self.stepSizeZ
+        steps_3 = steps_3*self.stepSizeT
         
         # check if within limits
         if pos_0+steps_0 > self.maxStepX or pos_0+steps_0 < self.minStepX:
