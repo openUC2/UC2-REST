@@ -91,6 +91,29 @@ void motor_act_fct() {
     isforever = 0;
   }
 
+  // check if homing is expected
+  if (jsonDocument.containsKey("ishomeX ")) {
+    ishomeX = jsonDocument["ishomeX "];
+  }
+  else {
+    ishomeX  = 0;
+  }
+  // check if homing is expected
+  if (jsonDocument.containsKey("ishomeY ")) {
+    ishomeY = jsonDocument["ishomeY "];
+  }
+  else {
+    ishomeY  = 0;
+  }
+  // check if homing is expected
+  if (jsonDocument.containsKey("ishomeZ ")) {
+    ishomeZ = jsonDocument["ishomeZ "];
+  }
+  else {
+    ishomeZ  = 0;
+  }
+
+
   jsonDocument.clear();
 
   if (DEBUG) {
@@ -107,6 +130,9 @@ void motor_act_fct() {
     Serial.print("isstop "); Serial.println(isstop);
     Serial.print("isaccel "); Serial.println(isaccel);
     Serial.print("isforever "); Serial.println(isforever);
+    Serial.print("ishomeX "); Serial.println(ishomeX);
+    Serial.print("ishomeY "); Serial.println(ishomeY);
+    Serial.print("ishomeZ "); Serial.println(ishomeZ);
   }
 
   if (isstop) {
@@ -128,6 +154,16 @@ void motor_act_fct() {
     jsonDocument["POSY"] = POSITION_MOTOR_Y;
     jsonDocument["POSZ"] = POSITION_MOTOR_Z;
     return;
+  }
+
+  if (abs(ishomeX)) {
+    doHoming("X", ishomeX);
+  }
+  if (abs(ishomeY)) {
+    doHoming("Y", ishomeY);
+  }
+  if (abs(ishomeZ)) {
+    doHoming("Z", ishomeZ);
   }
 
   if (IS_PSCONTROLER_ACTIVE)
@@ -183,6 +219,40 @@ void setEnableMotor(bool enable) {
 
 bool getEnableMotor() {
   return motor_enable;
+}
+
+
+void doHoming(String axis, int signHomging) {
+  // FIXME: Move motor until switch is hit...
+  long tStart = millis();
+  if (axis == "A") {
+    stepper_A.move(signHomging * 1000);
+    while (millis() - tStart < 1000) { // Here we want to check a button
+      stepper_A.run();
+    }
+    stepper_A.setCurrentPosition(0);
+  }
+  if (axis == "X") {
+    stepper_X.move(signHomging * 1000);
+    while (millis() - tStart < 1000) { // Here we want to check a button
+      stepper_X.run();
+    }
+    stepper_X.setCurrentPosition(0);
+  }
+  if (axis == "Y") {
+    stepper_Y.move(signHomging * 1000);
+    while (millis() - tStart < 1000) { // Here we want to check a button
+      stepper_Y.run();
+    }
+    stepper_A.setCurrentPosition(0);
+  }
+  if (axis == "Z") {
+    stepper_Z.move(signHomging * 1000);
+    while (millis() - tStart < 1000) { // Here we want to check a button
+      stepper_Z.run();
+    }
+    stepper_Z.setCurrentPosition(0);
+  }
 }
 
 void motor_set_fct() {
@@ -247,7 +317,7 @@ void motor_set_fct() {
     switch (axis) {
       case 0:
         MAX_ACCELERATION_A = accel;
-        stepper_X.setAcceleration(MAX_ACCELERATION_A);
+        stepper_A.setAcceleration(MAX_ACCELERATION_A);
         break;
       case 1:
         MAX_ACCELERATION_X = accel;
@@ -288,14 +358,18 @@ void motor_set_fct() {
     switch (axis) {
       case 0:
         POSITION_MOTOR_A = currentposition;
+        stepper_A.setCurrentPosition(currentposition);
         break;
       case 1:
         POSITION_MOTOR_X = currentposition;
+        stepper_X.setCurrentPosition(currentposition);
         break;
       case 2:
         POSITION_MOTOR_Y = currentposition;
+        stepper_Y.setCurrentPosition(currentposition);
       case 3:
         POSITION_MOTOR_Z = currentposition;
+        stepper_Z.setCurrentPosition(currentposition);
         break;
     }
   }
@@ -312,24 +386,7 @@ void motor_set_fct() {
         break;
     }
   }
-  if (pindir != 0 and pinstep != 0) {
-    if (axis == 0) {
-      STEP_PIN_A = pinstep;
-      DIR_PIN_A = pindir;
-    }
-    else if (axis == 1) {
-      STEP_PIN_X = pinstep;
-      DIR_PIN_X = pindir;
-    }
-    else if (axis == 2) {
-      STEP_PIN_Y = pinstep;
-      DIR_PIN_Y = pindir;
-    }
-    else if (axis == 3) {
-      STEP_PIN_Z = pinstep;
-      DIR_PIN_Z = pindir;
-    }
-  }
+
 
   //if (DEBUG) Serial.print("isen "); Serial.println(isen);
   if (isen != 0 and isen) {
@@ -357,8 +414,26 @@ void motor_get_fct() {
   int sign = 0;
   int mspeed = 0;
 
-  switch (axis) {
-    case 1:
+  if (axis == -1) {
+    //then we ask for position of all axis
+    jsonDocument.clear();
+    jsonDocument["positionX"] = stepper_X.currentPosition();
+    jsonDocument["positionY"] = stepper_Y.currentPosition();
+    jsonDocument["positionZ"] = stepper_Z.currentPosition();
+    jsonDocument["positionA"] = stepper_A.currentPosition();
+  }
+  else {
+    if (axis == 0) {
+      if (DEBUG) Serial.println("AXIS 0");
+      mmaxspeed = stepper_A.maxSpeed();
+      mspeed = stepper_A.speed();
+      POSITION_MOTOR_A = stepper_A.currentPosition();
+      mposition = POSITION_MOTOR_A;
+      pinstep = STEP_PIN_A;
+      pindir = DIR_PIN_A;
+      sign = SIGN_A;
+    }
+    if (axis == 1) {
       if (DEBUG) Serial.println("AXIS 1");
       mmaxspeed = stepper_X.maxSpeed();
       mspeed = stepper_X.speed();
@@ -367,8 +442,8 @@ void motor_get_fct() {
       pinstep = STEP_PIN_X;
       pindir = DIR_PIN_X;
       sign = SIGN_X;
-      break;
-    case 2:
+    }
+    if (axis == 2) {
       if (DEBUG) Serial.println("AXIS 2");
       mmaxspeed = stepper_Y.maxSpeed();
       mspeed = stepper_Y.speed();
@@ -377,8 +452,8 @@ void motor_get_fct() {
       pinstep = STEP_PIN_Y;
       pindir = DIR_PIN_Y;
       sign = SIGN_Y;
-      break;
-    case 3:
+    }
+    if (axis == 3) {
       if (DEBUG) Serial.println("AXIS 3");
       mmaxspeed = stepper_Z.maxSpeed();
       mspeed = stepper_Z.speed();
@@ -387,18 +462,17 @@ void motor_get_fct() {
       pinstep = STEP_PIN_Z;
       pindir = DIR_PIN_Z;
       sign = SIGN_Z;
-      break;
-    default:
-      break;
-  }
+    }
 
-  jsonDocument.clear();
-  jsonDocument["position"] = mposition;
-  jsonDocument["speed"] = mspeed;
-  jsonDocument["maxspeed"] = mmaxspeed;
-  jsonDocument["pinstep"] = pinstep;
-  jsonDocument["pindir"] = pindir;
-  jsonDocument["sign"] = sign;
+
+    jsonDocument.clear();
+    jsonDocument["position"] = mposition;
+    jsonDocument["speed"] = mspeed;
+    jsonDocument["maxspeed"] = mmaxspeed;
+    jsonDocument["pinstep"] = pinstep;
+    jsonDocument["pindir"] = pindir;
+    jsonDocument["sign"] = sign;
+  }
 }
 
 

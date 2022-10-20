@@ -36,6 +36,12 @@ int isabs = true;
 int isen = false;
 bool isactive = false;
 
+// Homing parameters
+int ishomeX=0;
+int ishomeY=0;
+int ishomeZ=0;
+int ishomeA=0;
+
 // direction
 int SIGN_A = 1;
 int SIGN_X = 1;
