@@ -26,6 +26,20 @@ class Motor(object):
 
         self._parent = parent
         
+        self.minPosX = -np.inf
+        self.minPosY = -np.inf
+        self.minPosZ = -np.inf
+        self.minPosT = -np.inf
+        self.maxPosX = np.inf
+        self.maxPosY = np.inf
+        self.maxPosZ = np.inf
+        self.maxPosT = np.inf
+        self.stepSizeX =  1
+        self.stepSizeY =  1
+        self.stepSizeZ =  1
+        self.stepSizeT =  1
+        
+        
         
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
@@ -213,13 +227,13 @@ class Motor(object):
         steps_3 *= self.stepSizeT
         
         # check if within limits
-        if pos_0+steps_0 > self.maxStepX or pos_0+steps_0 < self.minStepX:
+        if pos_0+steps_0 > self.maxPosX or pos_0+steps_0 < self.minPosX:
             steps_0=0
-        if pos_1+steps_1 > self.maxStepY or pos_1+steps_1 < self.minStepY:
+        if pos_1+steps_1 > self.maxPosY or pos_1+steps_1 < self.minPosY:
             steps_1=0
-        if pos_2+steps_2 > self.maxStepZ or pos_2+steps_2 < self.minStepZ:
+        if pos_2+steps_2 > self.maxPosZ or pos_2+steps_2 < self.minPosZ:
             steps_2 = 0
-        if pos_3+steps_3 > self.maxStepT or pos_3+steps_3 < self.minStepT:
+        if pos_3+steps_3 > self.maxPosT or pos_3+steps_3 < self.minPosT:
             steps_3 = 0
         
         payload = {
@@ -320,7 +334,7 @@ class Motor(object):
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
         try: _position = r["position"]
-        except: _position = None
+        except: _position = 0
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):

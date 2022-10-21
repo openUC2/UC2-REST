@@ -12,6 +12,9 @@ class Serial(object):
         self.timeout = timeout
         self._parent = parent
         
+        self.NumberRetryReconnect = 0
+        self.MaxNumberRetryReconnect = 20
+        
         self.open() # creates self.serialdevice
         
     def open(self):
@@ -43,6 +46,7 @@ class Serial(object):
                         if correctFirmware:
                             self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+iport.device)
+                            self.NumberRetryReconnect=0
                             return self.serialdevice
                     except Exception as e:
                         self._parent.logger.debug("Trying out port "+iport.device+" failed")
@@ -99,9 +103,10 @@ class Serial(object):
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
-            if self.serialport == "NotConnected":
-                # try to reconnect
+            if self.serialport == "NotConnected" and self.NumberRetryReconnect<self.MaxNumberRetryReconnect:
+                # try to reconnect               
                 self.open()
+                self.NumberRetryReconnect += 1
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:
