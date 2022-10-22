@@ -26,16 +26,18 @@ class Serial(object):
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
             time.sleep(2) # let it warm up
+            self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
+            return self.serialdevice
         except:
             # try to find the PORT
             _available_ports = serial.tools.list_ports.comports(include_links=False)
 
+            portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb", "/dev/cu.usbserial") # TODO: Hardcoded :/
+            descriptionlist = ("CH340", "CP2102")
             for iport in _available_ports:
                 # list of possible serial ports
                 self._parent.logger.debug(iport.device)
-                portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb", "/dev/cu.usbserial") # TODO: Hardcoded :/
-                descriptionlist = ("CH340")
-                if iport.device.startswith(portslist) or iport.description.find(descriptionlist) != -1:
+                if iport.device.startswith(portslist) or iport.description.startswith(descriptionlist):
                     try:
                         self.serialdevice = serial.Serial(port=iport.device, baudrate=self.baudrate, timeout=1)
                         self.serialdevice.write_timeout=1
@@ -45,7 +47,7 @@ class Serial(object):
                         correctFirmware = self.checkFirmware(self.serialdevice)
                         if correctFirmware:
                             self.serialport = iport.device
-                            self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+iport.device)
+                            self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
                             self.NumberRetryReconnect=0
                             return self.serialdevice
                     except Exception as e:

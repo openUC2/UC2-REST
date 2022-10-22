@@ -10,7 +10,7 @@ led_pattern = np.zeros((1, 5, 5, 3), dtype=np.uint8)
 esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
 esp32.led.send_LEDMatrix_full(intensity=(255, 0, 0), timeout=1)
 esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
-esp32.led.get
+
 
 # test Motor
 esp32.motor.move_x(steps=1000, speed=1000)

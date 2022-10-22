@@ -1,10 +1,15 @@
 import uc2rest as uc2
 
-ESP32 = uc2.ESP32Client(serialport="unknown")
+# define the serial port
+serialport = "/dev/cu.SLAB_USBtoUART"
 
-updater = uc2.updater(port="/dev/cu.SLAB_USBtoUART", firmwarePath="./")
-updater = uc2.updater(port="COM4", firmwarePath="./")
-#<updater = uc2.updater(ESP32=ESP32, firmwarePath="./")
+# optional: create an ESP32 objejct
+ESP32 = uc2.UC2Client(serialport=serialport)
+
+# create the updater object
+updater = uc2.updater(port=serialport, firmwarePath="./")
+#updater = uc2.updater(port="COM4", firmwarePath="./")
+#updater = uc2.updater(ESP32=ESP32, firmwarePath="./")
 updater.downloadFirmware()
 updater.flashFirmware()
 

@@ -93,7 +93,7 @@ class updater(object):
             return False
     
     def downloadFirmware(self):
-        print("Downloading Firmware")
+        print("Downloading Firmware from "+self.firmwareDownloadPath)
         # download the firmware from github
         fileCounter = 0
         if is_requests:

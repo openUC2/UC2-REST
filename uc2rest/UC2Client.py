@@ -6,26 +6,20 @@ Simple client code for the ESP32 in Python
 Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
 
-import numpy as np
-from tempfile import NamedTemporaryFile
+#import numpy as np
+
 
 
 from .galvo import Galvo
 from .config import config
 from .logger import Logger
-from .serial import Serial
+from .mserial import Serial
 from .ledmatrix import LedMatrix
 from .motor import Motor
 from .state import State
 from .laser import Laser
 from .wifi import Wifi
 
-
-try:
-    import cv2#
-    is_cv2 = True
-except:
-    is_cv2 = False
 
 try:
     from imswitch.imcommon.model import initLogger
