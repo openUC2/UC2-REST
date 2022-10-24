@@ -1,15 +1,17 @@
+import subprocess
+import os
 import esptool
+import tempfile
+
 try:
     import requests
     is_requests = True
 except:
     is_requests = False
 
-import subprocess
-import os 
 class updater(object):
     
-    def __init__(self, ESP32=None, port=None, firmwarePath="./", firmwareDownloadPath=None):
+    def __init__(self, ESP32=None, port=None, firmwareDownloadPath=None):
         if ESP32 is not None:
             self.port = ESP32.serial.serialport
         if port is not None:
@@ -17,10 +19,7 @@ class updater(object):
             
 
         # define a temporary firmware file name for the firmware download
-        if firmwarePath is not None:
-            self.firmwarePath = firmwarePath
-        else:
-            self.firmwarePath = "./"
+        self.firmwarePath = tempfile.gettempdir()
             
 
         
@@ -60,10 +59,10 @@ class updater(object):
                         "--flash_freq", "80m",
                         "--flash_mode", "dio", 
                         "--flash_size", "detect", 
-                        "0xe000", self.filenames[4],
-                        "0x1000", self.filenames[1], 
-                        "0x8000", self.filenames[3], 
-                        "0x10000", self.filenames[0]]
+                        "0xe000", os.path.join(self.firmwarePath,self.filenames[4]),
+                        "0x1000", os.path.join(self.firmwarePath,self.filenames[1]), 
+                        "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
+                        "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
                 print('Using command %s' % ' '.join(cmd))
                 process = subprocess.Popen(cmd)
                 process.wait()
@@ -78,10 +77,10 @@ class updater(object):
                         "--flash_freq", "80m",
                         "--flash_mode", "dio", 
                         "--flash_size", "detect", 
-                        "0xe000", self.filenames[4],
-                        "0x1000", self.filenames[1], 
-                        "0x8000", self.filenames[3], 
-                        "0x10000", self.filenames[0]]
+                        "0xe000", os.path.join(self.firmwarePath,self.filenames[4]),
+                        "0x1000", os.path.join(self.firmwarePath,self.filenames[1]), 
+                        "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
+                        "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
                 print('Using command %s' % ' '.join(cmd))
                 process = subprocess.Popen(cmd)
                 process.wait()
@@ -107,9 +106,9 @@ class updater(object):
                             os.makedirs(self.firmwarePath)
                         # remove file if exists
                         if os.path.exists(self.firmwarePath+filename):
-                            os.remove(self.firmwarePath+filename)    
-                        open(self.firmwarePath+filename, "wb").write(response.content) 
-                        print("Succesfully downloaded file: "+self.firmwarePath+filename)
+                            os.remove(os.path.join(self.firmwarePath,filename))
+                        open(os.path.join(self.firmwarePath, filename), "wb").write(response.content) 
+                        print("Succesfully downloaded file: "+os.path.join(self.firmwarePath,filename))
                         fileCounter+=1
                     except Exception as e:
                         print(e)
@@ -124,7 +123,7 @@ class updater(object):
         for filename in self.filenames:
             try:
                 print("Removing Firmware:"+filename)
-                os.remove(filename)
+                os.remove(os.path.join(self.firmwarePath,filename))
             except Exception as e:
                 print(e)
         return True
