@@ -83,7 +83,7 @@ class updater(object):
                         "0x8000", self.filenames[3], 
                         "0x10000", self.filenames[0]]
                 print('Using command %s' % ' '.join(cmd))
-                process = subprocess.Popen(cmd)
+                process = subprocess.Popen(cmd,shell=True)
                 process.wait()
             print("Firmware flashed")
             return True

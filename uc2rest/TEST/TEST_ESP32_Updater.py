@@ -4,7 +4,7 @@ import uc2rest as uc2
 serialport = "/dev/cu.SLAB_USBtoUART"
 
 # optional: create an ESP32 objejct
-ESP32 = uc2.UC2Client(serialport=serialport)
+#ESP32 = uc2.UC2Client(serialport=serialport)
 
 # create the updater object
 updater = uc2.updater(port=serialport, firmwarePath="./")
