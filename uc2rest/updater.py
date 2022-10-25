@@ -64,26 +64,61 @@ class updater(object):
                         "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
                         "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
                 print('Using command %s' % ' '.join(cmd))
-                process = subprocess.Popen(cmd)
+                process = subprocess.Popen(cmd,shell=True,stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 process.wait()
+                stdout, stderr = process.communicate()
+                if str(stderr).find("not reco")>0: 
+                    raise Exception
+                
             except Exception as e:
                 print(e)
                 print("We will try an alternative route:")
-                cmd = ["python -m esptool", 
-                        "--chip", "esp32",
-                        "--port", self.port, 
-                        "--baud", "921600", 
-                        "write_flash",
-                        "--flash_freq", "80m",
-                        "--flash_mode", "dio", 
-                        "--flash_size", "detect", 
-                        "0xe000", os.path.join(self.firmwarePath,self.filenames[4]),
-                        "0x1000", os.path.join(self.firmwarePath,self.filenames[1]), 
-                        "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
-                        "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
-                print('Using command %s' % ' '.join(cmd))
-                process = subprocess.Popen(cmd,shell=True)
-                process.wait()
+                try:
+                    cmd = ["python -m esptool", 
+                            "--chip", "esp32",
+                            "--port", self.port, 
+                            "--baud", "921600", 
+                            "write_flash",
+                            "--flash_freq", "80m",
+                            "--flash_mode", "dio", 
+                            "--flash_size", "detect", 
+                            "0xe000", os.path.join(self.firmwarePath,self.filenames[4]),
+                            "0x1000", os.path.join(self.firmwarePath,self.filenames[1]), 
+                            "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
+                            "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
+                    print('Using command %s' % ' '.join(cmd))
+                    env = os.environ
+                    process = subprocess.Popen(cmd,shell=True, env=env,stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                    process.wait()
+                    stdout, stderr = process.communicate()
+                    if str(stderr).find("not reco")>0: 
+                        raise Exception
+                except Exception as e:
+                    print(e)
+                    print("We will try an alternative route:")
+                    try:
+                        # special weindows case?
+                        cmd = ["esptool", 
+                                "--chip", "esp32",
+                                "--port", self.port, 
+                                "--baud", "921600", 
+                                "write_flash",
+                                "--flash_freq", "80m",
+                                "--flash_mode", "dio", 
+                                "--flash_size", "detect", 
+                                "0xe000", os.path.join(self.firmwarePath,self.filenames[4]),
+                                "0x1000", os.path.join(self.firmwarePath,self.filenames[1]), 
+                                "0x8000", os.path.join(self.firmwarePath,self.filenames[3]), 
+                                "0x10000", os.path.join(self.firmwarePath,self.filenames[0])]
+                        print('Using command %s' % ' '.join(cmd))
+                        env = os.environ
+                        process = subprocess.Popen(cmd,shell=True, env=env)
+                        process.wait()
+                    except Exception as e:
+                        print(e)
+                        print("Firmware not flashed.")
+                        return False
+                    
             print("Firmware flashed")
             return True
         except Exception as e:
