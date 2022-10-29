@@ -42,11 +42,38 @@ jobs:
           #IF EXIST ./ESP32/build/main.ino.elf DEL /F ./ESP32/build/main.ino.elf
           #IF EXIST ./ESP32/build/main.ino.map DEL /F ./ESP32/build/main.ino.map
           #IF EXIST ./ESP32/build/main.ino.partitions.bin DEL /F ./ESP32/build/main.ino.partitions.bin
-          #IF EXIST ./ESP32/build/main.ino.bootloader.bin           DEL /F ./ESP32/build/main.ino.bootloader.bin          
+          #IF EXIST ./ESP32/build/main.ino.bootloader.bin           DEL /F ./ESP32/build/main.ino.bootloader.bin
       - name: "Run if changes have been detected"
         if: steps.auto-commit-action.outputs.changes_detected == 'true'
         run: echo "Changes!"
       - name: auto-commit
         uses: stefanzweifel/git-auto-commit-action@v4
-
-
+      - name: version
+        run: GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c1-7)
+        run: echo "GITHUB_SHA_SHORT"
+        id: version
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          #body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: reate ZIP
+        uses: vimtor/action-zip@v1
+        with:
+          files: ./ESP32/build/
+          dest: binaries.zip
+      - name: upload linux artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: binaries.zip
+          asset_name: binaries.zip
+          asset_content_type: application/zip

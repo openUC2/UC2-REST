@@ -41,6 +41,11 @@ int ishomeX=0;
 int ishomeY=0;
 int ishomeZ=0;
 int ishomeA=0;
+int homePinA=0;
+int homePinX=0;
+int homePinY=0;
+int homePinZ=0;
+
 
 // direction
 int SIGN_A = 1;

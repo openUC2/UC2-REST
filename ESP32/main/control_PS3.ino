@@ -96,7 +96,7 @@ void control_PS3() {
     }
     else if (mspeed2 != 0) {
       mspeed2 = 0;
-      stepper_Z.setSpeed(mspeed2); // set motor off only once to not affect other modes
+      stepper_X.setSpeed(mspeed2); // set motor off only once to not affect other modes
     }
 
     // X-direction
@@ -112,7 +112,7 @@ void control_PS3() {
     }
     else if (mspeed1 != 0) {
       mspeed1 = 0;
-      stepper_X.setSpeed(mspeed1); // set motor off only once to not affect other modes
+      stepper_Z.setSpeed(mspeed1); // set motor off only once to not affect other modes
     }
 
     /*
@@ -194,9 +194,9 @@ void control_PS3() {
 #endif
 
     // run all motors simultaneously
-    stepper_X.setSpeed(mspeed1);
+    stepper_Z.setSpeed(mspeed1);
     stepper_Y.setSpeed(mspeed3);
-    stepper_Z.setSpeed(mspeed2);
+    stepper_X.setSpeed(mspeed2);
 
     if (mspeed1 or mspeed3 or mspeed2) {
       isforever = true;

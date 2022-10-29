@@ -92,26 +92,45 @@ void motor_act_fct() {
   }
 
   // check if homing is expected
-  if (jsonDocument.containsKey("ishomeX ")) {
+  if (jsonDocument.containsKey("ishomeX")) {
     ishomeX = jsonDocument["ishomeX "];
   }
   else {
     ishomeX  = 0;
   }
   // check if homing is expected
-  if (jsonDocument.containsKey("ishomeY ")) {
-    ishomeY = jsonDocument["ishomeY "];
+  if (jsonDocument.containsKey("ishomeY")) {
+    ishomeY = jsonDocument["ishomeY"];
   }
   else {
     ishomeY  = 0;
   }
   // check if homing is expected
-  if (jsonDocument.containsKey("ishomeZ ")) {
-    ishomeZ = jsonDocument["ishomeZ "];
+  if (jsonDocument.containsKey("ishomeZ")) {
+    ishomeZ = jsonDocument["ishomeZ"];
   }
   else {
     ishomeZ  = 0;
   }
+
+  // check if homing is expected
+  if (jsonDocument.containsKey("homePinX")) {
+    homePinX = jsonDocument["homePinX"];
+    pinMode(homePinX, INPUT_PULLUP);
+  }
+  if (jsonDocument.containsKey("homePinY")) {
+    homePinY = jsonDocument["homePinY"];
+    pinMode(homePinY, INPUT_PULLUP);
+  }
+  if (jsonDocument.containsKey("homePinZ")) {
+    homePinZ = jsonDocument["homePinZ"];
+    pinMode(homePinZ, INPUT_PULLUP);
+  }
+  if (jsonDocument.containsKey("homePinA")) {
+    homePinA = jsonDocument["homePinA"];
+    pinMode(homePinA, INPUT_PULLUP);
+  }
+
 
 
   jsonDocument.clear();
@@ -225,34 +244,36 @@ bool getEnableMotor() {
 void doHoming(String axis, int signHomging) {
   // FIXME: Move motor until switch is hit...
   long tStart = millis();
+  if(DEBUG) Serial.println("Start homing");
   if (axis == "A") {
-    stepper_A.move(signHomging * 1000);
-    while (millis() - tStart < 1000) { // Here we want to check a button
-      stepper_A.run();
+    stepper_A.setSpeed(signHomging*mspeed0);
+    while (millis() - tStart < 1000 or !digitalRead(homePinA)) { // Here we want to check a button
+      stepper_A.runSpeed();
     }
     stepper_A.setCurrentPosition(0);
   }
   if (axis == "X") {
-    stepper_X.move(signHomging * 1000);
-    while (millis() - tStart < 1000) { // Here we want to check a button
-      stepper_X.run();
+    stepper_X.setSpeed(signHomging*mspeed1);
+    while (millis() - tStart < 1000 or !digitalRead(homePinX)) { // Here we want to check a button
+      stepper_X.runSpeed();
     }
     stepper_X.setCurrentPosition(0);
   }
   if (axis == "Y") {
-    stepper_Y.move(signHomging * 1000);
-    while (millis() - tStart < 1000) { // Here we want to check a button
-      stepper_Y.run();
+    stepper_Y.setSpeed(signHomging*mspeed0);
+    while (millis() - tStart < 1000 or !digitalRead(homePinY)) { // Here we want to check a button
+      stepper_Y.runSpeed();
     }
     stepper_A.setCurrentPosition(0);
   }
   if (axis == "Z") {
-    stepper_Z.move(signHomging * 1000);
-    while (millis() - tStart < 1000) { // Here we want to check a button
-      stepper_Z.run();
+    stepper_Z.setSpeed(signHomging*mspeed0);
+    while (millis() - tStart < 1000 or !digitalRead(homePinZ)) { // Here we want to check a button
+      stepper_Z.runSpeed();
     }
     stepper_Z.setCurrentPosition(0);
   }
+  if(DEBUG) Serial.println("Finishing homing");
 }
 
 void motor_set_fct() {
