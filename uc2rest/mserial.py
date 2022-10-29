@@ -6,11 +6,12 @@ import json
 
 class Serial(object):
     
-    def __init__(self, port, baudrate, timeout=1, parent=None):
+    def __init__(self, port, baudrate, timeout=1, identity="UC2_Feather", parent=None):
         self.serialport = port
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
+        self.identity = identity
         
         self.NumberRetryReconnect = 0
         self.MaxNumberRetryReconnect = 20
@@ -64,7 +65,7 @@ class Serial(object):
         """Check if the firmware is correct"""
         path = "/state_get"
         _state = self.post_json(path, {"task":path}, timeout=timeout)
-        if _state["identifier_name"] == "UC2_Feather": 
+        if _state["identifier_name"] == self.identity: 
             return True
         else: return False
 
@@ -141,7 +142,7 @@ class Serial(object):
             while is_blocking:
                 try:
                     rmessage =  self.serialdevice.readline().decode()
-                    #self._parent.logger.debug(rmessage)
+                    # self._parent.logger.debug(rmessage)
                     returnmessage += rmessage
                     if rmessage.find("--")==0:
                         break
@@ -151,10 +152,12 @@ class Serial(object):
                     break
             # casting to dict
             try:
-                returnmessage = json.loads(returnmessage.split("--")[0].split("++")[-1])
+                # TODO: check if this is a valid JSON
+                returnmessage = returnmessage.split("--")[0].split("++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
+                returnmessage = json.loads(returnmessage)
             except:
                 self._parent.logger.debug("Casting json string from serial to Python dict failed")
-                returnmessage = ""
+                returnmessage = None
         return returnmessage
 
         
