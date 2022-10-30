@@ -162,7 +162,6 @@ class Serial(object):
                 self._parent.logger.debug("Casting json string from serial to Python dict failed")
                 returnmessage = None
         return returnmessage
-
         
 class SerialDummy(object):
         
