@@ -49,7 +49,8 @@ jobs:
       - name: auto-commit
         uses: stefanzweifel/git-auto-commit-action@v4
       - name: version
-        run: echo $GITHUB_SHA | cut -c1-7
+        run: GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c1-7)
+        run: echo "GITHUB_SHA_SHORT"
         id: version
       - name: release
         uses: actions/create-release@v1
