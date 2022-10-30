@@ -14,7 +14,7 @@ class Serial(object):
         self.identity = identity
         
         self.NumberRetryReconnect = 0
-        self.MaxNumberRetryReconnect = 20
+        self.MaxNumberRetryReconnect = 3
         
         self.open() # creates self.serialdevice
         
@@ -107,9 +107,11 @@ class Serial(object):
         """Write JSON document to serial device"""
         try:
             if self.serialport == "NotConnected" and self.NumberRetryReconnect<self.MaxNumberRetryReconnect:
-                # try to reconnect               
-                self.open()
+                # try to reconnect       
+                self._parent.logger.debug("Trying to reconnect to serial device: "+str(self.NumberRetryReconnect))       
                 self.NumberRetryReconnect += 1
+                self.open()
+                
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:

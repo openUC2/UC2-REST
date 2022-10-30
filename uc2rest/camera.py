@@ -12,7 +12,7 @@ class Camera(object):
         self.lastFrame = 255*np.random.randn(self.height, self.width)
         
         
-    def set_camera(self, width=None, height=None, fps=None):
+    def set_camera(self, width=None, height=None, fps=None, timeout=3):
         path = "/camera_set"
         payload = {"path":path,
                    "width":width,
@@ -25,7 +25,7 @@ class Camera(object):
         path = "/camera_get"
         return None
     
-    def get_frame(self, timeout=10):
+    def get_frame(self, timeout=5):
         path = "/camera_act"
         payload = {
             "grabimage":1
@@ -42,7 +42,7 @@ class Camera(object):
         except Exception as e:
             self._parent.logger.error(f"Error: {e}")
             image = None
-            image = self.lasetFrame
+            image = self.lastFrame
             
         return image
             
