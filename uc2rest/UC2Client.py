@@ -19,6 +19,7 @@ from .motor import Motor
 from .state import State
 from .laser import Laser
 from .wifi import Wifi
+from .camera import Camera
 
 
 try:
@@ -40,7 +41,7 @@ class UC2Client(object):
 
     BAUDRATE = 115200
     
-    def __init__(self, host=None, port=31950, serialport=None, baudrate=BAUDRATE):
+    def __init__(self, host=None, port=31950, serialport=None, identity=None, baudrate=BAUDRATE):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -61,7 +62,7 @@ class UC2Client(object):
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
-            self.serial = Serial(serialport, baudrate, parent=self)
+            self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
             self.is_serial = True
             self.is_connected = True
             
@@ -99,12 +100,17 @@ class UC2Client(object):
         # initialize laser
         self.state = State(self)
         
+        # initialize galvo
         self.galvo1 = Galvo(self, 1)
         
+        # initialize laser
         self.laser = Laser(self)
         
+        # initialize wifi
         self.wifi = Wifi(self)
         
+        # initialize camera
+        self.camera = Camera(self)
 
     def post_json(self, path, payload, timeout=1):
         if self.is_wifi:
