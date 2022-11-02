@@ -1,7 +1,10 @@
 name: Compile ESP32 bin
-'on':
-  - push
-  - pull_request
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+  
 jobs:
   build-esp32:
     strategy:
@@ -46,33 +49,17 @@ jobs:
       - name: "Run if changes have been detected"
         if: steps.auto-commit-action.outputs.changes_detected == 'true'
         run: echo "Changes!"
-      - name: auto-commit
-        uses: stefanzweifel/git-auto-commit-action@v4
-      - name: version
-        run: echo ${GITHUB_SHA::7}
-        id: version
-      - name: release
-        uses: actions/create-release@v1
-        id: create_release
-        with:
-          draft: false
-          prerelease: false
-          release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
-          #body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: reate ZIP
+      - name: create ZIP
         uses: vimtor/action-zip@v1
         with:
           files: ./ESP32/build/
           dest: binaries.zip
-      - name: upload linux artifact
+      - name: upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: binaries.zip
           asset_name: binaries.zip
           asset_content_type: application/zip
