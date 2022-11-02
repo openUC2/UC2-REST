@@ -105,37 +105,43 @@ class Motor(object):
         return r
         
 
-    def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(steps,0,0,0), speed=speed, timeout=1, backlash=(self.backlashX,0,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+    def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+        r = self.move_stepper(steps=(steps,0,0,0), speed=(speed,0,0,0), timeout=timeout, backlash=(self.backlashX,0,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
-    def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,steps,0,0), speed=speed, timeout=1, backlash=(0,self.backlashY,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+    def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+        r = self.move_stepper(steps=(0,steps,0,0), speed=(0,speed,0,0), timeout=timeout, backlash=(0,self.backlashY,0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
-    def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,0,steps,0), speed=speed, timeout=1, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+    def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+        r = self.move_stepper(steps=(0,0,steps,0), speed=(0,0,speed,0), timeout=timeout, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
-    def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True):
-        r = self.move_stepper(steps=(0,0,0,steps), speed=speed, timeout=1, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+    def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+        r = self.move_stepper(steps=(0,0,0,steps), speed=(0,0,0,speed), timeout=timeout, backlash=(0,0,self.backlashZ,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
     
-    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True):
+    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
         if len(speed)!= 3:
             speed = (speed,speed,speed)
 
-        r = self.move_xyzt(steps=(steps[0],steps[1],steps[2],0), speed=(speed[0],speed[1],speed[2],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_xyzt(steps=(steps[0],steps[1],steps[2],0), speed=(speed[0],speed[1],speed[2],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
-    def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True):
+    def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+        if len(speed)!= 2:
+            speed = (speed,speed)
+
+        r = self.move_xyzt(steps=(steps[0],steps[1],0,0), speed=(speed[0],speed[1],0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        return r
+
+    def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
         if type(speed)==int:
             speed = (speed,speed,speed,speed)
         if type(steps)==int:
             steps = (steps,steps,steps,steps)
         
-
-        r = self.move_stepper(steps=steps, speed=speed, timeout=1, backlash=(self.backlashX,self.backlashY,self.backlashZ,self.backlashT), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(steps=steps, speed=speed, backlash=(self.backlashX,self.backlashY,self.backlashZ,self.backlashT), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def init_filter(self, nSteps, speed=250, filter_axis=-1, is_blocking = True, is_enabled=False):
@@ -271,7 +277,7 @@ class Motor(object):
         self.steps_last_3 = steps_3
 
         # drive motor
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, timeout=1)
 
         #if PSwasActive:
         #    self.setControllerMode(isController=True)
