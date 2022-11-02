@@ -144,7 +144,7 @@ class Serial(object):
             while is_blocking:
                 try:
                     rmessage =  self.serialdevice.readline().decode()
-                    self._parent.logger.debug(rmessage)
+                    #self._parent.logger.debug(rmessage)
                     returnmessage += rmessage
                     if rmessage.find("--")==0:
                         break
@@ -156,7 +156,7 @@ class Serial(object):
             try:
                 # TODO: check if this is a valid JSON
                 returnmessage = returnmessage.split("\n--")[0].split("\n++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
-                self._parent.logger.debug(returnmessage)
+                #self._parent.logger.debug(returnmessage)
                 returnmessage = json.loads(returnmessage)
             except:
                 self._parent.logger.debug("Casting json string from serial to Python dict failed")

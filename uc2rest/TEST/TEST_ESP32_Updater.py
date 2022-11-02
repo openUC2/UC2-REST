@@ -9,8 +9,7 @@ serialport = "/dev/cu.SLAB_USBtoUART"
 
 # create the updater object
 updater = uc2.updater(port=serialport)
-#updater = uc2.updater(port="COM4")
-#updater = uc2.updater(ESP32=ESP32)
+
 updater.downloadFirmware()
 updater.flashFirmware()
 
