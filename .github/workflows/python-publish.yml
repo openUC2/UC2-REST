@@ -32,7 +32,7 @@ jobs:
       id: remote_chart
       uses: oprypin/find-latest-tag@v1
       with:
-        repository: dask/helm-chart
+        repository: openUC2/UC2-REST
         releases-only: true
     - name: bump version
       uses: jacobtomlinson/gha-find-replace@v2
