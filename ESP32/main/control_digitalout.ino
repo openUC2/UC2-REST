@@ -56,6 +56,7 @@ void digital_act_fct() {
   }
   jsonDocument.clear();
   jsonDocument["return"] = 1;
+  isBusy = false;
 }
 
 void digital_set_fct() {

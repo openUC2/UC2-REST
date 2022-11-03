@@ -231,7 +231,7 @@ void motor_act_fct() {
 }
 
 void setEnableMotor(bool enable) {
-  isBusy = enable;
+  //isBusy = enable;
   digitalWrite(ENABLE_PIN, !enable);
   motor_enable = enable;
 }
