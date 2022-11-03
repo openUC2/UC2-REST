@@ -41,7 +41,7 @@ class UC2Client(object):
 
     BAUDRATE = 115200
     
-    def __init__(self, host=None, port=31950, serialport=None, identity=None, baudrate=BAUDRATE):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
