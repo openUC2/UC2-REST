@@ -34,10 +34,12 @@ jobs:
         find: "__version__"
         replace: (echo $GITHUB_REF | sed 's#.*/v##')
         regex: false
+        include: "**__version__.py"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install build
+        python -m pip install --upgrade build        
     - name: Build package
       run: python -m build
     - name: Publish package
