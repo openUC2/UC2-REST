@@ -14,7 +14,7 @@ esp32.motor.move_xyzt(steps=1000, speed=1000)
 esp32.motor.move_forever(speed=(100,0,0), is_stop=False)
 esp32.motor.move_forever(speed=(100,0,0), is_stop=True)
 
-esp32.motor.set_motor_maxSpeed(axis=0, maxSpeed=10000)
+#esp32.motor.set_motor_maxSpeed(axis=0, maxSpeed=10000)
 esp32.motor.set_motor_currentPosition(axis=0, currentPosition=10000)
 esp32.motor.set_motor_acceleration(axis=0, acceleration=10000)
 esp32.motor.set_motor_enable(is_enable=1)

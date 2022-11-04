@@ -138,6 +138,7 @@ class Serial(object):
     def readSerial(self, is_blocking=True, timeout = 15): # TODO: hardcoded timeout - not code
         """Receive and decode return message"""
         returnmessage = ''
+        _returnmessage = ''
         rmessage = ''
         _time0 = time.time()
         if is_blocking:
@@ -155,13 +156,13 @@ class Serial(object):
             # casting to dict
             try:
                 # TODO: check if this is a valid JSON
-                returnmessage = returnmessage.split("\n--")[0].split("\n++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
+                _returnmessage = returnmessage.split("\n--")[0].split("\n++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
                 #self._parent.logger.debug(returnmessage)
-                returnmessage = json.loads(returnmessage)
-            except:
+                _returnmessage = json.loads(returnmessage)
+            except Exception as e:
                 self._parent.logger.debug("Casting json string from serial to Python dict failed")
-                returnmessage = None
-        return returnmessage
+                _returnmessage = None
+        return _returnmessage
         
 class SerialDummy(object):
         

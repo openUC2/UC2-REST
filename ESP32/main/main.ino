@@ -1,5 +1,5 @@
 //#define IS_PS3
-#define IS_PS4
+#define IS_PS3
 
 // external headers
 #include "soc/soc.h"
@@ -8,7 +8,7 @@
 #include <Ps3Controller.h>
 #else
 #include <PS4Controller.h>
-#endifb
+#endif
 #include <Arduino.h>
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"

@@ -161,7 +161,7 @@ class Motor(object):
         if type(steps)==int:
             steps = (steps,steps,steps,steps)
         
-        r = self.move_stepper(steps=steps, speed=speed, backlash=(self.backlashX,self.backlashY,self.backlashZ,self.backlashT), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_stepper(steps=steps, speed=speed, backlash=(self.backlash[0],self.backlash[1],self.backlash[2],self.backlash[3]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def init_filter(self, nSteps, speed=250, filter_axis=-1, is_blocking = True, is_enabled=False):
@@ -198,6 +198,10 @@ class Motor(object):
         return r
 
     def move_forever(self, speed=(0,0,0,0), is_stop=False):
+        if type(speed)==int:
+            speed=(speed, speed, speed, speed)
+        if len(speed)==3:
+            speed = (*speed,0)
         path = "/motor_act"
         
         payload = {
@@ -302,14 +306,14 @@ class Motor(object):
                         {   "stepperid": stepperid}]
                     }}
                     
-        if stepPin is not None: payload["steppers"][0]["step"] = stepPin
-        if dirPin is not None: payload["steppers"][0]["dir"] = dirPin
-        if enablePin is not None: payload["steppers"][0]["enable"] = enablePin
-        if maxPos is not None: payload["steppers"][0]["max_pos"] = maxPos 
-        if minPos is not None: payload["steppers"][0]["min_pos"] = minPos
-        if position is not None: payload["steppers"][0]["position"] = position
-        if acceleration is not None: payload["steppers"][0]["acceleration"] = acceleration
-        if isEnable is not None: payload["steppers"][0]["enable"] = isEnable
+        if stepPin is not None: payload['motor']["steppers"][0]["step"] = stepPin
+        if dirPin is not None: payload['motor']["steppers"][0]["dir"] = dirPin
+        if enablePin is not None: payload['motor']["steppers"][0]["enable"] = enablePin
+        if maxPos is not None: payload['motor']["steppers"][0]["max_pos"] = maxPos 
+        if minPos is not None: payload['motor']["steppers"][0]["min_pos"] = minPos
+        if position is not None: payload['motor']["steppers"][0]["position"] = position
+        if acceleration is not None: payload['motor']["steppers"][0]["acceleration"] = acceleration
+        if isEnable is not None: payload['motor']["steppers"][0]["enable"] = isEnable
         
         # send command
         r = self._parent.post_json(path, payload, timeout=1)
@@ -333,7 +337,7 @@ class Motor(object):
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
         
-        r = self.set_motor(stepperid = axis, isEnnable=is_enable) 
+        r = self.set_motor(stepperid = axis, isEnable=is_enable) 
         return r
 
     def get_position(self, timeout=1):
