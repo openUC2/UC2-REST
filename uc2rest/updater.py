@@ -25,19 +25,7 @@ class updater(object):
         # define a temporary firmware file name for the firmware download
         self.firmwarePath = os.path.join(tempfile.gettempdir(), "uc2rest")
             
-        print("We are checking for pre-built binaries on Github")
-        self.firmwareDownloadPath = 'https://api.github.com/repos/openUC2/UC2-REST/releases/latest'
-        releaseResponse = requests.get(
-            self.firmwareDownloadPath
-        )
-        latestVersion = releaseResponse.json()['tag_name']
-        print("Latest version is: "+latestVersion)
 
-        ## attempting to downloda the current ImSwitch version
-        self.downloadURL = releaseResponse.json()['assets'][0]['browser_download_url']
-        self.uc2restZip = "UC2Rest.zip"
-        print("We are downloading the software from: "+self.uc2restZip)
-                
                 
     def unzipFiles(self):
         ''' Unzip the UC2Rest.zip '''
@@ -184,6 +172,21 @@ class updater(object):
 
     
     def downloadFirmware(self):
+
+        print("We are checking for pre-built binaries on Github")
+        self.firmwareDownloadPath = 'https://api.github.com/repos/openUC2/UC2-REST/releases/latest'
+        releaseResponse = requests.get(
+            self.firmwareDownloadPath
+        )
+        latestVersion = releaseResponse.json()['tag_name']
+        print("Latest version is: "+latestVersion)
+
+        ## attempting to downloda the current ImSwitch version
+        self.downloadURL = releaseResponse.json()['assets'][0]['browser_download_url']
+        self.uc2restZip = "UC2Rest.zip"
+        print("We are downloading the software from: "+self.uc2restZip)
+                
+
         print("Downloading Firmware from "+self.firmwareDownloadPath)
         # download the firmware from github
         ## inplace replacement won't work I guess? => seems to work
