@@ -48,7 +48,6 @@ void state_get_fct() {
     jsonDocument.clear();
     jsonDocument["isBusy"] = isBusy; // returns state of function that takes longer to finalize (e.g. motor)
   }
-
   else if (jsonDocument.containsKey("pscontroller")) {
     jsonDocument.clear();
     jsonDocument["pscontroller"] = IS_PSCONTROLER_ACTIVE; // returns state of function that takes longer to finalize (e.g. motor)
