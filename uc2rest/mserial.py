@@ -6,12 +6,13 @@ import json
 
 class Serial(object):
     
-    def __init__(self, port, baudrate, timeout=1, identity="UC2_Feather", parent=None):
+    def __init__(self, port, baudrate, timeout=1, identity="UC2_Feather", parent=None, DEBUG=False):
         self.serialport = port
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
         self.identity = identity
+        self.DEBUG = DEBUG
         
         self.NumberRetryReconnect = 0
         self.MaxNumberRetryReconnect = 3
@@ -90,14 +91,14 @@ class Serial(object):
 
     def post_json(self, path, payload={}, headers=None, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
-        try:
-            payload["task"]
-        except:
+        if "task" not in payload:
             payload["task"] = path
-        try:
-            is_blocking = payload['isblock']
-        except:
+        
+        if "isblock" in payload:
+            is_blocking = payload["isblock"]
+        else:
             is_blocking = True
+
         self.writeSerial(payload)
         
         returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
@@ -145,7 +146,7 @@ class Serial(object):
             while is_blocking:
                 try:
                     rmessage =  self.serialdevice.readline().decode()
-                    #self._parent.logger.debug(rmessage)
+                    if self.DEBUG: self._parent.logger.debug(rmessage)
                     returnmessage += rmessage
                     if rmessage.find("--")==0:
                         break
@@ -157,10 +158,10 @@ class Serial(object):
             try:
                 # TODO: check if this is a valid JSON
                 _returnmessage = returnmessage.split("\n--")[0].split("\n++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
-                #self._parent.logger.debug(returnmessage)
-                _returnmessage = json.loads(returnmessage)
+                if self.DEBUG: self._parent.logger.debug(returnmessage)
+                _returnmessage = json.loads(_returnmessage)
             except Exception as e:
-                self._parent.logger.debug("Casting json string from serial to Python dict failed")
+                if self.DEBUG: self._parent.logger.debug("Casting json string from serial to Python dict failed")
                 _returnmessage = None
         return _returnmessage
         
