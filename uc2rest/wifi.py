@@ -87,9 +87,12 @@ class Wifi(object):
 
 
 
-    def scanWifi(self):
+    def scanWifi(self, timeout=3):
         path = '/wifi/scan'
-        r = self._parent.get_json(path)
+        payload={
+            "task": path
+        }
+        r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
         

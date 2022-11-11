@@ -11,114 +11,20 @@ class config(object):
             #TODO: read file and load
             
         self.configFile = self.loadDefaultConfig()
-        
     
-    '''
-    Set Configuration
-    '''
-    
-    def setMotorConfig(self, motXstp, motXdir, motYstp, motYdir, motZstp, motZdir, motAstp, motAdir, motEnable):
-        self.configFile["motXstp"] = motXstp
-        self.configFile["motXdir"] = motXdir
-        self.configFile["motYstp"] = motYstp
-        self.configFile["motYdir"] = motYdir
-        self.configFile["motZstp"] = motZstp
-        self.configFile["motZdir"] = motZdir
-        self.configFile["motAstp"] = motAstp
-        self.configFile["motAdir"] = motAdir
-        self.configFile["motEnable"] = motEnable
-        
-    def setDigitalPin(self, pin, value):
-        self.configFile["digitalPin" + str(pin)] = value
-        
-    def setAnalogPin(self, pin, value):
-        self.configFile["analogPin" + str(pin)] = value
-        
-    def setLEDArrayConfig(self, ledArrPin, ledArrNum):
-        configFile = {}
-        configFile["ledArrPin"] = ledArrPin
-        configFile["ledArrNum"] = ledArrNum
-        self.setConfigDevice(configFile, timeout=1)
-        
-    def setLaserPinConfig(self, pin1, pin2, pin3):
-        self.configFile["laserPin1"] = pin1
-        self.configFile["laserPin2"] = pin2
-        self.configFile["laserPin3"] = pin3
-        
-    def setDACFakeConfig(self, pin1, pin2):
-        self.configFile["dacFake1"] = pin1
-        self.configFile["dacFake2"] = pin2
-        
-    def setWIFIconfig(self, ssid, PW):
-        self.configFile["ssid"] = ssid
-        self.configFile["PW"] = PW
-        
-    def setIdentifier(self, identifier):
-        self.configFile["identifier"] = identifier
-        
-    '''
-    get Configuration
-    '''
-    def getMotorPinConfig(self):
-        return [self.configFile["motXstp"], 
-                self.configFile["motXdir"], 
-                self.configFile["motYstp"], 
-                self.configFile["motYdir"], 
-                self.configFile["motZstp"], 
-                self.configFile["motZdir"], 
-                self.configFile["motAstp"], 
-                self.configFile["motAdir"], 
-                self.configFile["motEnable"]]
-    
-    def getLaserPinConfig(self):
-        return [self.configFile["laserPin1"], self.configFile["laserPin2"], self.configFile["laserPin3"]]
-    
-    def getLEDArrayConfig(self):
-        return [self.configFile["ledArrPin"], self.configFile["ledArrNum"]]
-    
-    def getWiFiConfig(self):
-        return [self.configFile["ssid"], self.configFile["PW"]]
-    
-    def getIdentifier(self):
-        return self.configFile["identifier"]
-    
-    def getAnalogPinConfig(self):
-        return [self.configFile["analogPin1"], self.configFile["analogPin2"], self.configFile["analogPin3"]]
-    
-    def getDigitalPin(self, pin):
-        return self.configFile["digitalPin" + str(pin)]
-    
+
     '''
     default Configuration
     '''     
         
     def loadDefaultConfig(self):
-        self.defaultConfig = {
-            "motXstp": 0,
-            "motXdir": 0,
-            "motYstp": 0,
-            "motYdir": 0,
-            "motZstp": 0,
-            "motZdir": 0,
-            "motAstp": 0,
-            "motAdir": 0,
-            "motEnable": 0,
-            "ledArrPin": 0,
-            "ledArrNum": 64,
-            "digitalPin1":0,
-            "digitalPin2":0,
-            "analogPin1":0,
-            "analogPin2":0,
-            "analogPin3":0,
-            "laserPin1":0,
-            "laserPin2":0,
-            "laserPin3":0,
-            "dacFake1":0,
-            "dacFake2":0,
-            "identifier": "TEST",
-            "ssid": "ssid",
-            "PW": "PW"
-        }
+        self.defaultConfig = {"motorconfig": 
+                [{"stepperid": 0, "dir": 18, "step": 19, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}, 
+                {"stepperid": 1, "dir": 16, "step": 26, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}, 
+                {"stepperid": 2, "dir": 27, "step": 25, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}, 
+                {"stepperid": 3, "dir": 14, "step": 17, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}], 
+            "ledconfig": {"ledArrNum": 0, "ledArrPin": 0, "LEDArrMode": [0, 1, 2, 3, 4, 5, 6, 7], "led_ison": False}, 
+            "stateconfig": {"identifier_name": "UC2_Feather", "identifier_id": "V1.2", "identifier_date": "Nov  7 202212:52:14", "identifier_author": "BD", "IDENTIFIER_NAME": ""}}            
         return self.defaultConfig
     
     def setDefaultConfig(self, configDict=None, configFile=None):
@@ -145,25 +51,54 @@ class config(object):
     ################################################################################################################################################'''
 
     def loadConfigDevice(self, timeout=1):
-        path = '/config_get'
-        payload = {
-        }
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        # load current configuration from device 
+        if 0:
+            path = '/config_get'
+            payload = {
+            }
+            r = self._parent.post_json(path, payload, timeout=timeout)
+            
+            self.setDefaultConfig(r)
+            
+            if type(r) != dict:
+                r = self.loadDefaultConfig()
+            return r
         
-        self.setDefaultConfig(r)
-        
-        if type(r) != dict:
-            r = self.loadDefaultConfig()
-        return r
+        else:
+            motorconfig = self._parent.motor.get_motors()
+            ledconfig = self._parent.led.get_ledpin()
+            laserconfig = self._parent.laser.get_laserpins()
+            stateconfig = self._parent.state.get_state()
+            self.configfile = {"motorconfig": motorconfig, 
+                          "ledconfig": ledconfig, 
+                          "laserconfig": laserconfig, 
+                          "stateconfig": stateconfig}
+            return self.configfile
+            
 
-    def setConfigDevice(self, config, timeout=1):
-        path = '/config_set'
-        if type(config)==dict:
-            payload = config
+    def setConfigDevice(self, configfile, timeout=1):
+        # push changes back to device
+        if 0:
+            path = '/config_set'
+            if type(configfile)==dict:
+                payload = configfile
+            else: 
+                return None
+            r = self._parent.post_json(path, payload, timeout=timeout)
+            return r
         else: 
-            return None
-        r = self._parent.post_json(path, payload, timeout=timeout)
-        return r
+            # set all lasers 
+            self._parent.laser.set_laserpin(laserid=1, laserpin=configfile["laserconfig"]["LASER1pin"])
+            self._parent.laser.set_laserpin(laserid=2, laserpin=configfile["laserconfig"]["LASER2pin"])
+            self._parent.laser.set_laserpin(laserid=3, laserpin=configfile["laserconfig"]["LASER3pin"])
+            # set led 
+            self._parent.led.set_ledpin(ledArrPin=configfile["ledconfig"]["ledArrPin"], ledArrNum=configfile["ledconfig"]["ledArrNum"])
+            # set motors
+            
+            motorconfig = {
+                "motor":{
+                    "steppers": 
+                        configfile["motorconfig"]}}
+            self._parent.motor.set_motors(settingsdict=motorconfig)
+            
 
-
-    

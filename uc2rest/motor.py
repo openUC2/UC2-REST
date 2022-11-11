@@ -11,6 +11,15 @@ class Motor(object):
     filter_pos_init = -1250*microsteppingfactor_filter
     filter_speed = microsteppingfactor_filter * 500
     filter_position_now = 0
+    
+    # a dictionary that stores all motor parameters for each dxis
+    settingsdict = {"motor": {"steppers":
+        [{"stepperid":0,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
+         {"stepperid":1,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
+         {"stepperid":2,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
+         {"stepperid":3,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000}]
+        }}
+
 
 
     def __init__(self, parent=None):
@@ -342,6 +351,7 @@ class Motor(object):
             return False
 
     
+    
     def set_motor(self, stepperid = 0, position = None, stepPin=None, dirPin=None, enablePin=None, maxPos=None, minPos=None, acceleration=None, isEnable=None, isBlocking=True, timeout=2): 
         path = "/motor_set"
         payload = {"task":path, 
@@ -424,6 +434,47 @@ class Motor(object):
         return r
         '''
         return False
+    
+    def set_motors(self, settingsdict, isBlocking=True, timeout=1):
+        path = "/motor_set"
+        payload = settingsdict
+        payload["task"] = path
+                    
+        # send command
+        r = self._parent.post_json(path, payload, timeout=1)
+        
+        # wait until job has been done
+        time0=time.time()
+        if isBlocking:
+            while self.isBusy((0,0,0,0)):
+                time.sleep(0.1)
+                if time.time()-time0>timeout:
+                    break
+
+        return r
+    
+    
+    def get_motor(self, axis=1, timeout=1):
+        path = "/motor_get"
+        payload = {
+            "task":path,
+        }
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        try: return r["steppers"][axis]
+        except: return False
+
+    def get_motors(self, timeout=1):
+        path = "/motor_get"
+        payload = {
+            "task":path,
+        }
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        try: return r["steppers"]
+        except: return False
+
 
     def set_direction(self, axis=1, sign=1, timeout=1):
         return False
+
+
+

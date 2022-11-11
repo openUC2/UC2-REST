@@ -6,6 +6,7 @@ class Laser(object):
         self.filter_pos_2 = 0
         self.filter_pos_3 = 0
         self.filter_pos_LED = 0
+        self._parent.logger.debug("Attention, lasers are on channels 1,2,3")
         
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
@@ -48,8 +49,19 @@ class Laser(object):
         r = self._parent.post_json(path, payload)
         return r
 
+    def set_laserpin(self, laserid=1, laserpin=0):
+        path = '/laser_set'
+        
+        payload = {
+            "task": path,
+            "LASERid": laserid,
+            "LASERpin": laserpin
+        }
+        
+        r = self._parent.post_json(path, payload)
+        return r
 
-    def get_laser(self):
+    def get_laserpins(self):
         path = '/laser_get'
         
         payload = {
@@ -58,3 +70,13 @@ class Laser(object):
         
         r = self._parent.post_json(path, payload)
         return r
+    
+    def get_laserpin(self, laserid=1):
+        path = '/laser_get'
+        
+        payload = {
+            "task": path,
+        }
+        
+        r = self._parent.post_json(path, payload)
+        return r["LASER"+str(laserid)+"pin"]

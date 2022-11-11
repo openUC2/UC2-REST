@@ -27,7 +27,7 @@ class Serial(object):
             # most simple case: We know all parameters
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
-            time.sleep(2) # let it warm up
+            time.sleep(3) # let it warm up
             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
             return self.serialdevice
         except:
@@ -43,9 +43,8 @@ class Serial(object):
                     try:
                         self.serialdevice = serial.Serial(port=iport.device, baudrate=self.baudrate, timeout=1)
                         self.serialdevice.write_timeout=1
-                        
                         self.is_connected = True # attempting to initiliaze connection
-                        time.sleep(2)
+                        time.sleep(3) # let it warm up and wait until debugging messages may vanish
                         correctFirmware = self.checkFirmware(self.serialdevice)
                         if correctFirmware:
                             self.serialport = iport.device
@@ -81,7 +80,6 @@ class Serial(object):
 
     def get_json(self, path):
         """Perform an HTTP GET request and return the JSON response"""
-        path = path.replace(self.base_uri,"")
         message = {"task":path}
         message = json.dumps(message)
         self.serialdevice.flushInput()
