@@ -1,37 +1,46 @@
 import uc2rest as uc2
+import time 
 
-ESP32 = uc2.ESP32Client(serialport="unknown")
+# create the 
+ESP32 = uc2.UC2Client(serialport="/dev/cu.SLAB_USBtoUART")
+ESP32.serial.DEBUG=True
 
+# see if it's the right device
+ESP32.state.get_state()
 
-mConfig = ESP32.loadConfig()
+# load the pin config from the ESP32
+mConfig = ESP32.config.loadConfigDevice()
+print(mConfig)
 
-mConfig = {
-    "motXstp": 0,
-    "motXdir": 2,
-    "motYstp": 3,
-    "motYdir": 4,
-    "motZstp": 5,
-    "motZdir": 6,
-    "motAstp": 7,
-    "motAdir": 8,
-    "motEnable": 9,
-    "ledArrPin": 0,
-    "ledArrNum": 64,
-    "digitalPin1":10,
-    "digitalPin2":11,
-    "analogPin1":12,
-    "analogPin2":13,
-    "analogPin3":14,
-    "laserPin1":15,
-    "laserPin2":16,
-    "laserPin3":17,
-    "dacFake1":18,
-    "dacFake2":19,
-    "identifier": "TEST",
-    "ssid": "ssid",
-    "PW": "PW"}
+# reset the dictionary 
+mConfig = dict.fromkeys(mConfig, 0)
 
-ESP32.config.setConfig(mConfig)
+# modify some values
+mConfig["ledArrPin"] = 15
+mConfig["ledArrNum"] = 16
 
-mConfig = ESP32.loadConfig()
+mConfig["motXstp"] = 2
+mConfig["motXdir"] = 33
+
+mConfig["motYstp"] = 27
+mConfig["motYdir"] = 16
+
+mConfig["motZstp"] = 12
+mConfig["motZdir"] = 14
+
+mConfig["identifier"] = "UniEindhoven"
+mConfig["ssid"] = "UC2"
+mConfig["PW"] = "UC2"
+
+# now load the config to the ESP32
+ESP32.config.setConfigDevice(mConfig)
+ESP32.config.applyConfigDevice()
+
+# wait until the ESP reboots and identify the new config
+time.sleep(5)
+
+# see if it's the right device
+ESP32.state.get_state()
+mConfig = ESP32.config.loadConfigDevice()
+print(mConfig)
 
