@@ -39,7 +39,7 @@ jobs:
           arduino-cli core install esp32:esp32
       - name: Compile Sketch
         run: |
-          arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=enabled,PartitionScheme=min_spiffs,CPUFreq=240 ./ESP32/main/main.ino   --libraries ./ESP32/libraries/ --clean --export-binaries
+          arduino-cli compile --fqbn esp32:esp32:esp32:PSRAM=enabled,PartitionScheme=min_spiffs,CPUFreq=240 ./ESP32/main/main.ino   --libraries ./ESP32/libraries/ --clean --output-dir=./ESP32/build
           dir ./ESP32/build/
       - name: "Run if changes have been detected"
         if: steps.auto-commit-action.outputs.changes_detected == 'true'
