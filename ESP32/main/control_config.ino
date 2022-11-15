@@ -199,6 +199,7 @@ bool loadConfiguration() {
 
 void printConfig() {
   // Send JSON information back
+  Serial.println(" ");
   Serial.println("++");
   config2json();
   serializeJsonPretty(jsonDocument, Serial);

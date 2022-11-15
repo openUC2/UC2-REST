@@ -32,6 +32,8 @@ sample config file for Uc2 Standalone
 led -> LIMX
 laser1 -> LIMY
 laser2 -> LIMZ
+  
+  
   {
   "task":"/config_set", 
   "motXstp": 2,
@@ -62,6 +64,8 @@ laser2 -> LIMZ
   }
   {"task":"/config_act", "applyConfig":1}
   {"task":"/config_get"}
+
+  
   
 
 

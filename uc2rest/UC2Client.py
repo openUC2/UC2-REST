@@ -41,7 +41,7 @@ class UC2Client(object):
 
     BAUDRATE = 115200
     
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds = 25):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -85,13 +85,14 @@ class UC2Client(object):
         #self.galvo1 = Galvo(channel=1) FIXME
         #self.galvo2 = Galvo(channel=2) FIXME
         
+        # initialize state 
+        self.state = State(self)
+        self.state.get_state()
+        
         # initialize config
         self.config = config(self)
-        self.pinConfig = self.config.loadConfigDevice()
         
         # initialize LED matrix
-        try: NLeds = self.pinConfig["ledArrNum"]
-        except: NLeds=64
         self.led = LedMatrix(self, NLeds=NLeds)
         
         # initilize motor

@@ -144,14 +144,13 @@ class config(object):
     Set Configurations
     ################################################################################################################################################'''
 
-    def loadConfigDevice(self, timeout=1):
+    def loadConfigDevice(self, timeout=5):
         path = '/config_get'
         payload = {
+            "task": path
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
-        
         self.setDefaultConfig(r)
-        
         if type(r) != dict:
             r = self.loadDefaultConfig()
         return r
@@ -160,10 +159,24 @@ class config(object):
         path = '/config_set'
         if type(config)==dict:
             payload = config
+            payload["task"]=path
         else: 
             return None
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
+    def applyConfigDevice(self, timeout=1):
+        path = "/config_act"
+        payload = {"applyConfig":1}
+        payload["task"]=path
 
-    
+        r = self._parent.post_json(path, payload, timeout=timeout)
+
+        
+    def resetConfigDevice(self, timeout=1):
+        path = "/config_act"
+        payload = {"resetConfig":1}
+        payload["task"]=path
+
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        

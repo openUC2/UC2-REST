@@ -1,5 +1,5 @@
 //#define IS_PS3
-#define IS_PS4
+#define IS_PS3
 
 // external headers
 #include "soc/soc.h"
@@ -24,8 +24,9 @@
 #include "parameters_laser.h"
 #include "parameters_motor.h"
 #include "parameters_ledarr.h"
-#include "pindef.h" // for pin definitions
-//#include "pindefUC2Standalone.h"
+//#include "pindef.h" // for pin definitions
+#include "pindefUC2Standalone.h"
+//#include "pindefUC2StandaloneOld.h"
 #include "parameters_ps.h" // playstation parameters
 #include "parameters_config.h"
 
@@ -514,6 +515,7 @@ void jsonProcessor(char task[]) {
 
 
   // Send JSON information back
+  Serial.println("");
   Serial.println("++");
   serializeJson(jsonDocument, Serial);
   Serial.println();
