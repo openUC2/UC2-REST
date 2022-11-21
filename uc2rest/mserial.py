@@ -28,6 +28,10 @@ class Serial(object):
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
             time.sleep(3) # let it warm up
+            correctFirmware = self.checkFirmware(self.serialdevice)
+            if not correctFirmware:
+                raise Exception("Wrong firmware")
+                        
             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
             return self.serialdevice
         except:
@@ -210,7 +214,7 @@ class SerialDummy(object):
             is_blocking = True
         self.writeSerial(payload)
         #self._parent.logger.debug(payload)
-        returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+        returnmessage = self.readSerial(is_blocking=False, timeout=timeout)
         return returnmessage
         
     def writeSerial(self, payload):

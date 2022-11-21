@@ -6,6 +6,7 @@ port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 port = "/dev/cu.wchusbserial14310"
 #port = "/dev/cu.wchusbserial1440"
+port = "/dev/cu.wchusbserial110"
 
 esp32 = uc2rest.UC2Client(serialport=port)
 # setting debug output of the serial to true - all message will be printed
@@ -83,6 +84,20 @@ esp32.motor.move_forever(speed=(0,0,0,0), is_stop=True)
 position2 = esp32.motor.get_position(timeout=1)
 print(position2)
 
+dDist = 1000
+speed = 20000
+nDist = 10
+
+# test Motor in scanning mode
+esp32.motor.move_xyzt(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
+
+for ix in range(nDist):
+    for iy in range(nDist):
+        if ix%2==0:
+            iy=nDist-iy
+        esp32.motor.move_xyzt(steps=(0,ix*dDist,iy*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
+esp32.motor.move_xyzt(steps=(0,nDist*dDist,nDist*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
+esp32.motor.move_xyzt(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
 
 ''' ################
 LASER 

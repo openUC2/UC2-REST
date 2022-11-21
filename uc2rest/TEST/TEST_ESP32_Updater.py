@@ -2,7 +2,7 @@ import uc2rest as uc2
 
 # define the serial port
 serialport = "/dev/cu.SLAB_USBtoUART"
-#serialport = "COM3"
+serialport = "COM3"
 
 # optional: create an ESP32 objejct
 # ESP32 = uc2.UC2Client(serialport=serialport)

@@ -18,9 +18,10 @@ class updater(object):
     def __init__(self, ESP32=None, port=None):
         if ESP32 is not None:
             self.port = ESP32.serial.serialport
+
         if port is not None:
             self.port = port
-            
+        print("We will use ESP32 port: "+self.port)            
 
         # define a temporary firmware file name for the firmware download
         self.firmwarePath = os.path.join(tempfile.gettempdir(), "uc2rest")
@@ -39,7 +40,7 @@ class updater(object):
         return filenames
         
         
-    def flashFirmware(self, firmwarePath=None):
+    def flashFirmware(self):
         # sideload the firmware if already available online
         
         self.filenames = self.unzipFiles()

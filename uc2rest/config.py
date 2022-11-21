@@ -41,7 +41,16 @@ class config(object):
             data = json.load(f)
         return data
         
-    
+    def checkConfig(self, configfile):
+        # check if config is valid
+        if type(configfile['motorconfig'])==list and len(configfile['motorconfig'])==4:
+            print("loaded config is valid")
+            return True
+        else:
+            print("config is not valid")
+            return false
+        
+        
     '''
     send configuration to device
     '''
@@ -57,11 +66,11 @@ class config(object):
             payload = {
             }
             r = self._parent.post_json(path, payload, timeout=timeout)
-            
-            self.setDefaultConfig(r)
-            
+                        
             if type(r) != dict:
                 r = self.loadDefaultConfig()
+            else:
+                self.setDefaultConfig(r)
             return r
         
         else:
@@ -73,7 +82,15 @@ class config(object):
                           "ledconfig": ledconfig, 
                           "laserconfig": laserconfig, 
                           "stateconfig": stateconfig}
-            return self.configfile
+
+            # check if config is valid
+            isValidConfig = self.checkConfig(self.configfile)
+
+            if isValidConfig:
+                return self.configfile
+            else:
+                return self.loadDefaultConfig()
+
             
 
     def setConfigDevice(self, configfile, timeout=1):

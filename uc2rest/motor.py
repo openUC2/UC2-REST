@@ -1,6 +1,9 @@
 import numpy as np
 import time 
+import json
 
+
+gTIMEOUT = 10 # seconds to wait for a response from the ESP32
 class Motor(object):
     
     microsteppingfactor_filter=16 # run more smoothly
@@ -100,7 +103,7 @@ class Motor(object):
             axis = 0
         return axis
 
-    def home(self, axis="X", timeout=np.inf, speed = 2000, direction = 1, endposrelease=500):
+    def home(self, axis="X", timeout=gTIMEOUT, speed = 2000, direction = 1, endposrelease=500):
         # convert X,Y,Z to 0,1,2
         if type(axis) == str:
             axis = self.xyztTo1230(axis)
@@ -126,33 +129,33 @@ class Motor(object):
         return r
         
 
-    def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="T", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
     
-    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if len(speed)!= 3:
             speed = (speed,speed,speed)
 
         r = self.move_xyzt(steps=(steps[0],steps[1],steps[2],0), speed=(speed[0],speed[1],speed[2],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
-    def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if len(speed)!= 2:
             speed = (speed,speed)
 
         r = self.move_xyzt(steps=(steps[0],steps[1],0,0), speed=(speed[0],speed[1],0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
-    def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if type(speed)==int:
             speed = (speed,speed,speed,speed)
         if type(steps)==int:
@@ -161,7 +164,7 @@ class Motor(object):
         r = self.move_stepper(steps=steps, speed=speed, backlash=(self.backlash[0],self.backlash[1],self.backlash[2],self.backlash[3]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
     
-    def move_axis_by_name(self, axis="X", steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=np.inf):
+    def move_axis_by_name(self, axis="X", steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         axis = self.xyztTo1230(axis)
         _speed=np.zeros(4)
         _speed[axis] = speed
@@ -324,11 +327,31 @@ class Motor(object):
 
         # wait until job has been done
         time0=time.time()
-        if is_blocking:
-            while self.isBusy(steps):
-                time.sleep(0.1)
-                if time.time()-time0>timeout:
+        isDone=False 
+        
+        steppersRunning = np.array(steps)>0
+        if is_blocking and self._parent.serial.is_connected:
+            while True:
+                time.sleep(0.05) # don'T overwhelm the CPU
+                # see if already done
+                rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
+
+                # check if message contains a motor that is done already
+                if rMessage.find('isDone') >-1:
+                    try:
+                        rMessage = rMessage.split("\r")[0].replace("'", '"')
+                        mMessage = json.loads(rMessage)
+                        mNumber = mMessage['motor']
+                        steppersRunning[mNumber] = False
+                    except:
+                        pass
+                    
+                if np.sum(steppersRunning)==0:
                     break
+                        
+                if time.time()-time0>timeout or isDone:
+                    break
+                
 
         return r
     
