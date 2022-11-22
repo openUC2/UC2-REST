@@ -185,4 +185,6 @@ class LedMatrix(object):
         return r
             
     
-        
+    def setLEDArrayConfig(self, ledArrPin=4, ledArrNum=None):
+        # make imswitch happy
+        return self.set_ledpin(ledArrPin=ledArrPin, ledArrNum=ledArrNum)

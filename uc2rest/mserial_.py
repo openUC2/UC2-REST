@@ -15,7 +15,7 @@ class Serial(object):
         self.DEBUG = DEBUG
         
         self.NumberRetryReconnect = 0
-        self.MaxNumberRetryReconnect = 0
+        self.MaxNumberRetryReconnect = 3
         
         self.open() # creates self.serialdevice
         
@@ -28,15 +28,10 @@ class Serial(object):
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
             time.sleep(3) # let it warm up
-            correctFirmware = self.checkFirmware(self.serialdevice)
-            if not correctFirmware:
-                raise Exception("Wrong firmware")
-                        
             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
             return self.serialdevice
-        except Exception as e:
+        except:
             # try to find the PORT
-            self._parent.logger.error(e)
             _available_ports = serial.tools.list_ports.comports(include_links=False)
 
             portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb", "/dev/cu.usbserial") # TODO: Hardcoded :/
@@ -215,7 +210,7 @@ class SerialDummy(object):
             is_blocking = True
         self.writeSerial(payload)
         #self._parent.logger.debug(payload)
-        returnmessage = self.readSerial(is_blocking=False, timeout=timeout)
+        returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
         return returnmessage
         
     def writeSerial(self, payload):
