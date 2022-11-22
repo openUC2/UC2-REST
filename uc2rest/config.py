@@ -24,7 +24,8 @@ class config(object):
                 {"stepperid": 2, "dir": 27, "step": 25, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}, 
                 {"stepperid": 3, "dir": 14, "step": 17, "enable": 12, "dir_inverted": False, "step_inverted": False, "enable_inverted": False, "speed": 0, "speedmax": 200000, "max_pos": 100000, "min_pos": -100000}], 
             "ledconfig": {"ledArrNum": 0, "ledArrPin": 0, "LEDArrMode": [0, 1, 2, 3, 4, 5, 6, 7], "led_ison": False}, 
-            "stateconfig": {"identifier_name": "UC2_Feather", "identifier_id": "V1.2", "identifier_date": "Nov  7 202212:52:14", "identifier_author": "BD", "IDENTIFIER_NAME": ""}}            
+            "stateconfig": {"identifier_name": "UC2_Feather", "identifier_id": "V1.2", "identifier_date": "Nov  7 202212:52:14", "identifier_author": "BD", "IDENTIFIER_NAME": ""},
+            "laserconfig": {"LASER1pin": 0, "LASER2pin": 0, "LASER3pin": 0}}            
         return self.defaultConfig
     
     def setDefaultConfig(self, configDict=None, configFile=None):
@@ -113,16 +114,21 @@ class config(object):
         else: 
             # set all lasers 
             notAllowedPins = (1,2,3,5)
-            if configfile["laserconfig"]["LASER1pin"] not in notAllowedPins:
+            if configfile["laserconfig"]["LASER1pin"] in notAllowedPins:
                 self._parent.laser.set_laserpin(1, configfile["laserconfig"]["LASER1pin"])
-            if configfile["laserconfig"]["LASER2pin"] not in notAllowedPins:
+            if configfile["laserconfig"]["LASER2pin"] in notAllowedPins:
                 self._parent.laser.set_laserpin(2, configfile["laserconfig"]["LASER2pin"])
-            if configfile["laserconfig"]["LASER3pin"] not in notAllowedPins:
+            if configfile["laserconfig"]["LASER3pin"] in notAllowedPins:
                 self._parent.laser.set_laserpin(3, configfile["laserconfig"]["LASER3pin"])
+            self._parent.laser.set_laserpin(laserid=1, laserpin=configfile["laserconfig"]["LASER1pin"])
+            self._parent.laser.set_laserpin(laserid=2, laserpin=configfile["laserconfig"]["LASER2pin"])
+            self._parent.laser.set_laserpin(laserid=3, laserpin=configfile["laserconfig"]["LASER3pin"])
 
             # set led 
-            if configfile["ledconfig"]["ledArrPin"] not in notAllowedPins:
+            if configfile["ledconfig"]["ledArrPin"] in notAllowedPins:
                 self._parent.led.set_ledpin(ledArrPin=configfile["ledconfig"]["ledArrPin"], ledArrNum=configfile["ledconfig"]["ledArrNum"])
+            self._parent.led.set_ledpin(ledArrPin=configfile["ledconfig"]["ledArrPin"], ledArrNum=configfile["ledconfig"]["ledArrNum"])
+            
                 
             # set motors
             if configfile["motorconfig"][0]["dir"] in notAllowedPins:
