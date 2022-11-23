@@ -175,7 +175,7 @@ class updater(object):
     def downloadFirmware(self):
 
         print("We are checking for pre-built binaries on Github")
-        self.firmwareDownloadPath = 'https://api.github.com/repos/openUC2/UC2-REST/releases/latest'
+        self.firmwareDownloadPath = 'https://api.github.com/repos/youseetoo/uc2-esp32/releases/latest' 
         releaseResponse = requests.get(
             self.firmwareDownloadPath
         )
