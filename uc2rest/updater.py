@@ -7,6 +7,7 @@ import threading
 import zipfile
 import progressbar 
 import platform
+import glob
 try:
     import requests
     is_requests = True
@@ -18,10 +19,9 @@ class updater(object):
     def __init__(self, ESP32=None, port=None):
         if ESP32 is not None:
             self.port = ESP32.serial.serialport
-
         if port is not None:
             self.port = port
-        print("We will use ESP32 port: "+self.port)            
+            
 
         # define a temporary firmware file name for the firmware download
         self.firmwarePath = os.path.join(tempfile.gettempdir(), "uc2rest")
@@ -40,7 +40,7 @@ class updater(object):
         return filenames
         
         
-    def flashFirmware(self):
+    def flashFirmware(self, firmwarePath=None):
         # sideload the firmware if already available online
         
         self.filenames = self.unzipFiles()
@@ -175,7 +175,7 @@ class updater(object):
     def downloadFirmware(self):
 
         print("We are checking for pre-built binaries on Github")
-        self.firmwareDownloadPath = 'https://api.github.com/repos/youseetoo/uc2-esp32/releases/latest' 
+        self.firmwareDownloadPath = 'https://api.github.com/repos/youseetoo/uc2-esp32/releases/latest'
         releaseResponse = requests.get(
             self.firmwareDownloadPath
         )
@@ -219,7 +219,9 @@ class updater(object):
     def removeFirmware(self):
         try:
             print("Removing Firmware:"+self.uc2restZip)
-            os.remove(os.path.join(self.firmwarePath, self.uc2restZip))
+            for ifile in glob.glob(self.firmwarePath+"/*"):
+                try:os.remove(ifile)
+                except:pass
             return True
         except Exception as e:
             print(e)
