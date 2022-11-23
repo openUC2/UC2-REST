@@ -20,6 +20,7 @@ from .state import State
 from .laser import Laser
 from .wifi import Wifi
 from .camera import Camera
+from .analog import Analog
 
 
 try:
@@ -39,9 +40,10 @@ class UC2Client(object):
     is_wifi = False
     is_serial = False
 
+    # BAUDRATE = 500000
     BAUDRATE = 115200
-    
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds = 25):
+
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -53,11 +55,11 @@ class UC2Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
-    
+
         if IS_IMSWITCH:
             self.logger = initLogger(self, tryInheritParent=True)
         else:
-            self.logger = Logger()            
+            self.logger = Logger()
 
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
@@ -65,7 +67,7 @@ class UC2Client(object):
             self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
             self.is_serial = True
             self.is_connected = True
-            
+
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -84,34 +86,43 @@ class UC2Client(object):
         # initialize galvos
         #self.galvo1 = Galvo(channel=1) FIXME
         #self.galvo2 = Galvo(channel=2) FIXME
-        
-        # initialize state 
+
+
+        # initialize state
         self.state = State(self)
         self.state.get_state()
-        
+
         # initialize config
         self.config = config(self)
-        
+
         # initialize LED matrix
         self.led = LedMatrix(self, NLeds=NLeds)
-        
+
         # initilize motor
         self.motor = Motor(self)
-        
+
         # initialize laser
         self.state = State(self)
-        
+
         # initialize galvo
         self.galvo1 = Galvo(self, 1)
-        
+
         # initialize laser
         self.laser = Laser(self)
-        
+
         # initialize wifi
         self.wifi = Wifi(self)
-        
+
         # initialize camera
         self.camera = Camera(self)
+
+        # initialize analog
+        self.analog = Analog(self)
+
+        # initialize config
+        self.config = config(self)
+        self.pinConfig = self.config.loadConfigDevice()
+
 
     def post_json(self, path, payload, timeout=1):
         if self.is_wifi:
@@ -124,7 +135,7 @@ class UC2Client(object):
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
-        
+
     def get_json(self, path, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
@@ -132,18 +143,8 @@ class UC2Client(object):
             r = requests.get(url, headers=self.headers)
             return r.json()
         elif self.is_serial:
-            self.serial.get_json(self, path)
+            self.serial.get_json(path)
             return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
-
-
-
-
-
-
-
-
-
-

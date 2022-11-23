@@ -7,7 +7,6 @@ import threading
 import zipfile
 import progressbar 
 import platform
-import glob
 try:
     import requests
     is_requests = True
@@ -175,7 +174,7 @@ class updater(object):
     def downloadFirmware(self):
 
         print("We are checking for pre-built binaries on Github")
-        self.firmwareDownloadPath = 'https://api.github.com/repos/youseetoo/uc2-esp32/releases/latest'
+        self.firmwareDownloadPath = 'https://api.github.com/repos/openUC2/UC2-REST/releases/latest'
         releaseResponse = requests.get(
             self.firmwareDownloadPath
         )
@@ -219,9 +218,7 @@ class updater(object):
     def removeFirmware(self):
         try:
             print("Removing Firmware:"+self.uc2restZip)
-            for ifile in glob.glob(self.firmwarePath+"/*"):
-                try:os.remove(ifile)
-                except:pass
+            os.remove(os.path.join(self.firmwarePath, self.uc2restZip))
             return True
         except Exception as e:
             print(e)

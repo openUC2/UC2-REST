@@ -1,8 +1,12 @@
 class Laser(object):
-    
+    ## Laser
     def __init__(self, parent):
         self._parent = parent
-        
+        self.filter_pos_1 = 0
+        self.filter_pos_2 = 0
+        self.filter_pos_3 = 0
+        self.filter_pos_LED = 0
+        self._parent.logger.debug("Attention, lasers are on channels 1,2,3")
         
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
@@ -32,7 +36,7 @@ class Laser(object):
             self.switch_filter(filter_pos=filter_position_toGo, filter_axis=filter_axis, timeout=timeout,is_blocking=is_blocking)
 
         path = '/laser_act'
-
+        
         payload = {
             "task": path,
             "LASERid": channel,
@@ -44,3 +48,35 @@ class Laser(object):
         self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
         r = self._parent.post_json(path, payload)
         return r
+
+    def set_laserpin(self, laserid=1, laserpin=0):
+        path = '/laser_set'
+        
+        payload = {
+            "task": path,
+            "LASERid": laserid,
+            "LASERpin": laserpin
+        }
+        
+        r = self._parent.post_json(path, payload)
+        return r
+
+    def get_laserpins(self):
+        path = '/laser_get'
+        
+        payload = {
+            "task": path,
+        }
+        
+        r = self._parent.post_json(path, payload)
+        return r
+    
+    def get_laserpin(self, laserid=1):
+        path = '/laser_get'
+        
+        payload = {
+            "task": path,
+        }
+        
+        r = self._parent.post_json(path, payload)
+        return r["LASER"+str(laserid)+"pin"]

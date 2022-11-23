@@ -8,7 +8,7 @@ class State(object):
     def __init__(self, parent):
         self._parent = parent
         
-    def get_state(self, timeout=10):
+    def get_state(self, timeout=3):
         path = "/state_get"
 
         payload = {
