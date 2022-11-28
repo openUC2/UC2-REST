@@ -15,6 +15,9 @@ class Motor(object):
     filter_speed = microsteppingfactor_filter * 500
     filter_position_now = 0
     
+    # indicate if there is any motion happening
+    isRunning = False
+    
     # a dictionary that stores all motor parameters for each dxis
     settingsdict = {"motor": {"steppers":
         [{"stepperid":0,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
@@ -323,11 +326,11 @@ class Motor(object):
             self.steps_last[iMotor] = steps[iMotor]
 
         # drive motor
-        r = self._parent.post_json(path, payload, timeout=1)
+        self.isRunning = True
+        r = self._parent.post_json(path, payload, getReturn=~is_blocking, timeout=1)
 
         # wait until job has been done
         time0=time.time()
-        isDone=False 
         
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
@@ -349,10 +352,11 @@ class Motor(object):
                 if np.sum(steppersRunning)==0:
                     break
                         
-                if time.time()-time0>timeout or isDone:
+                if time.time()-time0>timeout:
                     break
                 
-
+        # reset busy flag
+        self.isRunning = False
         return r
     
     def isBusy(self, steps, timeout=1):

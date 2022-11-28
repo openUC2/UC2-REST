@@ -52,6 +52,7 @@ class UC2Client(object):
             self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
             self.is_serial = True
             self.is_connected = True
+            self.serial.DEBUG = True
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -134,15 +135,14 @@ class UC2Client(object):
         self.config = config(self)
         self.pinConfig = self.config.loadConfigDevice()
 
-
-    def post_json(self, path, payload, timeout=1):
+    def post_json(self, path, payload, getReturn=True, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.post(url, json=payload, headers=self.headers)
             return r.json()
         elif self.is_serial:
-            return self.serial.post_json(path, payload, timeout=timeout)
+            return self.serial.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None

@@ -109,8 +109,8 @@ class Serial(object):
         self._parent.logger.debug(message)
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
-
-    def post_json(self, path, payload={}, headers=None, timeout=1):
+    
+    def post_json(self, path, payload={}, getReturn=True, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         if "task" not in payload:
             payload["task"] = path
@@ -120,9 +120,15 @@ class Serial(object):
         else:
             is_blocking = True
 
+        # write message to the serial
         self.writeSerial(payload)
         
-        returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+        if getReturn:
+            # we read the return message
+            #self._parent.logger.debug(payload)
+            returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+        else:
+            returnmessage = None
         return returnmessage
         
     def writeSerial(self, payload):
@@ -152,7 +158,7 @@ class Serial(object):
         if type(payload)==dict:
             payload = json.dumps(payload)
         try:
-            self._parent.logger.debug(payload)
+            if self.DEBUG: self._parent.logger.debug(payload)
             self.serialdevice.write(payload.encode(encoding='UTF-8'))
         except Exception as e:
             self._parent.logger.error(e)
@@ -222,7 +228,7 @@ class SerialDummy(object):
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
 
-    def post_json(self, path, payload={}, headers=None, timeout=1):
+    def post_json(self, path, payload={}, getReturn=True, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         try:
             payload["task"]
@@ -233,8 +239,12 @@ class SerialDummy(object):
         except:
             is_blocking = True
         self.writeSerial(payload)
-        #self._parent.logger.debug(payload)
-        returnmessage = self.readSerial(is_blocking=False, timeout=timeout)
+        if getReturn:
+            # we read the return message
+            #self._parent.logger.debug(payload)
+            returnmessage = self.readSerial(is_blocking=False, timeout=timeout)
+        else:
+            returnmessage = None
         return returnmessage
         
     def writeSerial(self, payload):
