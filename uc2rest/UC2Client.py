@@ -5,24 +5,7 @@
 Simple client code for the ESP32 in Python
 Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
-
-#import numpy as np
-
-
-
-from .galvo import Galvo
-from .config import config
-from .logger import Logger
 from .mserial import Serial
-from .ledmatrix import LedMatrix
-from .motor import Motor
-from .state import State
-from .laser import Laser
-from .wifi import Wifi
-from .camera import Camera
-from .analog import Analog
-
-
 try:
     from imswitch.imcommon.model import initLogger
     IS_IMSWITCH = True
@@ -60,6 +43,8 @@ class UC2Client(object):
             self.logger = initLogger(self, tryInheritParent=True)
         else:
             self.logger = Logger()
+        # set default APIVersion
+        self.APIVersion = 2
 
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
@@ -67,7 +52,7 @@ class UC2Client(object):
             self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
             self.is_serial = True
             self.is_connected = True
-
+            self.serial.DEBUG = True
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -79,6 +64,33 @@ class UC2Client(object):
             self.is_connected = self.isConnected()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
+
+        # import libraries depending on API version
+        if self.APIVersion == 1:
+            self.logger.debug("Using API version 1")
+            from .v1.galvo import Galvo
+            from .v1.config import config
+            from .v1.logger import Logger
+            from .v1.ledmatrix import LedMatrix
+            from .v1.motor import Motor
+            from .v1.state import State
+            from .v1.laser import Laser
+            from .v1.wifi import Wifi
+            from .v1.camera import Camera
+            from .v1.analog import Analog
+        elif self.APIVersion == 2:    
+            self.logger.debug("Using API version 2")        
+            from .galvo import Galvo
+            from .config import config
+            from .logger import Logger
+            from .ledmatrix import LedMatrix
+            from .motor import Motor
+            from .state import State
+            from .laser import Laser
+            from .wifi import Wifi
+            from .camera import Camera
+            from .analog import Analog
+
 
         #FIXME
         #self.set_state(debug=False)
@@ -123,15 +135,14 @@ class UC2Client(object):
         self.config = config(self)
         self.pinConfig = self.config.loadConfigDevice()
 
-
-    def post_json(self, path, payload, timeout=1):
+    def post_json(self, path, payload, getReturn=True, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.post(url, json=payload, headers=self.headers)
             return r.json()
         elif self.is_serial:
-            return self.serial.post_json(path, payload, timeout=timeout)
+            return self.serial.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None

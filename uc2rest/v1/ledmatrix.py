@@ -15,18 +15,6 @@ class LedMatrix(object):
         self.timeout = 1
         self.intensity = (255,255,255)
         
-        self.ledArrayMode = {
-            "array": 0,
-            "full": 1,
-            "single": 2,
-            "off": 3,
-            "left": 4,
-            "right": 5,
-            "top": 6,
-            "bottom": 7,
-            "multi": 8}
-            
-            
     
     '''
     ##############################################################################################################################
@@ -43,14 +31,11 @@ class LedMatrix(object):
             led_pattern = np.reshape(led_pattern, (led_pattern.shape[0], int(np.sqrt(led_pattern.shape[1])), int(np.sqrt(led_pattern.shape[1]))))
         led_pattern[:,1::2, :] = led_pattern[:,1::2, ::-1]
         payload = {
-            "task":path,
-            "led": {
-                "red": led_pattern[:,:,0].flatten().tolist(),
-                "green": led_pattern[:,:,1].flatten().tolist(),
-                "blue": led_pattern[:,:,2].flatten().tolist(),
-                "arraySize": led_pattern.shape[1],
-                "LEDArrMode": self.ledArrayMode["array"]
-            }
+            "red": led_pattern[:,:,0].flatten().tolist(),
+            "green": led_pattern[:,:,1].flatten().tolist(),
+            "blue": led_pattern[:,:,2].flatten().tolist(),
+            "arraySize": led_pattern.shape[1],
+            "LEDArrMode": "array"
         }
         self._parent.logger.debug("Setting LED Pattern (array) ")
         r = self._parent.post_json(path, payload, timeout=timeout)
@@ -60,18 +45,14 @@ class LedMatrix(object):
         '''
         set all LEDs with te same RGB value: intensity=(255,255,255)
         '''
-        #{"task": "/ledarr_act", "led": {"red": 255, "green": 255, "blue": 255, "LEDArrMode": "full"}}
         path = '/ledarr_act'
         payload = {
             "task":path,
-            "led": {
-                "red": int(intensity[0]),
-                "green": int(intensity[1]),
-                "blue": int(intensity[2]),
-                "LEDArrMode": self.ledArrayMode["full"]
-            }
+            "red": int(intensity[0]),
+            "green": int(intensity[1]),
+            "blue": int(intensity[2]),
+            "LEDArrMode": "full"
         }
-        
         self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
@@ -82,13 +63,10 @@ class LedMatrix(object):
         '''
         path = '/ledarr_act'
         payload = {
-            "task":path,
-            "led": {
             "red": int(intensity[0]),
             "green": int(intensity[1]),
             "blue": int(intensity[2]),
-            "LEDArrMode": self.ledArrayMode[pattern]
-            }
+            "LEDArrMode": pattern
         }
         self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, timeout=timeout)
@@ -100,14 +78,11 @@ class LedMatrix(object):
         '''
         path = '/ledarr_act'
         payload = {
-            "task":path,
-            "led": {
-                "red": int(intensity[0]),
-                "green": int(intensity[1]),
-                "blue": int(intensity[2]),
-                "indexled": int(indexled),
-                "LEDArrMode": self.ledArrayMode["single"] 
-            }
+            "red": int(intensity[0]),
+            "green": int(intensity[1]),
+            "blue": int(intensity[2]),
+            "indexled": int(indexled),
+            "LEDArrMode": "single"
         }
         self._parent.logger.debug("Setting LED PAttern: "+str(indexled)+" - "+str(intensity))
         r = self._parent.post_json(path, payload, timeout=timeout)
@@ -119,14 +94,11 @@ class LedMatrix(object):
         '''
         path = '/ledarr_act'
         payload = {
-            "task":path,
-            "led": {
             "red": intensity[0],
             "green": intensity[1],
             "blue": intensity[2],
             "indexled": indexled,
-            "LEDArrMode": self.ledArrayMode["multi"]
-            }
+            "LEDArrMode": "multi"
         }
         self._parent.logger.debug("Setting LED PAttern: "+str(indexled)+" - "+str(intensity))
         r = self._parent.post_json(path, payload, timeout=timeout)
@@ -191,28 +163,6 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def set_ledpin(self, ledArrPin=4, ledArrNum=None):
-        if ledArrNum is None:
-            ledArrNum = self.NLeds
-            
-        path = "/ledarr_set"
-        payload = {
-            "task": path,
-            "ledArrPin": ledArrPin,
-            "ledArrNum": ledArrNum
-        }
-        r = self._parent.post_json(path, payload)
-        return r
+    def setLEDArrayConfig(self, ledArrPin=4, ledArrNum=25):
+        return self._parent.config.setLEDArrayConfig(ledArrPin=4, ledArrNum=25)
         
-    def get_ledpin(self):
-        path = "/ledarr_get"
-        payload = {
-            "task": path,
-        }
-        r = self._parent.post_json(path, payload)
-        return r
-            
-    
-    def setLEDArrayConfig(self, ledArrPin=4, ledArrNum=None):
-        # make imswitch happy
-        return self.set_ledpin(ledArrPin=ledArrPin, ledArrNum=ledArrNum)

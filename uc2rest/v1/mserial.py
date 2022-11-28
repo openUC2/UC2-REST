@@ -14,20 +14,10 @@ class Serial(object):
         self.identity = identity
         self.DEBUG = DEBUG
         
-        # default version (v1 or v2) for the API
-        self.versionFirmware = "V2.0"
-        
         self.NumberRetryReconnect = 0
-        self.MaxNumberRetryReconnect = 0
+        self.MaxNumberRetryReconnect = 3
         
         self.open() # creates self.serialdevice
-        
-        # switch between different api versions 
-        if self.versionFirmware == "V1.2":
-            self._parent.APIVersion = 1
-        elif self.versionFirmware == "V2.0":
-            self._parent.APIVersion = 2
-        
         
     def open(self):
         '''Open the serial port'''
@@ -38,15 +28,10 @@ class Serial(object):
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
             time.sleep(3) # let it warm up
-            correctFirmware = self.checkFirmware()
-            if not correctFirmware:
-                raise Exception("Wrong firmware")
-                        
             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
             return self.serialdevice
-        except Exception as e:
+        except:
             # try to find the PORT
-            self._parent.logger.error(e)
             _available_ports = serial.tools.list_ports.comports(include_links=False)
 
             portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb", "/dev/cu.usbserial") # TODO: Hardcoded :/
@@ -60,7 +45,7 @@ class Serial(object):
                         self.serialdevice.write_timeout=1
                         self.is_connected = True # attempting to initiliaze connection
                         time.sleep(3) # let it warm up and wait until debugging messages may vanish
-                        correctFirmware = self.checkFirmware()
+                        correctFirmware = self.checkFirmware(self.serialdevice)
                         if correctFirmware:
                             self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
@@ -76,19 +61,12 @@ class Serial(object):
         self._parent.logger.debug("No USB device connected! Using DUMMY!")
         return self.serialdevice                
 
-    def checkFirmware(self, timeout=1):
+    def checkFirmware(self, serialdevice, timeout=1):
         """Check if the firmware is correct"""
         path = "/state_get"
         _state = self.post_json(path, {"task":path}, timeout=timeout)
-        try:
-            self.versionFirmware = _state["identifier_id"]
-        except Exception as e:
-            self._parent.logger.error(e)
-            self.versionFirmware = "V2.0"
-            
         if _state["identifier_name"] == self.identity: 
             return True
-        
         else: return False
 
 
@@ -106,11 +84,10 @@ class Serial(object):
         message = json.dumps(message)
         self.serialdevice.flushInput()
         self.serialdevice.flushOutput()
-        self._parent.logger.debug(message)
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
-    
-    def post_json(self, path, payload={}, getReturn=True, timeout=1):
+
+    def post_json(self, path, payload={}, headers=None, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         if "task" not in payload:
             payload["task"] = path
@@ -120,15 +97,9 @@ class Serial(object):
         else:
             is_blocking = True
 
-        # write message to the serial
         self.writeSerial(payload)
         
-        if getReturn:
-            # we read the return message
-            #self._parent.logger.debug(payload)
-            returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
-        else:
-            returnmessage = None
+        returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
         return returnmessage
         
     def writeSerial(self, payload):
@@ -158,7 +129,6 @@ class Serial(object):
         if type(payload)==dict:
             payload = json.dumps(payload)
         try:
-            if self.DEBUG: self._parent.logger.debug(payload)
             self.serialdevice.write(payload.encode(encoding='UTF-8'))
         except Exception as e:
             self._parent.logger.error(e)
@@ -207,7 +177,7 @@ class SerialDummy(object):
         '''Open the serial port'''
         return SerialDeviceDummy()                
 
-    def checkFirmware(self):
+    def checkFirmware(self, serialdevice):
         """Check if the firmware is correct"""
         return True
         
@@ -228,7 +198,7 @@ class SerialDummy(object):
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
 
-    def post_json(self, path, payload={}, getReturn=True, timeout=1):
+    def post_json(self, path, payload={}, headers=None, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
         try:
             payload["task"]
@@ -239,12 +209,8 @@ class SerialDummy(object):
         except:
             is_blocking = True
         self.writeSerial(payload)
-        if getReturn:
-            # we read the return message
-            #self._parent.logger.debug(payload)
-            returnmessage = self.readSerial(is_blocking=False, timeout=timeout)
-        else:
-            returnmessage = None
+        #self._parent.logger.debug(payload)
+        returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
         return returnmessage
         
     def writeSerial(self, payload):
@@ -316,4 +282,4 @@ class SerialDeviceDummy(object):
             pass
         
         def readline(self):
-            return b'{"task":"dummy"}--'
+            return b'++{"task":"dummy"}--'
