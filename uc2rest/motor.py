@@ -1,11 +1,11 @@
 import numpy as np
-import time 
+import time
 import json
 
 
 gTIMEOUT = 10 # seconds to wait for a response from the ESP32
 class Motor(object):
-    
+
     microsteppingfactor_filter=16 # run more smoothly
     filter_pos_1 = 1000*microsteppingfactor_filter # GFP
     filter_pos_2 = 0*microsteppingfactor_filter # AF647/SIR
@@ -14,10 +14,10 @@ class Motor(object):
     filter_pos_init = -1250*microsteppingfactor_filter
     filter_speed = microsteppingfactor_filter * 500
     filter_position_now = 0
-    
+
     # indicate if there is any motion happening
     isRunning = False
-    
+
     # a dictionary that stores all motor parameters for each dxis
     settingsdict = {"motor": {"steppers":
         [{"stepperid":0,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
@@ -30,14 +30,14 @@ class Motor(object):
 
     def __init__(self, parent=None):
         self._parent = parent
-        
+
         self.nMotors = 4
         self.steps_last = np.zeros((self.nMotors))
         self.backlash = np.zeros((self.nMotors))
         self.stepSize = np.ones((self.nMotors))
         self.maxStep = np.ones((self.nMotors))*np.inf
         self.minStep = np.ones((self.nMotors))*(-np.inf)
-        
+
         self.minPosX = -np.inf
         self.minPosY = -np.inf
         self.minPosZ = -np.inf
@@ -50,9 +50,9 @@ class Motor(object):
         self.stepSizeY =  1
         self.stepSizeZ =  1
         self.stepSizeT =  1
-        
-        
-        
+
+
+
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''
@@ -76,24 +76,24 @@ class Motor(object):
             self.minPosT = minPos
             self.maxPosT = maxPos
             self.stepSizeT = stepSize
-            self.backlashT = backlash            
-            
+            self.backlashT = backlash
+
     def home_x(self):
         r = self.home(axis="X")
         return r
-    
+
     def home_y(self):
         r = self.home(axis="Y")
         return r
-    
+
     def home_z(self):
         r = self.home(axis="Z")
         return r
-    
+
     def home_xyz(self):
         r = self.home(axis="XYZ")
         return r
-    
+
     def xyztTo1230(self, axis):
         axis = axis.upper()
         if axis == "X":
@@ -101,7 +101,7 @@ class Motor(object):
         if axis == "Y":
             axis = 2
         if axis == "Z":
-            axis = 3                                    
+            axis = 3
         if axis == "T" or axis == "A":
             axis = 0
         return axis
@@ -119,10 +119,10 @@ class Motor(object):
             "task": path,
             "home":{
                 "steppers": [
-                { 
-                 "stepperid": axis, 
-                 "timeout":timeout, 
-                 "speed":speed, 
+                {
+                 "stepperid": axis,
+                 "timeout":timeout,
+                 "speed":speed,
                  "direction":direction,
                  "endposrelease":endposrelease
                  }]
@@ -130,7 +130,7 @@ class Motor(object):
 
         r = self._parent.post_json(path, payload)
         return r
-        
+
 
     def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
@@ -143,7 +143,7 @@ class Motor(object):
 
     def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="T", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
-    
+
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if len(speed)!= 3:
             speed = (speed,speed,speed)
@@ -163,10 +163,10 @@ class Motor(object):
             speed = (speed,speed,speed,speed)
         if type(steps)==int:
             steps = (steps,steps,steps,steps)
-        
+
         r = self.move_stepper(steps=steps, speed=speed, backlash=(self.backlash[0],self.backlash[1],self.backlash[2],self.backlash[3]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
-    
+
     def move_axis_by_name(self, axis="X", steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         axis = self.xyztTo1230(axis)
         _speed=np.zeros(4)
@@ -217,7 +217,7 @@ class Motor(object):
         if len(speed)==3:
             speed = (*speed,0)
         path = "/motor_act"
-        
+
         payload = {
             "task":path,
             "motor":
@@ -236,27 +236,27 @@ class Motor(object):
     def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=1, backlash=(0,0,0,0), is_blocking=True, is_enabled=True):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
-        
+
         XYZT => 1,2,3,0
         '''
         if type(is_absolute)==bool:
             is_absolute = (is_absolute,is_absolute,is_absolute,is_absolute)
-        
+
         # convert single elements to array
         if type(speed)!=list and type(speed)!=tuple and type(speed)!=np.ndarray:
             speed = np.array((speed,speed,speed,speed))
-            
+
         # make sure value is an array
         if type(steps)==tuple:
             steps = np.array(steps)
 
         # detect change in directiongit config --global user.name "Your Name"
-        for iMotor in range(4): 
+        for iMotor in range(4):
             if np.sign(self.steps_last[iMotor]) != np.sign(steps[iMotor]):
                 # we want to overshoot a bit
                 steps[iMotor] = steps[iMotor] + (np.sign(steps[iMotor])*backlash[iMotor])
 
-            
+
         '''
         # get current position
         pos_0 = self.get_position(0)
@@ -269,7 +269,7 @@ class Motor(object):
         steps_1 = steps_1*self.stepSizeY
         steps_2 = steps_2*self.stepSizeZ
         steps_3 = steps_3*self.stepSizeT
-        
+
         # check if within limits
         if pos_0+steps_0 > self.maxPosX or pos_0+steps_0 < self.minPosX:
             steps_0=0
@@ -280,7 +280,7 @@ class Motor(object):
         if pos_3+steps_3 > self.maxPosT or pos_3+steps_3 < self.minPosT:
             steps_3 = 0
         '''
-        
+
         '''
         {"task":"/motor_act",
         "motor":{
@@ -295,7 +295,7 @@ class Motor(object):
             ]
         }
         }
-        
+
         {"task":"/motor_act",
     "motor":
     {
@@ -319,10 +319,10 @@ class Motor(object):
                 ]
             }
         }
-        
-        
+
+
         # safe steps to track direction for backlash compensatio
-        for iMotor in range(self.nMotors): 
+        for iMotor in range(self.nMotors):
             self.steps_last[iMotor] = steps[iMotor]
 
         # drive motor
@@ -331,7 +331,7 @@ class Motor(object):
 
         # wait until job has been done
         time0=time.time()
-        
+
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
             while True:
@@ -348,17 +348,17 @@ class Motor(object):
                         steppersRunning[mNumber] = False
                     except:
                         pass
-                    
+
                 if np.sum(steppersRunning)==0:
                     break
-                        
+
                 if time.time()-time0>timeout:
                     break
-                
+
         # reset busy flag
         self.isRunning = False
         return r
-    
+
     def isBusy(self, steps, timeout=1):
         path = "/motor_get"
         payload = {
@@ -377,28 +377,28 @@ class Motor(object):
         except Exception as e:
             return False
 
-    
-    
-    def set_motor(self, stepperid = 0, position = None, stepPin=None, dirPin=None, enablePin=None, maxPos=None, minPos=None, acceleration=None, isEnable=None, isBlocking=True, timeout=2): 
+
+
+    def set_motor(self, stepperid = 0, position = None, stepPin=None, dirPin=None, enablePin=None, maxPos=None, minPos=None, acceleration=None, isEnable=None, isBlocking=True, timeout=2):
         path = "/motor_set"
-        payload = {"task":path, 
+        payload = {"task":path,
                     "motor":{
                     "steppers": [
                         {   "stepperid": stepperid}]
                     }}
-                    
+
         if stepPin is not None: payload['motor']["steppers"][0]["step"] = stepPin
         if dirPin is not None: payload['motor']["steppers"][0]["dir"] = dirPin
         if enablePin is not None: payload['motor']["steppers"][0]["enable"] = enablePin
-        if maxPos is not None: payload['motor']["steppers"][0]["max_pos"] = maxPos 
+        if maxPos is not None: payload['motor']["steppers"][0]["max_pos"] = maxPos
         if minPos is not None: payload['motor']["steppers"][0]["min_pos"] = minPos
         if position is not None: payload['motor']["steppers"][0]["position"] = position
         if acceleration is not None: payload['motor']["steppers"][0]["acceleration"] = acceleration
         if isEnable is not None: payload['motor']["steppers"][0]["isen"] = isEnable
-        
+
         # send command
         r = self._parent.post_json(path, payload, timeout=1)
-        
+
         # wait until job has been done
         time0=time.time()
         if isBlocking:
@@ -412,22 +412,22 @@ class Motor(object):
     def set_motor_currentPosition(self, axis=0, currentPosition=10000):
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
-        
-        r = self.set_motor(stepperid = axis, position = currentPosition) 
+
+        r = self.set_motor(stepperid = axis, position = currentPosition)
         return r
 
     def set_motor_acceleration(self, axis=0, acceleration=10000):
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
-        
-        r = self.set_motor(stepperid = axis, acceleration=acceleration) 
+
+        r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
     def set_motor_enable(self, axis =0, is_enable=1):
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
-        
-        r = self.set_motor(stepperid = axis, isEnable=is_enable) 
+
+        r = self.set_motor(stepperid = axis, isEnable=is_enable)
         return r
 
     def get_position(self, timeout=1):
@@ -438,7 +438,7 @@ class Motor(object):
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
         _position = np.array((0,0,0,0))
-        try: 
+        try:
             for istepper in r["motor"]["steppers"]:
                 _position[istepper["stepperid"]]=istepper["position"]
         except Exception as e: self._parent.logger.error(e)
@@ -461,15 +461,15 @@ class Motor(object):
         return r
         '''
         return False
-    
+
     def set_motors(self, settingsdict, isBlocking=True, timeout=1):
         path = "/motor_set"
         payload = settingsdict
         payload["task"] = path
-                    
+
         # send command
         r = self._parent.post_json(path, payload, timeout=1)
-        
+
         # wait until job has been done
         time0=time.time()
         if isBlocking:
@@ -479,8 +479,8 @@ class Motor(object):
                     break
 
         return r
-    
-    
+
+
     def get_motor(self, axis=1, timeout=1):
         path = "/motor_get"
         payload = {
@@ -502,6 +502,3 @@ class Motor(object):
 
     def set_direction(self, axis=1, sign=1, timeout=1):
         return False
-
-
-
