@@ -327,7 +327,7 @@ class Motor(object):
 
         # wait until job has been done
         time0=time.time()
-        isDone=False 
+
         
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
@@ -349,7 +349,7 @@ class Motor(object):
                 if np.sum(steppersRunning)==0:
                     break
                         
-                if time.time()-time0>timeout or isDone:
+                if time.time()-time0>timeout:
                     break
                 
 
