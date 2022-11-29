@@ -90,6 +90,7 @@ class UC2Client(object):
             from .wifi import Wifi
             from .camera import Camera
             from .analog import Analog
+            from .updater import updater
 
 
         #FIXME
@@ -134,7 +135,10 @@ class UC2Client(object):
         # initialize config
         self.config = config(self)
         self.pinConfig = self.config.loadConfigDevice()
-
+        
+        # initialize updater 
+        self.updater = updater(parent=self)
+   
     def post_json(self, path, payload, getReturn=True, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working

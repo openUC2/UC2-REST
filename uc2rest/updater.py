@@ -16,13 +16,13 @@ except:
 
 class updater(object):
     
-    def __init__(self, ESP32=None, port=None):
+    def __init__(self, ESP32=None, port=None, parent=None):
         if ESP32 is not None:
             self.port = ESP32.serial.serialport
         if port is not None:
             self.port = port
-            
-
+        self.parent = parent
+        
         # define a temporary firmware file name for the firmware download
         self.firmwarePath = os.path.join(tempfile.gettempdir(), "uc2rest")
             
@@ -44,6 +44,13 @@ class updater(object):
         # sideload the firmware if already available online
         
         self.filenames = self.unzipFiles()
+        if self._parent is not None:
+            # in case the serial is still open, perhaps it makes sense to close it
+            try:
+                self._parent.serial.close()
+            except:
+                pass
+            
         if platform.system()=="Windows":
             try:
                 #esptool.py --chip esp32 --port /dev/cu.SLAB_USBtoUART --baud 921600 
