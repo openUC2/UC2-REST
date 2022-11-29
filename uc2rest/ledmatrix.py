@@ -39,6 +39,9 @@ class LedMatrix(object):
         Send an LED array pattern e.g. an RGB Matrix: led_pattern=np.zeros((3,8,8))
         '''
         path = '/ledarr_act'
+        # if we have a 2d pattern => flatten
+        if len(led_pattern.shape)==3:
+            led_pattern=np.reshape(led_pattern, (np.prod(led_pattern.shape[0:2]),led_pattern.shape[2])) 
 
         # convert pattern strip to list of RGB values
         pattern_list = []

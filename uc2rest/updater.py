@@ -21,8 +21,11 @@ class updater(object):
             self.port = ESP32.serial.serialport
         if port is not None:
             self.port = port
-        self.parent = parent
-        
+        # parent holds the entire esp object
+        if parent is not None:
+            self._parent = parent
+            self.port = self._parent.serial.serialport
+
         # define a temporary firmware file name for the firmware download
         self.firmwarePath = os.path.join(tempfile.gettempdir(), "uc2rest")
             

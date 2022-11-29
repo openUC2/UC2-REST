@@ -212,6 +212,9 @@ class SerialDummy(object):
         """Check if the firmware is correct"""
         return True
         
+    def close(self):
+        self.closeSerial()
+        
     def closeSerial(self):
         self.serialdevice.close()
         
