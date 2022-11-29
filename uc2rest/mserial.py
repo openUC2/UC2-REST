@@ -3,6 +3,7 @@ import serial.tools.list_ports
 import time
 import json
 
+T_SERIAL_WARMUP = 5 # the time to wait for the serial to warm up
 
 class Serial(object):
     
@@ -37,7 +38,7 @@ class Serial(object):
             # most simple case: We know all parameters
             self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
             self.is_connected = True
-            time.sleep(3) # let it warm up
+            time.sleep(T_SERIAL_WARMUP) # let it warm up
             correctFirmware = self.checkFirmware()
             if not correctFirmware:
                 raise Exception("Wrong firmware")
@@ -59,7 +60,7 @@ class Serial(object):
                         self.serialdevice = serial.Serial(port=iport.device, baudrate=self.baudrate, timeout=1)
                         self.serialdevice.write_timeout=1
                         self.is_connected = True # attempting to initiliaze connection
-                        time.sleep(3) # let it warm up and wait until debugging messages may vanish
+                        time.sleep(T_SERIAL_WARMUP) # let it warm up and wait until debugging messages may vanish
                         correctFirmware = self.checkFirmware()
                         if correctFirmware:
                             self.serialport = iport.device

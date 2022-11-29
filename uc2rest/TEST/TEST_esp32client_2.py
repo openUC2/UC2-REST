@@ -18,6 +18,41 @@ esp32.serial.writeSerial(test_cmd)
 cmd_return = esp32.serial.readSerial()
 print(cmd_return)
 
+
+
+''' ################
+LED 
+################'''
+# setup led configuration
+if esp32.APIVersion == 2:
+    esp32.led.set_ledpin(ledArrPin=4, ledArrNum=16)
+    print(esp32.led.get_ledpin())
+
+# test LED
+esp32.led.send_LEDMatrix_full(intensity=(255, 255, 255), timeout=1)
+time.sleep(0.5)
+esp32.led.send_LEDMatrix_full(intensity=(0, 0, 0), timeout=1)
+
+# display random pattern
+for i in range(100):
+    led_pattern = np.random.randint(0,55, (25,3))
+    esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
+
+esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
+
+
+#%% left
+led_pattern = np.zeros((25,3))
+list_left = (0,1,2,3,4,5,9,10,11,12,13,14,15,16,17)
+list_right = (0,5,6,7,8,9,18,19,20,21,22,23,24)
+led_pattern[list_left,0] = 255
+led_pattern[list_right,1] = 255
+esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
+time.sleep(1)
+esp32.led.send_LEDMatrix_array(led_pattern=led_pattern*0, timeout=1)
+
+#%%
+
 ''' ################
 analog
 ################'''
@@ -152,19 +187,6 @@ esp32.laser.set_laser(channel=2, value=1000, despeckleAmplitude=0, despecklePeri
 esp32.laser.set_laser(channel=3, value=1000, despeckleAmplitude=0, despecklePeriod=10, timeout=20, is_blocking = True)
 
 
-''' ################
-LED 
-################'''
-# setup led configuration
-if esp32.APIVersion == 2:
-    esp32.led.set_ledpin(ledArrPin=4, ledArrNum=16)
-    print(esp32.led.get_ledpin())
-
-# test LED
-led_pattern = np.zeros((1, 5, 5, 3), dtype=np.uint8)
-esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
-esp32.led.send_LEDMatrix_full(intensity=(255, 0, 0), timeout=1)
-esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
 
 
 ''' ################
