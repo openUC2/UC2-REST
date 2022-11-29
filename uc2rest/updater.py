@@ -50,7 +50,7 @@ class updater(object):
         if self._parent is not None:
             # in case the serial is still open, perhaps it makes sense to close it
             try:
-                self._parent.serial.close()
+                self._parent.serial.closeSerial()
             except:
                 pass
             

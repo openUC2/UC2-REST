@@ -9,7 +9,7 @@ class LedMatrix(object):
         self.Nx = self.Ny = int(np.sqrt(NLeds))
         
         # we assume the pattern is binary (e.g. 0 or 1)
-        self.ledpattern = np.zeros((self.Nx, self.Ny, 3))
+        self.ledpattern = np.zeros((self.NLeds, 3))
         
         # this is a istance of the _parent32Client class
         self._parent = parent
@@ -155,7 +155,7 @@ class LedMatrix(object):
             self.intensity = intensity
         intensity2display = np.array(self.intensity)*np.array(state)
         self.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
-        self.ledpattern = state*np.ones((self.Nx, self.Ny, 3))
+        self.ledpattern = state*np.ones((self.NLeds, 3))
         return self.ledpattern
     
     def setIntensity(self, intensity):
