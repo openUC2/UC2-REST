@@ -304,22 +304,23 @@ class Motor(object):
         ]
     }
 }
-
         '''
+        
+        # only consider those actions that are necessary
+        motorPropList = []
+        for iMotor in range(4):
+            if is_absolute[iMotor] or abs(steps[iMotor])>0:
+                motorProp = { "stepperid": iMotor, "position": np.int(steps[iMotor]), "speed": speed[iMotor], "isabs": is_absolute[iMotor], "isaccel":0}
+                motorPropList.append(motorProp)
+
         path = "/motor_act"
         payload = {
             "task":path,
             "motor":
             {
-                "steppers": [
-                    { "stepperid": 0, "position": np.int(steps[0]), "speed": speed[0], "isabs": is_absolute[0], "isaccel":0},
-                    { "stepperid": 1, "position": np.int(steps[1]), "speed": speed[1], "isabs": is_absolute[1], "isaccel":0},
-                    { "stepperid": 2, "position": np.int(steps[2]), "speed": speed[2], "isabs": is_absolute[2], "isaccel":0},
-                    { "stepperid": 3, "position": np.int(steps[3]), "speed": speed[3], "isabs": is_absolute[3], "isaccel":0}
-                ]
+                "steppers": motorPropList
             }
         }
-
 
         # safe steps to track direction for backlash compensatio
         for iMotor in range(self.nMotors):
@@ -337,8 +338,11 @@ class Motor(object):
             while True:
                 time.sleep(0.05) # don'T overwhelm the CPU
                 # see if already done
-                rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
-
+                try:
+                    rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
+                except Exception as e:
+                    self._parent.logger.error(e)
+                    rMessage = ""
                 # check if message contains a motor that is done already
                 if rMessage.find('isDone') >-1:
                     try:
