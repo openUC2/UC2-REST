@@ -69,6 +69,21 @@ class Laser(object):
         }
         
         r = self._parent.post_json(path, payload)
+        
+        if type(r) is dict:
+            # cast laser pins
+            if "LASER1pin" in r: r["LASER1pin"] = int(r["LASER1pin"])
+            else: r["LASER1pin"] = 0
+            if r.__contains__("LASER2pin"): r["LASER2pin"] = int(r["LASER2pin"])
+            else: r["LASER2pin"] = 0
+            if r.__contains__("LASER3pin"): r["LASER3pin"] = int(r["LASER3pin"])
+            else: r["LASER3pin"] = 0
+        else:
+            r={}
+            r["LASER1pin"] = 0
+            r["LASER2pin"] = 0
+            r["LASER3pin"] = 0
+        
         return r
     
     def get_laserpin(self, laserid=1):
