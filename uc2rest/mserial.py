@@ -165,7 +165,7 @@ class Serial(object):
             self._parent.logger.error(e)
 
 
-    def readSerial(self, is_blocking=True, timeout = 15): # TODO: hardcoded timeout - not code
+    def readSerial(self, is_blocking=True, timeout = 1): # TODO: hardcoded timeout - not code
         """Receive and decode return message"""
         returnmessage = ''
         _returnmessage = ''

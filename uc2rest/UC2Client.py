@@ -13,6 +13,7 @@ except:
     print("No imswitch available")
     IS_IMSWITCH = False
 
+import requests
 
 class UC2Client(object):
     # headers = {'ESP32-version': '*'}
@@ -91,6 +92,7 @@ class UC2Client(object):
             from .camera import Camera
             from .analog import Analog
             from .updater import updater
+            from .modules import Modules
 
 
         #FIXME
@@ -138,6 +140,9 @@ class UC2Client(object):
         
         # initialize updater 
         self.updater = updater(parent=self)
+        
+        # initialize module controller
+        self.modules = Modules(parent=self)
    
     def post_json(self, path, payload, getReturn=True, timeout=1):
         if self.is_wifi:

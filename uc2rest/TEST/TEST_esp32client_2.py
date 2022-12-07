@@ -19,6 +19,20 @@ cmd_return = esp32.serial.readSerial()
 print(cmd_return)
 
 
+''' ################
+MODULES
+################'''
+mModules = esp32.modules.get_default_modules()
+print(mModules)
+mModulesDevice = esp32.modules.get_modules()
+print(mModulesDevice)
+esp32.modules.set_modules(mModules)
+# wait for reboot
+time.sleep(2)
+mModulesDevice = esp32.modules.get_modules()
+print(mModulesDevice)
+
+
 
 ''' ################
 LED 
@@ -29,16 +43,16 @@ if esp32.APIVersion == 2:
     print(esp32.led.get_ledpin())
 
 # test LED
-esp32.led.send_LEDMatrix_full(intensity=(255, 255, 255), timeout=1)
+esp32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
 time.sleep(0.5)
-esp32.led.send_LEDMatrix_full(intensity=(0, 0, 0), timeout=1)
+esp32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
 
 # display random pattern
-for i in range(100):
+for i in range(10):
     led_pattern = np.random.randint(0,55, (25,3))
-    esp32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
+    esp32.led.send_LEDMatrix_array(led_pattern=led_pattern)
 
-esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
+esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0))
 
 
 #%% left
@@ -62,84 +76,87 @@ analogValueAVG = esp32.analog.read_sensor(sensorID=1, NAvg=100)
 print(analogValueAVG)
 
 
+
+
 ''' ################
 MOTOR
 ################'''
 
-# sestup all motors at once 
-if esp32.APIVersion == 1:
-    # load the pin config from the ESP32
-    mConfig = esp32.config.loadConfigDevice()
-    print(mConfig)
+if 0:
+    # sestup all motors at once 
+    if esp32.APIVersion == 1:
+        # load the pin config from the ESP32
+        mConfig = esp32.config.loadConfigDevice()
+        print(mConfig)
 
-    # reset the dictionary 
-    mConfig = dict.fromkeys(mConfig, 0)
+        # reset the dictionary 
+        mConfig = dict.fromkeys(mConfig, 0)
 
-    # modify some values
-    mConfig["ledArrPin"] = 15
-    mConfig["ledArrNum"] = 16
+        # modify some values
+        mConfig["ledArrPin"] = 15
+        mConfig["ledArrNum"] = 16
 
-    mConfig["motXstp"] = 2
-    mConfig["motXdir"] = 33
+        mConfig["motXstp"] = 2
+        mConfig["motXdir"] = 33
 
-    mConfig["motYstp"] = 27
-    mConfig["motYdir"] = 16
+        mConfig["motYstp"] = 27
+        mConfig["motYdir"] = 16
 
-    mConfig["motZstp"] = 12
-    mConfig["motZdir"] = 14
+        mConfig["motZstp"] = 12
+        mConfig["motZdir"] = 14
 
-    mConfig["identifier"] = "UniEindhoven"
-    mConfig["ssid"] = "UC2"
-    mConfig["PW"] = "UC2"
+        mConfig["identifier"] = "UniEindhoven"
+        mConfig["ssid"] = "UC2"
+        mConfig["PW"] = "UC2"
 
-    # now load the config to the ESP32
-    esp32.config.setConfigDevice(mConfig)
-    esp32.config.applyConfigDevice()
+        # now load the config to the ESP32
+        esp32.config.setConfigDevice(mConfig)
+        esp32.config.applyConfigDevice()
 
-    # wait until the ESP reboots and identify the new config
-    time.sleep(5)
+        # wait until the ESP reboots and identify the new config
+        time.sleep(5)
 
-    # see if it's the right device
-    esp32.state.get_state()
-    mConfig = esp32.config.loadConfigDevice()
-    print(mConfig)
-    
-if esp32.APIVersion == 2:
-    print(esp32.motor.settingsdict)
-    esp32.motor.settingsdict["motor"]["steppers"][1]["dir"]=16
-    esp32.motor.settingsdict["motor"]["steppers"][1]["step"]=26
-    esp32.motor.settingsdict["motor"]["steppers"][2]["dir"]=27
-    esp32.motor.settingsdict["motor"]["steppers"][2]["step"]=25
-    esp32.motor.settingsdict["motor"]["steppers"][3]["dir"]=14
-    esp32.motor.settingsdict["motor"]["steppers"][3]["step"]=17
-    esp32.motor.settingsdict["motor"]["steppers"][0]["dir"]=18
-    esp32.motor.settingsdict["motor"]["steppers"][0]["step"]=19
-    esp32.motor.settingsdict["motor"]["steppers"][0]["enable"]=12
-    esp32.motor.settingsdict["motor"]["steppers"][1]["enable"]=12
-    esp32.motor.settingsdict["motor"]["steppers"][2]["enable"]=12
-    esp32.motor.settingsdict["motor"]["steppers"][3]["enable"]=12
-    esp32.motor.set_motors(esp32.motor.settingsdict)
+        # see if it's the right device
+        esp32.state.get_state()
+        mConfig = esp32.config.loadConfigDevice()
+        print(mConfig)
+        
+    if esp32.APIVersion == 2:
+        print(esp32.motor.settingsdict)
+        esp32.motor.settingsdict["motor"]["steppers"][1]["dir"]=16
+        esp32.motor.settingsdict["motor"]["steppers"][1]["step"]=26
+        esp32.motor.settingsdict["motor"]["steppers"][2]["dir"]=27
+        esp32.motor.settingsdict["motor"]["steppers"][2]["step"]=25
+        esp32.motor.settingsdict["motor"]["steppers"][3]["dir"]=14
+        esp32.motor.settingsdict["motor"]["steppers"][3]["step"]=17
+        esp32.motor.settingsdict["motor"]["steppers"][0]["dir"]=18
+        esp32.motor.settingsdict["motor"]["steppers"][0]["step"]=19
+        esp32.motor.settingsdict["motor"]["steppers"][0]["enable"]=12
+        esp32.motor.settingsdict["motor"]["steppers"][1]["enable"]=12
+        esp32.motor.settingsdict["motor"]["steppers"][2]["enable"]=12
+        esp32.motor.settingsdict["motor"]["steppers"][3]["enable"]=12
+        esp32.motor.set_motors(esp32.motor.settingsdict)
 
-    # print settings 
-    print(esp32.motor.get_motors())
+        # print settings 
+        print(esp32.motor.get_motors())
 
-    # OR setup motors individually (according to WEMOS R32 D1)
-    esp32.motor.set_motor(stepperid = 1, position = 0, stepPin = 26, dirPin=16, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-    esp32.motor.set_motor(stepperid = 2, position = 0, stepPin = 25, dirPin=27, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-    esp32.motor.set_motor(stepperid = 3, position = 0, stepPin = 17, dirPin=14, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-    esp32.motor.set_motor(stepperid = 0, position = 0, stepPin = 19, dirPin=18, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
+        # OR setup motors individually (according to WEMOS R32 D1)
+        esp32.motor.set_motor(stepperid = 1, position = 0, stepPin = 26, dirPin=16, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
+        esp32.motor.set_motor(stepperid = 2, position = 0, stepPin = 25, dirPin=27, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
+        esp32.motor.set_motor(stepperid = 3, position = 0, stepPin = 17, dirPin=14, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
+        esp32.motor.set_motor(stepperid = 0, position = 0, stepPin = 19, dirPin=18, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
 
-    # get individual motors
-    print(esp32.motor.get_motor(axis = 1))
+        # get individual motors
+        print(esp32.motor.get_motor(axis = 1))
 
-    esp32.motor.set_motor_currentPosition(axis=0, currentPosition=10000)
-    esp32.motor.set_motor_acceleration(axis=0, acceleration=10000)
-    esp32.motor.set_motor_enable(is_enable=1)
-    esp32.motor.set_direction(axis=1, sign=1, timeout=1)
-    esp32.motor.set_position(axis=1, position=0, timeout=1)
+        esp32.motor.set_motor_currentPosition(axis=0, currentPosition=10000)
+        esp32.motor.set_motor_acceleration(axis=0, acceleration=10000)
+        esp32.motor.set_motor_enable(is_enable=1)
+        esp32.motor.set_direction(axis=1, sign=1, timeout=1)
+        esp32.motor.set_position(axis=1, position=0, timeout=1)
 
-    # wait to settle
-    time.sleep(2)
+        # wait to settle
+        time.sleep(2)
 
 # test Motor
 position1 = esp32.motor.get_position(timeout=1)
