@@ -328,7 +328,7 @@ class Motor(object):
 
         # drive motor
         self.isRunning = True
-        r = self._parent.post_json(path, payload, getReturn=~is_blocking, timeout=1)
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=1)
 
         # wait until job has been done
         time0=time.time()
@@ -348,8 +348,10 @@ class Motor(object):
                     try:
                         rMessage = rMessage.split("\r")[0].replace("'", '"')
                         mMessage = json.loads(rMessage)
-                        mNumber = mMessage['motor']
-                        steppersRunning[mNumber] = False
+                        for iElement in mMessage['steppers']: 
+                            if iElement['isDone']:
+                                mNumber = iElement['stepperid']
+                                steppersRunning[mNumber] = False
                     except:
                         pass
 
