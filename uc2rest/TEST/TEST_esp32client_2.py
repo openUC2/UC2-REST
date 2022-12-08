@@ -12,12 +12,13 @@ esp32 = uc2rest.UC2Client(serialport=port)
 # setting debug output of the serial to true - all message will be printed
 esp32.serial.DEBUG=True
 
-# test Serial
+''' ################
+SERIAL
+################'''
 test_cmd = "{'task': '/motor_get'}"
 esp32.serial.writeSerial(test_cmd)
 cmd_return = esp32.serial.readSerial()
 print(cmd_return)
-
 
 ''' ################
 MODULES
@@ -31,7 +32,6 @@ esp32.modules.set_modules(mModules)
 time.sleep(2)
 mModulesDevice = esp32.modules.get_modules()
 print(mModulesDevice)
-
 
 
 ''' ################
@@ -50,7 +50,7 @@ esp32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
 # display random pattern
 for i in range(10):
     led_pattern = np.random.randint(0,55, (25,3))
-    esp32.led.send_LEDMatrix_array(led_pattern=led_pattern)
+    esp32.led.send_LEDMatrix_array(led_pattern=led_pattern,timeout=1)
 
 esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0))
 
@@ -72,8 +72,8 @@ analog
 ################'''
 esp32.analog.set_analog(readanaloginID=1, readanaloginPIN=35, nanaloginavg=1)
 esp32.analog.get_analog(readanaloginID=1)
-analogValueAVG = esp32.analog.read_sensor(sensorID=1, NAvg=100)
-print(analogValueAVG)
+#analogValueAVG = esp32.analog.read_sensor(sensorID=1, NAvg=100)
+#print(analogValueAVG)
 
 
 
@@ -176,7 +176,7 @@ print(position2)
 
 dDist = 1000
 speed = 20000
-nDist = 10
+nDist = 4
 
 # test Motor in scanning mode
 esp32.motor.move_xyzt(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
@@ -197,6 +197,10 @@ if esp32.APIVersion == 2:
     esp32.laser.set_laserpin(laserid=1, laserpin=15)
     esp32.laser.set_laserpin(laserid=2, laserpin=16)
     esp32.laser.set_laserpin(laserid=3, laserpin=17)
+
+# get laser pins
+esp32.laser.get_laserpins()
+esp32.laser.get_laserpin(laserid=1)
 
 # set laser values
 esp32.laser.set_laser(channel=1, value=1000, despeckleAmplitude=0, despecklePeriod=10, timeout=20, is_blocking = True)
@@ -238,5 +242,3 @@ time.sleep(5)
 esp32.state.setControllerMode(isController=True)
 _busy = esp32.state.isBusy()
 print(_busy)
-
-#
