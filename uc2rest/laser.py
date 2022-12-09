@@ -93,5 +93,5 @@ class Laser(object):
             "task": path,
         }
         
-        r = self._parent.post_json(path, payload)
+        r = self._parent.post_json(path, payload,timeout=2)
         return r["LASER"+str(laserid)+"pin"]

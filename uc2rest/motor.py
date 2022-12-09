@@ -149,7 +149,7 @@ class Motor(object):
             speed = (speed,speed,speed)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyzt(steps=(0,steps[0],steps[1],steps[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout) 
+        r = self.move_xyzt(steps=(0,steps[0],steps[1],steps[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -307,15 +307,15 @@ class Motor(object):
     }
 }
         '''
-        
+
         # only consider those actions that are necessary
         motorPropList = []
         for iMotor in range(4):
             if is_absolute[iMotor] or abs(steps[iMotor])>0:
-                motorProp = { "stepperid": iMotor, 
-                             "position": np.int(steps[iMotor]), 
-                             "speed": speed[iMotor], 
-                             "isabs": is_absolute[iMotor], 
+                motorProp = { "stepperid": iMotor,
+                             "position": np.int(steps[iMotor]),
+                             "speed": speed[iMotor],
+                             "isabs": is_absolute[iMotor],
                              "isaccel":0}
                 motorPropList.append(motorProp)
 
@@ -337,7 +337,7 @@ class Motor(object):
         r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
 
         # wait until job has been done
-        
+
         '''
         time0=time.time()
         steppersRunning = np.array(steps)>0
@@ -355,8 +355,10 @@ class Motor(object):
                     try:
                         rMessage = rMessage.split("\r")[0].replace("'", '"')
                         mMessage = json.loads(rMessage)
-                        mNumber = mMessage['motor']
-                        steppersRunning[mNumber] = False
+                        for iElement in mMessage['steppers']:
+                            if iElement['isDone']:
+                                mNumber = iElement['stepperid']
+                                steppersRunning[mNumber] = False
                     except:
                         pass
 

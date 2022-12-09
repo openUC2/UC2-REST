@@ -124,12 +124,12 @@ class Serial(object):
         # write message to the serial
         self.writeSerial(payload)
         
-        if getReturn:
+        if getReturn==True:
             # we read the return message
             #self._parent.logger.debug(payload)
             returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
         else:
-            returnmessage = None
+            returnmessage = False
         return returnmessage
         
     def writeSerial(self, payload):
@@ -191,7 +191,6 @@ class Serial(object):
                 _returnmessage = json.loads(_returnmessage)
             except Exception as e:
                 if self.DEBUG: self._parent.logger.debug("Casting json string from serial to Python dict failed")
-                _returnmessage = None
         return _returnmessage
         
 class SerialDummy(object):

@@ -10,7 +10,7 @@ class Modules(object):
                 "home":0,
                 "analogin":0,
                 "pid":0,
-                "laser":0,
+                "laser":1,
                 "dac":0,
                 "analogout":0,
                 "digitalout":0,
