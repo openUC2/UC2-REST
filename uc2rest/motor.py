@@ -148,14 +148,16 @@ class Motor(object):
         if len(speed)!= 3:
             speed = (speed,speed,speed)
 
-        r = self.move_xyzt(steps=(steps[0],steps[1],steps[2],0), speed=(speed[0],speed[1],speed[2],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
+        r = self.move_xyzt(steps=(0,steps[0],steps[1],steps[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if len(speed)!= 2:
             speed = (speed,speed)
 
-        r = self.move_xyzt(steps=(steps[0],steps[1],0,0), speed=(speed[0],speed[1],0,0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
+        r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -305,12 +307,16 @@ class Motor(object):
     }
 }
         '''
-        
+
         # only consider those actions that are necessary
         motorPropList = []
         for iMotor in range(4):
             if is_absolute[iMotor] or abs(steps[iMotor])>0:
-                motorProp = { "stepperid": iMotor, "position": np.int(steps[iMotor]), "speed": speed[iMotor], "isabs": is_absolute[iMotor], "isaccel":0}
+                motorProp = { "stepperid": iMotor,
+                             "position": np.int(steps[iMotor]),
+                             "speed": speed[iMotor],
+                             "isabs": is_absolute[iMotor],
+                             "isaccel":0}
                 motorPropList.append(motorProp)
 
         path = "/motor_act"
@@ -328,11 +334,12 @@ class Motor(object):
 
         # drive motor
         self.isRunning = True
-        r = self._parent.post_json(path, payload, getReturn=False, timeout=1)
+        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
 
         # wait until job has been done
-        time0=time.time()
 
+        '''
+        time0=time.time()
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
             while True:
@@ -348,7 +355,7 @@ class Motor(object):
                     try:
                         rMessage = rMessage.split("\r")[0].replace("'", '"')
                         mMessage = json.loads(rMessage)
-                        for iElement in mMessage['steppers']: 
+                        for iElement in mMessage['steppers']:
                             if iElement['isDone']:
                                 mNumber = iElement['stepperid']
                                 steppersRunning[mNumber] = False
@@ -361,6 +368,7 @@ class Motor(object):
                 if time.time()-time0>timeout:
                     break
 
+        '''
         # reset busy flag
         self.isRunning = False
         return r
