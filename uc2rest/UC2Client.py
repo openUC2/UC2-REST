@@ -27,7 +27,7 @@ class UC2Client(object):
     # BAUDRATE = 500000
     BAUDRATE = 115200
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, DEBUG=False):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -50,10 +50,10 @@ class UC2Client(object):
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
-            self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
+            self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG)
             self.is_serial = True
             self.is_connected = True
-            self.serial.DEBUG = True
+            self.serial.DEBUG = DEBUG
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
