@@ -11,6 +11,7 @@ try:
     IS_IMSWITCH = True
 except:
     print("No imswitch available")
+    from .logger import Logger
     IS_IMSWITCH = False
 
 import requests
@@ -83,7 +84,6 @@ class UC2Client(object):
             self.logger.debug("Using API version 2")        
             from .galvo import Galvo
             from .config import config
-            from .logger import Logger
             from .ledmatrix import LedMatrix
             from .motor import Motor
             from .state import State
