@@ -44,6 +44,7 @@ class UC2Client(object):
         if IS_IMSWITCH:
             self.logger = initLogger(self, tryInheritParent=True)
         else:
+            from .logger import Logger
             self.logger = Logger()
         # set default APIVersion
         self.APIVersion = 2
