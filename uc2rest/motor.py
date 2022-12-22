@@ -218,20 +218,34 @@ class Motor(object):
             speed=(speed, speed, speed, speed)
         if len(speed)==3:
             speed = (*speed,0)
-        path = "/motor_act"
+        '''
+        {"task":"/motor_act",
+            "motor":
+            {
+                "steppers": [
+                    { "stepperid": 3, "isforever": 1, "speed": 2000}
+                ]
+            }
+        }
+        '''
+        # only consider those actions that are necessary
+        motorPropList = []
+        for iMotor in range(4):
+            if abs(speed[iMotor])>0:
+                motorProp = { "stepperid": iMotor,
+                             "isforever": int(not is_stop),
+                             "speed": speed[iMotor]}
+                motorPropList.append(motorProp)
 
+        path = "/motor_act"
         payload = {
             "task":path,
             "motor":
             {
-                "steppers": [
-                    { "stepperid": 0, "speed": speed[0], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 1, "speed": speed[1], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 2, "speed": speed[2], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 3, "speed": speed[3], "isforver":1, "isstop":is_stop},
-                ]
+                "steppers": motorPropList
             }
         }
+
         r = self._parent.post_json(path, payload, timeout=0)
         return r
 

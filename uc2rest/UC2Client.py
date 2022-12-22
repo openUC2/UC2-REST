@@ -99,11 +99,6 @@ class UC2Client(object):
         #FIXME
         #self.set_state(debug=False)
 
-        # initialize galvos
-        #self.galvo1 = Galvo(channel=1) FIXME
-        #self.galvo2 = Galvo(channel=2) FIXME
-
-
         # initialize state
         self.state = State(self)
         self.state.get_state()
@@ -121,7 +116,7 @@ class UC2Client(object):
         self.state = State(self)
 
         # initialize galvo
-        self.galvo1 = Galvo(self, 1)
+        self.galvo = Galvo(self)
 
         # initialize laser
         self.laser = Laser(self)
