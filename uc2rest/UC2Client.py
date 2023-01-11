@@ -87,6 +87,7 @@ class UC2Client(object):
             from .config import config
             from .ledmatrix import LedMatrix
             from .motor import Motor
+            from .home import Home
             from .state import State
             from .laser import Laser
             from .wifi import Wifi
@@ -111,6 +112,9 @@ class UC2Client(object):
 
         # initilize motor
         self.motor = Motor(self)
+        
+        # initiliaze homing
+        self.home = Home(self)
 
         # initialize laser
         self.state = State(self)

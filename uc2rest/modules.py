@@ -7,7 +7,7 @@ class Modules(object):
                 "led":1,
                 "motor":1,
                 "slm":0,
-                "home":0,
+                "home":1,
                 "analogin":0,
                 "pid":0,
                 "laser":1,

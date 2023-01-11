@@ -11,7 +11,7 @@ esp32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0), timeout=1)
 
 
 # test Motor
-esp32.motor.move_stepper(steps=(0,0,0,1), speed=(0,0,0,200))
+esp32.motor.move_stepper(steps=(0,0,0,1), speed=(0,0,0,200)) 
 esp32.motor.move_forever(speed=(0,0,0,200), is_stop=False)
 time.sleep(1)
 
