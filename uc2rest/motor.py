@@ -78,21 +78,7 @@ class Motor(object):
             self.stepSizeT = stepSize
             self.backlashT = backlash
 
-    def home_x(self):
-        r = self.home(axis="X")
-        return r
 
-    def home_y(self):
-        r = self.home(axis="Y")
-        return r
-
-    def home_z(self):
-        r = self.home(axis="Z")
-        return r
-
-    def home_xyz(self):
-        r = self.home(axis="XYZ")
-        return r
 
     def xyztTo1230(self, axis):
         axis = axis.upper()
@@ -105,32 +91,6 @@ class Motor(object):
         if axis == "T" or axis == "A":
             axis = 0
         return axis
-
-    def home(self, axis="X", timeout=gTIMEOUT, speed = 2000, direction = 1, endposrelease=500):
-        # convert X,Y,Z to 0,1,2
-        if type(axis) == str:
-            axis = self.xyztTo1230(axis)
-        if direction not in [-1,1]:
-            direction = 1
-
-        path = "/motor_act",
-
-        payload = {
-            "task": path,
-            "home":{
-                "steppers": [
-                {
-                 "stepperid": axis,
-                 "timeout":timeout,
-                 "speed":speed,
-                 "direction":direction,
-                 "endposrelease":endposrelease
-                 }]
-            }}
-
-        r = self._parent.post_json(path, payload)
-        return r
-
 
     def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
@@ -218,20 +178,34 @@ class Motor(object):
             speed=(speed, speed, speed, speed)
         if len(speed)==3:
             speed = (*speed,0)
-        path = "/motor_act"
+        '''
+        {"task":"/motor_act",
+            "motor":
+            {
+                "steppers": [
+                    { "stepperid": 3, "isforever": 1, "speed": 2000}
+                ]
+            }
+        }
+        '''
+        # only consider those actions that are necessary
+        motorPropList = []
+        for iMotor in range(4):
+            if abs(speed[iMotor])>0:
+                motorProp = { "stepperid": iMotor,
+                             "isforever": int(not is_stop),
+                             "speed": speed[iMotor]}
+                motorPropList.append(motorProp)
 
+        path = "/motor_act"
         payload = {
             "task":path,
             "motor":
             {
-                "steppers": [
-                    { "stepperid": 0, "speed": speed[0], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 1, "speed": speed[1], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 2, "speed": speed[2], "isforver":1, "isstop":is_stop},
-                    { "stepperid": 3, "speed": speed[3], "isforver":1, "isstop":is_stop},
-                ]
+                "steppers": motorPropList
             }
         }
+
         r = self._parent.post_json(path, payload, timeout=0)
         return r
 
@@ -336,9 +310,7 @@ class Motor(object):
         self.isRunning = True
         r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
 
-        # wait until job has been done
-
-        '''
+        # wait until job has been done        
         time0=time.time()
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
@@ -368,7 +340,7 @@ class Motor(object):
                 if time.time()-time0>timeout:
                     break
 
-        '''
+        
         # reset busy flag
         self.isRunning = False
         return r

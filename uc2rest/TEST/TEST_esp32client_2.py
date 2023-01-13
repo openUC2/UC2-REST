@@ -27,11 +27,20 @@ mModules = ESP32.modules.get_default_modules()
 print(mModules)
 mModulesDevice = ESP32.modules.get_modules()
 print(mModulesDevice)
+mModules['home']=1 # activate home module
 ESP32.modules.set_modules(mModules)
 # wait for reboot
 time.sleep(2)
 mModulesDevice = ESP32.modules.get_modules()
 print(mModulesDevice)
+
+
+''' ################
+HOME
+################'''
+ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
+ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
+
 
 
 ''' ################
@@ -226,7 +235,6 @@ if ESP32.APIVersion == 2:
     print(configfile)
     configfile["motorconfig"][0]["dir"]=17 # change parameter
     ESP32.config.setConfigDevice(configfile)
-
 
 ''' ################
 State

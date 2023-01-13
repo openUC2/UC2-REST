@@ -87,6 +87,7 @@ class UC2Client(object):
             from .config import config
             from .ledmatrix import LedMatrix
             from .motor import Motor
+            from .home import Home
             from .state import State
             from .laser import Laser
             from .wifi import Wifi
@@ -98,11 +99,6 @@ class UC2Client(object):
 
         #FIXME
         #self.set_state(debug=False)
-
-        # initialize galvos
-        #self.galvo1 = Galvo(channel=1) FIXME
-        #self.galvo2 = Galvo(channel=2) FIXME
-
 
         # initialize state
         self.state = State(self)
@@ -116,12 +112,15 @@ class UC2Client(object):
 
         # initilize motor
         self.motor = Motor(self)
+        
+        # initiliaze homing
+        self.home = Home(self)
 
         # initialize laser
         self.state = State(self)
 
         # initialize galvo
-        self.galvo1 = Galvo(self, 1)
+        self.galvo = Galvo(self)
 
         # initialize laser
         self.laser = Laser(self)
