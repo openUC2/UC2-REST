@@ -93,7 +93,7 @@ sample config file for Uc2 Standalone  1,1
   "laserPin3":15,
   "dacFake1":0,
   "dacFake2":0,
-  "identifier": "UC2Standalone",
+  "identifier": "UC2Standalone",{"task": "/motor_act", "motor": {"steppers": [{"stepperid": 3, "isforever": true, "speed": 200}]}}
   "ssid": "Blynk",
   "PW": "12345678", 
   "PS4Mac": "1a:2b:3c:01:01:01"

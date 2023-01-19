@@ -11,6 +11,7 @@ try:
     IS_IMSWITCH = True
 except:
     print("No imswitch available")
+    from .logger import Logger
     IS_IMSWITCH = False
 
 import requests
@@ -27,7 +28,7 @@ class UC2Client(object):
     # BAUDRATE = 500000
     BAUDRATE = 115200
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, DEBUG=False):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -43,6 +44,7 @@ class UC2Client(object):
         if IS_IMSWITCH:
             self.logger = initLogger(self, tryInheritParent=True)
         else:
+            from .logger import Logger
             self.logger = Logger()
         # set default APIVersion
         self.APIVersion = 2
@@ -50,10 +52,10 @@ class UC2Client(object):
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
-            self.serial = Serial(serialport, baudrate, parent=self, identity=identity)
+            self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG)
             self.is_serial = True
             self.is_connected = True
-            self.serial.DEBUG = True
+            self.serial.DEBUG = DEBUG
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -83,9 +85,9 @@ class UC2Client(object):
             self.logger.debug("Using API version 2")        
             from .galvo import Galvo
             from .config import config
-            from .logger import Logger
             from .ledmatrix import LedMatrix
             from .motor import Motor
+            from .home import Home
             from .state import State
             from .laser import Laser
             from .wifi import Wifi
@@ -97,11 +99,6 @@ class UC2Client(object):
 
         #FIXME
         #self.set_state(debug=False)
-
-        # initialize galvos
-        #self.galvo1 = Galvo(channel=1) FIXME
-        #self.galvo2 = Galvo(channel=2) FIXME
-
 
         # initialize state
         self.state = State(self)
@@ -115,12 +112,15 @@ class UC2Client(object):
 
         # initilize motor
         self.motor = Motor(self)
+        
+        # initiliaze homing
+        self.home = Home(self)
 
         # initialize laser
         self.state = State(self)
 
         # initialize galvo
-        self.galvo1 = Galvo(self, 1)
+        self.galvo = Galvo(self)
 
         # initialize laser
         self.laser = Laser(self)

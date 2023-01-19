@@ -35,7 +35,7 @@ class LedMatrix(object):
     LED ARRAY
     ##############################################################################################################################
     '''
-    def send_LEDMatrix_array(self, led_pattern, timeout=gTimeout):
+    def send_LEDMatrix_array(self, led_pattern, is_blocking = False, timeout=gTimeout):
         '''
         Send an LED array pattern e.g. an RGB Matrix: led_pattern=np.zeros((3,8,8))
         '''
@@ -49,9 +49,9 @@ class LedMatrix(object):
         for i in range(led_pattern.shape[0]):
             pattern_list.append({
                 "id": i,
-                "red": int(led_pattern[i,0]),
-                "green": int(led_pattern[i,1]),
-                "blue": int(led_pattern[i,2])                        
+                "r": int(led_pattern[i,0]),
+                "g": int(led_pattern[i,1]),
+                "b": int(led_pattern[i,2])                        
             })
 
         payload = {
@@ -62,7 +62,7 @@ class LedMatrix(object):
             }
         }
         self._parent.logger.debug("Setting LED Pattern (array) ")
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
         
         return r
 
@@ -70,15 +70,15 @@ class LedMatrix(object):
         '''
         set all LEDs with te same RGB value: intensity=(255,255,255)
         '''
-        #{"task": "/ledarr_act","led": {"LEDArrMode": 1,"led_array": [{"blue": 255,"green": 255,"red": 255}]}}
+        #{"task": "/ledarr_act","led": {"LEDArrMode": 1,"led_array": [{"b": 255,"g": 255,"r": 255}]}}
         path = '/ledarr_act'
         payload = {
             "task":path,
             "led": {
                 "led_array":[{
-                    "red": int(intensity[0]),
-                    "green": int(intensity[1]),
-                    "blue": int(intensity[2])}],
+                    "r": int(intensity[0]),
+                    "g": int(intensity[1]),
+                    "b": int(intensity[2])}],
                 "LEDArrMode": self.ledArrayMode["full"]
             }
         }
@@ -95,9 +95,9 @@ class LedMatrix(object):
         payload = {
             "task":path,
             "led": {
-            "red": int(intensity[0]),
-            "green": int(intensity[1]),
-            "blue": int(intensity[2]),
+            "r": int(intensity[0]),
+            "g": int(intensity[1]),
+            "b": int(intensity[2]),
             "LEDArrMode": self.ledArrayMode[pattern]
             }
         }
@@ -116,9 +116,9 @@ class LedMatrix(object):
                 "LEDArrMode": self.ledArrayMode["single"],
                 "led_array": [{
                     "id": indexled,
-                    "red": int(intensity[0]),
-                    "green": int(intensity[1]),
-                    "blue": int(intensity[2])}]
+                    "r": int(intensity[0]),
+                    "g": int(intensity[1]),
+                    "b": int(intensity[2])}]
             }
         }
         self._parent.logger.debug("Setting LED Pattern (single) ")
@@ -142,7 +142,7 @@ class LedMatrix(object):
         # Update the intensity of a single LED in a cartesian grid        
         ix = indexled//self.Nx
         iy = indexled%self.Nx
-        self.ledpattern[ix, iy] = state # either [0, 1]
+        self.ledpattern[indexled] = (state,state,state) # either [0, 1]
         # forward backward enumaration
         if ix%2 != 0:
            indexled = (ix*self.Nx)+(self.Ny-iy-1)
@@ -177,9 +177,9 @@ class LedMatrix(object):
         
     def set_led(self, colour=(0,0,0)):
         payload = {
-            "red": colour[0],
-            "green": colour[1],
-            "blue": colour[2]
+            "r": colour[0],
+            "g": colour[1],
+            "b": colour[2]
         }
         path = '/led'
         r = self._parent.post_json(path, payload)
