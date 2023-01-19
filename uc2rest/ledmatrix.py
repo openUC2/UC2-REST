@@ -35,7 +35,7 @@ class LedMatrix(object):
     LED ARRAY
     ##############################################################################################################################
     '''
-    def send_LEDMatrix_array(self, led_pattern, timeout=gTimeout):
+    def send_LEDMatrix_array(self, led_pattern, is_blocking = False, timeout=gTimeout):
         '''
         Send an LED array pattern e.g. an RGB Matrix: led_pattern=np.zeros((3,8,8))
         '''
@@ -62,7 +62,7 @@ class LedMatrix(object):
             }
         }
         self._parent.logger.debug("Setting LED Pattern (array) ")
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
         
         return r
 
@@ -142,7 +142,7 @@ class LedMatrix(object):
         # Update the intensity of a single LED in a cartesian grid        
         ix = indexled//self.Nx
         iy = indexled%self.Nx
-        self.ledpattern[ix, iy] = state # either [0, 1]
+        self.ledpattern[indexled] = (state,state,state) # either [0, 1]
         # forward backward enumaration
         if ix%2 != 0:
            indexled = (ix*self.Nx)+(self.Ny-iy-1)
