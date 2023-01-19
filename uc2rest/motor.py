@@ -334,11 +334,11 @@ class Motor(object):
 
         # drive motor
         self.isRunning = True
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
 
-        # wait until job has been done
-
+        self._parent.logger.error("We are not checking if motor arrives at position properly! ")
         '''
+        # wait until job has been done
         time0=time.time()
         steppersRunning = np.array(steps)>0
         if is_blocking and self._parent.serial.is_connected:
@@ -347,6 +347,7 @@ class Motor(object):
                 # see if already done
                 try:
                     rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
+                    print(rMessage)
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
@@ -369,6 +370,7 @@ class Motor(object):
                     break
 
         '''
+
         # reset busy flag
         self.isRunning = False
         return r
