@@ -21,6 +21,17 @@ cmd_return = ESP32.serial.readSerial()
 print(cmd_return)
 
 ''' ################
+Digital out
+################'''
+ESP32.digitalout.setup_digitaloutpin(id=1, pin=4)
+ESP32.digitalout.setup_digitaloutpin(id=2, pin=0)
+ESP32.digitalout.set_trigger(trigger1=True, delayOn1=10, delayOff1=10, trigger2=True, delayOn2=100, delayOff2=10, trigger3=False, delayOn3=0, delayOff3=0)
+time.sleep(1)
+ESP32.digitalout.reset_triggertable()
+
+
+
+''' ################
 MODULES
 ################'''
 mModules = ESP32.modules.get_default_modules()
