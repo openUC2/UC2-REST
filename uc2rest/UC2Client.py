@@ -95,6 +95,7 @@ class UC2Client(object):
             from .analog import Analog
             from .updater import updater
             from .modules import Modules
+            from .digitalout import DigitalOut
 
 
         #FIXME
@@ -133,7 +134,10 @@ class UC2Client(object):
 
         # initialize analog
         self.analog = Analog(self)
-
+        
+        # initialize digital out
+        self.digitalout = DigitalOut(self)
+        
         # initialize config
         self.config = config(self)
         self.pinConfig = self.config.loadConfigDevice()
