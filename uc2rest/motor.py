@@ -233,7 +233,7 @@ class Motor(object):
                 steps[iMotor] = steps[iMotor] + (np.sign(steps[iMotor])*backlash[iMotor])
 
 
-        '''
+
         # get current position
         pos_0 = self.get_position(0)
         pos_1 = self.get_position(1)
@@ -241,11 +241,11 @@ class Motor(object):
         pos_3 = self.get_position(3)
 
         # convert to physical units
-        steps_0 = steps_0*self.stepSizeX
-        steps_1 = steps_1*self.stepSizeY
-        steps_2 = steps_2*self.stepSizeZ
-        steps_3 = steps_3*self.stepSizeT
-
+        steps[0] *= 1/self.stepSizeT
+        steps[1] *= 1/self.stepSizeX
+        steps[2] *= 1/self.stepSizeY
+        steps[3] *= 1/self.stepSizeZ
+        '''
         # check if within limits
         if pos_0+steps_0 > self.maxPosX or pos_0+steps_0 < self.minPosX:
             steps_0=0
