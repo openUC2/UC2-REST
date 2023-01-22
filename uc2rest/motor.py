@@ -6,15 +6,6 @@ import json
 gTIMEOUT = 10 # seconds to wait for a response from the ESP32
 class Motor(object):
 
-    microsteppingfactor_filter=16 # run more smoothly
-    filter_pos_1 = 1000*microsteppingfactor_filter # GFP
-    filter_pos_2 = 0*microsteppingfactor_filter # AF647/SIR
-    filter_pos_3 = 500*microsteppingfactor_filter
-    filter_pos_LED = filter_pos_1 # GFP / Brightfield
-    filter_pos_init = -1250*microsteppingfactor_filter
-    filter_speed = microsteppingfactor_filter * 500
-    filter_position_now = 0
-
     # indicate if there is any motion happening
     isRunning = False
 
@@ -138,39 +129,6 @@ class Motor(object):
         _backlash=np.zeros(4)
         _backlash[axis] = self.backlash[axis]
         r = self.move_stepper(_steps, speed=_speed, timeout=timeout, backlash=_backlash, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
-        return r
-
-    def init_filter(self, nSteps, speed=250, filter_axis=-1, is_blocking = True, is_enabled=False):
-        self.move_filter(steps=nSteps, speed=speed, filter_axis=filter_axis, is_blocking=is_blocking, is_enabled = is_enabled)
-        self.is_filter_init = True
-        self.filter_position_now = 0
-
-    def switch_filter(self, filter_pos=0, filter_axis=-1, timeout=20, is_filter_init=None, speed=None, is_enabled=False, is_blocking=True):
-
-        # switch off all lasers first!
-        self.set_laser(1, 0)
-        self.set_laser(2, 0)
-        self.set_laser(3, 0)
-
-        if speed is None:
-            speed = self.filter_speed
-
-        if is_filter_init is not None:
-            self.is_filter_init = is_filter_init
-        if not self.is_filter_init:
-            self.init_filter(nSteps=self.filter_pos_init, speed=speed, filter_axis=filter_axis, is_blocking = True)
-
-        # measured in steps from zero position
-        steps = filter_pos - self.filter_position_now
-        self.filter_position_now = filter_pos
-
-        self.move_filter(steps=steps, speed=speed, filter_axis=filter_axis, is_blocking=is_blocking, timeout=timeout, is_enabled=is_enabled)
-
-
-    def move_filter(self, steps=100, speed=200, filter_axis=-1, timeout=10, is_enabled=False, is_blocking=False):
-        steps_xyzt = np.zeros(4)
-        steps_xyzt[filter_axis] = steps
-        r = self.move_stepper(steps=steps_xyzt, speed=speed, timeout=timeout, is_enabled=is_enabled, is_blocking=is_blocking)
         return r
 
     def move_forever(self, speed=(0,0,0,0), is_stop=False):
@@ -325,6 +283,8 @@ class Motor(object):
                     rMessage = ""
                 # check if message contains a motor that is done already
                 if rMessage.find('isDone') >-1:
+                    break
+                    ''' TODO: This only checks for one motor!
                     try:
                         rMessage = rMessage.split("\r")[0].replace("'", '"')
                         mMessage = json.loads(rMessage)
@@ -334,7 +294,7 @@ class Motor(object):
                                 steppersRunning[mNumber] = False
                     except:
                         pass
-
+                    '''
                 if np.sum(steppersRunning)==0:
                     break
 
