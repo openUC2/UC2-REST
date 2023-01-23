@@ -10,7 +10,7 @@ class Home(object):
         self.speed = 15000
         self.timeout = 20000
         
-    def home_x(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=True):
+    def home_x(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
         # axis = 1 corresponds to 'X'
         axis = 1
         self.home(axis=axis, 
@@ -20,7 +20,7 @@ class Home(object):
                   endposrelease=endposrelease,
                   isBlocking=isBlocking)
 
-    def home_y(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=True):
+    def home_y(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
         # axis = 2 corresponds to 'Y'
         axis = 2
         self.home(axis=axis, 
@@ -30,7 +30,7 @@ class Home(object):
                   endposrelease=endposrelease, 
                   isBlocking=isBlocking)    
     
-    def home_z(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=True):
+    def home_z(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
         # axisa = 3 corresponds to 'Z'
         axis = 3
         self.home(axis=axis, 
@@ -40,7 +40,7 @@ class Home(object):
                   endposrelease=endposrelease, 
                   isBlocking=isBlocking)    
         
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, isBlocking=True):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, isBlocking=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)

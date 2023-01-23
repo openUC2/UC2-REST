@@ -167,6 +167,36 @@ class Motor(object):
         r = self._parent.post_json(path, payload, timeout=0)
         return r
 
+
+    def stop(self, axis=None):
+        axisNumberList = []
+        if axis is None:
+            for iMotor in range(self.nMotors):
+                axisNumberList.append(iMotor)
+        else:
+            axisNumberList.append(self.xyztTo1230(axis))
+
+        motorPropList = []
+        for iMotor in axisNumberList:
+            motorProp = { "stepperid": iMotor,
+                            "isstop": True}
+            motorPropList.append(motorProp)
+
+        path = "/motor_act"
+        payload = {
+            "task":path,
+            "motor":
+            {
+                "steppers": motorPropList
+            }
+        }
+        # ensure that nothing blocks this command!
+        if self.isRunning:
+            self._parent.serial.breakCurrentCommunication()
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=0)
+        return r
+
+
     def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=1, backlash=(0,0,0,0), is_blocking=True, is_enabled=True):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
@@ -190,13 +220,9 @@ class Motor(object):
                 # we want to overshoot a bit
                 steps[iMotor] = steps[iMotor] + (np.sign(steps[iMotor])*backlash[iMotor])
 
-
-
         # get current position
-        pos_0 = self.get_position(0)
-        pos_1 = self.get_position(1)
-        pos_2 = self.get_position(2)
-        pos_3 = self.get_position(3)
+        _positions = self.get_position() # x,y,z,t = 1,2,3,0
+        pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
 
         # convert to physical units
         steps[0] *= 1/self.stepSizeT
@@ -377,14 +403,16 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, isEnable=is_enable)
         return r
 
-    def get_position(self, timeout=1):
+    def get_position(self, axis=None, timeout=1):
+        # pulls all current positions from the stepper controller
         path = "/motor_get"
         payload = {
             "task":path,
-            "position":1,
+            "position":True,
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
-        _position = np.array((0,0,0,0))
+        _position = np.array((0,0,0,0)) # T,X,Y,Z
+        _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
         try:
             for istepper in r["motor"]["steppers"]:
                 _position[istepper["stepperid"]]=istepper["position"]

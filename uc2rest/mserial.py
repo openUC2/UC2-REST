@@ -14,6 +14,8 @@ class Serial(object):
         self._parent = parent
         self.identity = identity
         self.DEBUG = DEBUG
+
+        self.isSafetyBreak = False
         
         # default version (v1 or v2) for the API
         self.versionFirmware = "V2.0"
@@ -164,6 +166,12 @@ class Serial(object):
         except Exception as e:
             self._parent.logger.error(e)
 
+    def breakCurrentCommunication(self):
+        # this breaks the wait-for-return command in readserial
+        self.isSafetyBreak = True
+        self.serialdevice.flushInput()
+        self.serialdevice.flushOutput()
+
 
     def readSerial(self, is_blocking=True, timeout = 1): # TODO: hardcoded timeout - not code
         """Receive and decode return message"""
@@ -172,7 +180,7 @@ class Serial(object):
         rmessage = ''
         _time0 = time.time()
         if is_blocking:
-            while is_blocking:
+            while is_blocking and not self.isSafetyBreak:
                 try:
                     rmessage =  self.serialdevice.readline().decode()
                     if self.DEBUG: self._parent.logger.debug(rmessage)
@@ -191,6 +199,7 @@ class Serial(object):
                 _returnmessage = json.loads(_returnmessage)
             except Exception as e:
                 if self.DEBUG: self._parent.logger.debug("Casting json string from serial to Python dict failed")
+            self.isSafetyBreak = False
         return _returnmessage
         
 class SerialDummy(object):
