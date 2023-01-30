@@ -203,9 +203,16 @@ class Motor(object):
 
         XYZT => 1,2,3,0
         '''
-        if type(is_absolute)==bool:
-            is_absolute = (is_absolute,is_absolute,is_absolute,is_absolute)
 
+        # determine the axis to operate
+        axisToMove = np.where(np.abs(speed)>0)
+
+        if type(is_absolute)==bool:
+            isAbsoluteArray = np.zeros((4))
+            isAbsoluteArray[axisToMove] = is_absolute
+        else:
+            isAbsoluteArray = is_absolute
+            
         # convert single elements to array
         if type(speed)!=list and type(speed)!=tuple and type(speed)!=np.ndarray:
             speed = np.array((speed,speed,speed,speed))
@@ -221,8 +228,8 @@ class Motor(object):
                 steps[iMotor] = steps[iMotor] + (np.sign(steps[iMotor])*backlash[iMotor])
 
         # get current position
-        _positions = self.get_position() # x,y,z,t = 1,2,3,0
-        pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
+        #_positions = self.get_position() # x,y,z,t = 1,2,3,0
+        #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
 
         # convert to physical units
         steps[0] *= 1/self.stepSizeT
@@ -269,11 +276,11 @@ class Motor(object):
         # only consider those actions that are necessary
         motorPropList = []
         for iMotor in range(4):
-            if is_absolute[iMotor] or abs(steps[iMotor])>0:
+            if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
                 motorProp = { "stepperid": iMotor,
                              "position": np.int(steps[iMotor]),
                              "speed": speed[iMotor],
-                             "isabs": is_absolute[iMotor],
+                             "isabs": isAbsoluteArray[iMotor],
                              "isaccel":0}
                 motorPropList.append(motorProp)
 
@@ -296,7 +303,7 @@ class Motor(object):
 
         # wait until job has been done        
         time0=time.time()
-        steppersRunning = np.array(steps)>0
+        steppersRunning = np.abs(np.array(steps))>0
         if is_blocking and self._parent.serial.is_connected:
             while True:
                 time.sleep(0.05) # don'T overwhelm the CPU
@@ -309,8 +316,7 @@ class Motor(object):
                     rMessage = ""
                 # check if message contains a motor that is done already
                 if rMessage.find('isDone') >-1:
-                    break
-                    ''' TODO: This only checks for one motor!
+                    ''' TODO: This only checks for one motor!'''
                     try:
                         rMessage = rMessage.split("\r")[0].replace("'", '"')
                         mMessage = json.loads(rMessage)
@@ -320,7 +326,7 @@ class Motor(object):
                                 steppersRunning[mNumber] = False
                     except:
                         pass
-                    '''
+                    
                 if np.sum(steppersRunning)==0:
                     break
 
@@ -414,8 +420,8 @@ class Motor(object):
         _position = np.array((0,0,0,0)) # T,X,Y,Z
         _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
         try:
-            for istepper in r["motor"]["steppers"]:
-                _position[istepper["stepperid"]]=istepper["position"]
+            for index, istepper in enumerate(r["motor"]["steppers"]):
+                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[index]
         except Exception as e: self._parent.logger.error(e)
         return _position
 
