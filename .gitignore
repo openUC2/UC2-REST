@@ -1,6 +1,8 @@
 # visual studio code
 .vscode/
 
+build*
+
 # python
 venv/
 virtualenv/
@@ -15,3 +17,4 @@ docs/build_*
 # misc
 .DS_Store
 
+build/lib/uc2rest/modules.py
