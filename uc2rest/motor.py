@@ -310,7 +310,7 @@ class Motor(object):
                 # see if already done
                 try:
                     rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
-                    print(rMessage)
+                    #print(rMessage)
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
