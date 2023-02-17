@@ -403,10 +403,16 @@ class Motor(object):
         return r
 
     def set_motor_enable(self, axis =0, is_enable=1):
+        
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
-
-        r = self.set_motor(stepperid = axis, isEnable=is_enable)
+        
+        path = "/motor_set"
+        payload = {
+            "task": path,
+            "isen": is_enable
+        }
+        r = self._parent.post_json(path, payload)
         return r
 
     def get_position(self, axis=None, timeout=1):
