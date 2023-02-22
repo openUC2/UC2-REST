@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import time 
-gTimeout = 0.5
+gTimeout = 0.1
 class LedMatrix(object):
     def __init__(self, parent, NLeds=64):
         #TOOD: This is for the LED matrix only!
@@ -61,7 +61,7 @@ class LedMatrix(object):
                 "led_array": pattern_list
             }
         }
-        self._parent.logger.debug("Setting LED Pattern (array) ")
+        #self._parent.logger.debug("Setting LED Pattern (array) ")
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
         
         return r
@@ -83,7 +83,7 @@ class LedMatrix(object):
             }
         }
         
-        self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
+        #self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
         return r
 

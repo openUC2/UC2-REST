@@ -126,10 +126,16 @@ class Serial(object):
         # write message to the serial
         self.writeSerial(payload)
         
-        if getReturn==True:
+        if getReturn:
             # we read the return message
             #self._parent.logger.debug(payload)
             returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+            if returnmessage == 'deserializeJson() failed: NoMemory':
+                # TODO: We will loose values here - need to set xyz coordinates!!
+                self.serialdevice.close()
+                self._parent.state.espRestart()
+                self._parent.state.restart()
+                self.open()
         else:
             returnmessage = False
         return returnmessage
