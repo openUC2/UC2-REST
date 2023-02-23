@@ -12,6 +12,9 @@ ESP32 = uc2rest.UC2Client(serialport=port)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 
+
+ESP32.motor.set_motor_enable(axis=0, is_enable=0)
+
 ''' ################
 SERIAL
 ################'''
