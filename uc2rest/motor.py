@@ -270,7 +270,7 @@ class Motor(object):
             { "stepperid": 1, "position": -100, "speed": 2000, "isabs": 0, "isaccel":0}
         ]
     }
-}
+}<
         '''
 
         # only consider those actions that are necessary
@@ -278,7 +278,7 @@ class Motor(object):
         for iMotor in range(4):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
                 motorProp = { "stepperid": iMotor,
-                             "position": np.int(steps[iMotor]),
+                             "position": int(steps[iMotor]),
                              "speed": speed[iMotor],
                              "isabs": isAbsoluteArray[iMotor],
                              "isaccel":0}
