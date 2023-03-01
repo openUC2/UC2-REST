@@ -66,7 +66,7 @@ class LedMatrix(object):
         
         return r
 
-    def send_LEDMatrix_full(self, intensity = (255,255,255),timeout=gTimeout):
+    def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=True, timeout=gTimeout):
         '''
         set all LEDs with te same RGB value: intensity=(255,255,255)
         '''
@@ -84,7 +84,7 @@ class LedMatrix(object):
         }
         
         #self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         return r
 
     def send_LEDMatrix_special(self, pattern="left", intensity = (255,255,255),timeout=gTimeout):
