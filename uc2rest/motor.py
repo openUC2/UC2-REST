@@ -42,7 +42,10 @@ class Motor(object):
         self.stepSizeZ =  1
         self.stepSizeT =  1
 
+        self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
+    def setMotorAxisOrder(self, order=[0,1,2,3]):
+        self.motorAxisOrder = order
 
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
@@ -68,8 +71,6 @@ class Motor(object):
             self.maxPosT = maxPos
             self.stepSizeT = stepSize
             self.backlashT = backlash
-
-
 
     def xyztTo1230(self, axis):
         axis = axis.upper()
@@ -167,7 +168,6 @@ class Motor(object):
         r = self._parent.post_json(path, payload, timeout=0)
         return r
 
-
     def stop(self, axis=None):
         axisNumberList = []
         if axis is None:
@@ -178,7 +178,7 @@ class Motor(object):
 
         motorPropList = []
         for iMotor in axisNumberList:
-            motorProp = { "stepperid": iMotor,
+            motorProp = { "stepperid": self.motorAxisOrder[iMotor],
                             "isstop": True}
             motorPropList.append(motorProp)
 
@@ -270,15 +270,15 @@ class Motor(object):
             { "stepperid": 1, "position": -100, "speed": 2000, "isabs": 0, "isaccel":0}
         ]
     }
-}<
+}
         '''
 
         # only consider those actions that are necessary
         motorPropList = []
         for iMotor in range(4):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
-                motorProp = { "stepperid": iMotor,
-                             "position": int(steps[iMotor]),
+                motorProp = { "stepperid": self.motorAxisOrder[iMotor],
+                             "position": np.int(steps[iMotor]),
                              "speed": speed[iMotor],
                              "isabs": isAbsoluteArray[iMotor],
                              "isaccel":0}
@@ -310,7 +310,6 @@ class Motor(object):
                 # see if already done
                 try:
                     rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
-                    #print(rMessage)
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
@@ -322,7 +321,7 @@ class Motor(object):
                         mMessage = json.loads(rMessage)
                         for iElement in mMessage['steppers']:
                             if iElement['isDone']:
-                                mNumber = iElement['stepperid']
+                                mNumber = self.motorAxisOrder[iElement['stepperid']]
                                 steppersRunning[mNumber] = False
                     except:
                         pass
@@ -363,7 +362,7 @@ class Motor(object):
         payload = {"task":path,
                     "motor":{
                     "steppers": [
-                        {   "stepperid": stepperid}]
+                        {   "stepperid": self.motorAxisOrder[stepperid]}]
                     }}
 
         if stepPin is not None: payload['motor']["steppers"][0]["step"] = stepPin
@@ -403,11 +402,9 @@ class Motor(object):
         return r
 
     def set_motor_enable(self, axis =0, is_enable=1):
-        
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
-        
-        path = "/motor_set"
+        path = "/motor_act"
         payload = {
             "task": path,
             "isen": is_enable
@@ -427,11 +424,12 @@ class Motor(object):
         _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
         try:
             for index, istepper in enumerate(r["motor"]["steppers"]):
-                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[index]
+                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
         except Exception as e: self._parent.logger.error(e)
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):
+        self._parent.logger.error("set_position is deprecated. Use set_motor_currentPosition instead.")
         '''
         path = "/motor_set"
         if axis=="X": axis=1
@@ -474,7 +472,7 @@ class Motor(object):
             "task":path,
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
-        try: return r["steppers"][axis]
+        try: return r["steppers"][self.motorAxisOrder[axis]]
         except: return False
 
     def get_motors(self, timeout=1):
