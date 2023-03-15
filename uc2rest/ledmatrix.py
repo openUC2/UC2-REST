@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import time 
-gTimeout = 0.1
+gTimeout = 1
 class LedMatrix(object):
     def __init__(self, parent, NLeds=64):
         #TOOD: This is for the LED matrix only!
@@ -35,7 +35,7 @@ class LedMatrix(object):
     LED ARRAY
     ##############################################################################################################################
     '''
-    def send_LEDMatrix_array(self, led_pattern, is_blocking = False, timeout=gTimeout):
+    def send_LEDMatrix_array(self, led_pattern, getReturn = True, timeout=gTimeout):
         '''
         Send an LED array pattern e.g. an RGB Matrix: led_pattern=np.zeros((3,8,8))
         '''
@@ -62,8 +62,9 @@ class LedMatrix(object):
             }
         }
         #self._parent.logger.debug("Setting LED Pattern (array) ")
-        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
-        
+        r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
+        if not getReturn or timeout==0:
+            r = {"success": 1}
         return r
 
     def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=True, timeout=gTimeout):
@@ -85,9 +86,11 @@ class LedMatrix(object):
         
         #self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
+        if not getReturn or timeout==0:
+            r = {"success": 1}
         return r
 
-    def send_LEDMatrix_special(self, pattern="left", intensity = (255,255,255),timeout=gTimeout):
+    def send_LEDMatrix_special(self, pattern="left", intensity = (255,255,255), getReturn = True, timeout=gTimeout):
         '''
         set all LEDs inside a certain pattern (e.g. left half) with the same RGB value: intensity=(255,255,255), rest 0
         '''
@@ -103,9 +106,11 @@ class LedMatrix(object):
         }
         self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        if not getReturn or timeout==0:
+            r = {"success": 1}
         return r
 
-    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), timeout=gTimeout):
+    def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), getReturn = True, timeout=gTimeout):
         '''
         update only a single LED with a colour:  indexled=0, intensity=(255,255,255)
         '''
@@ -122,7 +127,9 @@ class LedMatrix(object):
             }
         }
         self._parent.logger.debug("Setting LED Pattern (single) ")
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
+        if not getReturn or timeout==0:
+            r = {"success": 1}
         return r
 
 

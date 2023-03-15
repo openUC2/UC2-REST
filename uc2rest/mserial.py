@@ -3,7 +3,7 @@ import serial.tools.list_ports
 import time
 import json
 
-T_SERIAL_WARMUP = 5 # the time to wait for the serial to warm up
+T_SERIAL_WARMUP = 2 # the time to wait for the serial to warm up
 
 class Serial(object):
     

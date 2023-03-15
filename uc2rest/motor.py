@@ -281,7 +281,8 @@ class Motor(object):
                              "position": np.int(steps[iMotor]),
                              "speed": speed[iMotor],
                              "isabs": isAbsoluteArray[iMotor],
-                             "isaccel":0}
+                             "isaccel":0, 
+                             "isen": is_enabled}
                 motorPropList.append(motorProp)
 
         path = "/motor_act"
