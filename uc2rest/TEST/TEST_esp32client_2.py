@@ -96,23 +96,29 @@ if(0):
 ''' ################
 MOTOR
 ################'''
+ESP32.setDebugging(True)
 
-if 1:
-    ESP32.motor.set_motor_enable(is_enable=1)
-    ESP32.motor.set_direction(axis=1, sign=1, timeout=1)
-    ESP32.motor.set_position(axis=1, position=0, timeout=1)
+# mResult = ESP32.motor.move_x(steps=0, is_enabled=False)
+mResult = ESP32.motor.set_motor_enable(is_enable=1)
+mResult = ESP32.motor.set_motor_enable(is_enable=0)
+assert mResult["success"] == 1, "Failed sending motor command"
 
 # test Motor
-ESP32.motor.set_motor_enable(axis=0, is_enable=0)
+mResult = ESP32.motor.set_position(axis=0, position=1000)
+assert mResult["success"] == 1, "Failed sending motor command"
+
 position1 = ESP32.motor.get_position(timeout=1)
+assert position1[0]==1000, "Failed getting motor position"
 print(position1)
+
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
-ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
-ESP32.motor.move_t(steps=1000, speed=1000)
-ESP32.motor.move_xyzt(steps=(0,10000,10000,0), speed=10000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)ESP32.motor.move_t(steps=1000, speed=1000)
+ESP32.motor.move_xyzt(steps=(0,1000,100,0), speed=10000, is_blocking=True)
 ESP32.motor.move_xyzt(steps=(0,0,0,0), speed=10000, is_absolute=True, is_blocking=True)
-ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+>‡cdevfrgcf ¥ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+>‡cdevfrgcf _.¥bESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
 time.sleep(1)
 ESP32.motor.move_forever(speed=(0,0,0,0), is_stop=True)
 
