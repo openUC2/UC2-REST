@@ -29,7 +29,7 @@ class Modules(object):
         payload = {
             "task": path,
             }
-        r = self._parent.post_json(path, payload)
+        r = self._parent.post_json(path, payload)["modules"]
         
         return r
 
