@@ -17,7 +17,7 @@ class LedMatrix(object):
         self.timeout = 1
         self.intensity = (255,255,255)
         
-        self.ledArrayMode = {
+        self.ledArrayModes = {
             "array": 0,
             "full": 1,
             "single": 2,
@@ -27,7 +27,8 @@ class LedMatrix(object):
             "top": 6,
             "bottom": 7,
             "multi": 8}
-            
+
+        self.currentLedArrayMode = "full"            
             
     
     '''
@@ -57,7 +58,7 @@ class LedMatrix(object):
         payload = {
             "task":path,
             "led": {
-                "LEDArrMode": self.ledArrayMode["array"],
+                "LEDArrMode": self.ledArrayModes["array"],
                 "led_array": pattern_list
             }
         }
@@ -65,6 +66,7 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         if not getReturn or timeout==0:
             r = {"success": 1}
+        self.currentLedArrayMode = "array"            
         return r
 
     def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=True, timeout=gTimeout):
@@ -80,7 +82,7 @@ class LedMatrix(object):
                     "r": int(intensity[0]),
                     "g": int(intensity[1]),
                     "b": int(intensity[2])}],
-                "LEDArrMode": self.ledArrayMode["full"]
+                "LEDArrMode": self.ledArrayModes["full"]
             }
         }
         
@@ -88,6 +90,7 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         if not getReturn or timeout==0:
             r = {"success": 1}
+        self.currentLedArrayMode = "full"            
         return r
 
     def send_LEDMatrix_special(self, pattern="left", intensity = (255,255,255), getReturn = True, timeout=gTimeout):
@@ -101,13 +104,14 @@ class LedMatrix(object):
             "r": int(intensity[0]),
             "g": int(intensity[1]),
             "b": int(intensity[2]),
-            "LEDArrMode": self.ledArrayMode[pattern]
+            "LEDArrMode": self.ledArrayModes[pattern]
             }
         }
         self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, getReturn=True, timeout=timeout)
         if not getReturn or timeout==0:
             r = {"success": 1}
+        self.currentLedArrayMode = "special"            
         return r
 
     def send_LEDMatrix_single(self, indexled=0, intensity=(255,255,255), getReturn = True, timeout=gTimeout):
@@ -118,7 +122,7 @@ class LedMatrix(object):
         payload = {
             "task":path,
             "led": {
-                "LEDArrMode": self.ledArrayMode["single"],
+                "LEDArrMode": self.ledArrayModes["single"],
                 "led_array": [{
                     "id": indexled,
                     "r": int(intensity[0]),
@@ -130,6 +134,7 @@ class LedMatrix(object):
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         if not getReturn or timeout==0:
             r = {"success": 1}
+        self.currentLedArrayMode = "single"            
         return r
 
 
@@ -167,16 +172,21 @@ class LedMatrix(object):
         self.ledpattern = state*np.ones((self.NLeds, 3))
         return self.ledpattern
     
-    def setIntensity(self, intensity):
+    def setIntensity(self, intensity, getReturn=True):
         self.intensity = intensity
-        self.setPattern()
+        self.setPattern(getReturn=getReturn)
     
-    def setPattern(self, ledpattern=None):
+    def setPattern(self, getReturn=True, ledpattern=None):
         # sends pattern with proper intensity
         if ledpattern is not None:
             self.ledpattern = ledpattern
         pattern2send = (self.ledpattern>=1)*self.intensity
-        self.send_LEDMatrix_array(pattern2send, timeout=self.timeout)
+        if np.sum(self.ledpattern, 0)[0]==self.ledpattern.shape[0]:
+            # turn on all - faster! 
+            self.send_LEDMatrix_full(pattern2send[0,:], getReturn=getReturn, timeout=self.timeout)
+        else:
+            # set individual pattern - slower
+            self.send_LEDMatrix_array(pattern2send, getReturn=getReturn, timeout=self.timeout)
         return self.ledpattern
     
     def getPattern(self):
