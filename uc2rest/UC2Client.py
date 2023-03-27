@@ -172,3 +172,7 @@ class UC2Client(object):
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
+
+    def setDebugging(self, debug=False):
+        self.logger.debug(f"Setting debugging to {debug}")
+        self.serial.DEBUG = debug

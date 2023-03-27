@@ -84,16 +84,16 @@ class Motor(object):
             axis = 0
         return axis
 
-    def move_x(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_x(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_y(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_y(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_z(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_z(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_t(self, steps=100, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_t(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="T", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -281,7 +281,8 @@ class Motor(object):
                              "position": np.int(steps[iMotor]),
                              "speed": speed[iMotor],
                              "isabs": isAbsoluteArray[iMotor],
-                             "isaccel":0}
+                             "isaccel":0, 
+                             "isen": is_enabled}
                 motorPropList.append(motorProp)
 
         path = "/motor_act"
@@ -429,39 +430,25 @@ class Motor(object):
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):
-        self._parent.logger.error("set_position is deprecated. Use set_motor_currentPosition instead.")
+
         '''
-        path = "/motor_set"
+        {"task":"/home_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
+        '''
+        path = "/home_act"
         if axis=="X": axis=1
         if axis=="Y": axis=2
         if axis=="Z": axis=3
 
         payload = {
-            "task":path,
-            "axis":axis,
-            "currentposition": position
-        }
+            "task": path,
+            "setpos":{
+                "steppers": [
+                {
+                 "stepperid": axis,
+                 "posval": int(position)
+                 }]
+            }}
         r = self._parent.post_json(path, payload, timeout=timeout)
-
-        return r
-        '''
-        return False
-
-    def set_motors(self, settingsdict, isBlocking=True, timeout=1):
-        path = "/motor_set"
-        payload = settingsdict
-        payload["task"] = path
-
-        # send command
-        r = self._parent.post_json(path, payload, timeout=1)
-
-        # wait until job has been done
-        time0=time.time()
-        if isBlocking:
-            while self.isBusy((0,0,0,0)):
-                time.sleep(0.1)
-                if time.time()-time0>timeout:
-                    break
 
         return r
 

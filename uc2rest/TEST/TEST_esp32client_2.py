@@ -8,12 +8,17 @@ port = "/dev/cu.wchusbserial14310"
 #port = "/dev/cu.wchusbserial1440"
 port = "/dev/cu.wchusbserial110"
 
-ESP32 = uc2rest.UC2Client(serialport=port)
+ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 
 
-ESP32.motor.set_motor_enable(axis=0, is_enable=0)
+# check if we are connected 
+# see if it's the right device
+mState = ESP32.state.get_state()
+assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
+
+
 
 ''' ################
 SERIAL
@@ -26,171 +31,94 @@ print(cmd_return)
 ''' ################
 Digital out
 ################'''
-ESP32.digitalout.setup_digitaloutpin(id=1, pin=4)
-ESP32.digitalout.setup_digitaloutpin(id=2, pin=0)
-ESP32.digitalout.set_trigger(trigger1=True, delayOn1=10, delayOff1=10, trigger2=True, delayOn2=100, delayOff2=10, trigger3=False, delayOn3=0, delayOff3=0)
-time.sleep(1)
-ESP32.digitalout.reset_triggertable()
-
+if(0):
+    ESP32.digitalout.setup_digitaloutpin(id=1, pin=4)
+    ESP32.digitalout.setup_digitaloutpin(id=2, pin=0)
+    ESP32.digitalout.set_trigger(trigger1=True, delayOn1=10, delayOff1=10, trigger2=True, delayOn2=100, delayOff2=10, trigger3=False, delayOn3=0, delayOff3=0)
+    time.sleep(1)
+    ESP32.digitalout.reset_triggertable()
 
 
 ''' ################
 MODULES
 ################'''
+#load modules from pyhton
 mModules = ESP32.modules.get_default_modules()
-print(mModules)
+assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
+print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
+
+# load modules from device
 mModulesDevice = ESP32.modules.get_modules()
-print(mModulesDevice)
+assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
+print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
 mModules['home']=1 # activate home module
-ESP32.modules.set_modules(mModules)
-# wait for reboot
-time.sleep(2)
-mModulesDevice = ESP32.modules.get_modules()
-print(mModulesDevice)
-
-
-''' ################
-HOME
-################'''
-ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
-ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
 
 
 
 ''' ################
 LED 
 ################'''
-# setup led configuration
-if ESP32.APIVersion == 2:
-    ESP32.led.set_ledpin(ledArrPin=4, ledArrNum=16)
-    print(ESP32.led.get_ledpin())
-
 # test LED
-ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+assert mResult["success"] == 1, "Failed sending LED command"
 time.sleep(0.5)
-ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
+assert mResult["success"] == 1, "Failed sending LED command"
+
+# single LED
+ESP32.setDebugging(False)
+for iLED in range(5):
+    # timeout = 0 means no timeout => mResult will be rubish!
+    mResult = ESP32.led.send_LEDMatrix_single(indexled=iLED, intensity=(255, 255, 255), timeout=0.)
+    mResult = ESP32.led.send_LEDMatrix_single(indexled=iLED, intensity=(0, 0, 0), timeout=0.)
+    assert mResult["success"] == 1, "Failed sending LED command"
 
 # display random pattern
-for i in range(10):
+for i in range(5):
     led_pattern = np.random.randint(0,55, (25,3))
-    ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern,timeout=1)
-
-ESP32.led.send_LEDMatrix_single(indexled=0, intensity=(0, 255, 0))
+    mResult = ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern,timeout=0)
+    assert mResult["success"] == 1, "Failed sending LED command"
 
 
 #%% left
-led_pattern = np.zeros((25,3))
-list_left = (0,1,2,3,4,5,9,10,11,12,13,14,15,16,17)
-list_right = (0,5,6,7,8,9,18,19,20,21,22,23,24)
-led_pattern[list_left,0] = 255
-led_pattern[list_right,1] = 255
-ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
-time.sleep(1)
-ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern*0, timeout=1)
+if(0):
+    led_pattern = np.zeros((25,3))
+    list_left = (0,1,2,3,4,5,9,10,11,12,13,14,15,16,17)
+    list_right = (0,5,6,7,8,9,18,19,20,21,22,23,24)
+    led_pattern[list_left,0] = 255
+    led_pattern[list_right,1] = 255
+    ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern, timeout=1)
+    time.sleep(1)
+    ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern*0, timeout=1)
 
 #%%
-
-''' ################
-analog
-################'''
-ESP32.analog.set_analog(readanaloginID=1, readanaloginPIN=35, nanaloginavg=1)
-ESP32.analog.get_analog(readanaloginID=1)
-#analogValueAVG = ESP32.analog.read_sensor(sensorID=1, NAvg=100)
-#print(analogValueAVG)
-
-
-
-
+#%%
 ''' ################
 MOTOR
 ################'''
+ESP32.setDebugging(True)
 
-if 0:
-    # sestup all motors at once 
-    if ESP32.APIVersion == 1:
-        # load the pin config from the ESP32
-        mConfig = ESP32.config.loadConfigDevice()
-        print(mConfig)
-
-        # reset the dictionary 
-        mConfig = dict.fromkeys(mConfig, 0)
-
-        # modify some values
-        mConfig["ledArrPin"] = 15
-        mConfig["ledArrNum"] = 16
-
-        mConfig["motXstp"] = 2
-        mConfig["motXdir"] = 33
-
-        mConfig["motYstp"] = 27
-        mConfig["motYdir"] = 16
-
-        mConfig["motZstp"] = 12
-        mConfig["motZdir"] = 14
-
-        mConfig["identifier"] = "UniEindhoven"
-        mConfig["ssid"] = "UC2"
-        mConfig["PW"] = "UC2"
-
-        # now load the config to the ESP32
-        ESP32.config.setConfigDevice(mConfig)
-        ESP32.config.applyConfigDevice()
-
-        # wait until the ESP reboots and identify the new config
-        time.sleep(5)
-
-        # see if it's the right device
-        ESP32.state.get_state()
-        mConfig = ESP32.config.loadConfigDevice()
-        print(mConfig)
-        
-    if ESP32.APIVersion == 2:
-        print(ESP32.motor.settingsdict)
-        ESP32.motor.settingsdict["motor"]["steppers"][1]["dir"]=16
-        ESP32.motor.settingsdict["motor"]["steppers"][1]["step"]=26
-        ESP32.motor.settingsdict["motor"]["steppers"][2]["dir"]=27
-        ESP32.motor.settingsdict["motor"]["steppers"][2]["step"]=25
-        ESP32.motor.settingsdict["motor"]["steppers"][3]["dir"]=14
-        ESP32.motor.settingsdict["motor"]["steppers"][3]["step"]=17
-        ESP32.motor.settingsdict["motor"]["steppers"][0]["dir"]=18
-        ESP32.motor.settingsdict["motor"]["steppers"][0]["step"]=19
-        ESP32.motor.settingsdict["motor"]["steppers"][0]["enable"]=12
-        ESP32.motor.settingsdict["motor"]["steppers"][1]["enable"]=12
-        ESP32.motor.settingsdict["motor"]["steppers"][2]["enable"]=12
-        ESP32.motor.settingsdict["motor"]["steppers"][3]["enable"]=12
-        ESP32.motor.set_motors(ESP32.motor.settingsdict)
-
-        # print settings 
-        print(ESP32.motor.get_motors())
-
-        # OR setup motors individually (according to WEMOS R32 D1)
-        ESP32.motor.set_motor(stepperid = 1, position = 0, stepPin = 26, dirPin=16, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-        ESP32.motor.set_motor(stepperid = 2, position = 0, stepPin = 25, dirPin=27, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-        ESP32.motor.set_motor(stepperid = 3, position = 0, stepPin = 17, dirPin=14, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-        ESP32.motor.set_motor(stepperid = 0, position = 0, stepPin = 19, dirPin=18, enablePin=12, maxPos=None, minPos=None, acceleration=None, isEnable=1)
-
-        # get individual motors
-        print(ESP32.motor.get_motor(axis = 1))
-
-        ESP32.motor.set_motor_currentPosition(axis=0, currentPosition=10000)
-        ESP32.motor.set_motor_acceleration(axis=0, acceleration=10000)
-        ESP32.motor.set_motor_enable(is_enable=1)
-        ESP32.motor.set_direction(axis=1, sign=1, timeout=1)
-        ESP32.motor.set_position(axis=1, position=0, timeout=1)
-
-        # wait to settle
-        time.sleep(2)
+# mResult = ESP32.motor.move_x(steps=0, is_enabled=False)
+mResult = ESP32.motor.set_motor_enable(is_enable=1)
+mResult = ESP32.motor.set_motor_enable(is_enable=0)
+assert mResult["success"] == 1, "Failed sending motor command"
 
 # test Motor
+mResult = ESP32.motor.set_position(axis=0, position=1000)
+assert mResult["success"] == 1, "Failed sending motor command"
+
 position1 = ESP32.motor.get_position(timeout=1)
+assert position1[0]==1000, "Failed getting motor position"
 print(position1)
+
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
-ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
-ESP32.motor.move_t(steps=1000, speed=1000)
-ESP32.motor.move_xyzt(steps=(0,10000,10000,0), speed=10000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)ESP32.motor.move_t(steps=1000, speed=1000)
+ESP32.motor.move_xyzt(steps=(0,1000,100,0), speed=10000, is_blocking=True)
 ESP32.motor.move_xyzt(steps=(0,0,0,0), speed=10000, is_absolute=True, is_blocking=True)
-ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+>‡cdevfrgcf ¥ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+>‡cdevfrgcf _.¥bESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
 time.sleep(1)
 ESP32.motor.move_forever(speed=(0,0,0,0), is_stop=True)
 
@@ -211,6 +139,23 @@ for ix in range(nDist):
         ESP32.motor.move_xyzt(steps=(0,ix*dDist,iy*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
 ESP32.motor.move_xyzt(steps=(0,nDist*dDist,nDist*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
 ESP32.motor.move_xyzt(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
+
+#%%
+
+''' ################
+analog
+################'''
+ESP32.analog.set_analog(readanaloginID=1, readanaloginPIN=35, nanaloginavg=1)
+ESP32.analog.get_analog(readanaloginID=1)
+#analogValueAVG = ESP32.analog.read_sensor(sensorID=1, NAvg=100)
+#print(analogValueAVG)
+
+#%%
+''' ################
+HOME
+################'''
+ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
+ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
 
 ''' ################
 LASER 
