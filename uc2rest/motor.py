@@ -278,8 +278,8 @@ class Motor(object):
         for iMotor in range(4):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
                 motorProp = { "stepperid": self.motorAxisOrder[iMotor],
-                             "position": np.int(steps[iMotor]),
-                             "speed": speed[iMotor],
+                             "position": int(steps[iMotor]),
+                             "speed": int(speed[iMotor]),
                              "isabs": isAbsoluteArray[iMotor],
                              "isaccel":0, 
                              "isen": is_enabled}
