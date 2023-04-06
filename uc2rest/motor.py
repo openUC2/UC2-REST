@@ -402,13 +402,19 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
-    def set_motor_enable(self, axis =0, is_enable=1):
+    def set_motor_enable(self, axis =0, is_enable=1, is_enableauto=1):
+        """
+        is_enable turns on/off enable pin overrides motor settings - god for cooling puproses
+        is_eanbale auto  turns on/off timer of the accelstepper library
+        """
+        
         if type(axis)==str:
             axis = self.xyztTo1230(axis)
         path = "/motor_act"
         payload = {
             "task": path,
-            "isen": is_enable
+            "isen": is_enable,
+            "isenauto": is_enableauto
         }
         r = self._parent.post_json(path, payload)
         return r
