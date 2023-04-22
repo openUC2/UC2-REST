@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSerial Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://pyscript.net/releases/2022.12.1/pyscript.css"
+    />
+    <script
+      defer
+      src="https://pyscript.net/releases/2022.12.1/pyscript.js"
+    ></script>
+    <py-env>
+      <py-config>
+        packages = [ "numpy", "pillow" ] 
+        [[fetch]] 
+        files = ['__init__.py', '__pycache__', '__version__.py', 'analog.py', 'camera.py', 'config.py', 'digitalout.py', 'galvo.py', 'home.py', 'laser.py', 'ledmatrix.py', 'logger.py', 'modules.py', 'motor.py', 'mserial.py', 'pid.py', 'slm.py', 'state.py', 'UC2Client.py', 'updater.py', 'utils.py', 'wifi.py'] 
+        from = 'uc2rest' 
+        to_folder = './uc2rest'
+      </py-config>
+    </py-env>
+  </head>
+  <body>
+    <py-script src="webserialdemo.py"></py-script>
+
+    <button py-click="sm.askForSerial()" id="open">Open a Serial Port</button>
+    <button py-click="sm.getState()" id="state">Get State of ESP32</button>
+    <br /><button py-click="sendValueFromInputBox(sm)" id="write">
+      Write to the serial port:
+    </button>
+    <input type="text" id="text" />
+  </body>
+</html>
