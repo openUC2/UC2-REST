@@ -25,7 +25,7 @@
     <py-script src="webserialdemo.py"></py-script>
 
     <button py-click="sm.askForSerial()" id="open">Open a Serial Port</button>
-    <button py-click="sm.getState()" id="state">Get State of ESP32</button>
+    <button py-click="getState(sm)" id="state">Get State of ESP32</button>
     <br /><button py-click="sendValueFromInputBox(sm)" id="write">
       Write to the serial port:
     </button>

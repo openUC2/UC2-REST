@@ -220,7 +220,7 @@ class SerialManagerWrapper(object):
         self.isSafetyBreak = False
         self.DEBUG = DEBUG
         
-    def post_json(self, path, payload={}, getReturn=True, timeout=1):
+    async def post_json(self, path, payload={}, getReturn=True, timeout=1):
         if "task" not in payload:
             payload["task"] = path
         
@@ -230,8 +230,9 @@ class SerialManagerWrapper(object):
             is_blocking = True
 
         # write message to the serial
-        self.writeSerial(payload)
-        
+        await self.writeSerial(payload)
+        return ''
+        print(3)
         if getReturn:
             # we read the return message
             #self._parent.logger.debug(payload)
@@ -240,17 +241,17 @@ class SerialManagerWrapper(object):
             returnmessage = False
         return returnmessage
     
-    def writeSerial(self, payload):
+    async def writeSerial(self, payload):
         """Write JSON document to serial device"""
         if type(payload)==dict:
             payload = json.dumps(payload)
         try:
             if self.DEBUG: self._parent.logger.debug(payload)
-            self.SerialManager.write(payload.encode(encoding='UTF-8'))
+            await self.SerialManager.write(payload)
         except Exception as e:
             self._parent.logger.error(e)
 
-    def readSerial(self, is_blocking=True, timeout = 1): # TODO: hardcoded timeout - not code
+    async def readSerial(self, is_blocking=True, timeout = 1): # TODO: hardcoded timeout - not code
         """Receive and decode return message"""
         returnmessage = ''
         _returnmessage = ''
@@ -260,7 +261,7 @@ class SerialManagerWrapper(object):
         if is_blocking:
             while is_blocking and not self.isSafetyBreak:
                 try:
-                    rmessage =  self.SerialManager.read().decode()
+                    rmessage = await self.SerialManager.read().decode()
                     if self.DEBUG: self._parent.logger.debug(rmessage)
                     returnmessage += rmessage
                     if rmessage.find("--")==0:

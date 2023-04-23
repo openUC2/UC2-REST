@@ -77,7 +77,7 @@ class UC2Client(object):
             self.isPyScript = True
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
-
+        
         # import libraries depending on API version
         if self.APIVersion == 1:
             self.logger.debug("Using API version 1")
@@ -113,10 +113,12 @@ class UC2Client(object):
 
         # initialize state
         self.state = State(self)
-        self.state.get_state()
-
+        if not self.isPyScript: 
+            self.state.get_state()
+       
         # initialize config
-        self.config = config(self)
+        if not self.isPyScript: 
+            self.config = config(self)
 
         # initialize LED matrix
         self.led = LedMatrix(self, NLeds=NLeds)
@@ -149,11 +151,13 @@ class UC2Client(object):
         self.digitalout = DigitalOut(self)
         
         # initialize config
-        self.config = config(self)
-        self.pinConfig = self.config.loadConfigDevice()
+        if not self.isPyScript: 
+            self.config = config(self)
+            self.pinConfig = self.config.loadConfigDevice()
         
         # initialize updater 
-        if not self.isPyScript: self.updater = updater(parent=self)
+        if not self.isPyScript: 
+            self.updater = updater(parent=self)
         
         # initialize module controller
         self.modules = Modules(parent=self)
