@@ -19,8 +19,11 @@ class Motor(object):
 
 
 
-    def __init__(self, parent=None):
+    def __init__(self, isCoreXY = False, parent=None):
         self._parent = parent
+        
+        # do we have a coreXY setup?
+        self.isCoreXY = isCoreXY
 
         self.nMotors = 4
         self.steps_last = np.zeros((self.nMotors))
@@ -84,11 +87,28 @@ class Motor(object):
             axis = 0
         return axis
 
+    def cartesian2corexy(self, x, y):
+        # convert cartesian coordinates to coreXY coordinates
+        # https://www.corexy.com/theory.html
+        x1 = (x+y)/np.sqrt(2)
+        y1 = (x-y)/np.sqrt(2)
+        return x1, y1
+    
     def move_x(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        if self.isCoreXY:
+            # have to turn two motors to move in X direction
+            xTemp, yTemp =  self.cartesian2corexy(steps, 0)
+            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        else:
+            return self.move_axis_by_name(axis="X", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
     def move_y(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        if self.isCoreXY:
+            # have to turn two motors to move in Y direction
+            xTemp, yTemp =  self.cartesian2corexy(0,steps)
+            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout
+        else:
+            return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
     def move_z(self, steps=0, speed=1000, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
@@ -105,12 +125,18 @@ class Motor(object):
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        if len(speed)!= 2:
-            speed = (speed,speed)
+        if self.isCoreXY:
+            # have to move only one motor to move in XY direction
+            self.parent.logger.info("Moving in XY direction in coreXY is not yet implemented")
+            xTemp, yTemp =  self.cartesian2corexy(steps[0], steps[1])
+            return self.move_xy(steps=(xTemp, yTemp), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)           
+        else:
+            if len(speed)!= 2:
+                speed = (speed,speed)
 
-        # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
-        return r
+            # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
+            r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return r
 
     def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if type(speed)==int:
@@ -402,20 +428,19 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
-    def set_motor_enable(self, axis =0, is_enable=1, is_enableauto=1):
+    def set_motor_enable(self, is_enable=None, is_enableauto=None):
         """
         is_enable turns on/off enable pin overrides motor settings - god for cooling puproses
         is_eanbale auto  turns on/off timer of the accelstepper library
         """
-        
-        if type(axis)==str:
-            axis = self.xyztTo1230(axis)
         path = "/motor_act"
         payload = {
-            "task": path,
-            "isen": is_enable,
-            "isenauto": is_enableauto
+            "task": path
         }
+        if is_enable is not None:
+            payload["isen"] = is_enable
+        if is_enableauto is not None:
+            payload["isenauto"] = is_enableauto
         r = self._parent.post_json(path, payload)
         return r
 
