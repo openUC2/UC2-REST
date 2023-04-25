@@ -1,5 +1,8 @@
-import serial
-import serial.tools.list_ports
+try:
+    import serial
+    import serial.tools.list_ports
+except:
+    print("No serial available - running on pyscript?")
 import time
 import json
 
@@ -208,6 +211,75 @@ class Serial(object):
             self.isSafetyBreak = False
         return _returnmessage
         
+class SerialManagerWrapper(object):
+    
+    def __init__(self, SerialManager, DEBUG = True, parent=None) -> None:
+        self._parent=parent
+        self._parent.logger.debug("SerialManagerWrapper init")
+        self.SerialManager = SerialManager
+        self.isSafetyBreak = False
+        self.DEBUG = DEBUG
+        
+    async def post_json(self, path, payload={}, getReturn=True, timeout=1):
+        if "task" not in payload:
+            payload["task"] = path
+        
+        if "isblock" in payload:
+            is_blocking = payload["isblock"]
+        else:
+            is_blocking = True
+
+        # write message to the serial
+        await self.writeSerial(payload)
+        return ''
+        print(3)
+        if getReturn:
+            # we read the return message
+            #self._parent.logger.debug(payload)
+            returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
+        else:
+            returnmessage = False
+        return returnmessage
+    
+    async def writeSerial(self, payload):
+        """Write JSON document to serial device"""
+        if type(payload)==dict:
+            payload = json.dumps(payload)
+        try:
+            if self.DEBUG: self._parent.logger.debug(payload)
+            await self.SerialManager.write(payload)
+        except Exception as e:
+            self._parent.logger.error(e)
+
+    async def readSerial(self, is_blocking=True, timeout = 1): # TODO: hardcoded timeout - not code
+        """Receive and decode return message"""
+        returnmessage = ''
+        _returnmessage = ''
+        rmessage = ''
+        _time0 = time.time()
+        print("Reading serial")
+        if is_blocking:
+            while is_blocking and not self.isSafetyBreak:
+                try:
+                    rmessage = await self.SerialManager.read().decode()
+                    if self.DEBUG: self._parent.logger.debug(rmessage)
+                    returnmessage += rmessage
+                    if rmessage.find("--")==0:
+                        break
+                except:
+                    pass
+                if (time.time()-_time0)>timeout:
+                    break
+            # casting to dict
+            try:
+                # TODO: check if this is a valid JSON
+                _returnmessage = returnmessage.split("\n--")[0].split("\n++")[-1].replace("\r","").replace("\n", "").replace("'", '"')
+                if self.DEBUG: self._parent.logger.debug(returnmessage)
+                _returnmessage = json.loads(_returnmessage)
+            except Exception as e:
+                if self.DEBUG: self._parent.logger.debug("Casting json string from serial to Python dict failed")
+            self.isSafetyBreak = False
+        return _returnmessage
 class SerialDummy(object):
         
     def __init__(self, port, baudrate, timeout=1, parent=None):

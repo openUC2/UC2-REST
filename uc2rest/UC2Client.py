@@ -6,15 +6,20 @@ Simple client code for the ESP32 in Python
 Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
 from .mserial import Serial
+from .mserial import SerialManagerWrapper
+
 try:
-    from imswitch.imcommon.model import initLogger
+    from .imswitch.imcommon.model import initLogger
     IS_IMSWITCH = True
 except:
     print("No imswitch available")
     from .logger import Logger
     IS_IMSWITCH = False
 
-import requests
+try:
+    import requests
+except:
+    print("No requests available - running on pyscript?")
 
 class UC2Client(object):
     # headers = {'ESP32-version': '*'}
@@ -28,7 +33,7 @@ class UC2Client(object):
     # BAUDRATE = 500000
     BAUDRATE = 115200
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, DEBUG=False):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, SerialManager=None, DEBUG=False):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -48,6 +53,7 @@ class UC2Client(object):
             self.logger = Logger()
         # set default APIVersion
         self.APIVersion = 2
+        self.isPyScript = False
 
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
@@ -65,9 +71,13 @@ class UC2Client(object):
             # check if host is up
             self.logger.debug(f"Connecting to microscope {self.host}:{self.port}")
             self.is_connected = self.isConnected()
+        elif SerialManager is not None:
+            # we are trying to access the controller from .a web browser
+            self.serial = SerialManagerWrapper(SerialManager, parent=self)
+            self.isPyScript = True
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
-
+        
         # import libraries depending on API version
         if self.APIVersion == 1:
             self.logger.debug("Using API version 1")
@@ -93,7 +103,7 @@ class UC2Client(object):
             from .wifi import Wifi
             from .camera import Camera
             from .analog import Analog
-            from .updater import updater
+            if not self.isPyScript: from .updater import updater
             from .modules import Modules
             from .digitalout import DigitalOut
 
@@ -103,10 +113,12 @@ class UC2Client(object):
 
         # initialize state
         self.state = State(self)
-        self.state.get_state()
-
+        if not self.isPyScript: 
+            self.state.get_state()
+       
         # initialize config
-        self.config = config(self)
+        if not self.isPyScript: 
+            self.config = config(self)
 
         # initialize LED matrix
         self.led = LedMatrix(self, NLeds=NLeds)
@@ -139,11 +151,13 @@ class UC2Client(object):
         self.digitalout = DigitalOut(self)
         
         # initialize config
-        self.config = config(self)
-        self.pinConfig = self.config.loadConfigDevice()
+        if not self.isPyScript: 
+            self.config = config(self)
+            self.pinConfig = self.config.loadConfigDevice()
         
         # initialize updater 
-        self.updater = updater(parent=self)
+        if not self.isPyScript: 
+            self.updater = updater(parent=self)
         
         # initialize module controller
         self.modules = Modules(parent=self)
@@ -154,7 +168,7 @@ class UC2Client(object):
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.post(url, json=payload, headers=self.headers)
             return r.json()
-        elif self.is_serial:
+        elif self.is_serial or self.isPyScript:
             return self.serial.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
@@ -166,7 +180,7 @@ class UC2Client(object):
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.get(url, headers=self.headers)
             return r.json()
-        elif self.is_serial:
+        elif self.is_serial or self.isPyScript:
             self.serial.get_json(path)
             return self.serial.read_json()
         else:
