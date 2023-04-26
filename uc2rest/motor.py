@@ -431,17 +431,17 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
-    def set_motor_enable(self, is_enable=None, enableauto=None):
+    def set_motor_enable(self, enable=None, enableauto=None):
         """
-        is_enable turns on/off enable pin overrides motor settings - god for cooling puproses
-        is_eanbale auto  turns on/off timer of the accelstepper library
+        turns on/off enable pin overrides motor settings - god for cooling puproses
+        eanbaleauto  turns on/off timer of the accelstepper library
         """
         path = "/motor_act"
         payload = {
             "task": path
         }
-        if is_enable is not None:
-            payload["isen"] = is_enable
+        if enable is not None:
+            payload["isen"] = enable
         if enableauto is not None:
             payload["isenauto"] = enableauto
         r = self._parent.post_json(path, payload)
