@@ -19,11 +19,11 @@ class Motor(object):
 
 
 
-    def __init__(self, isCoreXY = False, parent=None):
+    def __init__(self, parent=None):
         self._parent = parent
         
         # do we have a coreXY setup?
-        self.isCoreXY = isCoreXY
+        self.isCoreXY = False
 
         self.nMotors = 4
         self.steps_last = np.zeros((self.nMotors))
@@ -46,6 +46,9 @@ class Motor(object):
         self.stepSizeT =  1
 
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
+
+    def setIsCoreXY(self, isCoreXY = False):
+        self.isCoreXY = isCoreXY 
 
     def setMotorAxisOrder(self, order=[0,1,2,3]):
         self.motorAxisOrder = order
@@ -106,7 +109,7 @@ class Motor(object):
         if self.isCoreXY:
             # have to turn two motors to move in Y direction
             xTemp, yTemp =  self.cartesian2corexy(0,steps)
-            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout
+            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         else:
             return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
@@ -428,7 +431,7 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
-    def set_motor_enable(self, is_enable=None, is_enableauto=None):
+    def set_motor_enable(self, is_enable=None, enableauto=None):
         """
         is_enable turns on/off enable pin overrides motor settings - god for cooling puproses
         is_eanbale auto  turns on/off timer of the accelstepper library
@@ -439,8 +442,8 @@ class Motor(object):
         }
         if is_enable is not None:
             payload["isen"] = is_enable
-        if is_enableauto is not None:
-            payload["isenauto"] = is_enableauto
+        if enableauto is not None:
+            payload["isenauto"] = enableauto
         r = self._parent.post_json(path, payload)
         return r
 
