@@ -10,7 +10,7 @@ class LedMatrix(object):
         self.Nx = self.Ny = int(np.sqrt(NLeds))
         
         # we assume the pattern is binary (e.g. 0 or 1)
-        self.ledpattern = np.zeros((self.NLeds, 3))
+        self.ledpattern = np.ones((self.NLeds, 3))*-1 # not set yet
         
         # this is a istance of the _parent32Client class
         self._parent = parent
