@@ -130,9 +130,9 @@ class Motor(object):
     def move_xy(self, steps=(0,0), speed=(1000,1000), is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if self.isCoreXY:
             # have to move only one motor to move in XY direction
-            self.parent.logger.info("Moving in XY direction in coreXY is not yet implemented")
-            xTemp, yTemp =  self.cartesian2corexy(steps[0], steps[1])
-            return self.move_xy(steps=(xTemp, yTemp), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)           
+            #self.move_axis_by_name(axis="X", steps=steps[0], speed=speed[0], is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            #self.move_axis_by_name(axis="Y", steps=steps[1], speed=speed[1], is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_xyzt(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)           
         else:
             if len(speed)!= 2:
                 speed = (speed,speed)
