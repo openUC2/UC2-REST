@@ -64,11 +64,7 @@ class Laser(object):
     def get_laserpins(self):
         path = '/laser_get'
         
-        payload = {
-            "task": path,
-        }
-        
-        r = self._parent.post_json(path, payload)
+        r = self._parent.get_json(path)
         
         if type(r) is dict:
             # cast laser pins

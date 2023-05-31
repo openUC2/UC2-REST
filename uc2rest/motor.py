@@ -334,7 +334,7 @@ class Motor(object):
         # wait until job has been done        
         time0=time.time()
         steppersRunning = np.abs(np.array(steps))>0
-        if is_blocking and self._parent.serial.is_connected:
+        if not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
             while True:
                 time.sleep(0.05) # don'T overwhelm the CPU
                 # see if already done
@@ -431,6 +431,9 @@ class Motor(object):
         r = self.set_motor(stepperid = axis, acceleration=acceleration)
         return r
 
+    def set_motor_enable(self, is_enable=1):
+        self.set_motor_enable(enable=is_enable)
+
     def set_motor_enable(self, enable=None, enableauto=None):
         """
         turns on/off enable pin overrides motor settings - god for cooling puproses
@@ -498,10 +501,8 @@ class Motor(object):
 
     def get_motors(self, timeout=1):
         path = "/motor_get"
-        payload = {
-            "task":path,
-        }
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        
+        r = self._parent.get_json(path, timeout=timeout)
         try: return r["steppers"]
         except: return False
 

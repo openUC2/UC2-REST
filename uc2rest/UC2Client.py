@@ -70,7 +70,7 @@ class UC2Client(object):
 
             # check if host is up
             self.logger.debug(f"Connecting to microscope {self.host}:{self.port}")
-            self.is_connected = self.isConnected()
+            #self.is_connected = self.isConnected()
         elif SerialManager is not None:
             # we are trying to access the controller from .a web browser
             self.serial = SerialManagerWrapper(SerialManager, parent=self)
@@ -114,7 +114,7 @@ class UC2Client(object):
         # initialize state
         self.state = State(self)
         if not self.isPyScript: 
-            self.state.get_state()
+            state = self.state.get_state()
        
         # initialize config
         if not self.isPyScript: 
@@ -153,11 +153,13 @@ class UC2Client(object):
         # initialize config
         if not self.isPyScript: 
             self.config = config(self)
-            self.pinConfig = self.config.loadConfigDevice()
+            try: self.pinConfig = self.config.loadConfigDevice()
+            except: self.pinConfig = None
         
         # initialize updater 
         if not self.isPyScript: 
-            self.updater = updater(parent=self)
+            try: self.updater = updater(parent=self)
+            except: self.updater = None
         
         # initialize module controller
         self.modules = Modules(parent=self)
@@ -167,14 +169,16 @@ class UC2Client(object):
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.post(url, json=payload, headers=self.headers)
-            return r.json()
+            returnMessage = r.json()
+            returnMessage["success"] = r.status_code==200
+            return returnMessage
         elif self.is_serial or self.isPyScript:
             return self.serial.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
 
-    def get_json(self, path, timeout=1):
+    def get_json(self, path, getReturn=False, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"

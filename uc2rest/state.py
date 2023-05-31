@@ -11,10 +11,7 @@ class State(object):
     def get_state(self, timeout=3):
         path = "/state_get"
 
-        payload = {
-            "task":path
-        }
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.get_json(path, timeout=timeout)
         return r
 
     def set_state(self, debug=False, timeout=1):

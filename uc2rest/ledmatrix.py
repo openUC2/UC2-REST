@@ -218,10 +218,7 @@ class LedMatrix(object):
         
     def get_ledpin(self):
         path = "/ledarr_get"
-        payload = {
-            "task": path,
-        }
-        r = self._parent.post_json(path, payload, getReturn=True, timeout=1)
+        r = self._parent.get_json(path, getReturn=True, timeout=1)
         return r
             
     
