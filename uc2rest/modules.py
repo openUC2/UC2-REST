@@ -25,12 +25,10 @@ class Modules(object):
     def get_modules(self, timeout=1):
         # returns a list of available modules that are set or not set in the ESP
         path = '/modules_get'
-        
-        payload = {
-            "task": path,
-            }
-        r = self._parent.post_json(path, payload)["modules"]
-        
+        try:
+            r = self._parent.get_json(path)["modules"]
+        except:
+            r = None
         return r
 
     def set_modules(self, modules, timeout=1):
