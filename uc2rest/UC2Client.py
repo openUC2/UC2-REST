@@ -185,8 +185,8 @@ class UC2Client(object):
             r = requests.get(url, headers=self.headers)
             return r.json()
         elif self.is_serial or self.isPyScript:
-            self.serial.get_json(path)
-            return self.serial.read_json()
+            return self.serial.get_json(path)
+            #return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
