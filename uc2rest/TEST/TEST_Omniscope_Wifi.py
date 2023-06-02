@@ -10,53 +10,23 @@ ESP32 = uc2rest.UC2Client(host=host, port=port, DEBUG=True)
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
-assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
-
-
-
-''' ################
-SERIAL
-################'''
-test_endpoint = "/state_get" 
-cmd_return = ESP32.get_json(test_endpoint, timeout=1)
-print(cmd_return)
-
-''' ################
-Digital out
-################'''
-if(0):
-    ESP32.digitalout.setup_digitaloutpin(id=1, pin=4)
-    ESP32.digitalout.setup_digitaloutpin(id=2, pin=0)
-    ESP32.digitalout.set_trigger(trigger1=True, delayOn1=10, delayOff1=10, trigger2=True, delayOn2=100, delayOff2=10, trigger3=False, delayOn3=0, delayOff3=0)
-    time.sleep(1)
-    ESP32.digitalout.reset_triggertable()
-
-
-''' ################
-MODULES
-################'''
-#load modules from pyhton
-mModules = ESP32.modules.get_default_modules()
-assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
-print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-
-# load modules from device
-mModulesDevice = ESP32.modules.get_modules()
-assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
-print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-mModules['home']=1 # activate home module
-
+print(mState)
 
 
 ''' ################
 LED 
 ################'''
 # test LED
-mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
-assert mResult["success"] == 1, "Failed sending LED command"
-time.sleep(0.5)
-mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
-assert mResult["success"] == 1, "Failed sending LED command"
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(25, 25, 25))
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(0,0,0))
+
+
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
+ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
+
+lkjalksdjf
 
 # single LED
 for iLED in range(5):
