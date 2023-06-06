@@ -168,7 +168,7 @@ class UC2Client(object):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
-            r = requests.post(url, json=payload, headers=self.headers)
+            r = requests.post(url, json=payload, headers=self.headers,  timeout=timeout)
             returnMessage = r.json()
             returnMessage["success"] = r.status_code==200
             return returnMessage
@@ -182,7 +182,7 @@ class UC2Client(object):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
-            r = requests.get(url, headers=self.headers)
+            r = requests.get(url, headers=self.headers, timeout=timeout)
             return r.json()
         elif self.is_serial or self.isPyScript:
             return self.serial.get_json(path)
