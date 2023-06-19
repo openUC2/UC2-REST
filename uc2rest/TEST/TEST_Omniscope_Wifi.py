@@ -26,7 +26,6 @@ ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
 ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 
-lkjalksdjf
 
 # single LED
 for iLED in range(5):

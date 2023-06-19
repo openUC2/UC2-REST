@@ -110,7 +110,7 @@ assert mResult["success"] == 1, "Failed sending motor command"
 position1 = ESP32.motor.get_position(timeout=1)
 assert position1[0]==1000, "Failed getting motor position"
 print(position1)
-
+ESP32.set_motor_enable(enable=None, enableauto=False)# always on
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
