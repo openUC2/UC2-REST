@@ -79,33 +79,20 @@ class UC2Client(object):
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
         
         # import libraries depending on API version
-        if self.APIVersion == 1:
-            self.logger.debug("Using API version 1")
-            from .v1.galvo import Galvo
-            from .v1.config import config
-            from .v1.logger import Logger
-            from .v1.ledmatrix import LedMatrix
-            from .v1.motor import Motor
-            from .v1.state import State
-            from .v1.laser import Laser
-            from .v1.wifi import Wifi
-            from .v1.camera import Camera
-            from .v1.analog import Analog
-        elif self.APIVersion == 2:    
-            self.logger.debug("Using API version 2")        
-            from .galvo import Galvo
-            from .config import config
-            from .ledmatrix import LedMatrix
-            from .motor import Motor
-            from .home import Home
-            from .state import State
-            from .laser import Laser
-            from .wifi import Wifi
-            from .camera import Camera
-            from .analog import Analog
-            if not self.isPyScript: from .updater import updater
-            from .modules import Modules
-            from .digitalout import DigitalOut
+        self.logger.debug("Using API version 2")        
+        from .galvo import Galvo
+        from .config import config
+        from .ledmatrix import LedMatrix
+        from .motor import Motor
+        from .home import Home
+        from .state import State
+        from .laser import Laser
+        from .wifi import Wifi
+        from .camera import Camera
+        from .analog import Analog
+        if not self.isPyScript: from .updater import updater
+        from .modules import Modules
+        from .digitalout import DigitalOut
 
 
         #FIXME
