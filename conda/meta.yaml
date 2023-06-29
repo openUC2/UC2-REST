@@ -1,0 +1,43 @@
+{% set data = load_setup_py_data() %}
+#  conda build --output-folder ./conda-out/ ./conda/meta.yaml 
+package:
+  name: {{ data.get('name')|lower }}
+  version: {{ data.get('version') }}
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  entry_points:
+    # uncomment and modify the following line if your package has an entry point
+    # - uc2rest = uc2rest.entry_points:main
+
+requirements:
+  build:
+    - python >=3.7
+    - setuptools
+  host:
+    - python >=3.7
+    - pip
+  run:
+    - python >=3.7
+    - numpy
+    - requests
+    - pyserial
+    - esptool
+    - progressbar2
+    - pillow
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  license_file: LICENSE  # Make sure you have a LICENSE file in your repository
+  summary: '{{ data.get('description') }}'
+  dev_url: {{ data.get('url') }}
+
+extra:
+  recipe-maintainers:
+    - openUC2  # replace with your github username
