@@ -118,6 +118,7 @@ class Serial(object):
     
     def post_json(self, path, payload={}, getReturn=True, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
+        self.is_sending = True
         if "task" not in payload:
             payload["task"] = path
         
@@ -141,6 +142,7 @@ class Serial(object):
                 self.open()
         else:
             returnmessage = False
+        self.is_sending = False
         return returnmessage
         
     def writeSerial(self, payload):
@@ -287,7 +289,7 @@ class SerialDummy(object):
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
-        
+        self.is_sending = False
         self.serialdevice = self.open()
         
     def open(self):
@@ -311,11 +313,13 @@ class SerialDummy(object):
 
     def get_json(self, path):
         """Perform an HTTP GET request and return the JSON response"""
+        self.is_sending = True
         message = {"task":path}
         message = json.dumps(message)
         self.serialdevice.flushInput()
         self.serialdevice.flushOutput()
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
+        self.is_sending = False
         return returnmessage
 
     def post_json(self, path, payload={}, getReturn=True, timeout=1):
@@ -340,6 +344,8 @@ class SerialDummy(object):
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
+            # clear any data that's in the buffer
+            self.serialdevice.readline()
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:
