@@ -55,7 +55,7 @@ class Serial(object):
             self._parent.logger.error(e)
             _available_ports = serial.tools.list_ports.comports(include_links=False)
 
-            portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb", "/dev/cu.usbserial") # TODO: Hardcoded :/
+            portslist = ("COM", "/dev/tt", "/dev/a", "/dev/cu.SLA","/dev/cu.wchusb")#, "/dev/cu.usbserial") # TODO: Hardcoded :/
             descriptionlist = ("CH340", "CP2102")
             for iport in _available_ports:
                 # list of possible serial ports
@@ -189,7 +189,7 @@ class Serial(object):
         rmessage = ''
         _time0 = time.time()
         if is_blocking:
-            while is_blocking and not self.isSafetyBreak:
+            while is_blocking and not self.isSafetyBreak and not self.serialport=="NotConnected":
                 try:
                     rmessage =  self.serialdevice.readline().decode()
                     if self.DEBUG: self._parent.logger.debug(rmessage)
@@ -287,6 +287,7 @@ class SerialDummy(object):
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
+        self.versionFirmware = "Dummy"
         
         self.serialdevice = self.open()
         

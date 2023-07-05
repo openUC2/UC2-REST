@@ -7,9 +7,21 @@ Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
 from .mserial import Serial
 from .mserial import SerialManagerWrapper
-
+from .galvo import Galvo
+from .config import config
+from .ledmatrix import LedMatrix
+from .motor import Motor
+from .home import Home
+from .state import State
+from .laser import Laser
+from .wifi import Wifi
+from .camera import Camera
+from .analog import Analog
+from .modules import Modules
+from .digitalout import DigitalOut
+from .rotator import Rotator
 try:
-    from .imswitch.imcommon.model import initLogger
+    from imswitch.imcommon.model import initLogger
     IS_IMSWITCH = True
 except:
     print("No imswitch available")
@@ -55,6 +67,7 @@ class UC2Client(object):
         self.APIVersion = 2
         self.isPyScript = False
 
+
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
@@ -78,22 +91,11 @@ class UC2Client(object):
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
         
+                
+        if not self.isPyScript: from .updater import updater
+        
         # import libraries depending on API version
         self.logger.debug("Using API version 2")        
-        from .galvo import Galvo
-        from .config import config
-        from .ledmatrix import LedMatrix
-        from .motor import Motor
-        from .home import Home
-        from .state import State
-        from .laser import Laser
-        from .wifi import Wifi
-        from .camera import Camera
-        from .analog import Analog
-        if not self.isPyScript: from .updater import updater
-        from .modules import Modules
-        from .digitalout import DigitalOut
-
 
         #FIXME
         #self.set_state(debug=False)
@@ -112,6 +114,9 @@ class UC2Client(object):
 
         # initilize motor
         self.motor = Motor(self)
+        
+        # initialize rotator
+        self.rotator = Rotator(self)
         
         # initiliaze homing
         self.home = Home(self)
@@ -172,7 +177,7 @@ class UC2Client(object):
             r = requests.get(url, headers=self.headers, timeout=timeout)
             return r.json()
         elif self.is_serial or self.isPyScript:
-            return self.serial.get_json(path)
+            return self.serial.post_json(path)
             #return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")

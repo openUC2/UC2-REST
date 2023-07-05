@@ -18,6 +18,19 @@ ESP32.serial.DEBUG=True
 mState = ESP32.state.get_state()
 assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
 
+#%% 
+# test Motor
+ESP32.rotator.move_x(steps=10000, speed=10000, is_blocking=True)
+ESP32.rotator.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
+ESP32.rotator.move_z(steps=1000, speed=1000, is_blocking=True)
+ESP32.rotator.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
+ESP32.rotator.move_t(steps=1000, speed=1000)
+ESP32.rotator.move_xyzt(steps=(0,1000,100,0), speed=10000, is_blocking=True)
+ESP32.rotator.move_xyzt(steps=(0,0,0,0), speed=10000, is_absolute=True, is_blocking=True)
+ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+time.sleep(1)
+
 
 
 ''' ################
@@ -114,11 +127,12 @@ ESP32.set_motor_enable(enable=None, enableauto=False)# always on
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
-ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)ESP32.motor.move_t(steps=1000, speed=1000)
+ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
+ESP32.motor.move_t(steps=1000, speed=1000)
 ESP32.motor.move_xyzt(steps=(0,1000,100,0), speed=10000, is_blocking=True)
 ESP32.motor.move_xyzt(steps=(0,0,0,0), speed=10000, is_absolute=True, is_blocking=True)
->‡cdevfrgcf ¥ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
->‡cdevfrgcf _.¥bESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
+ESP32.motor.move_forever(speed=(0,100,0,0), is_stop=False)
 time.sleep(1)
 ESP32.motor.move_forever(speed=(0,0,0,0), is_stop=True)
 
