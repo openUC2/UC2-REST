@@ -452,13 +452,18 @@ class Motor(object):
             "task":path,
             "position":True,
         }
-        r = self._parent.post_json(path, payload, timeout=timeout)
         _position = np.array((0,0,0,0)) # T,X,Y,Z
         _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        try:
-            for index, istepper in enumerate(r["motor"]["steppers"]):
-                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
-        except Exception as e: self._parent.logger.error(e)
+
+        # this may be an asynchronous call.. #FIXME!
+        for i in range(3):
+            if not self._parent.is_sending(): 
+                r = self._parent.post_json(path, payload, timeout=timeout)
+                if "motor" in r:
+                    for index, istepper in enumerate(r["motor"]["steppers"]):
+                        _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
+                    break
+
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):

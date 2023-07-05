@@ -9,7 +9,7 @@ import json
 T_SERIAL_WARMUP = 3 # the time to wait for the serial to warm up
 
 class Serial(object):
-    
+
     def __init__(self, port, baudrate, timeout=1, identity="UC2_Feather", parent=None, DEBUG=False):
         self.serialport = port
         self.baudrate = baudrate
@@ -19,22 +19,22 @@ class Serial(object):
         self.DEBUG = DEBUG
 
         self.isSafetyBreak = False
-        
+
         # default version (v1 or v2) for the API
         self.versionFirmware = "V2.0"
-        
+
         self.NumberRetryReconnect = 0
         self.MaxNumberRetryReconnect = 0
-        
+
         self.open() # creates self.serialdevice
-        
-        # switch between different api versions 
+
+        # switch between different api versions
         if self.versionFirmware == "V1.2":
             self._parent.APIVersion = 1
         elif self.versionFirmware == "V2.0":
             self._parent.APIVersion = 2
-        
-        
+
+
     def open(self):
         '''Open the serial port'''
         self.is_connected = False
@@ -47,7 +47,7 @@ class Serial(object):
             correctFirmware = self.checkFirmware()
             if not correctFirmware:
                 raise Exception("Wrong firmware")
-                        
+
             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
             return self.serialdevice
         except Exception as e:
@@ -80,7 +80,7 @@ class Serial(object):
         self.serialport = "NotConnected"
         self.serialdevice = SerialDeviceDummy()
         self._parent.logger.debug("No USB device connected! Using DUMMY!")
-        return self.serialdevice                
+        return self.serialdevice
 
     def checkFirmware(self, timeout=1):
         """Check if the firmware is correct"""
@@ -91,16 +91,16 @@ class Serial(object):
         except Exception as e:
             self._parent.logger.error(e)
             self.versionFirmware = "V2.0"
-            
-        if _state["identifier_name"] == self.identity: 
+
+        if _state["identifier_name"] == self.identity:
             return True
-        
+
         else: return False
 
 
     def closeSerial(self):
         self.serialdevice.close()
-        
+
     def reconnect(self):
         """Reconnect to serial device"""
         if self.is_serial:
@@ -115,12 +115,13 @@ class Serial(object):
         self._parent.logger.debug(message)
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
         return returnmessage
-    
+
     def post_json(self, path, payload={}, getReturn=True, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
+        self.is_sending = True
         if "task" not in payload:
             payload["task"] = path
-        
+
         if "isblock" in payload:
             is_blocking = payload["isblock"]
         else:
@@ -128,7 +129,7 @@ class Serial(object):
 
         # write message to the serial
         self.writeSerial(payload)
-        
+
         if getReturn:
             # we read the return message
             #self._parent.logger.debug(payload)
@@ -141,17 +142,18 @@ class Serial(object):
                 self.open()
         else:
             returnmessage = False
+        self.is_sending = False
         return returnmessage
-        
+
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
             if self.serialport == "NotConnected" and self.NumberRetryReconnect<self.MaxNumberRetryReconnect:
-                # try to reconnect       
-                self._parent.logger.debug("Trying to reconnect to serial device: "+str(self.NumberRetryReconnect))       
+                # try to reconnect
+                self._parent.logger.debug("Trying to reconnect to serial device: "+str(self.NumberRetryReconnect))
                 self.NumberRetryReconnect += 1
                 self.open()
-                
+
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:
@@ -210,20 +212,20 @@ class Serial(object):
                 if self.DEBUG: self._parent.logger.debug("Casting json string from serial to Python dict failed")
             self.isSafetyBreak = False
         return _returnmessage
-        
+
 class SerialManagerWrapper(object):
-    
+
     def __init__(self, SerialManager, DEBUG = True, parent=None) -> None:
         self._parent=parent
         self._parent.logger.debug("SerialManagerWrapper init")
         self.SerialManager = SerialManager
         self.isSafetyBreak = False
         self.DEBUG = DEBUG
-        
+
     async def post_json(self, path, payload={}, getReturn=True, timeout=1):
         if "task" not in payload:
             payload["task"] = path
-        
+
         if "isblock" in payload:
             is_blocking = payload["isblock"]
         else:
@@ -240,7 +242,7 @@ class SerialManagerWrapper(object):
         else:
             returnmessage = False
         return returnmessage
-    
+
     async def writeSerial(self, payload):
         """Write JSON document to serial device"""
         if type(payload)==dict:
@@ -281,30 +283,30 @@ class SerialManagerWrapper(object):
             self.isSafetyBreak = False
         return _returnmessage
 class SerialDummy(object):
-        
+
     def __init__(self, port, baudrate, timeout=1, parent=None):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
         self.versionFirmware = "Dummy"
-        
+        self.is_sending = False
         self.serialdevice = self.open()
-        
+
     def open(self):
         '''Open the serial port'''
-        return SerialDeviceDummy()                
+        return SerialDeviceDummy()
 
     def checkFirmware(self):
         """Check if the firmware is correct"""
         return True
-        
+
     def close(self):
         self.closeSerial()
-        
+
     def closeSerial(self):
         self.serialdevice.close()
-        
+
     def reconnect(self):
         """Reconnect to serial device"""
         if self.is_serial:
@@ -312,11 +314,13 @@ class SerialDummy(object):
 
     def get_json(self, path):
         """Perform an HTTP GET request and return the JSON response"""
+        self.is_sending = True
         message = {"task":path}
         message = json.dumps(message)
         self.serialdevice.flushInput()
         self.serialdevice.flushOutput()
         returnmessage = self.serialdevice.write(message.encode(encoding='UTF-8'))
+        self.is_sending = False
         return returnmessage
 
     def post_json(self, path, payload={}, getReturn=True, timeout=1):
@@ -337,10 +341,12 @@ class SerialDummy(object):
         else:
             returnmessage = None
         return returnmessage
-        
+
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
+            # clear any data that's in the buffer
+            self.serialdevice.readline()
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:
@@ -389,22 +395,22 @@ class SerialDummy(object):
                 returnmessage = ""
         return returnmessage
 
-        
+
 class SerialDeviceDummy(object):
         def __init__(self) -> None:
             pass
-        
+
         def close(self):
             pass
-        
+
         def flushInput(self):
             pass
-        
+
         def flushOutput(self):
             pass
-        
+
         def write(self, payload):
             pass
-        
+
         def readline(self):
             return b'{"task":"dummy"}--'
