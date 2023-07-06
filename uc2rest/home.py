@@ -9,8 +9,9 @@ class Home(object):
         self.direction = 1
         self.speed = 15000
         self.timeout = 20000
+        self.endstoppolarity = 1
         
-    def home_x(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
+    def home_x(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
         # axis = 1 corresponds to 'X'
         axis = 1
         self.home(axis=axis, 
@@ -18,9 +19,10 @@ class Home(object):
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease,
+                  endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)
 
-    def home_y(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
+    def home_y(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
         # axis = 2 corresponds to 'Y'
         axis = 2
         self.home(axis=axis, 
@@ -28,9 +30,10 @@ class Home(object):
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease, 
+                  endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
     
-    def home_z(self, speed = None, direction = None, endposrelease = None, timeout=None, isBlocking=False):
+    def home_z(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
         # axisa = 3 corresponds to 'Z'
         axis = 3
         self.home(axis=axis, 
@@ -38,9 +41,10 @@ class Home(object):
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease, 
+                  endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
         
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, isBlocking=False):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, isBlocking=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)
@@ -58,6 +62,8 @@ class Home(object):
             endposrelease = self.endposrelease
         if timeout is None:
             timeout = self.timeout
+        if endstoppolarity is None:
+            endstoppolarity = self.endstoppolarity
 
         if direction not in [-1,1]:
             direction = 1
@@ -74,7 +80,8 @@ class Home(object):
                  "timeout":timeout*1000,
                  "speed":speed,
                  "direction":direction,
-                 "endposrelease":endposrelease
+                 "endposrelease":endposrelease, 
+                 "endstoppolarity":endstoppolarity
                  }]
             }}
      
