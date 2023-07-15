@@ -59,7 +59,7 @@ class UC2Client(object):
         '''
 
         if IS_IMSWITCH:
-            self.logger = initLogger(self, tryInheritParent=True)
+            self.logger = initLogger(self, tryInheritParent=False)
         else:
             from .logger import Logger
             self.logger = Logger()
