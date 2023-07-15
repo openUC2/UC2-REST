@@ -135,8 +135,11 @@ class Motor(object):
             if len(speed)!= 2:
                 speed = (speed,speed)
 
+            if len(acceleration)!= 2:
+                acceleration = (acceleration,acceleration)
+
             # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-            r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
             return r
 
     def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):

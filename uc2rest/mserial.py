@@ -71,7 +71,7 @@ class Serial(object):
                             self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
                             self.NumberRetryReconnect=0
-                            return self.serialdevice
+                            #return self.serialdevice
                     except Exception as e:
                         self._parent.logger.debug("Trying out port "+iport.device+" failed")
                         self._parent.logger.error(e)
