@@ -118,7 +118,6 @@ class Serial(object):
 
     def post_json(self, path, payload={}, getReturn=True, timeout=1):
         """Make an HTTP POST request and return the JSON response"""
-        self.is_sending = True
         if "task" not in payload:
             payload["task"] = path
 
@@ -142,7 +141,6 @@ class Serial(object):
                 self.open()
         else:
             returnmessage = False
-        self.is_sending = False
         return returnmessage
 
     def writeSerial(self, payload):
@@ -290,7 +288,6 @@ class SerialDummy(object):
         self.timeout = timeout
         self._parent = parent
         self.versionFirmware = "Dummy"
-        self.is_sending = False
         self.serialdevice = self.open()
 
     def open(self):

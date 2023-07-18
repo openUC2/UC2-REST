@@ -459,13 +459,11 @@ class Motor(object):
         _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
-        for i in range(3):
-            if not self._parent.is_sending(): 
-                r = self._parent.post_json(path, payload, timeout=timeout)
-                if "motor" in r:
-                    for index, istepper in enumerate(r["motor"]["steppers"]):
-                        _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
-                    break
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        if "motor" in r:
+            for index, istepper in enumerate(r["motor"]["steppers"]):
+                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
+            
 
         return _position
 

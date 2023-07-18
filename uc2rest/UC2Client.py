@@ -156,8 +156,7 @@ class UC2Client(object):
         # initialize module controller
         self.modules = Modules(parent=self)
    
-    def is_sending(self):
-        return self.serial.is_sending
+
     
     def post_json(self, path, payload, getReturn=True, timeout=1):
         if self.is_wifi:
