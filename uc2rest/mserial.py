@@ -62,13 +62,13 @@ class Serial(object):
                 self._parent.logger.debug(iport.device)
                 if iport.device.startswith(portslist) or iport.description.startswith(descriptionlist):
                     try:
-                        self.serialdevice = serial.Serial(port=iport.device, baudrate=self.baudrate, timeout=1)
+                        self.serialport = iport.device
+                        self.serialdevice = serial.Serial(port=self.serialport, baudrate=self.baudrate, timeout=1)
                         self.serialdevice.write_timeout=1
                         self.is_connected = True # attempting to initiliaze connection
                         time.sleep(T_SERIAL_WARMUP) # let it warm up and wait until debugging messages may vanish
                         correctFirmware = self.checkFirmware()
                         if correctFirmware:
-                            self.serialport = iport.device
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
                             self.NumberRetryReconnect=0
                             #return self.serialdevice
