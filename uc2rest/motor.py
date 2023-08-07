@@ -146,10 +146,10 @@ class Motor(object):
             return r
 
     def move_az(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        if len(speed)!= 2:
+        if (type(speed)!=list and type(speed)!=tuple) or len(speed)!= 2:
             speed = (speed,speed)
 
-        if len(acceleration)!= 2:
+        if (type(acceleration)!=list and type(acceleration)!=tuple) or len(acceleration)!= 2:
             acceleration = (acceleration,acceleration)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
