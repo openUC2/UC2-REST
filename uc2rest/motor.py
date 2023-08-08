@@ -119,7 +119,7 @@ class Motor(object):
         else:
             return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_t(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_a(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         return self.move_axis_by_name(axis="T", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -177,7 +177,7 @@ class Motor(object):
         r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, backlash=_backlash, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
-    def move_forever(self, speed=(0,0,0,0), is_stop=False):
+    def move_forever(self, speed=(0,0,0,0), is_stop=False, is_blocking=False):
         if type(speed)==int:
             speed=(speed, speed, speed, speed)
         if len(speed)==3:
@@ -210,7 +210,7 @@ class Motor(object):
             }
         }
 
-        r = self._parent.post_json(path, payload, timeout=0)
+        r = self._parent.post_json(path, payload, timeout=0, getReturn=is_blocking)
         return r
 
     def stop(self, axis=None):
