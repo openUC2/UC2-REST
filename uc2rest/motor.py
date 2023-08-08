@@ -72,7 +72,7 @@ class Motor(object):
             self.maxPosZ = maxPos
             self.stepSizeZ = stepSize
             self.backlashZ = backlash
-        elif axis == "T":
+        elif axis == "A":
             self.minPosT = minPos
             self.maxPosT = maxPos
             self.stepSizeT = stepSize
@@ -86,7 +86,7 @@ class Motor(object):
             axis = 2
         if axis == "Z":
             axis = 3
-        if axis == "T" or axis == "A":
+        if axis == "A":
             axis = 0
         return axis
 
@@ -119,8 +119,8 @@ class Motor(object):
         else:
             return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
-    def move_t(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        return self.move_axis_by_name(axis="T", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+    def move_a(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+        return self.move_axis_by_name(axis="A", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
 
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if len(speed)!= 3:

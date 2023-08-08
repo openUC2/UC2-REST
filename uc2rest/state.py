@@ -14,6 +14,7 @@ class State(object):
         r = self._parent.get_json(path, timeout=timeout)
         return r
 
+
     def set_state(self, debug=False, timeout=1):
         path = "/state_set"
 
@@ -36,7 +37,13 @@ class State(object):
             return r["pscontroller"]
         except:
             return False
-
+        
+    def pairBT(self, timeout=1):
+        path = "/bt_scan"
+        payload={
+            "dummy": 1}
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
     def espRestart(self,timeout=1):
         # if isController =True=> only PS jjoystick will be accepted
         path = "/state_act"
