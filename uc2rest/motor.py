@@ -21,7 +21,7 @@ class Motor(object):
 
     def __init__(self, parent=None):
         self._parent = parent
-        
+
         # do we have a coreXY setup?
         self.isCoreXY = False
 
@@ -48,7 +48,7 @@ class Motor(object):
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
     def setIsCoreXY(self, isCoreXY = False):
-        self.isCoreXY = isCoreXY 
+        self.isCoreXY = isCoreXY
 
     def setMotorAxisOrder(self, order=[0,1,2,3]):
         self.motorAxisOrder = order
@@ -96,7 +96,7 @@ class Motor(object):
         x1 = (x+y)/np.sqrt(2)
         y1 = (x-y)/np.sqrt(2)
         return x1, y1
-    
+
     def move_x(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if self.isCoreXY:
             # have to turn two motors to move in X direction
@@ -133,7 +133,7 @@ class Motor(object):
     def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if self.isCoreXY:
             # have to move only one motor to move in XY direction
-           return self.move_xyzt(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)           
+           return self.move_xyzt(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         else:
             if len(speed)!= 2:
                 speed = (speed,speed)
@@ -155,7 +155,7 @@ class Motor(object):
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
         r = self.move_xyzt(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
-    
+
     def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if type(speed)==int:
             speed = (speed,speed,speed,speed)
@@ -177,7 +177,7 @@ class Motor(object):
         r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, backlash=_backlash, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
-    def move_forever(self, speed=(0,0,0,0), is_stop=False):
+    def move_forever(self, speed=(0,0,0,0), is_stop=False, is_blocking=False):
         if type(speed)==int:
             speed=(speed, speed, speed, speed)
         if len(speed)==3:
@@ -210,7 +210,7 @@ class Motor(object):
             }
         }
 
-        r = self._parent.post_json(path, payload, timeout=0)
+        r = self._parent.post_json(path, payload, timeout=0, getReturn=is_blocking)
         return r
 
     def stop(self, axis=None):
@@ -257,7 +257,7 @@ class Motor(object):
             isAbsoluteArray[axisToMove] = is_absolute
         else:
             isAbsoluteArray = is_absolute
-            
+
         # convert single elements to array
         if type(speed)!=list and type(speed)!=tuple and type(speed)!=np.ndarray:
             speed = np.array((speed,speed,speed,speed))
@@ -306,7 +306,7 @@ class Motor(object):
                              "position": int(steps[iMotor]),
                              "speed": int(speed[iMotor]),
                              "isabs": isAbsoluteArray[iMotor],
-                             "isaccel":0, 
+                             "isaccel":0,
                              "isen": is_enabled}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
@@ -329,7 +329,7 @@ class Motor(object):
         self.isRunning = True
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
 
-        # wait until job has been done        
+        # wait until job has been done
         time0=time.time()
         if np.sum(isAbsoluteArray):
             steppersRunning = isAbsoluteArray
@@ -337,13 +337,14 @@ class Motor(object):
             steppersRunning = np.abs(np.array(steps))>0
         if not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
             while True:
-                time.sleep(0.05) # don'T overwhelm the CPU
+                time.sleep(0.01) # don'T overwhelm the CPU
                 # see if already done
                 try:
                     rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
+                print(rMessage)
                 # check if message contains a motor that is done already
                 if rMessage.find('isDone') >-1:
                     ''' TODO: This only checks for one motor!'''
@@ -356,7 +357,7 @@ class Motor(object):
                                 steppersRunning[mNumber] = False
                     except:
                         pass
-                    
+
                 if np.sum(steppersRunning)==0:
                     break
 
@@ -477,7 +478,7 @@ class Motor(object):
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
-            
+
 
         return _position
 
@@ -516,7 +517,7 @@ class Motor(object):
 
     def get_motors(self, timeout=1):
         path = "/motor_get"
-        
+
         r = self._parent.get_json(path, timeout=timeout)
         try: return r["steppers"]
         except: return False
