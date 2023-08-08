@@ -189,7 +189,7 @@ class Serial(object):
         rmessage = ''
         _time0 = time.time()
         if is_blocking:
-            while is_blocking and not self.isSafetyBreak and not self.serialport=="NotConnected":
+            while is_blocking and not self.isSafetyBreak :
                 try:
                     rmessage =  self.serialdevice.readline().decode()
                     if self.DEBUG: self._parent.logger.debug(rmessage)

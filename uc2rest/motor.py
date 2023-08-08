@@ -329,28 +329,43 @@ class Motor(object):
         self.isRunning = True
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
 
-        # wait until job has been done
-        time0=time.time()
+        # wait until the job has been done
+        time0 = time.time()
         if np.sum(isAbsoluteArray):
             steppersRunning = isAbsoluteArray
         else:
-            steppersRunning = np.abs(np.array(steps))>0
+            steppersRunning = np.abs(np.array(steps)) > 0
+
         if not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
             while True:
-                time.sleep(0.01) # don'T overwhelm the CPU
-                # see if already done
+                time.sleep(0.01) # Don't overwhelm the CPU
+                
+                # Read the response message from the serial device
                 try:
-                    rMessage = self._parent.serial.serialdevice.readline().decode() # TODO: Make sure it's compatible with all motors running at the same time
+                    rMessage = self._parent.serial.serialdevice.readline().decode()
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
                 print(rMessage)
-                # check if message contains a motor that is done already
-                if rMessage.find('isDone') >-1:
-                    ''' TODO: This only checks for one motor!'''
+
+                # Check if the response message contains a motor that is done already
+                if rMessage.find('++') > -1:
+                    tmpString = ""
+                    readline = ""
+                    while readline.find('--') < 0:
+                        readline = self._parent.serial.serialdevice.readline().decode()
+                        tmpString += readline
+
+                        # Timeout check
+                        if time.time() - time0 > timeout:
+                            break
+
+                    # Remove the trailing characters to prepare for JSON parsing
+                    json_str = tmpString.rstrip('\r\n--\r\n')
+
                     try:
-                        rMessage = rMessage.split("\r")[0].replace("'", '"')
-                        mMessage = json.loads(rMessage)
+                        # Parse the JSON string into a dictionary
+                        mMessage = json.loads(json_str)
                         for iElement in mMessage['steppers']:
                             if iElement['isDone']:
                                 mNumber = self.motorAxisOrder[iElement['stepperid']]
@@ -358,14 +373,15 @@ class Motor(object):
                     except:
                         pass
 
-                if np.sum(steppersRunning)==0:
+                # Check if all motors are done running
+                if np.sum(steppersRunning) == 0:
                     break
 
-                if time.time()-time0>timeout:
+                # Timeout check
+                if time.time() - time0 > timeout:
                     break
 
-
-        # reset busy flag
+        # Reset busy flag
         self.isRunning = False
         return r
 
