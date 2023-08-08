@@ -12,7 +12,7 @@ ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 
-
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()

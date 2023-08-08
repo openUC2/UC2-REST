@@ -71,7 +71,7 @@ class Serial(object):
                         if correctFirmware:
                             self._parent.logger.debug("We are connected: "+str(self.is_connected) + " on port: "+self.serialdevice.port)
                             self.NumberRetryReconnect=0
-                            #return self.serialdevice
+                            return self.serialdevice
                     except Exception as e:
                         self._parent.logger.debug("Trying out port "+iport.device+" failed")
                         self._parent.logger.error(e)
@@ -189,7 +189,7 @@ class Serial(object):
         rmessage = ''
         _time0 = time.time()
         if is_blocking:
-            while is_blocking and not self.isSafetyBreak and not self.serialport=="NotConnected":
+            while is_blocking and not self.isSafetyBreak :
                 try:
                     rmessage =  self.serialdevice.readline().decode()
                     if self.DEBUG: self._parent.logger.debug(rmessage)
