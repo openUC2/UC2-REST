@@ -502,9 +502,9 @@ class Motor(object):
     def set_position(self, axis=1, position=0, timeout=1):
 
         '''
-        {"task":"/home_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
+        {"task":"/motor_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
         '''
-        path = "/home_act"
+        path = "/motor_act"
         axis = self.xyztTo1230(axis)
 
         payload = {
