@@ -4,13 +4,12 @@ import time
 
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
-port = "/dev/cu.wchusbserial14310"
-#port = "/dev/cu.wchusbserial1440"
-port = "/dev/cu.wchusbserial110"
 
 ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
+
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
 
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 # check if we are connected 

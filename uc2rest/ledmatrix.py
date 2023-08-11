@@ -79,13 +79,15 @@ class LedMatrix(object):
             "task":path,
             "led": {
                 "led_array":[{
+                    "id": 0,
                     "r": int(intensity[0]),
                     "g": int(intensity[1]),
                     "b": int(intensity[2])}],
                 "LEDArrMode": self.ledArrayModes["full"]
             }
         }
-        
+        #{"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
+        #{"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r": 255, "g": 255, "b": 255}]}}
         #self._parent.logger.debug("Setting LED Pattern (full): "+ str(intensity))
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         if not getReturn or timeout==0:

@@ -327,8 +327,9 @@ class Motor(object):
 
         # drive motor
         self.isRunning = True
+        is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
+        timeout = timeout if is_blocking else 0
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
-
         # wait until the job has been done
         time0 = time.time()
         if np.sum(isAbsoluteArray):
@@ -336,7 +337,7 @@ class Motor(object):
         else:
             steppersRunning = np.abs(np.array(steps)) > 0
 
-        if not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
+        if is_blocking :
             while True:
                 time.sleep(0.01) # Don't overwhelm the CPU
                 
@@ -504,9 +505,7 @@ class Motor(object):
         {"task":"/home_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
         '''
         path = "/home_act"
-        if axis=="X": axis=1
-        if axis=="Y": axis=2
-        if axis=="Z": axis=3
+        axis = self.xyztTo1230(axis)
 
         payload = {
             "task": path,
