@@ -9,7 +9,11 @@ ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 
+
+# {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+
+
 
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 # check if we are connected 
@@ -36,6 +40,7 @@ time.sleep(1)
 SERIAL
 ################'''
 test_cmd = "{'task': '/motor_get'}"
+test_cmd = '{"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}'
 ESP32.serial.writeSerial(test_cmd)
 cmd_return = ESP32.serial.readSerial()
 print(cmd_return)

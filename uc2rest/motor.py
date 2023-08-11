@@ -328,6 +328,7 @@ class Motor(object):
         # drive motor
         self.isRunning = True
         is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
+
         timeout = timeout if is_blocking else 0
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout)
         # wait until the job has been done
@@ -347,8 +348,7 @@ class Motor(object):
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
-                print(rMessage)
-
+                
                 # Check if the response message contains a motor that is done already
                 if rMessage.find('++') > -1:
                     tmpString = ""
@@ -487,7 +487,7 @@ class Motor(object):
             "task":path,
             "position":True,
         }
-        _position = np.array((0,0,0,0)) # T,X,Y,Z
+        _position = np.array((0.,0.,0.,0.)) # T,X,Y,Z
         _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
