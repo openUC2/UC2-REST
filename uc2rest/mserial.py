@@ -90,12 +90,13 @@ class Serial(object):
             self.versionFirmware = _state["identifier_id"]
         except Exception as e:
             self._parent.logger.error(e)
-            self.versionFirmware = "V2.0"
+            return False
 
         if _state["identifier_name"] == self.identity:
             return True
-
-        else: return False
+        
+        else: 
+            return False
 
 
     def closeSerial(self):
@@ -127,9 +128,9 @@ class Serial(object):
             is_blocking = True
 
         # write message to the serial
-        self.writeSerial(payload)
+        writeResult = self.writeSerial(payload)
 
-        if getReturn:
+        if getReturn and writeResult>0:
             # we read the return message
             #self._parent.logger.debug(payload)
             returnmessage = self.readSerial(is_blocking=is_blocking, timeout=timeout)
@@ -146,34 +147,21 @@ class Serial(object):
     def writeSerial(self, payload):
         """Write JSON document to serial device"""
         try:
-            if self.serialport == "NotConnected" and self.NumberRetryReconnect<self.MaxNumberRetryReconnect:
-                # try to reconnect
-                self._parent.logger.debug("Trying to reconnect to serial device: "+str(self.NumberRetryReconnect))
-                self.NumberRetryReconnect += 1
-                self.open()
-
             self.serialdevice.flushInput()
             self.serialdevice.flushOutput()
         except Exception as e:
+            self._parent.logger.error("Could not flush the line")            
             self._parent.logger.error(e)
-            try:
-                del self.serialdevice
-            except:
-                pass
-            self.is_connected=False
-            # attempt to reconnect?
-            try:
-                self.open()
-            except:
-                return -1
 
         if type(payload)==dict:
             payload = json.dumps(payload)
         try:
             if self.DEBUG: self._parent.logger.debug(payload)
             self.serialdevice.write(payload.encode(encoding='UTF-8'))
+            return 1
         except Exception as e:
             self._parent.logger.error(e)
+            return  -1
 
     def breakCurrentCommunication(self):
         # this breaks the wait-for-return command in readserial
