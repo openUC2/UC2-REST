@@ -348,7 +348,6 @@ class Motor(object):
                 except Exception as e:
                     self._parent.logger.error(e)
                     rMessage = ""
-                print(rMessage)
 
                 # Check if the response message contains a motor that is done already
                 if rMessage.find('++') > -1:
