@@ -1,3 +1,4 @@
+#%%
 import uc2rest
 import numpy as np
 import time
@@ -9,13 +10,33 @@ ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 
+iLED = 1
+mResult = ESP32.led.send_LEDMatrix_single(indexled=iLED, intensity=(255, 255, 255), timeout=0.)
+    
 
-# {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
-mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+''' ################
+MODULES
+################'''
+#load modules from pyhton
+mModules = ESP32.modules.get_default_modules()
+assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
+print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
 
+# load modules from device
+mModulesDevice = ESP32.modules.get_modules()
+assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
+print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
+mModules['home']=1 # activate home module
+#%%
 
 
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+
+# {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255), getReturn=False)
+
+
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
@@ -56,19 +77,6 @@ if(0):
     ESP32.digitalout.reset_triggertable()
 
 
-''' ################
-MODULES
-################'''
-#load modules from pyhton
-mModules = ESP32.modules.get_default_modules()
-assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
-print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-
-# load modules from device
-mModulesDevice = ESP32.modules.get_modules()
-assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
-print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-mModules['home']=1 # activate home module
 
 
 
