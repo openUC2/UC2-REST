@@ -44,13 +44,14 @@ class State(object):
             "dummy": 1}
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
+    
     def espRestart(self,timeout=1):
         # if isController =True=> only PS jjoystick will be accepted
         path = "/state_act"
         payload = {
             "restart":1
             }
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=timeout)
         return r
 
     def setControllerMode(self, isController=False, timeout=1):

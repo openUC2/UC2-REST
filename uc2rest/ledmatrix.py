@@ -135,7 +135,7 @@ class LedMatrix(object):
         self._parent.logger.debug("Setting LED Pattern (single) ")
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         if not getReturn or timeout==0:
-            r = {"success": 1}
+            r = {"success": r}
         self.currentLedArrayMode = "single"            
         return r
 

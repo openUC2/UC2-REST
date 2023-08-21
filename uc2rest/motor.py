@@ -156,7 +156,7 @@ class Motor(object):
         r = self.move_xyzt(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
-    def move_xyzt(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if type(speed)==int:
             speed = (speed,speed,speed,speed)
         if type(steps)==int:
@@ -341,50 +341,6 @@ class Motor(object):
         else:
             steppersRunning = np.abs(np.array(steps)) > 0
 
-        if False: #is_blocking :
-            while True:
-                time.sleep(0.01) # Don't overwhelm the CPU
-                
-                # Read the response message from the serial device
-                try:
-                    rMessage = self._parent.serial.serialdevice.readline().decode()
-                except Exception as e:
-                    self._parent.logger.error(e)
-                    rMessage = ""
-                
-                # Check if the response message contains a motor that is done already
-                if rMessage.find('++') > -1:
-                    tmpString = ""
-                    readline = ""
-                    while readline.find('--') < 0:
-                        readline = self._parent.serial.serialdevice.readline().decode()
-                        tmpString += readline
-
-                        # Timeout check
-                        if time.time() - time0 > timeout:
-                            break
-
-                    # Remove the trailing characters to prepare for JSON parsing
-                    json_str = tmpString.rstrip('\r\n--\r\n')
-
-                    try:
-                        # Parse the JSON string into a dictionary
-                        mMessage = json.loads(json_str)
-                        for iElement in mMessage['steppers']:
-                            if iElement['isDone']:
-                                mNumber = self.motorAxisOrder[iElement['stepperid']]
-                                steppersRunning[mNumber] = False
-                    except:
-                        pass
-
-                # Check if all motors are done running
-                if np.sum(steppersRunning) == 0:
-                    break
-
-                # Timeout check
-                if time.time() - time0 > timeout:
-                    break
-
         # Reset busy flag
         self.isRunning = False
         return r
@@ -464,9 +420,6 @@ class Motor(object):
         return r
 
 
-    def set_motor_enable(self, is_enable=1):
-        self.set_motor_enable(enable=is_enable)
-
     def set_motor_enable(self, enable=None, enableauto=None):
         """
         turns on/off enable pin overrides motor settings - god for cooling puproses
@@ -508,7 +461,8 @@ class Motor(object):
         {"task":"/motor_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
         '''
         path = "/motor_act"
-        axis = self.xyztTo1230(axis)
+        if type(axis) !=int:
+            axis = self.xyztTo1230(axis)
 
         payload = {
             "task": path,
