@@ -283,7 +283,7 @@ class Rotator(object):
             steppersRunning = isAbsoluteArray
         else:
             steppersRunning = np.abs(np.array(steps))>0
-        if not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
+        if False: #not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected:
             while True:
                 time.sleep(0.05) # don'T overwhelm the CPU
                 # see if already done

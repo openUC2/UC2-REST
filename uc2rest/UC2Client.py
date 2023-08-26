@@ -20,13 +20,7 @@ from .analog import Analog
 from .modules import Modules
 from .digitalout import DigitalOut
 from .rotator import Rotator
-try:
-    from imswitch.imcommon.model import initLogger
-    IS_IMSWITCH = True
-except:
-    print("No imswitch available")
-    from .logger import Logger
-    IS_IMSWITCH = False
+from .logger import Logger
 
 try:
     import requests
@@ -58,13 +52,9 @@ class UC2Client(object):
         you can send commands through wifi/http or usb/serial
         '''
 
-        if IS_IMSWITCH:
-            self.logger = initLogger(self, tryInheritParent=False)
-        else:
-            from .logger import Logger
-            self.logger = Logger()
-        # set default APIVersion
-        self.APIVersion = 2
+        self.logger = Logger()
+
+        # perhaps we are in the browser?
         self.isPyScript = False
 
 
@@ -143,7 +133,7 @@ class UC2Client(object):
         self.digitalout = DigitalOut(self)
         
         # initialize config
-        if not self.isPyScript: 
+        if False: # not self.isPyScript: 
             self.config = config(self)
             try: self.pinConfig = self.config.loadConfigDevice()
             except: self.pinConfig = None
@@ -158,7 +148,7 @@ class UC2Client(object):
    
 
     
-    def post_json(self, path, payload, getReturn=True, timeout=1):
+    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
@@ -167,19 +157,24 @@ class UC2Client(object):
             returnMessage["success"] = r.status_code==200
             return returnMessage
         elif self.is_serial or self.isPyScript:
-            return self.serial.post_json(path, payload, getReturn=getReturn, timeout=timeout)
+            if timeout <=0:
+                getReturn = False
+            return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
 
-    def get_json(self, path, getReturn=False, timeout=1):
+    def get_json(self, path, getReturn=True, timeout=1):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
             r = requests.get(url, headers=self.headers, timeout=timeout)
             return r.json()
         elif self.is_serial or self.isPyScript:
-            return self.serial.post_json(path)
+            # timeout is not used anymore
+            if timeout <=0:
+                getReturn = False
+            return self.serial.post_json(path, payload=None, getReturn=getReturn, nResponses=1)
             #return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
