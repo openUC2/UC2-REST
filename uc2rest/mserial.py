@@ -133,7 +133,11 @@ class Serial:
                 continue
             
             # if we just want to send but not even wait for a response
-            mReadline = self.ser.readline()
+            try:
+                mReadline = self.ser.readline()
+            except Exception as e:
+                self._parent.logger.error(e)
+                return 
             try:
                 line = mReadline.decode('utf-8').strip()
                 if self.DEBUG: print(line)
@@ -216,7 +220,7 @@ class Serial:
         if nResponses <= 0:
             return identifier
         while self.running:
-            time.sleep(0.005)
+            time.sleep(0.002)
             if self.resetLastCommand:
                 self.resetLastCommand = False
                 return "communication interrupted"

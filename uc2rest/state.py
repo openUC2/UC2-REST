@@ -42,7 +42,7 @@ class State(object):
         path = "/bt_scan"
         payload={
             "dummy": 1}
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=timeout)
         return r
     
     def espRestart(self,timeout=1):

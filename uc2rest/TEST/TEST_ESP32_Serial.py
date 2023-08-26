@@ -9,13 +9,15 @@ port = "/dev/cu.SLAB_USBtoUARTd"
 ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
-
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+ESP32.motor.move_x(steps=-10000, speed=10000, is_blocking=True)
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 #%%
 ''' ################
 HOME
 ################'''
-ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2, isBlocking=True)
-ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+#ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2, isBlocking=True)
+#ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
 
 
 ''' ################
@@ -139,7 +141,7 @@ assert mResult["success"] == 1, "Failed sending motor command"
 position1 = ESP32.motor.get_position(timeout=1)
 assert position1[0]==1000, "Failed getting motor position"
 print(position1)
-ESP32.motor.set_motor_enable(enable=None, enableauto=False)# always on
+ESP32.motor.set_motor_enable(enable=1, enableauto=False)# always on
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_y(steps=1000, speed=1000, is_blocking=True, is_enabled=False)
 ESP32.motor.move_z(steps=1000, speed=1000, is_blocking=True)
