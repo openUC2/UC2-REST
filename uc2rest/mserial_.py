@@ -20,7 +20,6 @@ class Serial:
 
         # setup command queue        
         self.resetLastCommand = False
-        self.command_queue = queue.Queue()
         self.responses = {}
         self.commands = {}
         self.lock = threading.Lock()
@@ -28,12 +27,19 @@ class Serial:
         self.identifier_counter = 0 # Counter for generating unique identifiers
         self.thread = threading.Thread(target=self._process_commands)
         self.thread.start()
-        # Create a flag to control the loop
-        restart_flag = threading.Event()
+        self.serial_lock = threading.Lock()
+        
+        self.currentIdentifier = -1
 
         # initialize serial connection        
         self.ser = self.openDevice(port, baudrate, timeout)
         
+    def setCurrentIdentifier(self, identifier):
+        self.currentIdentifier = identifier
+    
+    def getCurrentIdentfier(self):
+        return self.currentIdentifier
+    
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
 
@@ -52,12 +58,13 @@ class Serial:
             
     def openDevice(self, port, baud_rate, timeout=5):
         try: 
-            ser = serial.Serial(port, baud_rate, timeout=.1)
+            ser = serial.Serial(port, baud_rate, timeout=1)
+            ser.write_timeout = 1
         except:
             ser = self.findCorrectSerialDevice()
             
         self.is_connected = True
-        ser.write_timeout = .1
+        
         # TODO: Need to be able to auto-connect 
         # need to let device warm up and flush out any old data
         self._freeSerialBuffer(ser)
@@ -123,12 +130,8 @@ class Serial:
         
         t0 = time.time()
         while self.running:
-            if not self.command_queue.empty() and not reading_json:
-                currentIdentifier, command = self.command_queue.get()
-                if self.DEBUG: print("Sending: "+ str(command))
-                json_command = json.dumps(command)
-                self.ser.write(json_command.encode('utf-8'))
-                self.ser.write(b'\n')
+            # get the identifier just in case we cannot parse it from the serial
+            currentIdentifier = self.getCurrentIdentfier()
 
             # device not ready yet
             if self.ser is None:
@@ -165,11 +168,14 @@ class Serial:
                     except:
                         self.responses[currentIdentifier] = list()
                         self.responses[currentIdentifier].append(json_response.copy())
+                    currentIdentifier = None
                 buffer = ""     # reset buffer
                 
             if reading_json:
                 buffer += line
                 lineCounter +=1 
+
+            time.sleep(0.001)
 
     def get_json(self, path):
         message = {"task":path}
@@ -204,7 +210,7 @@ class Serial:
                 pass
         return {"timeout": 1}
         
-    def sendMessage(self, command, nResponses=1):
+    def sendMessage(self, command, nResponses=1, timeout=10):
         '''
         Sends a command to the device and optionally waits for a response.
         If nResponses is 0, then the command is sent but no response is expected.
@@ -215,15 +221,23 @@ class Serial:
             command = json.loads(command)
         identifier = self._generate_identifier()
         command["qid"] = identifier
-        self.command_queue.put((identifier, command))
+        # trying to send message here instead:
+        self.setCurrentIdentifier(identifier)
+        if self.DEBUG: print("Sending: "+ str(command))
+        with self.serial_lock:
+            time.sleep(0.1)
+            self.ser.write((json.dumps(command)+'\n').encode('utf-8'))
         self.commands[identifier]=command
         if nResponses <= 0:
             return identifier
+        t0 = time.time()
         while self.running:
             time.sleep(0.002)
             if self.resetLastCommand:
                 self.resetLastCommand = False
                 return "communication interrupted"
+            if time.time()-t0>timeout:
+                return "timeout"
             with self.lock:
                 if identifier in self.responses:
                     if len(self.responses[identifier])==nResponses:
