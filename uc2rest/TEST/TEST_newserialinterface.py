@@ -4,7 +4,7 @@ import threading
 import time
 
 class SerialMonitor:
-    def __init__(self, port, baud_rate=9600):
+    def __init__(self, port, baud_rate=115200):
         self.ser = serial.Serial(port, baud_rate)
         self.command_id = 0
         self.pending_responses = {}
@@ -60,7 +60,7 @@ class SerialMonitor:
         self.ser.close()
 
 # Usage example
-monitor = SerialMonitor('COM3') # Change to your port
+monitor = SerialMonitor('/dev/cu.SLAB_USBtoUART') # Change to your port
 
 command_to_send = {
     "command": "ping"
