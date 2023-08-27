@@ -21,6 +21,7 @@ from .modules import Modules
 from .digitalout import DigitalOut
 from .rotator import Rotator
 from .logger import Logger
+from .cmdrecorder import cmdRecorder
 
 try:
     import requests
@@ -51,19 +52,17 @@ class UC2Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
-
         self.logger = Logger()
 
         # perhaps we are in the browser?
         self.isPyScript = False
-
 
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
             self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG)
             self.is_serial = True
-            self.is_connected = True
+            self.is_connected = self.serial.is_connected
             self.serial.DEBUG = DEBUG
         elif host is not None:
             # use client in wireless mode
@@ -99,6 +98,9 @@ class UC2Client(object):
         if not self.isPyScript: 
             self.config = config(self)
 
+        # initialize cmdRecorder
+        self.cmdRecorder = cmdRecorder(self)
+        
         # initialize LED matrix
         self.led = LedMatrix(self, NLeds=NLeds)
 
@@ -145,8 +147,6 @@ class UC2Client(object):
         
         # initialize module controller
         self.modules = Modules(parent=self)
-   
-
     
     def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=1):
         if self.is_wifi:
@@ -183,3 +183,6 @@ class UC2Client(object):
     def setDebugging(self, debug=False):
         self.logger.debug(f"Setting debugging to {debug}")
         self.serial.DEBUG = debug
+        
+    def close(self):
+        self.serial.closeSerial()

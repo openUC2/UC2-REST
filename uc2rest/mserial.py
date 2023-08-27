@@ -17,6 +17,8 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
+        
+        self.cmdCallBackFct = None
 
         # setup command queue        
         self.resetLastCommand = False
@@ -51,13 +53,17 @@ class Serial:
                 return
             
     def openDevice(self, port, baud_rate, timeout=5):
+        self.is_connected = True
         try: 
             ser = serial.Serial(port, baud_rate, timeout=.1)
+            ser.write_timeout = .1
         except:
             ser = self.findCorrectSerialDevice()
-            
-        self.is_connected = True
-        ser.write_timeout = .1
+            if ser is None:
+                ser = MockSerial(port, baud_rate, timeout=.1)
+                self.is_connected = False
+        ser.write_timeout = .1        
+    
         # TODO: Need to be able to auto-connect 
         # need to let device warm up and flush out any old data
         self._freeSerialBuffer(ser)
@@ -186,9 +192,13 @@ class Serial:
         # write message to the serial
         if not getReturn:
             nResponses = -1
-        writeResult = self.sendMessage(command=payload, nResponses=nResponses)
-        return writeResult
-    
+        if self.cmdCallBackFct is not None:
+            self.cmdCallBackFct(payload)
+            return "OK"
+        else:
+            writeResult = self.sendMessage(command=payload, nResponses=nResponses)
+            return writeResult
+        
     def writeSerial(self, payload):
         return self.sendMessage(payload, nResponses=-1)
     
@@ -217,7 +227,7 @@ class Serial:
         command["qid"] = identifier
         self.command_queue.put((identifier, command))
         self.commands[identifier]=command
-        if nResponses <= 0:
+        if nResponses <= 0 or not self.is_connected:
             return identifier
         while self.running:
             time.sleep(0.002)
@@ -246,6 +256,9 @@ class Serial:
         if not self.isConnected:
             self.openDevice(self.port, self.baudrate)
 
+    def toggleCommandOutput(self, cmdCallBackFct=None):
+        # if true, all commands will be output to a callback function and stored for later use
+        self.cmdCallBackFct = cmdCallBackFct
 
 if __name__ == "__main__":
     # Usage example
@@ -280,3 +293,60 @@ class SerialManagerWrapper:
     
     def __init__(self) -> None:
         pass
+    
+import random
+from threading import Thread
+class MockSerial:
+    def __init__(self, port, baudrate, timeout=1):
+        self.port = port
+        self.baudrate = baudrate
+        self.timeout = timeout
+        self.is_open = False
+        self.data_buffer = []
+        self.thread = Thread(target=self._simulate_data)
+        self.thread.daemon = True
+        self.thread.start()
+        self.is_open = True
+
+    def open(self):
+        self.is_open = True
+
+    def close(self):
+        self.is_open = False
+        
+    def readline(self, timeout=1):
+        if not self.is_open:
+            raise Exception("Device not connected")
+        if len(self.data_buffer) == 0:
+            return b''
+        data = self.data_buffer
+        self.data_buffer = self.data_buffer
+        return bytes(data)
+
+    def read(self, num_bytes):
+        if not self.is_open:
+            raise Exception("Device not connected")
+        if len(self.data_buffer) == 0:
+            return b''
+        data = self.data_buffer[:num_bytes]
+        self.data_buffer = self.data_buffer[num_bytes:]
+        return bytes(data)
+
+    def write(self, data):
+        if not self.is_open:
+            raise Exception("Device not connected")
+        pass  # Do nothing, as it's a mock
+
+    def _simulate_data(self):
+        while True:
+            if self.is_open:
+                if random.random() < 0.2:  # Simulate occasional data availability
+                    self.data_buffer.extend([random.randint(0, 255) for _ in range(10)])
+            time.sleep(0.1)
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
