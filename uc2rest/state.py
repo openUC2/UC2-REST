@@ -14,6 +14,14 @@ class State(object):
         r = self._parent.get_json(path, timeout=timeout)
         return r
 
+    def delay(self, delay=1, getReturn=True):
+        path = "/state_act"
+        payload = {
+            "task":path,
+            "delay":delay
+        }
+        r = self._parent.post_json(path, payload, getReturn=getReturn)
+        return r
 
     def set_state(self, debug=False, timeout=1):
         path = "/state_set"

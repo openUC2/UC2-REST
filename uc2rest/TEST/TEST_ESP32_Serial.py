@@ -4,14 +4,17 @@ import numpy as np
 import time
 
 port = "unknown"
-port = "/dev/cu.SLAB_USBtoUARTd"
+port = "/dev/cu.SLAB_USBtoUART"
 
 ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
-ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
+ESP32.motor.move_a(steps=10000, speed=10000, is_blocking=False)
+ESP32.motor.move_z(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_x(steps=-10000, speed=10000, is_blocking=True)
-ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
+mState = ESP32.state.get_state()
 #%%
 ''' ################
 HOME
@@ -40,7 +43,7 @@ ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 # {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
-mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255), getReturn=False)
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0), getReturn=False)
 
 
 # check if we are connected 
