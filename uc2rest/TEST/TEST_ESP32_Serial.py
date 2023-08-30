@@ -5,8 +5,16 @@ import time
 
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
-
 ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
+
+
+#%%
+''' ################
+HOME
+################'''
+ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2, isBlocking=True)
+ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
@@ -15,12 +23,6 @@ ESP32.motor.move_z(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_x(steps=-10000, speed=10000, is_blocking=True)
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
 mState = ESP32.state.get_state()
-#%%
-''' ################
-HOME
-################'''
-#ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2, isBlocking=True)
-#ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
 
 
 ''' ################
