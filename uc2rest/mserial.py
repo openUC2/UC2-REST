@@ -30,8 +30,6 @@ class Serial:
         self.identifier_counter = 0 # Counter for generating unique identifiers
         self.thread = threading.Thread(target=self._process_commands)
         self.thread.start()
-        # Create a flag to control the loop
-        restart_flag = threading.Event()
 
         # initialize serial connection        
         self.ser = self.openDevice(port, baudrate, timeout)
@@ -52,7 +50,7 @@ class Serial:
             if time.time()-t0 > timeout:
                 return
             
-    def openDevice(self, port, baud_rate, timeout=5):
+    def openDevice(self, port=None, baud_rate=115200, timeout=5):
         self.is_connected = True
         try: 
             ser = serial.Serial(port, baud_rate, timeout=.1)
@@ -138,6 +136,7 @@ class Serial:
 
             # device not ready yet
             if self.ser is None:
+                self.is_connected = False
                 continue
             
             # if we just want to send but not even wait for a response
@@ -253,8 +252,8 @@ class Serial:
         self.stop()
         
     def reconnect(self):
-        if not self.isConnected:
-            self.openDevice(self.port, self.baudrate)
+        if not self.is_connected:
+            self.openDevice()
 
     def toggleCommandOutput(self, cmdCallBackFct=None):
         # if true, all commands will be output to a callback function and stored for later use
