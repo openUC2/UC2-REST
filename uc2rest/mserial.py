@@ -214,13 +214,14 @@ class Serial:
                 pass
         return {"timeout": 1}
         
-    def sendMessage(self, command, nResponses=1):
+    def sendMessage(self, command, nResponses=1, timeout = 100):
         '''
         Sends a command to the device and optionally waits for a response.
         If nResponses is 0, then the command is sent but no response is expected.
         If nResponses is 1, then the command is sent and the response is returned.
         If nResponses is >1, then the command is sent and a list of responses is returned.        
         '''
+        t0 = time.time()
         if type(command) == str:
             command = json.loads(command)
         identifier = self._generate_identifier()
@@ -231,7 +232,7 @@ class Serial:
             return identifier
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand:
+            if self.resetLastCommand or time.time()-t0>timeout:
                 self.resetLastCommand = False
                 return "communication interrupted"
             with self.lock:
