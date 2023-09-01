@@ -51,10 +51,10 @@ class Serial:
                 return
             
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
-        self.is_connected = True
         try: 
             ser = serial.Serial(port, baud_rate, timeout=.1)
             ser.write_timeout = .1
+            self.is_connected = True
         except:
             ser = self.findCorrectSerialDevice()
             if ser is None:
@@ -76,6 +76,7 @@ class Serial:
             if any(port.device.startswith(allowed_port) for allowed_port in ports_to_check) or \
                any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
                 if self.tryToConnect(port.device):
+                    self.is_connected = True
                     return self.serialdevice
 
         self.is_connected = False
@@ -138,6 +139,8 @@ class Serial:
             if self.ser is None:
                 self.is_connected = False
                 continue
+            else:
+                self.is_connected = True
             
             # if we just want to send but not even wait for a response
             try:
@@ -231,7 +234,7 @@ class Serial:
             return identifier
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand or time.time()-t0>timeout:
+            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
                 self.resetLastCommand = False
                 return "communication interrupted"
             with self.lock:

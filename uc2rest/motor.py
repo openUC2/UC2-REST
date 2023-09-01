@@ -43,7 +43,7 @@ class Motor(object):
         self.stepSizeX =  1
         self.stepSizeY =  1
         self.stepSizeZ =  1
-        self.stepSizeT =  1
+        self.stepSizeA =  1
 
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
@@ -75,7 +75,7 @@ class Motor(object):
         elif axis == "A":
             self.minPosT = minPos
             self.maxPosT = maxPos
-            self.stepSizeT = stepSize
+            self.stepSizeA = stepSize
             self.backlashT = backlash
 
     def xyztTo1230(self, axis):
@@ -127,13 +127,13 @@ class Motor(object):
             speed = (speed,speed,speed)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyzt(steps=(0,steps[0],steps[1],steps[2]), acceleration=acceleration, speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=acceleration, speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         if self.isCoreXY:
             # have to move only one motor to move in XY direction
-           return self.move_xyzt(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+           return self.move_xyza(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         else:
             if len(speed)!= 2:
                 speed = (speed,speed)
@@ -142,7 +142,7 @@ class Motor(object):
                 acceleration = (acceleration,acceleration)
 
             # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-            r = self.move_xyzt(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            r = self.move_xyza(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
             return r
 
     def move_az(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -153,7 +153,7 @@ class Motor(object):
             acceleration = (acceleration,acceleration)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyzt(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -281,7 +281,7 @@ class Motor(object):
         #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
 
         # convert to physical units
-        steps[0] *= 1/self.stepSizeT
+        steps[0] *= 1/self.stepSizeA
         steps[1] *= 1/self.stepSizeX
         steps[2] *= 1/self.stepSizeY
         steps[3] *= 1/self.stepSizeZ
@@ -444,10 +444,10 @@ class Motor(object):
             "position":True,
         }
         _position = np.array((0.,0.,0.,0.)) # T,X,Y,Z
-        _physicalStepSizes = np.array((self.stepSizeT, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn = True)
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
