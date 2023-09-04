@@ -53,14 +53,14 @@ class Serial:
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try: 
             ser = serial.Serial(port, baud_rate, timeout=.1)
-            ser.write_timeout = .1
+            ser.write_timeout = .3
             self.is_connected = True
         except:
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        ser.write_timeout = .1        
+        ser.write_timeout = .3     
     
         # TODO: Need to be able to auto-connect 
         # need to let device warm up and flush out any old data
@@ -257,7 +257,7 @@ class Serial:
         
     def reconnect(self):
         if not self.is_connected:
-            self.openDevice()
+            self.openDevice(port = self.serialport, baud_rate = self.baudrate)
 
     def toggleCommandOutput(self, cmdCallBackFct=None):
         # if true, all commands will be output to a callback function and stored for later use
