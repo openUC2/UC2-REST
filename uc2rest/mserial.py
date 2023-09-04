@@ -147,7 +147,8 @@ class Serial:
                 mReadline = self.ser.readline()
             except Exception as e:
                 self._parent.logger.error(e)
-                return 
+                self.is_connected = False
+                break 
             try:
                 line = mReadline.decode('utf-8').strip()
                 if self.DEBUG: print(line)
@@ -216,7 +217,7 @@ class Serial:
                 pass
         return {"timeout": 1}
         
-    def sendMessage(self, command, nResponses=1, timeout = 100):
+    def sendMessage(self, command, nResponses=1, timeout = 20):
         '''
         Sends a command to the device and optionally waits for a response.
         If nResponses is 0, then the command is sent but no response is expected.
