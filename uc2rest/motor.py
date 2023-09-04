@@ -26,20 +26,22 @@ class Motor(object):
         self.isCoreXY = False
 
         self.nMotors = 4
-        self.steps_last = np.zeros((self.nMotors))
+        self.lastDirection = np.zeros((self.nMotors))
         self.backlash = np.zeros((self.nMotors))
         self.stepSize = np.ones((self.nMotors))
         self.maxStep = np.ones((self.nMotors))*np.inf
         self.minStep = np.ones((self.nMotors))*(-np.inf)
+        self.currentDirection = np.zeros((self.nMotors))
+        self.currentPosition = np.zeros((self.nMotors))
 
         self.minPosX = -np.inf
         self.minPosY = -np.inf
         self.minPosZ = -np.inf
-        self.minPosT = -np.inf
+        self.minPosA = -np.inf
         self.maxPosX = np.inf
         self.maxPosY = np.inf
         self.maxPosZ = np.inf
-        self.maxPosT = np.inf
+        self.maxPosA = np.inf
         self.stepSizeX =  1
         self.stepSizeY =  1
         self.stepSizeZ =  1
@@ -61,22 +63,19 @@ class Motor(object):
             self.minPosX = minPos
             self.maxPosX = maxPos
             self.stepSizeX = stepSize
-            self.backlashX = backlash
         elif axis == "Y":
             self.minPosY = minPos
             self.maxPosY = maxPos
             self.stepSizeY = stepSize
-            self.backlashY = backlash
         elif axis == "Z":
             self.minPosZ = minPos
             self.maxPosZ = maxPos
             self.stepSizeZ = stepSize
-            self.backlashZ = backlash
         elif axis == "A":
-            self.minPosT = minPos
-            self.maxPosT = maxPos
+            self.minPosA = minPos
+            self.maxPosA = maxPos
             self.stepSizeA = stepSize
-            self.backlashT = backlash
+        self.backlash[self.xyztTo1230(axis)] = backlash
 
     def xyztTo1230(self, axis):
         axis = axis.upper()
@@ -162,7 +161,7 @@ class Motor(object):
         if type(steps)==int:
             steps = (steps,steps,steps,steps)
 
-        r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, backlash=(self.backlash[0],self.backlash[1],self.backlash[2],self.backlash[3]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_axis_by_name(self, axis="X", steps=100, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -171,10 +170,8 @@ class Motor(object):
         _speed[axis] = speed
         _steps=np.array((0,0,0,0))
         _steps[axis] = steps
-        _backlash=np.zeros(4)
-        _backlash[axis] = self.backlash[axis]
         _acceleration=acceleration
-        r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, backlash=_backlash, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
         return r
 
     def move_forever(self, speed=(0,0,0,0), is_stop=False, is_blocking=False):
@@ -242,7 +239,7 @@ class Motor(object):
         return r
 
 
-    def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, backlash=(0,0,0,0), acceleration=(None, None, None, None), is_blocking=True, is_enabled=True):
+    def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, acceleration=(None, None, None, None), is_blocking=True, is_enabled=True):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
 
@@ -270,12 +267,17 @@ class Motor(object):
         if type(steps)==tuple:
             steps = np.array(steps)
 
-        # detect change in directiongit config --global user.name "Your Name"
+        # detect change in direction
         for iMotor in range(4):
-            if np.sign(self.steps_last[iMotor]) != np.sign(steps[iMotor]):
+            # for absolute motion:
+            if isAbsoluteArray[iMotor]:
+                self.currentDirection[iMotor] = 1 if np.sign(self.currentPosition > steps[0]) else -1
+            else:
+                self.currentDirection[iMotor] = np.sign(steps[iMotor])
+            if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
                 # we want to overshoot a bit
-                steps[iMotor] = steps[iMotor] + (np.sign(steps[iMotor])*backlash[iMotor])
-
+                steps[iMotor] = steps[iMotor] +  self.currentDirection[iMotor]*self.backlash[iMotor]
+        
         # get current position
         #_positions = self.get_position() # x,y,z,t = 1,2,3,0
         #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
@@ -293,7 +295,7 @@ class Motor(object):
             steps_1=0
         if pos_2+steps_2 > self.maxPosZ or pos_2+steps_2 < self.minPosZ:
             steps_2 = 0
-        if pos_3+steps_3 > self.maxPosT or pos_3+steps_3 < self.minPosT:
+        if pos_3+steps_3 > self.maxPosA or pos_3+steps_3 < self.minPosA:
             steps_3 = 0
         '''
 
@@ -323,26 +325,27 @@ class Motor(object):
 
         # safe steps to track direction for backlash compensatio
         for iMotor in range(self.nMotors):
-            self.steps_last[iMotor] = steps[iMotor]
+            if isAbsoluteArray[iMotor]:
+                self.currentPosition = steps[iMotor]
+            else:
+                self.currentPosition = self.currentPosition + steps[iMotor]
 
         # drive motor
         self.isRunning = True
         is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
-
         timeout = timeout if is_blocking else 0
         nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
 
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
-        # wait until the job has been done
-        time0 = time.time()
-        if np.sum(isAbsoluteArray):
-            steppersRunning = isAbsoluteArray
-        else:
-            steppersRunning = np.abs(np.array(steps)) > 0
+
+
+        # save direction for last iteration
+        self.lastDirection = self.currentDirection.copy()
 
         # Reset busy flag
         self.isRunning = False
+        
         return r
 
     def isBusy(self, steps, timeout=1):
