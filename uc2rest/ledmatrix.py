@@ -73,7 +73,7 @@ class LedMatrix(object):
         self.currentLedArrayMode = "array"            
         return r
 
-    def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=True, timeout=gTimeout):
+    def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=False, timeout=gTimeout):
         '''
         set all LEDs with te same RGB value: intensity=(255,255,255)
         '''
@@ -168,18 +168,18 @@ class LedMatrix(object):
 
         return self.ledpattern
     
-    def setAll(self, state, intensity=None):
+    def setAll(self, state, intensity=None, getReturn=False):
         # fast addressing
         # turns on all LEDs at a certain intensity
         state = np.sum(state)>0
         if intensity is not None:
             self.intensity = intensity
         intensity2display = np.array(self.intensity)*np.array(state)
-        self.send_LEDMatrix_full(intensity = intensity2display, timeout=self.timeout)
+        self.send_LEDMatrix_full(intensity = intensity2display, getReturn=getReturn)
         self.ledpattern = state*np.ones((self.NLeds, 3))
         return self.ledpattern
     
-    def setIntensity(self, intensity, getReturn=True):
+    def setIntensity(self, intensity, getReturn=False):
         self.intensity = intensity
         self.setPattern(getReturn=getReturn)
     
@@ -190,10 +190,10 @@ class LedMatrix(object):
         pattern2send = (self.ledpattern>=1)*self.intensity
         if np.sum(self.ledpattern, 0)[0]==self.ledpattern.shape[0]:
             # turn on all - faster! 
-            self.send_LEDMatrix_full(pattern2send[0,:], getReturn=getReturn, timeout=self.timeout)
+            self.send_LEDMatrix_full(pattern2send[0,:], getReturn=getReturn)
         else:
             # set individual pattern - slower
-            self.send_LEDMatrix_array(pattern2send, getReturn=getReturn, timeout=self.timeout)
+            self.send_LEDMatrix_array(pattern2send, getReturn=getReturn)
         return self.ledpattern
     
     def getPattern(self):
