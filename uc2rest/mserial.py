@@ -264,7 +264,8 @@ class Serial:
                     print("You have sent the wrong command!")
                     return "Wrong Command"
                     
-            
+    def interruptCurrentSerialCommunication(self):
+        self.resetLastCommand = True
 
     def stop(self):
         self.running = False
