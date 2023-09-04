@@ -122,10 +122,7 @@ class Serial(object):
         if "task" not in payload:
             payload["task"] = path
 
-        if "isblock" in payload:
-            is_blocking = payload["isblock"]
-        else:
-            is_blocking = True
+
 
         # write message to the serial
         writeResult = self.writeSerial(payload)
