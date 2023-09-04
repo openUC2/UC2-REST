@@ -14,6 +14,14 @@ class State(object):
         r = self._parent.get_json(path, timeout=timeout)
         return r
 
+    def delay(self, delay=1, getReturn=True):
+        path = "/state_act"
+        payload = {
+            "task":path,
+            "delay":delay
+        }
+        r = self._parent.post_json(path, payload, getReturn=getReturn)
+        return r
 
     def set_state(self, debug=False, timeout=1):
         path = "/state_set"
@@ -42,15 +50,16 @@ class State(object):
         path = "/bt_scan"
         payload={
             "dummy": 1}
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=timeout)
         return r
+    
     def espRestart(self,timeout=1):
         # if isController =True=> only PS jjoystick will be accepted
         path = "/state_act"
         payload = {
             "restart":1
             }
-        r = self._parent.post_json(path, payload, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn=False, timeout=timeout)
         return r
 
     def setControllerMode(self, isController=False, timeout=1):
