@@ -3,6 +3,7 @@ import numpy as np
 import time
 
 host = "192.168.137.60"
+host = "192.168.4.1"
 port = 80
 
 ESP32 = uc2rest.UC2Client(host=host, port=port, DEBUG=True)
@@ -11,7 +12,7 @@ ESP32 = uc2rest.UC2Client(host=host, port=port, DEBUG=True)
 # see if it's the right device
 mState = ESP32.state.get_state()
 assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
-
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 
 ''' ################
