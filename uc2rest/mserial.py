@@ -253,7 +253,7 @@ class Serial:
             return identifier
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
+            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected or not type(self.ser.BAUDRATES) is tuple:
                 self.resetLastCommand = False
                 return "communication interrupted"
             with self.lock:
@@ -333,6 +333,8 @@ class MockSerial:
         self.thread.daemon = True
         self.thread.start()
         self.is_open = True
+        self.manufacturer = "UC2Mock"
+        self.BAUDRATES = -1
 
     def open(self):
         self.is_open = True
