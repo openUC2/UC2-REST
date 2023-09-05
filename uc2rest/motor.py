@@ -271,7 +271,7 @@ class Motor(object):
         for iMotor in range(4):
             # for absolute motion:
             if isAbsoluteArray[iMotor]:
-                self.currentDirection[iMotor] = 1 if np.sign(self.currentPosition > steps[0]) else -1
+                self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > steps[iMotor]) else -1
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
             if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
@@ -326,9 +326,9 @@ class Motor(object):
         # safe steps to track direction for backlash compensatio
         for iMotor in range(self.nMotors):
             if isAbsoluteArray[iMotor]:
-                self.currentPosition = steps[iMotor]
+                self.currentPosition[iMotor] = steps[iMotor]
             else:
-                self.currentPosition = self.currentPosition + steps[iMotor]
+                self.currentPosition[iMotor] = self.currentPosition[iMotor] + steps[iMotor]
 
         # drive motor
         self.isRunning = True
