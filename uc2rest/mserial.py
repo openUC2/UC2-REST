@@ -138,9 +138,8 @@ class Serial:
         while self.running:
             if not self.command_queue.empty() and not reading_json:
                 currentIdentifier, command = self.command_queue.get()
-                if self.DEBUG: print("Sending: "+ str(command))
+                if self.DEBUG: self._parent.logger.debug("Sending: "+ str(command))
                 json_command = json.dumps(command)
-                self.ser.write(json_command.encode('utf-8'))
                 try:
                     self.ser.write(json_command.encode('utf-8'))
                 except:
@@ -168,7 +167,7 @@ class Serial:
                 return 
             try:
                 line = mReadline.decode('utf-8').strip()
-                if self.DEBUG: print(line)
+                if self.DEBUG: self._parent.logger.debug(line)
             except:
                 line = ""
             if line == "++":
@@ -180,7 +179,7 @@ class Serial:
                 try:
                     json_response = json.loads(buffer)
                 except: 
-                    print("Failed to load the json from serial")
+                    self._parent.logger.debug("Failed to load the json from serial")
                     json_response = {}            
                 
                 with self.lock:
@@ -261,7 +260,7 @@ class Serial:
                     if len(self.responses[identifier])==nResponses:
                         return self.responses[identifier][-1]
                 if -identifier in self.responses:
-                    print("You have sent the wrong command!")
+                    self._parent.logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
                     
     def interruptCurrentSerialCommunication(self):
