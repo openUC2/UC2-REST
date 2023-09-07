@@ -17,6 +17,7 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
+        self.write_timeout = 0.01
 
         self.cmdCallBackFct = None
 
@@ -51,14 +52,14 @@ class Serial:
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try:
             ser = serial.Serial(port, baud_rate, timeout=.1)
-            ser.write_timeout = .1
+            ser.write_timeout = self.write_timeout
             self.is_connected = True
         except:
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        ser.write_timeout = .1
+        ser.write_timeout = self.write_timeout
 
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
@@ -168,7 +169,7 @@ class Serial:
                 break
             try:
                 line = mReadline.decode('utf-8').strip()
-                if self.DEBUG: print(line)
+                if self.DEBUG and line!="": print(line)
             except:
                 line = ""
             if line == "++":
