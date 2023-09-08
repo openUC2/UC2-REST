@@ -249,11 +249,11 @@ class Serial:
         command["qid"] = identifier
         self.command_queue.put((identifier, command))
         self.commands[identifier]=command
-        if nResponses <= 0 or not self.is_connected:
+        if nResponses <= 0 or not self.is_connected or not type(self.ser.BAUDRATES) is tuple:
             return identifier
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected or not type(self.ser.BAUDRATES) is tuple:
+            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
                 self.resetLastCommand = False
                 return "communication interrupted"
             with self.lock:
