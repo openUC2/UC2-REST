@@ -40,7 +40,7 @@ class UC2Client(object):
     # BAUDRATE = 500000
     BAUDRATE = 115200
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, SerialManager=None, DEBUG=False):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, SerialManager=None, DEBUG=False, logger=None):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -52,7 +52,10 @@ class UC2Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
-        self.logger = Logger()
+        if logger is None:
+            self.logger = Logger()
+        else:
+            self.logger = logger
 
         # perhaps we are in the browser?
         self.isPyScript = False
@@ -152,9 +155,15 @@ class UC2Client(object):
         if self.is_wifi:
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
-            r = requests.post(url, json=payload, headers=self.headers,  timeout=timeout)
-            returnMessage = r.json()
-            returnMessage["success"] = r.status_code==200
+            try:
+                r = requests.post(url, json=payload, headers=self.headers,  timeout=timeout)
+                returnMessage = r.json()
+                returnMessage["success"] = r.status_code==200
+            except Exception as e:
+                print(e)
+                returnMessage = {}
+                returnMessage["error"] = str(e)
+                returnMessage["success"] = 0
             return returnMessage
         elif self.is_serial or self.isPyScript:
             if timeout <=0:

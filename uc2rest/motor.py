@@ -436,6 +436,8 @@ class Motor(object):
             payload["isen"] = enable
         if enableauto is not None:
             payload["isenauto"] = enableauto
+        if not enableauto:
+            enable = True
         r = self._parent.post_json(path, payload)
         return r
 
@@ -450,7 +452,7 @@ class Motor(object):
         _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, getReturn = True)
+        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1)
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
