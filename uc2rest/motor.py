@@ -33,7 +33,8 @@ class Motor(object):
         self.minStep = np.ones((self.nMotors))*(-np.inf)
         self.currentDirection = np.zeros((self.nMotors))
         self.currentPosition = np.zeros((self.nMotors))
-
+        self._position = np.zeros((self.nMotors)) # position from the last motor status update
+        
         self.minPosX = -np.inf
         self.minPosY = -np.inf
         self.minPosZ = -np.inf
@@ -49,6 +50,31 @@ class Motor(object):
 
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
+        # register a callback function for the motor status on the serial loop
+        self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
+        
+    def _callback_motor_status(self, data):
+        ''' cast the json in the form:
+        {
+        "qid":	0,
+        "steppers":	[{
+                "stepperid":	1,
+                "position":	1000,
+                "isDone":	1
+            }]
+        }
+        into the position array of the motors '''
+        try:
+            nSteppers = len(data["steppers"])
+            for iMotor in range(nSteppers): 
+                stepperID = data["steppers"][iMotor]["stepperid"]
+                # smart to re-update this variable? Will be updated by motor-sender too
+                self._position[stepperID] = data["steppers"][iMotor]["position"]
+        except Exception as e:
+            print("Error in _callback_motor_status: ", e)
+            
+            
+        
     def setIsCoreXY(self, isCoreXY = False):
         self.isCoreXY = isCoreXY
 
