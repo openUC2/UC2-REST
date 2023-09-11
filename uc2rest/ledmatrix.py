@@ -208,26 +208,8 @@ class LedMatrix(object):
         path = '/led'
         r = self._parent.post_json(path, payload)
         return r
-
-    def set_ledpin(self, ledArrPin=4, ledArrNum=None):
-        if ledArrNum is None:
-            ledArrNum = self.NLeds
-            
-        path = "/ledarr_set"
-        payload = {
-            "task": path,
-            "ledArrPin": ledArrPin,
-            "ledArrNum": ledArrNum
-        }
-        r = self._parent.post_json(path, payload, getReturn=True)
-        return r
         
     def get_ledpin(self):
         path = "/ledarr_get"
         r = self._parent.get_json(path, getReturn=True, timeout=1)
         return r
-            
-    
-    def setLEDArrayConfig(self, ledArrPin=4, ledArrNum=None):
-        # make imswitch happy
-        return self.set_ledpin(ledArrPin=ledArrPin, ledArrNum=ledArrNum)
