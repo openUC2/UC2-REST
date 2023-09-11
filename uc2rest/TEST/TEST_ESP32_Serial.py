@@ -6,6 +6,7 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 ESP32 = uc2rest.UC2Client(serialport=port, DEBUG=True)
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 
 #%%

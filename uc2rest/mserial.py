@@ -28,6 +28,7 @@ class Serial:
         self.commands = {}
         self.lock = threading.Lock()
 
+        self.callBackList = []
 
         # initialize serial connection
         self.thread = None
@@ -179,9 +180,18 @@ class Serial:
                 reading_json = False
                 try:
                     json_response = json.loads(buffer)
+                    if len(self.callBackList) > 0:
+                        for callback in self.callBackList:
+                            # check if json has key
+                            try: 
+                                if callback["pattern"] in json_response:
+                                    callback["callbackfct"](json_response)    
+                            except Exception as e:
+                                self._parent.logger.debug(e)
+                            
                 except: 
                     self._parent.logger.debug("Failed to load the json from serial")
-                    json_response = {}            
+                    json_response = {}      
                 
                 with self.lock:
                     try: currentIdentifier = json_response["qid"]
@@ -235,6 +245,13 @@ class Serial:
                 pass
         return {"timeout": 1}
 
+    def register_callback(self, callback, pattern):
+        '''
+        we need to add a callback function to a list of callbacks that will be read during the serial communication
+        loop
+        ''' 
+        self.callBackList.append({"callbackfct":callback, "pattern":pattern})
+        
     def sendMessage(self, command, nResponses=1, timeout = 20):
         '''
         Sends a command to the device and optionally waits for a response.
