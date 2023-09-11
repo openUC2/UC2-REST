@@ -45,7 +45,7 @@ class Laser(object):
             "LASERdespecklePeriod": int(despecklePeriod),
 
         }
-        self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
+        #self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
         r = self._parent.post_json(path, payload, getReturn=is_blocking)
         return r
 

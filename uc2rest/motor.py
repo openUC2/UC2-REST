@@ -436,6 +436,8 @@ class Motor(object):
             payload["isen"] = enable
         if enableauto is not None:
             payload["isenauto"] = enableauto
+        if not enableauto:
+            enable = True
         r = self._parent.post_json(path, payload)
         return r
 
