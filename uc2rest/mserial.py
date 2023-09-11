@@ -150,8 +150,8 @@ class Serial:
                         self.ser.write_timeout=.1
                     except:
                         pass
-                self.ser.write(b'\n')
-
+                try:self.ser.write(b'\n')
+                except: break
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
