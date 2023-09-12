@@ -293,6 +293,7 @@ class Serial:
         self.stop()
 
     def reconnect(self):
+        self.running=0
         try:
             self.ser.close()
         except:
