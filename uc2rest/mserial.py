@@ -17,7 +17,7 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
-        self.write_timeout = 0.01
+        self.write_timeout = 0.02
 
         self.cmdCallBackFct = None
 
@@ -52,16 +52,17 @@ class Serial:
 
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try:
-            ser = serial.Serial(port, baud_rate, timeout=.1)
+            ser = serial.Serial(port, baud_rate, timeout=.01)
             ser.write_timeout = self.write_timeout
             self.is_connected = True
-        except:
+        except Exception as e:
+            self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
         ser.write_timeout = self.write_timeout
-
+        if not ser.isOpen(): ser.open()
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
         self._freeSerialBuffer(ser)
@@ -96,7 +97,7 @@ class Serial:
 
     def tryToConnect(self, port):
         try:
-            self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=1, write_timeout=1)
+            self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=1, write_timeout=self.write_timeout)
             self._freeSerialBuffer(self.serialdevice)
             if self.checkFirmware(self.serialdevice):
                 self.is_connected = True
@@ -144,13 +145,13 @@ class Serial:
                 json_command = json.dumps(command)
                 try:
                     self.ser.write(json_command.encode('utf-8'))
-                except:
+                except Exception as e:
                     try:
                         self.ser.write_timeout = 1
                         self.ser.write(json_command.encode('utf-8'))
-                        self.ser.write_timeout=.1
-                    except:
-                        pass
+                        self.ser.write_timeout=self.write_timeout
+                    except Exception as e:
+                        self._parent.logger.error(e)
                 try:self.ser.write(b'\n')
                 except: break
             # device not ready yet
@@ -354,6 +355,9 @@ class MockSerial:
         self.manufacturer = "UC2Mock"
         self.BAUDRATES = -1
 
+    def isOpen(Self):
+        return self.is_open 
+    
     def open(self):
         self.is_open = True
 
