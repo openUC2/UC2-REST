@@ -4,11 +4,6 @@
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = GPIO_NUM_25;     
-
-
- int8_t LASER_1 = GPIO_NUM_12;
- int8_t LASER_2 = GPIO_NUM_4;
- int8_t LASER_3 = GPIO_NUM_2;
      
 
 // Setup a oneWire instance to communicate with any OneWire devices
@@ -27,13 +22,13 @@ float previousError = 0;
 float integral = 0;
 
 // Desired temperature
-const float setpoint = 30.0;  // for example, 50°C
+const float setpoint = 36.0;  // for example, 50°C
 
 // LEDC variables
 const int freq = 5000;
 const int ledChannel = 0;
 const int resolution = 8;
-const int heaterPin = 27;  // PWM pin connected to the heater
+const int heaterPin = GPIO_NUM_12;  // PWM pin connected to the heater
 
 // Get the current temperature
 // Here you'll want to replace this with your actual temperature reading logic
