@@ -355,7 +355,7 @@ class MockSerial:
         self.manufacturer = "UC2Mock"
         self.BAUDRATES = -1
 
-    def isOpen(Self):
+    def isOpen(self):
         return self.is_open 
     
     def open(self):
@@ -371,6 +371,7 @@ class MockSerial:
             return b''
         data = self.data_buffer
         self.data_buffer = self.data_buffer
+        time.sleep(.05)
         return bytes(data)
 
     def read(self, num_bytes):
