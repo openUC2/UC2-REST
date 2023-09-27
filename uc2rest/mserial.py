@@ -53,8 +53,11 @@ class Serial:
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try:
             ser = serial.Serial(port, baud_rate, timeout=.01)
+            if not self.checkFirmware(ser):
+                Raise("Wrong Firmware")
             ser.write_timeout = self.write_timeout
             self.is_connected = True
+            
         except Exception as e:
             self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()

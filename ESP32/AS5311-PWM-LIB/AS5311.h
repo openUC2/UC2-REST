@@ -9,7 +9,7 @@ public:
     void begin();
     float readPosition();
 private:
-    int _pwmPin, _interruptPin;
+    static int _pwmPin, _interruptPin;
     static volatile uint32_t _pos_edg_0, _pos_edg_1, _neg_edg_0, _edgeCounter;
     static volatile bool _time_2_print;
     typedef struct {

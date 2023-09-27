@@ -8,7 +8,13 @@ volatile uint32_t AS5311::_edgeCounter = 0;
 volatile bool AS5311::_time_2_print = false;
 volatile AS5311::PWM_Params AS5311::_pwm = {0, 0};
 
-AS5311::AS5311(int pwmPin, int interruptPin) : _pwmPin(pwmPin), _interruptPin(interruptPin) {}
+int AS5311::_pwmPin = 0;
+int AS5311::_interruptPin = 0;
+
+AS5311::AS5311(int pwmPin, int interruptPin) {
+    _pwmPin = pwmPin; // Set static members in the constructor
+    _interruptPin = interruptPin;
+}
 
 void AS5311::begin() {
     pinMode(_pwmPin, INPUT_PULLDOWN);
