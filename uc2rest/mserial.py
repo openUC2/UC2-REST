@@ -53,8 +53,11 @@ class Serial:
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try:
             ser = serial.Serial(port, baud_rate, timeout=.01)
+            if not self.checkFirmware(ser):
+                Raise("Wrong Firmware")
             ser.write_timeout = self.write_timeout
             self.is_connected = True
+            
         except Exception as e:
             self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()
@@ -389,10 +392,9 @@ class MockSerial:
         pass  # Do nothing, as it's a mock
 
     def _simulate_data(self):
-        while True:
-            if self.is_open:
-                if random.random() < 0.2:  # Simulate occasional data availability
-                    self.data_buffer.extend([random.randint(0, 255) for _ in range(10)])
+        while self.is_open:
+            if random.random() < 0.2:  # Simulate occasional data availability
+                self.data_buffer.extend([random.randint(0, 255) for _ in range(10)])
             time.sleep(0.1)
 
     def __enter__(self):
