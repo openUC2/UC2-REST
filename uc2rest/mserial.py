@@ -4,7 +4,7 @@ import queue
 import threading
 import time
 
-T_SERIAL_WARMUP = 3
+T_SERIAL_WARMUP = 1
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
@@ -43,19 +43,21 @@ class Serial:
         while True:
             try:
                 readLine = ser.readline().decode('utf-8').strip()
+                #print(readLine)
                 if readLine == "":
                     break
-            except:
+            except Exception as e:
+                #print(e)
                 pass
             if time.time()-t0 > timeout:
                 return
 
     def openDevice(self, port=None, baud_rate=115200, timeout=5):
         try:
-            ser = serial.Serial(port, baud_rate, timeout=.01)
-            if not self.checkFirmware(ser):
+            isUC2 = self.tryToConnect(port)
+            if not isUC2:
                 Raise("Wrong Firmware")
-            ser.write_timeout = self.write_timeout
+            ser = self.serialdevice
             self.is_connected = True
             
         except Exception as e:
@@ -101,6 +103,7 @@ class Serial:
     def tryToConnect(self, port):
         try:
             self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=1, write_timeout=self.write_timeout)
+            time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice)
             if self.checkFirmware(self.serialdevice):
                 self.is_connected = True
@@ -117,7 +120,7 @@ class Serial:
         """Check if the firmware is correct"""
         path = "/state_get"
         payload = {"task": path}
-
+        
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
 
