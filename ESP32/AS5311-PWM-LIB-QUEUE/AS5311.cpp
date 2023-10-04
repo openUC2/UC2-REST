@@ -6,19 +6,23 @@ volatile uint32_t AS5311::_pos_edg_1 = 0;
 volatile uint32_t AS5311::_neg_edg_0 = 0;
 volatile AS5311::PWM_Params AS5311::_pwm = {0, 0, 0};
 volatile int AS5311::_edgeCounter = 0;
+volatile float AS5311::_position = 0.f;
 QueueHandle_t AS5311::dataQueue = nullptr;  // Define the Queue handle globally.
 
+int AS5311::_pwmPin = 0;
+int AS5311::_interruptPin = 0;
+
 AS5311::AS5311(int pwmPin, int interruptPin) {
-  _pwmPin = pwmPin; // Set static members in the constructor
+  AS5311::_pwmPin = pwmPin; 
   _interruptPin = interruptPin;
 }
 
 void AS5311::begin() {
   pinMode(_pwmPin, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(_pwmPin), _Ext_PWM_ISR_handler, CHANGE);
-
   pinMode(_interruptPin, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(_interruptPin), _handleRisingEdge, RISING);
+  
+  attachInterrupt(digitalPinToInterrupt(_pwmPin), _Ext_PWM_ISR_handler, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(_interruptPin), _handleRisingEdge, RISING); 
 
   // Create a queue to handle PWM and EdgeCounter data in a safe context
   dataQueue = xQueueCreate(10, sizeof(PWM_Params));
@@ -34,8 +38,7 @@ void AS5311::begin() {
 }
 
 float AS5311::readPosition() {
-  // This method may need adjustment according to your new data handling logic.
-  return -1.;
+  return _position;
 }
 
 int AS5311::readEdgeCounter() {
@@ -54,12 +57,12 @@ void IRAM_ATTR AS5311::_handleRisingEdge() {
   }
 }
 
-void IRAM_ATTR AS5311::_Ext_PWM_ISR_handler() {
+void IRAM_ATTR  AS5311::_Ext_PWM_ISR_handler() {
   uint32_t current_time = micros();
   PWM_Params localData;
   localData.period = 0;
   localData.duty_cycle = 0;
-  localData.edgeCounter = 1; 
+  localData.edgeCounter = 0; 
 
   if (digitalRead(_pwmPin) == HIGH) {
     _pos_edg_1 = current_time;
@@ -79,13 +82,38 @@ void IRAM_ATTR AS5311::_Ext_PWM_ISR_handler() {
 
 void AS5311::handleDataTask(void *parameter) {
   PWM_Params receivedData;
+  PWM_Params localData;
+  localData = {0, 0, 0};
+  float position = 0.f;
   for (;;) {
     if (xQueueReceive(dataQueue, &receivedData, portMAX_DELAY)) {
-      Serial.println(receivedData.period);
-      Serial.println(receivedData.edgeCounter);
-      //_edgeCounter = receivedData.edgeCounter;
-      //Serial.println(receivedData);
-      // You might process the received data here, or update other variables accordingly.
+      if (receivedData.edgeCounter != 0) {
+        if (_position>.5){
+          _edgeCounter = _edgeCounter +1;
+        }
+        else{
+          _edgeCounter = _edgeCounter -1;
+        }
+        //Serial.print("Edge Counter: ");
+        //Serial.println(_edgeCounter);
+      }
+
+      if(receivedData.period != 0) {
+        //Serial.print("Period: ");
+        //Serial.println(receivedData.period);
+        localData.period = receivedData.period;
+      }
+      if (receivedData.duty_cycle != 0) {
+        //Serial.print("Duty Cycle: ");
+        //Serial.println(receivedData.duty_cycle);
+        localData.duty_cycle = receivedData.duty_cycle;
+      }
+
+      // Calculate position
+      if (localData.period !=0 and localData.duty_cycle <= localData.period){
+       _position = (float) localData.duty_cycle / (float) localData.period;
+      }
+       
     }
   }
 }

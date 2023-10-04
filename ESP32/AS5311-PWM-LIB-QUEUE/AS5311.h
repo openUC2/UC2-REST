@@ -6,6 +6,7 @@
 class AS5311 {
   public:
     AS5311(int pwmPin, int interruptPin);
+    
     void begin();
     float readPosition();
     int readEdgeCounter();
@@ -14,6 +15,7 @@ class AS5311 {
     static bool writing_counter;
     static volatile uint32_t _pos_edg_0, _pos_edg_1, _neg_edg_0;
     static volatile int _edgeCounter;
+    static volatile float _position;
     static volatile bool _time_2_print;
     static QueueHandle_t dataQueue;  // Define the Queue handle globally.
     static void handleDataTask(void *parameter);
@@ -23,7 +25,6 @@ class AS5311 {
       uint32_t duty_cycle;
       int edgeCounter; 
     } PWM_Params;
-
 
     static volatile PWM_Params _pwm;
 
