@@ -17,6 +17,9 @@ AS5311::AS5311(int pwmPin, int interruptPin) {
   _interruptPin = interruptPin;
 }
 
+static QueueHandle_t gpio_evt_queue = NULL;
+
+
 void AS5311::begin() {
   pinMode(_pwmPin, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(_pwmPin), _Ext_PWM_ISR_handler, CHANGE);
@@ -66,6 +69,7 @@ void IRAM_ATTR AS5311::_Ext_PWM_ISR_handler() {
       _neg_edg_0 = current_time;
       _pwm.duty_cycle = _neg_edg_0 - _pos_edg_0;
     }
+    xQueueSendFromISR(gpio_evt_queue, &_pwm, NULL);
   }
 }
 
