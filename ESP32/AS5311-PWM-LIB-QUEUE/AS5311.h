@@ -19,7 +19,7 @@ class AS5311 {
     static volatile bool _time_2_print;
     static QueueHandle_t dataQueue;  // Define the Queue handle globally.
     static void handleDataTask(void *parameter);
-    
+    static float calculateRollingAverage(float newVal);
     typedef struct {
       uint32_t period;
       uint32_t duty_cycle;

@@ -111,9 +111,24 @@ void AS5311::handleDataTask(void *parameter) {
 
       // Calculate position
       if (localData.period !=0 and localData.duty_cycle <= localData.period){
-       _position = (float) localData.duty_cycle / (float) localData.period;
+        // At the 0/1 change the duty cycle gets noisy, so we need to average it over multiple senses
+       _position = calculateRollingAverage((float) localData.duty_cycle / (float) localData.period);
       }
        
     }
   }
+}
+
+float AS5311::calculateRollingAverage(float newVal) {
+  static float values[3] = {0.0, 0.0, 0.0};
+  static int insertIndex = 0;  
+  static float sum = 0.0;
+    
+  sum -= values[insertIndex];
+  values[insertIndex] = newVal;
+  sum += newVal;
+    
+  insertIndex = (insertIndex + 1) % 3;
+    
+  return sum / 3.0;
 }
