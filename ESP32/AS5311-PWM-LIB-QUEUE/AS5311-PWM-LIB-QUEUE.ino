@@ -8,10 +8,11 @@ void setup() {
 }
 
 void loop() {
+    
     float position = sensor.readPosition();
     int edgeCount = sensor.readEdgeCounter();
     if (position != -1.0f) {
-        Serial.println(position);
+        Serial.println((edgeCount+position));
         Serial.println(edgeCount);
     }
     delay(10);
