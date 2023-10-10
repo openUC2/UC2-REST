@@ -1,25 +1,25 @@
-#ifndef AS5311_H
-#define AS5311_H
+#ifndef AS5311AB_H
+#define AS5311AB_H
 
-#include <Arduino.h>
+#include "Arduino.h"
+#include "freertos/queue.h"
 
-class AS5311AB
-{
-
+class AS5311AB {
 public:
-  AS5311AB(uint8_t pinA, uint8_t pinB, bool is_isr_service_installed);
-  void begin();
-  int getPosition();
+    AS5311AB(int pinA, int pinB);
+    void begin();
+    int getPosition();
 
 private:
-  static uint8_t _pinA, _pinB;
+    static int _pinA;
+    static int _pinB;
+    static volatile int _encoderPos;
+    static QueueHandle_t _encoderQueue;
 
-  static void IRAM_ATTR handleAChange(void *arg);
-  static void IRAM_ATTR handleBChange(void *arg);
-  static void processEncoderData(void *parameter);
-  static bool _is_isr_service_installed;
 
-  static volatile int encoder_pos;
-  static QueueHandle_t encoderQueue;
+    static void IRAM_ATTR _handleAChange();
+    static void IRAM_ATTR _handleBChange();
+    static void _processEncoderData(void* parameter);
 };
+
 #endif

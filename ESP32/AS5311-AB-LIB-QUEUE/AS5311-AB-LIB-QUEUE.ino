@@ -1,9 +1,6 @@
 #include "AS5311AB.h"
 
-#define PIN_A 32
-#define PIN_B 33
-
-AS5311AB encoder(PIN_A, PIN_B, false);
+AS5311AB encoder(33, 32);
 
 void setup() {
     Serial.begin(115200);
