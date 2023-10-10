@@ -277,7 +277,7 @@ class Motor(object):
         '''
 
         # determine the axis to operate
-        axisToMove = np.where(np.abs(speed)>0)
+        axisToMove = np.where(np.abs(speed)>0)[0]
 
         if type(is_absolute)==bool:
             isAbsoluteArray = np.zeros((4))
@@ -364,7 +364,7 @@ class Motor(object):
         self.isRunning = True
         is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
         timeout = timeout if is_blocking else 0
-        nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
+        nResponses = axisToMove.shape[0]+1 # we get the command received flag + a return for every axis
 
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
