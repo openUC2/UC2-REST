@@ -18,6 +18,7 @@ class Serial:
         self.DEBUG = DEBUG
         self.is_connected = False
         self.write_timeout = 0.02
+        self.read_timeout = 0.02
 
         self.cmdCallBackFct = None
 
@@ -32,7 +33,7 @@ class Serial:
 
         # initialize serial connection
         self.thread = None
-        self.ser = self.openDevice(port, baudrate, timeout)
+        self.ser = self.openDevice(port, baudrate)
 
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
@@ -52,7 +53,7 @@ class Serial:
             if time.time()-t0 > timeout:
                 return
 
-    def openDevice(self, port=None, baud_rate=115200, timeout=5):
+    def openDevice(self, port=None, baud_rate=115200):
         try:
             isUC2 = self.tryToConnect(port)
             if not isUC2:
@@ -102,7 +103,7 @@ class Serial:
 
     def tryToConnect(self, port):
         try:
-            self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=1, write_timeout=self.write_timeout)
+            self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice)
             if self.checkFirmware(self.serialdevice):
