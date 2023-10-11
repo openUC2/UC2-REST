@@ -43,11 +43,11 @@ class Serial:
         while True:
             try:
                 readLine = ser.readline().decode('utf-8').strip()
-                #print(readLine)
+                if self.DEBUG: self._parent.logger.debug(readLine)
                 if readLine == "":
                     break
             except Exception as e:
-                #print(e)
+                if self.DEBUG: self._parent.logger.debug(e)
                 pass
             if time.time()-t0 > timeout:
                 return
@@ -56,7 +56,7 @@ class Serial:
         try:
             isUC2 = self.tryToConnect(port)
             if not isUC2:
-                Raise("Wrong Firmware")
+                Exception("Wrong Firmware")
             ser = self.serialdevice
             self.is_connected = True
             
@@ -66,7 +66,7 @@ class Serial:
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        ser.write_timeout = self.write_timeout
+        #ser.write_timeout = self.write_timeout
         if not ser.isOpen(): ser.open()
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
@@ -117,16 +117,19 @@ class Serial:
         return False
 
     def checkFirmware(self, ser):
-        """Check if the firmware is correct"""
+        """Check if the firmware is correct
+        We do not do that inside the queue processor yet
+        """
         path = "/state_get"
         payload = {"task": path}
         
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
-
-        for i in range(5):
+        # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
+        for i in range(10):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
+            if self.DEBUG: self._parent.logger.debug(mReadline)
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True
