@@ -57,7 +57,7 @@ class Serial:
         try:
             isUC2 = self.tryToConnect(port)
             if not isUC2:
-                Raise("Wrong Firmware")
+                raise ValueError('Wrong Firmware.')
             ser = self.serialdevice
             self.is_connected = True
             
@@ -158,9 +158,12 @@ class Serial:
                         self.ser.write(json_command.encode('utf-8'))
                         self.ser.write_timeout=self.write_timeout
                     except Exception as e:
+                        self._parent.logger.error("Writing failed in sreial")
                         self._parent.logger.error(e)
                 try:self.ser.write(b'\n')
-                except: break
+                except:
+                    self._parent.logger.error("Break the loop in serial") 
+                    break
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
@@ -172,6 +175,7 @@ class Serial:
             try:
                 mReadline = self.ser.readline()
             except Exception as e:
+                self._parent.logger.error("Failed to read the line in serial")
                 self._parent.logger.error(e)
                 self.is_connected = False
                 break
