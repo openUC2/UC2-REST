@@ -44,11 +44,11 @@ class Serial:
         while True:
             try:
                 readLine = ser.readline().decode('utf-8').strip()
-                #print(readLine)
+                if self.DEBUG: self._parent.logger.debug(readLine)
                 if readLine == "":
                     break
             except Exception as e:
-                #print(e)
+                if self.DEBUG: self._parent.logger.debug(e)
                 pass
             if time.time()-t0 > timeout:
                 return
@@ -60,14 +60,14 @@ class Serial:
                 raise ValueError('Wrong Firmware.')
             ser = self.serialdevice
             self.is_connected = True
-            
+
         except Exception as e:
             self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        ser.write_timeout = self.write_timeout
+        #ser.write_timeout = self.write_timeout
         if not ser.isOpen(): ser.open()
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
@@ -118,16 +118,19 @@ class Serial:
         return False
 
     def checkFirmware(self, ser):
-        """Check if the firmware is correct"""
+        """Check if the firmware is correct
+        We do not do that inside the queue processor yet
+        """
         path = "/state_get"
         payload = {"task": path}
-        
+
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
-
-        for i in range(5):
+        # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
+        for i in range(10):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
+            if self.DEBUG: self._parent.logger.debug(mReadline)
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True
@@ -162,7 +165,7 @@ class Serial:
                         self._parent.logger.error(e)
                 try:self.ser.write(b'\n')
                 except:
-                    self._parent.logger.error("Break the loop in serial") 
+                    self._parent.logger.error("Break the loop in serial")
                     break
             # device not ready yet
             if self.ser is None:
@@ -195,16 +198,16 @@ class Serial:
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
-                            try: 
+                            try:
                                 if callback["pattern"] in json_response:
-                                    callback["callbackfct"](json_response)    
+                                    callback["callbackfct"](json_response)
                             except Exception as e:
                                 self._parent.logger.debug(e)
-                            
-                except: 
+
+                except:
                     self._parent.logger.debug("Failed to load the json from serial")
-                    json_response = {}      
-                
+                    json_response = {}
+
                 with self.lock:
                     try: currentIdentifier = json_response["qid"]
                     except: pass
@@ -261,9 +264,9 @@ class Serial:
         '''
         we need to add a callback function to a list of callbacks that will be read during the serial communication
         loop
-        ''' 
+        '''
         self.callBackList.append({"callbackfct":callback, "pattern":pattern})
-        
+
     def sendMessage(self, command, nResponses=1, timeout = 20):
         '''
         Sends a command to the device and optionally waits for a response.
@@ -367,8 +370,8 @@ class MockSerial:
         self.BAUDRATES = -1
 
     def isOpen(self):
-        return self.is_open 
-    
+        return self.is_open
+
     def open(self):
         self.is_open = True
 
