@@ -156,7 +156,7 @@ class Motor(object):
             speed = (speed,speed,speed)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=acceleration, speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -364,8 +364,10 @@ class Motor(object):
         self.isRunning = True
         is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
         timeout = timeout if is_blocking else 0
-        nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
-
+        if type(axisToMove) == list:
+            nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
+        elif type(axisToMove) == tuple:
+            nResponses = axisToMove[0].shape[0]+1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 

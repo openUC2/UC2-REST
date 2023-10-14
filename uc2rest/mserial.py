@@ -49,6 +49,7 @@ class Serial:
                     break
             except Exception as e:
                 if self.DEBUG: self._parent.logger.debug(e)
+
                 pass
             if time.time()-t0 > timeout:
                 return
@@ -60,15 +61,16 @@ class Serial:
                 raise ValueError('Wrong Firmware.')
             ser = self.serialdevice
             self.is_connected = True
-
+            
         except Exception as e:
             self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        #ser.write_timeout = self.write_timeout
-        if not ser.isOpen(): ser.open()
+        ser.write_timeout = self.write_timeout
+        if not ser.isOpen():
+            ser.open()
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
         self._freeSerialBuffer(ser)
@@ -136,6 +138,7 @@ class Serial:
                 return True
         return False
 
+
     def _generate_identifier(self):
         self.identifier_counter += 1
         return self.identifier_counter
@@ -165,7 +168,7 @@ class Serial:
                         self._parent.logger.error(e)
                 try:self.ser.write(b'\n')
                 except:
-                    self._parent.logger.error("Break the loop in serial")
+                    self._parent.logger.error("Break the loop in serial") 
                     break
             # device not ready yet
             if self.ser is None:
@@ -198,16 +201,16 @@ class Serial:
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
-                            try:
+                            try: 
                                 if callback["pattern"] in json_response:
-                                    callback["callbackfct"](json_response)
+                                    callback["callbackfct"](json_response)    
                             except Exception as e:
                                 self._parent.logger.debug(e)
-
-                except:
+                            
+                except: 
                     self._parent.logger.debug("Failed to load the json from serial")
-                    json_response = {}
-
+                    json_response = {}      
+                
                 with self.lock:
                     try: currentIdentifier = json_response["qid"]
                     except: pass
@@ -264,9 +267,9 @@ class Serial:
         '''
         we need to add a callback function to a list of callbacks that will be read during the serial communication
         loop
-        '''
+        ''' 
         self.callBackList.append({"callbackfct":callback, "pattern":pattern})
-
+        
     def sendMessage(self, command, nResponses=1, timeout = 20):
         '''
         Sends a command to the device and optionally waits for a response.
@@ -370,8 +373,8 @@ class MockSerial:
         self.BAUDRATES = -1
 
     def isOpen(self):
-        return self.is_open
-
+        return self.is_open 
+    
     def open(self):
         self.is_open = True
 
