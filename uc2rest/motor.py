@@ -368,6 +368,10 @@ class Motor(object):
             nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
         elif type(axisToMove) == tuple:
             nResponses = axisToMove[0].shape[0]+1
+        elif type(axisToMove) == np.ndarray:
+            nResponses = axisToMove.shape[0] +1
+        else:
+            nResponses = 2
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 
