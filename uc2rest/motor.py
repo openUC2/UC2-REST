@@ -34,7 +34,7 @@ class Motor(object):
         self.currentDirection = np.zeros((self.nMotors))
         self.currentPosition = np.zeros((self.nMotors))
         self._position = np.zeros((self.nMotors)) # position from the last motor status update
-        
+
         self.minPosX = -np.inf
         self.minPosY = -np.inf
         self.minPosZ = -np.inf
@@ -53,10 +53,10 @@ class Motor(object):
         # register a callback function for the motor status on the serial loop
         self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
 
-        # move motor to wake them up #FIXME: Should not be necessary! 
+        # move motor to wake them up #FIXME: Should not be necessary!
         self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
         self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
-        
+
     def _callback_motor_status(self, data):
         ''' cast the json in the form:
         {
@@ -70,15 +70,15 @@ class Motor(object):
         into the position array of the motors '''
         try:
             nSteppers = len(data["steppers"])
-            for iMotor in range(nSteppers): 
+            for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
                 # smart to re-update this variable? Will be updated by motor-sender too
                 self._position[stepperID] = data["steppers"][iMotor]["position"]
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
-            
-            
-        
+
+
+
     def setIsCoreXY(self, isCoreXY = False):
         self.isCoreXY = isCoreXY
 
@@ -156,7 +156,7 @@ class Motor(object):
             speed = (speed,speed,speed)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=acceleration, speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
@@ -307,7 +307,7 @@ class Motor(object):
             if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
                 # we want to overshoot a bit
                 steps[iMotor] = steps[iMotor] +  self.currentDirection[iMotor]*self.backlash[iMotor]
-        
+
         # get current position
         #_positions = self.get_position() # x,y,z,t = 1,2,3,0
         #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
@@ -364,8 +364,10 @@ class Motor(object):
         self.isRunning = True
         is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
         timeout = timeout if is_blocking else 0
-        nResponses = axisToMove.shape[0]+1 # we get the command received flag + a return for every axis
-
+        if type(axisToMove) == list:
+            nResponses = len(axisToMove)+1 # we get the command received flag + a return for every axis
+        elif type(axisToMove) == tuple:
+            nResponses = axisToMove[0].shape[0]+1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 
@@ -375,7 +377,7 @@ class Motor(object):
 
         # Reset busy flag
         self.isRunning = False
-        
+
         return r
 
     def isBusy(self, steps, timeout=1):
