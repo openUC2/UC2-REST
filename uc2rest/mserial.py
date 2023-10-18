@@ -4,7 +4,7 @@ import queue
 import threading
 import time
 
-T_SERIAL_WARMUP = 1
+T_SERIAL_WARMUP = 1.5
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
@@ -112,6 +112,8 @@ class Serial:
                 self.is_connected = True
                 self.NumberRetryReconnect = 0
                 return True
+            else:
+                False
 
         except Exception as e:
             self._parent.logger.debug(f"Trying out port {port} failed")
