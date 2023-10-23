@@ -56,7 +56,10 @@ class Serial:
 
     def openDevice(self, port=None, baud_rate=115200):
         try:
-            isUC2 = self.tryToConnect(port)
+            for i in range(2): # not good, but sometimes it  needs a second attempt
+                isUC2 = self.tryToConnect(port)
+                if isUC2:
+                    break
             if not isUC2:
                 raise ValueError('Wrong Firmware.')
             ser = self.serialdevice
@@ -151,15 +154,26 @@ class Serial:
         currentIdentifier = None
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
+        lastTransmisionSuccess = True
 
+        qeueIdSuccess = {}
         t0 = time.time()
         while self.running:
-            if not self.command_queue.empty() and not reading_json:
+            
+            # Check if the last command went through successfully
+            if currentIdentifier is not None:
+                try: lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)]
+                except: lastTransmisionSuccess = False 
+            if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
+                
                 if self.DEBUG: self._parent.logger.debug("Sending: "+ str(command))
                 json_command = json.dumps(command)
+                if currentIdentifier == 5:
+                    self._parent.logger.debug("Sending: "+ str(command))
                 try:
                     self.ser.write(json_command.encode('utf-8'))
+                    print(json_command.encode('utf-8'))
                 except Exception as e:
                     try:
                         self.ser.write_timeout = 1
@@ -172,6 +186,7 @@ class Serial:
                 except:
                     self._parent.logger.error("Break the loop in serial") 
                     break
+             
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
@@ -182,6 +197,7 @@ class Serial:
             # if we just want to send but not even wait for a response
             try:
                 mReadline = self.ser.readline()
+                print(mReadline)
             except Exception as e:
                 self._parent.logger.error("Failed to read the line in serial")
                 self._parent.logger.error(e)
@@ -200,6 +216,8 @@ class Serial:
                 reading_json = False
                 try:
                     json_response = json.loads(buffer)
+                    # add success to the dictionary
+                    qeueIdSuccess[str(json_response["qid"])]=1
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
@@ -208,6 +226,7 @@ class Serial:
                                     callback["callbackfct"](json_response)    
                             except Exception as e:
                                 self._parent.logger.debug(e)
+                            
                             
                 except: 
                     self._parent.logger.debug("Failed to load the json from serial")
