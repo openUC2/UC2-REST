@@ -55,6 +55,11 @@ class Serial:
                 return
 
     def openDevice(self, port=None, baud_rate=115200):
+        try: # try to close an eventually open serial connection
+            if str(type(self.ser)) != "<class 'uc2rest.mserial.MockSerial'>":
+                self.ser.close()
+        except: pass
+
         try:
             for i in range(2): # not good, but sometimes it  needs a second attempt
                 isUC2 = self.tryToConnect(port)
@@ -173,7 +178,6 @@ class Serial:
                     self._parent.logger.debug("Sending: "+ str(command))
                 try:
                     self.ser.write(json_command.encode('utf-8'))
-                    print(json_command.encode('utf-8'))
                 except Exception as e:
                     try:
                         self.ser.write_timeout = 1
@@ -197,7 +201,6 @@ class Serial:
             # if we just want to send but not even wait for a response
             try:
                 mReadline = self.ser.readline()
-                print(mReadline)
             except Exception as e:
                 self._parent.logger.error("Failed to read the line in serial")
                 self._parent.logger.error(e)
