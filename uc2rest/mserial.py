@@ -139,7 +139,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(10):
+        for i in range(20):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG: self._parent.logger.debug(mReadline)
@@ -167,7 +167,11 @@ class Serial:
             
             # Check if the last command went through successfully
             if currentIdentifier is not None:
-                try: lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)]
+                try: 
+                    lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
+                    timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
+                    if time.time() - timeLastTrasmissionWasAsked > 0.1:
+                        lastTransmisionSuccess = True # something went wrong, we have to free serial now!
                 except: lastTransmisionSuccess = False 
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
@@ -220,7 +224,7 @@ class Serial:
                 try:
                     json_response = json.loads(buffer)
                     # add success to the dictionary
-                    qeueIdSuccess[str(json_response["qid"])]=1
+                    qeueIdSuccess[str(json_response["qid"])]=(1, time.time())
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
