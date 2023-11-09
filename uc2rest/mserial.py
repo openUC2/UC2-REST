@@ -162,17 +162,21 @@ class Serial:
         lastTransmisionSuccess = True
 
         qeueIdSuccess = {}
+        timeLastTrasmissionWasAsked=time.time()
         t0 = time.time()
         while self.running:
             
             # Check if the last command went through successfully
             if currentIdentifier is not None:
                 try: 
-                    lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
-                    timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
                     if time.time() - timeLastTrasmissionWasAsked > 0.1:
                         lastTransmisionSuccess = True # something went wrong, we have to free serial now!
-                except: lastTransmisionSuccess = False 
+               
+                    lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
+                    timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
+                except Exception as e: 
+                    self._parent.logger.error("Error: "+ str(e))
+                    lastTransmisionSuccess = False 
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
                 
@@ -337,9 +341,10 @@ class Serial:
 
     def closeSerial(self):
         self.stop()
+        self.running = False
 
     def reconnect(self):
-        self.running=0
+        self.running = False
         try:
             self.ser.close()
         except:
