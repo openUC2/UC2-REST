@@ -139,7 +139,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(10):
+        for i in range(20):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG: self._parent.logger.debug(mReadline)
