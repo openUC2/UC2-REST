@@ -22,6 +22,7 @@ from .digitalout import DigitalOut
 from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
+from .temperature import Temperature
 
 try:
     import requests
@@ -115,6 +116,9 @@ class UC2Client(object):
         
         # initiliaze homing
         self.home = Home(self)
+        
+        # initialize temperature
+        self.temperature = Temperature(self)
 
         # initialize laser
         self.state = State(self)

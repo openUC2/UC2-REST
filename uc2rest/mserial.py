@@ -38,14 +38,14 @@ class Serial:
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
 
-    def _freeSerialBuffer(self, ser, timeout=5):
+    def _freeSerialBuffer(self, ser, timeout=5, timeMinimum=0):
         t0 = time.time()
         # free up any old data
         while True:
             try:
                 readLine = ser.readline().decode('utf-8').strip()
                 if self.DEBUG: self._parent.logger.debug(readLine)
-                if readLine == "":
+                if readLine == "" and time.time()-t0 > timeMinimum:
                     break
             except Exception as e:
                 if self.DEBUG: self._parent.logger.debug(e)
@@ -69,7 +69,7 @@ class Serial:
                 raise ValueError('Wrong Firmware.')
             ser = self.serialdevice
             self.is_connected = True
-            
+
         except Exception as e:
             self._parent.logger.error(e)
             ser = self.findCorrectSerialDevice()
@@ -115,7 +115,7 @@ class Serial:
         try:
             self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             time.sleep(T_SERIAL_WARMUP)
-            self._freeSerialBuffer(self.serialdevice)
+            self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
             if self.checkFirmware(self.serialdevice):
                 self.is_connected = True
                 self.NumberRetryReconnect = 0
@@ -139,7 +139,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(20):
+        for i in range(100):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG: self._parent.logger.debug(mReadline)
@@ -165,21 +165,21 @@ class Serial:
         timeLastTrasmissionWasAsked=time.time()
         t0 = time.time()
         while self.running:
-            
+
             # Check if the last command went through successfully
             if currentIdentifier is not None:
-                try: 
+                try:
                     if time.time() - timeLastTrasmissionWasAsked > 0.1:
                         lastTransmisionSuccess = True # something went wrong, we have to free serial now!
-               
+
                     lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
                     timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
-                except Exception as e: 
-                    self._parent.logger.error(e)
-                    lastTransmisionSuccess = False 
+                except Exception as e:
+                    #self._parent.logger.error("Error: "+ str(e))
+                    lastTransmisionSuccess = False
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
-                
+
                 if self.DEBUG: self._parent.logger.debug("Sending: "+ str(command))
                 json_command = json.dumps(command)
                 if currentIdentifier == 5:
@@ -197,9 +197,9 @@ class Serial:
                         self._parent.logger.error(e)
                 try:self.ser.write(b'\n')
                 except:
-                    self._parent.logger.error("Break the loop in serial") 
+                    self._parent.logger.error("Break the loop in serial")
                     break
-             
+
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
@@ -233,17 +233,17 @@ class Serial:
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
-                            try: 
+                            try:
                                 if callback["pattern"] in json_response:
-                                    callback["callbackfct"](json_response)    
+                                    callback["callbackfct"](json_response)
                             except Exception as e:
                                 self._parent.logger.debug(e)
-                            
-                            
-                except: 
-                    self._parent.logger.debug("Failed to load the json from serial")
-                    json_response = {}      
-                
+
+
+                except:
+                    self._parent.logger.debug("Failed to load the json from serial %s" % buffer)
+                    json_response = {}
+
                 with self.lock:
                     try: currentIdentifier = json_response["qid"]
                     except: pass
@@ -300,9 +300,9 @@ class Serial:
         '''
         we need to add a callback function to a list of callbacks that will be read during the serial communication
         loop
-        ''' 
+        '''
         self.callBackList.append({"callbackfct":callback, "pattern":pattern})
-        
+
     def sendMessage(self, command, nResponses=1, timeout = 20):
         '''
         Sends a command to the device and optionally waits for a response.
@@ -407,8 +407,8 @@ class MockSerial:
         self.BAUDRATES = -1
 
     def isOpen(self):
-        return self.is_open 
-    
+        return self.is_open
+
     def open(self):
         self.is_open = True
 
