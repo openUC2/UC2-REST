@@ -18,7 +18,7 @@ class Temperature(object):
         path = "/heat_act"
         payload = {
             "task": path,
-            "active": active,
+            "active": int(active),
             "Kp": Kp,
             "Ki": Ki,
             "Kd": Kd,
@@ -32,6 +32,10 @@ class Temperature(object):
     def get_temperature(self):
         path = "/heat_get"
         r = self._parent.get_json(path)
+        try:
+            r = r["heat"]
+        except:
+            r = 9999
         return r
 
 
