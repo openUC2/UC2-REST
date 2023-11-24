@@ -175,7 +175,7 @@ class Serial:
                     lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
                     timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
                 except Exception as e: 
-                    self._parent.logger.error("Error: "+ str(e))
+                    self._parent.logger.error(e)
                     lastTransmisionSuccess = False 
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
@@ -186,6 +186,7 @@ class Serial:
                     self._parent.logger.debug("Sending: "+ str(command))
                 try:
                     self.ser.write(json_command.encode('utf-8'))
+                    qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
                 except Exception as e:
                     try:
                         self.ser.write_timeout = 1
