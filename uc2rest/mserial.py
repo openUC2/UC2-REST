@@ -38,14 +38,14 @@ class Serial:
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
 
-    def _freeSerialBuffer(self, ser, timeout=5):
+    def _freeSerialBuffer(self, ser, timeout=5, timeMinimum=0):
         t0 = time.time()
         # free up any old data
         while True:
             try:
                 readLine = ser.readline().decode('utf-8').strip()
                 if self.DEBUG: self._parent.logger.debug(readLine)
-                if readLine == "":
+                if readLine == "" and time.time()-t0 > timeMinimum:
                     break
             except Exception as e:
                 if self.DEBUG: self._parent.logger.debug(e)
@@ -115,7 +115,7 @@ class Serial:
         try:
             self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             time.sleep(T_SERIAL_WARMUP)
-            self._freeSerialBuffer(self.serialdevice)
+            self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
             if self.checkFirmware(self.serialdevice):
                 self.is_connected = True
                 self.NumberRetryReconnect = 0
@@ -139,7 +139,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(20):
+        for i in range(100):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG: self._parent.logger.debug(mReadline)
@@ -175,7 +175,7 @@ class Serial:
                     lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
                     timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
                 except Exception as e: 
-                    self._parent.logger.error("Error: "+ str(e))
+                    #self._parent.logger.error("Error: "+ str(e))
                     lastTransmisionSuccess = False 
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
@@ -240,7 +240,7 @@ class Serial:
                             
                             
                 except: 
-                    self._parent.logger.debug("Failed to load the json from serial")
+                    self._parent.logger.debug("Failed to load the json from serial %s" % buffer)
                     json_response = {}      
                 
                 with self.lock:
