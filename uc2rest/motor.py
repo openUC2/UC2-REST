@@ -278,7 +278,8 @@ class Motor(object):
 
         # determine the axis to operate
         axisToMove = np.where(np.abs(speed)>0)[0]
-
+        if axisToMove.shape[0]==0:
+            return "{'return':-1}"
         if type(is_absolute)==bool:
             isAbsoluteArray = np.zeros((4))
             isAbsoluteArray[axisToMove] = is_absolute
