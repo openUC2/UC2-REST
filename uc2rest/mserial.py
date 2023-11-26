@@ -186,6 +186,7 @@ class Serial:
                     self._parent.logger.debug("Sending: "+ str(command))
                 try:
                     self.ser.write(json_command.encode('utf-8'))
+                    qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
                 except Exception as e:
                     try:
                         self.ser.write_timeout = 1
