@@ -54,7 +54,19 @@ class UC2Client(object):
         you can send commands through wifi/http or usb/serial
         '''
         if logger is None:
-            self.logger = Logger()
+            import logging
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(logging.DEBUG)
+            # create console handler and set level to debug
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.DEBUG)
+            # create formatter
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            # add formatter to ch
+            ch.setFormatter(formatter)
+            # add ch to logger
+            self.logger.addHandler(ch)
+            
         else:
             self.logger = logger
 

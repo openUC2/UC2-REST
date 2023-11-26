@@ -4,7 +4,7 @@ import queue
 import threading
 import time
 
-T_SERIAL_WARMUP = 1.5
+T_SERIAL_WARMUP = 1
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
@@ -14,11 +14,23 @@ class Serial:
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
+        
+        if self._parent is None:
+            import logging
+            self._logger = logging.getLogger(__name__)
+            self._logger.setLevel(logging.DEBUG)
+            self._logger.addHandler(logging.StreamHandler())
+        else:
+            self._logger = self._parent.logger
+            
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
         self.write_timeout = 0.02
         self.read_timeout = 0.02
+        
+
+
 
         self.cmdCallBackFct = None
 
@@ -30,10 +42,14 @@ class Serial:
         self.lock = threading.Lock()
 
         self.callBackList = []
-
         # initialize serial connection
-        self.thread = None
+        self.processingThread = None
+        self.sendingThread = None
+        self.successfullQueueIDs = []
+        
+        # try to connect to the device with the given port
         self.ser = self.openDevice(port, baudrate)
+        
 
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
@@ -43,12 +59,13 @@ class Serial:
         # free up any old data
         while True:
             try:
-                readLine = ser.readline().decode('utf-8').strip()
-                if self.DEBUG: self._parent.logger.debug(readLine)
+                readLineRaw = ser.readline()
+                readLine = readLineRaw.decode('utf-8').strip()
+                if self.DEBUG: self._logger.debug("[FreeSerial]: "+str(readLine))
                 if readLine == "" and time.time()-t0 > timeMinimum:
                     break
             except Exception as e:
-                if self.DEBUG: self._parent.logger.debug(e)
+                if self.DEBUG: self._logger.error("[FreeSerial]: "+str(e))
 
                 pass
             if time.time()-t0 > timeout:
@@ -61,7 +78,7 @@ class Serial:
         except: pass
 
         try:
-            for i in range(2): # not good, but sometimes it  needs a second attempt
+            for _ in range(2): # fixme: not good, but sometimes it  needs a second attempt
                 isUC2 = self.tryToConnect(port)
                 if isUC2:
                     break
@@ -71,27 +88,29 @@ class Serial:
             self.is_connected = True
 
         except Exception as e:
-            self._parent.logger.error(e)
+            self._logger.error("[OpenDevice]: "+str(e))
             ser = self.findCorrectSerialDevice()
             if ser is None:
                 ser = MockSerial(port, baud_rate, timeout=.1)
                 self.is_connected = False
-        ser.write_timeout = self.write_timeout
+        
         if not ser.isOpen():
             ser.open()
         # TODO: Need to be able to auto-connect
         # need to let device warm up and flush out any old data
-        self._freeSerialBuffer(ser)
+        # self._freeSerialBuffer(ser)
 
         # remove any remaining thread in case there was one open
         try:
-            del self.thread
+            del self.processingThread
         except:
             pass
         self.running = True
         self.identifier_counter = 0 # Counter for generating unique identifiers
-        self.thread = threading.Thread(target=self._process_commands)
-        self.thread.start()
+        self.processingThread = threading.Thread(target=self._process_commands)
+        self.sendingThread = threading.Thread(target=self._send_commands)
+        self.sendingThread.start()
+        self.processingThread.start()
         return ser
 
     def findCorrectSerialDevice(self):
@@ -109,7 +128,7 @@ class Serial:
         self.is_connected = False
         self.serialport = "NotConnected"
         self.serialdevice = None
-        self._parent.logger.debug("No USB device connected! Using DUMMY!")
+        self._logger.debug("No USB device connected! Using DUMMY!")
 
     def tryToConnect(self, port):
         try:
@@ -124,8 +143,7 @@ class Serial:
                 False
 
         except Exception as e:
-            self._parent.logger.debug(f"Trying out port {port} failed")
-            self._parent.logger.error(e)
+            self._logger.debug(f"Trying out port {port} failed: "+str(e))
 
         return False
 
@@ -136,70 +154,52 @@ class Serial:
         path = "/state_get"
         payload = {"task": path}
 
-        ser.write(json.dumps(payload).encode('utf-8'))
-        ser.write(b'\n')
+        ser.write((json.dumps(payload)).encode('utf-8'))
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(100):
+        for i in range(1000):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
-            if self.DEBUG: self._parent.logger.debug(mReadline)
+            if self.DEBUG: self._logger.debug("[checkFirmware]: "+str(mReadline))
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True
         return False
 
-
     def _generate_identifier(self):
         self.identifier_counter += 1
         return self.identifier_counter
 
+    def _send_commands(self):
+        while self.running:
+            if not self.command_queue.empty():
+                with self.lock:
+                    currentID, command = self.command_queue.get()
+
+                if self.DEBUG:
+                    self._logger.debug(f"Sending: {command}")
+                
+                json_command = json.dumps(command).encode('utf-8')
+                try:
+                    self.ser.write(json_command + b'\n')
+                except Exception as e:
+                    self._logger.error(f"Error sending command: {e}")
+                    
+                # introduce a slight delay to allow the device to process the command
+                # wait for the response from the processing thread (e.g. the return of the QID by the device that is triggered in _act)
+                timeout = 0.1
+                t0 = time.time()
+                while not currentID in self.successfullQueueIDs:
+                    time.sleep(0.001)
+                    if time.time()-t0>timeout:
+                        break
+                
     def _process_commands(self):
         buffer = ""
         reading_json = False
-        currentIdentifier = None
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
-        lastTransmisionSuccess = True
-
-        qeueIdSuccess = {}
-        timeLastTrasmissionWasAsked=time.time()
         t0 = time.time()
         while self.running:
-
-            # Check if the last command went through successfully
-            if currentIdentifier is not None:
-                try:
-                    if time.time() - timeLastTrasmissionWasAsked > 0.1:
-                        lastTransmisionSuccess = True # something went wrong, we have to free serial now!
-
-                    lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0]
-                    timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1]
-                except Exception as e:
-                    #self._parent.logger.error("Error: "+ str(e))
-                    lastTransmisionSuccess = False
-            if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
-                currentIdentifier, command = self.command_queue.get()
-
-                if self.DEBUG: self._parent.logger.debug("Sending: "+ str(command))
-                json_command = json.dumps(command)
-                if currentIdentifier == 5:
-                    self._parent.logger.debug("Sending: "+ str(command))
-                try:
-                    self.ser.write(json_command.encode('utf-8'))
-                    qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
-                except Exception as e:
-                    try:
-                        self.ser.write_timeout = 1
-                        self.ser.write(json_command.encode('utf-8'))
-                        self.ser.write_timeout=self.write_timeout
-                    except Exception as e:
-                        self._parent.logger.error("Writing failed in sreial")
-                        self._parent.logger.error(e)
-                try:self.ser.write(b'\n')
-                except:
-                    self._parent.logger.error("Break the loop in serial")
-                    break
-
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
@@ -211,13 +211,12 @@ class Serial:
             try:
                 mReadline = self.ser.readline()
             except Exception as e:
-                self._parent.logger.error("Failed to read the line in serial")
-                self._parent.logger.error(e)
+                self._logger.error("Failed to read the line in serial: "+str(e))
                 self.is_connected = False
                 break
             try:
                 line = mReadline.decode('utf-8').strip()
-                if self.DEBUG and line!="": self._parent.logger.debug(line)
+                if self.DEBUG and line!="": self._logger.debug("[ProcessLines]:"+str(line))
             except:
                 line = ""
             if line == "++":
@@ -229,7 +228,8 @@ class Serial:
                 try:
                     json_response = json.loads(buffer)
                     # add success to the dictionary
-                    qeueIdSuccess[str(json_response["qid"])]=(1, time.time())
+                    self.successfullQueueIDs.append(json_response["qid"])
+                    
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
@@ -237,11 +237,11 @@ class Serial:
                                 if callback["pattern"] in json_response:
                                     callback["callbackfct"](json_response)
                             except Exception as e:
-                                self._parent.logger.debug(e)
-
-
-                except:
-                    self._parent.logger.debug("Failed to load the json from serial %s" % buffer)
+                                self._logger.error("[ProcessCommands]: "+str(e))
+                                
+                except Exception as e:
+                    self._logger.error("Failed to load the json from serial %s" % buffer)
+                    self._logger.error("Error: %s", e)
                     json_response = {}
 
                 with self.lock:
@@ -329,7 +329,7 @@ class Serial:
                     if len(self.responses[identifier])==nResponses:
                         return self.responses[identifier][-1]
                 if -identifier in self.responses:
-                    self._parent.logger.debug("You have sent the wrong command!")
+                    self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
 
     def interruptCurrentSerialCommunication(self):
@@ -337,7 +337,7 @@ class Serial:
 
     def stop(self):
         self.running = False
-        self.thread.join()
+        self.processingThread.join()
         self.ser.close()
 
     def closeSerial(self):
@@ -356,33 +356,6 @@ class Serial:
         # if true, all commands will be output to a callback function and stored for later use
         self.cmdCallBackFct = cmdCallBackFct
 
-if __name__ == "__main__":
-    # Usage example
-    monitor = Serial('/dev/cu.SLAB_USBtoUART', baudsrate=115200)  # Change to your port
-
-    command_to_send = {
-            "task": "/state_get"
-    }
-
-    command_to_send = {"task":"/motor_act","motor":{"steppers": [{ "stepperid": 3, "position": -1000, "speed": 15000, "isabs": 0, "isaccel":0}]}}
-
-    t0 = time.time()
-    response = monitor.sendMessage(command_to_send, nResponses=2)
-    print("Response:", response)
-    print("time:", time.time()-t0)
-
-    t0 = time.time()
-    response = monitor.sendMessage(command_to_send, nResponses=0)
-    print("Response:", response)
-    print("time:", time.time()-t0)
-
-
-    #response = monitor.waitForResponse(command_id)
-
-    if response:
-        print("Response:", response)
-
-    monitor.stop()
 
 
 class SerialManagerWrapper:
@@ -399,9 +372,9 @@ class MockSerial:
         self.timeout = timeout
         self.is_open = False
         self.data_buffer = []
-        self.thread = Thread(target=self._simulate_data)
-        self.thread.daemon = True
-        self.thread.start()
+        self.processingThread = Thread(target=self._simulate_data)
+        self.processingThread.daemon = True
+        self.processingThread.start()
         self.is_open = True
         self.manufacturer = "UC2Mock"
         self.BAUDRATES = -1
@@ -451,3 +424,32 @@ class MockSerial:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+
+if __name__ == "__main__":
+    # Usage example
+    monitor = Serial('/dev/cu.SLAB_USBtoUART', baudrate=128000, DEBUG=True)# 115200)  # Change to your port
+
+    command_to_send = {
+            "task": "/state_get"
+    }
+
+    command_to_send = {"task":"/motor_act","qid":0,"motor":{"steppers": [{ "stepperid": 3, "position": -1000, "speed": 15000, "isabs": 0, "isaccel":0}]}}
+
+    t0 = time.time()
+    response = monitor.sendMessage(command_to_send, nResponses=2)
+    print("Response:", response)
+    print("time:", time.time()-t0)
+
+    t0 = time.time()
+    response = monitor.sendMessage(command_to_send, nResponses=0)
+    print("Response:", response)
+    print("time:", time.time()-t0)
+
+
+    #response = monitor.waitForResponse(command_id)
+
+    if response:
+        print("Response:", response)
+
+    monitor.stop()
