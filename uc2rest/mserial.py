@@ -192,6 +192,7 @@ class Serial:
                     time.sleep(0.001)
                     if time.time()-t0>timeout:
                         break
+                time.sleep(0.01) # reduce CPU load
                 
     def _process_commands(self):
         buffer = ""
@@ -258,6 +259,7 @@ class Serial:
                 buffer += line
                 lineCounter +=1
         self.running = False
+        time.sleep(0.01) # reduce CPU load
 
     def get_json(self, path):
         message = {"task":path}
