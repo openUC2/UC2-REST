@@ -29,9 +29,9 @@ class Temperature(object):
         r = self._parent.post_json(path, payload, getReturn=False)
         return r
     
-    def get_temperature(self):
+    def get_temperature(self, timeout=0.5):
         path = "/heat_get"
-        r = self._parent.get_json(path)
+        r = self._parent.get_json(path, timeout=timeout)
         try:
             r = r["heat"]
         except:

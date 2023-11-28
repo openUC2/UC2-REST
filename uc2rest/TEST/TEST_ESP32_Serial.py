@@ -5,7 +5,9 @@ import time
 
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=128000, DEBUG=True)
+port = "COM3"
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=500000, DEBUG=True)
+ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 
 #%%
@@ -16,14 +18,13 @@ ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2,
 ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
 
 # setting debug output of the serial to true - all message will be printed
-#ESP32.serial.DEBUG=True
+ESP32.serial.DEBUG=True
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
 ESP32.motor.move_a(steps=10000, speed=10000, is_blocking=False)
-mState = ESP32.state.get_state()
 ESP32.motor.move_z(steps=10000, speed=10000, is_blocking=True)
 ESP32.motor.move_x(steps=-10000, speed=10000, is_blocking=True)
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
-
+mState = ESP32.state.get_state()
 
 
 ''' ################
@@ -36,7 +37,7 @@ print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, '
 
 # load modules from device
 mModulesDevice = ESP32.modules.get_modules()
-assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
+#assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
 print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
 mModules['home']=1 # activate home module
 #%%

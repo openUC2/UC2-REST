@@ -54,19 +54,7 @@ class UC2Client(object):
         you can send commands through wifi/http or usb/serial
         '''
         if logger is None:
-            import logging
-            self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(logging.DEBUG)
-            # create console handler and set level to debug
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.DEBUG)
-            # create formatter
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            # add formatter to ch
-            ch.setFormatter(formatter)
-            # add ch to logger
-            self.logger.addHandler(ch)
-            
+            self.logger = Logger()
         else:
             self.logger = logger
 
@@ -199,7 +187,7 @@ class UC2Client(object):
             # timeout is not used anymore
             if timeout <=0:
                 getReturn = False
-            return self.serial.post_json(path, payload=None, getReturn=getReturn, nResponses=1)
+            return self.serial.post_json(path, payload=None, getReturn=getReturn, nResponses=1, timeout=timeout)
             #return self.serial.read_json()
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
