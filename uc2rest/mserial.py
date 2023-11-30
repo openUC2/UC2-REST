@@ -119,6 +119,7 @@ class Serial:
         self.serialport = "NotConnected"
         self.serialdevice = None
         self._logger.debug("No USB device connected! Using DUMMY!")
+        return None
 
     def tryToConnect(self, port):
         try:
@@ -353,7 +354,7 @@ class Serial:
             self.ser.close()
         except:
             pass
-        self.openDevice(port = self.serialport, baud_rate = self.baudrate)
+        self.serialdevice = self.openDevice(port = self.serialport, baud_rate = self.baudrate)
 
     def toggleCommandOutput(self, cmdCallBackFct=None):
         # if true, all commands will be output to a callback function and stored for later use
