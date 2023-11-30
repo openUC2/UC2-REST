@@ -186,23 +186,9 @@ class Serial:
                     lastTransmisionSuccess = True
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
-
                 if self.DEBUG: self._logger.debug("Sending: "+ str(command))
-                json_command = json.dumps(command)
-                try:
-                    self.ser.write(json_command.encode('utf-8'))
-                    qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
-                except Exception as e:
-                    try:
-                        self.ser.write_timeout = 1
-                        self.ser.write(json_command.encode('utf-8'))
-                        self.ser.write_timeout=self.write_timeout
-                    except Exception as e:
-                        self._logger.error("Writing failed in sreial, %s", e)
-                try:self.ser.write(b'\n')
-                except Exception as e:
-                    self._logger.error("Break the loop in serial" + str(e))
-
+                qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
+                
             # device not ready yet
             if self.ser is None:
                 self.is_connected = False
@@ -318,6 +304,12 @@ class Serial:
         identifier = self._generate_identifier()
         command["qid"] = identifier
         self.command_queue.put((identifier, command))
+        try:
+            json_command = json.dumps(command)+"\n"
+            self.ser.write(json_command.encode('utf-8') )
+        except Exception as e:
+            if self.DEBUG: self._logger.error(e)
+            return "Failed to Send"
         self.commands[identifier]=command
         if nResponses <= 0 or not self.is_connected or not type(self.ser.BAUDRATES) is tuple:
             return identifier
