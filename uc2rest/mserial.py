@@ -14,7 +14,7 @@ class Serial:
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
-        
+
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -182,7 +182,7 @@ class Serial:
                     if time.time() - timeLastTrasmissionWasAsked > 0.1: #timeout to wait until ESP32 responds
                         lastTransmisionSuccess = True # something went wrong, we have to free serial now!
                 except Exception as e:
-                    time.sleep(0.1) # add an artifical delay in case the esp32 did reply but we didn't catch it and then free the serial connection
+                    time.sleep(0.01) # add an artifical delay in case the esp32 did reply but we didn't catch it and then free the serial connection
                     lastTransmisionSuccess = True
             if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
                 currentIdentifier, command = self.command_queue.get()
@@ -200,9 +200,8 @@ class Serial:
                     except Exception as e:
                         self._logger.error("Writing failed in sreial, %s", e)
                 try:self.ser.write(b'\n')
-                except:
-                    self._logger.error("Break the loop in serial")
-                    break
+                except Exception as e:
+                    self._logger.error("Break the loop in serial" + str(e))
 
             # device not ready yet
             if self.ser is None:
