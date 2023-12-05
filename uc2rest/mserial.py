@@ -168,27 +168,11 @@ class Serial:
         currentIdentifier = None
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
-        lastTransmisionSuccess = True
-
-        qeueIdSuccess = {}
-        timeLastTrasmissionWasAsked=time.time()
-        t0 = time.time()
         while self.running:
 
             # Check if the last command went through successfully
-            if currentIdentifier is not None:
-                try:
-                    lastTransmisionSuccess = qeueIdSuccess[str(currentIdentifier)][0] # contains the success of the last transmission
-                    timeLastTrasmissionWasAsked = qeueIdSuccess[str(currentIdentifier)][1] # contains the time when the last transmission was asked in case we need to timeout
-                    if time.time() - timeLastTrasmissionWasAsked > 0.1: #timeout to wait until ESP32 responds
-                        lastTransmisionSuccess = True # something went wrong, we have to free serial now!
-                except Exception as e:
-                    time.sleep(0.01) # add an artifical delay in case the esp32 did reply but we didn't catch it and then free the serial connection
-                    lastTransmisionSuccess = True
-            if not self.command_queue.empty() and not reading_json and lastTransmisionSuccess:
-                currentIdentifier, command = self.command_queue.get()
-                if self.DEBUG: self._logger.debug("Sending: "+ str(command))
-                qeueIdSuccess[str(currentIdentifier)]=(False, time.time())
+            #if not self.command_queue.empty() and not reading_json:
+            #    currentIdentifier, command = self.command_queue.get()
                 
             # device not ready yet
             if self.ser is None:
@@ -217,8 +201,6 @@ class Serial:
                 reading_json = False
                 try:
                     json_response = json.loads(buffer)
-                    # add success to the dictionary
-                    qeueIdSuccess[str(json_response["qid"])]=(1, time.time())
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
@@ -307,7 +289,12 @@ class Serial:
         self.command_queue.put((identifier, command))
         try:
             json_command = json.dumps(command)+"\n"
-            self.ser.write(json_command.encode('utf-8') )
+            with self.lock:
+                t0 = time.time()
+                self.ser.flush()
+                self._logger.debug("[SendMessage]: "+str(json_command))
+                self.ser.write(json_command.encode('utf-8') )
+                self._logger.debug("[SendMessage] took: "+str(time.time()-t0))
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
