@@ -9,7 +9,7 @@ class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
 
-        self.ser = None
+        self.serialdevice= None
         self.serialport = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -42,7 +42,7 @@ class Serial:
 
         # initialize serial connection
         self.thread = None
-        self.ser = self.openDevice(port, baudrate)
+        self.serialdevice= self.openDevice(port, baudrate)
 
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
@@ -66,7 +66,7 @@ class Serial:
     def openDevice(self, port=None, baud_rate=115200):
         try: # try to close an eventually open serial connection
             if str(type(self.ser)) != "<class 'uc2rest.mserial.MockSerial'>":
-                self.ser.close()
+                self.serialdevice.close()
         except: pass
 
         try:
@@ -175,7 +175,7 @@ class Serial:
             #    currentIdentifier, command = self.command_queue.get()
                 
             # device not ready yet
-            if self.ser is None:
+            if self.serialdeviceis None:
                 self.is_connected = False
                 continue
             else:
@@ -183,11 +183,9 @@ class Serial:
 
             # if we just want to send but not even wait for a response
             try:
-                mReadline = self.ser.readline()
+                mReadline = self.serialdevice.readline()
             except Exception as e:
                 self._logger.error("Failed to read the line in serial: "+str(e))
-                self.is_connected = False
-                break
             try:
                 line = mReadline.decode('utf-8').strip()
                 if self.DEBUG and line!="": self._logger.debug("[ProcessLines]:"+str(line))
@@ -291,15 +289,15 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             with self.lock:
                 t0 = time.time()
-                self.ser.flush()
+                self.serialdevice.flush()
                 self._logger.debug("[SendMessage]: "+str(json_command))
-                self.ser.write(json_command.encode('utf-8') )
+                self.serialdevice.write(json_command.encode('utf-8') )
                 self._logger.debug("[SendMessage] took: "+str(time.time()-t0))
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
         self.commands[identifier]=command
-        if nResponses <= 0 or not self.is_connected or not type(self.ser.BAUDRATES) is tuple:
+        if nResponses <= 0 or not self.is_connected or not type(self.serialdevice.BAUDRATES) is tuple:
             return identifier
         while self.running:
             time.sleep(0.002)
@@ -320,7 +318,7 @@ class Serial:
     def stop(self):
         self.running = False
         self.thread.join()
-        self.ser.close()
+        self.serialdevice.close()
 
     def closeSerial(self):
         self.stop()
@@ -329,7 +327,7 @@ class Serial:
     def reconnect(self):
         self.running = False
         try:
-            self.ser.close()
+            self.serialdevice.close()
         except:
             pass
         self.serialdevice = self.openDevice(port = self.serialport, baud_rate = self.baudrate)
@@ -388,6 +386,9 @@ class MockSerial:
         self.manufacturer = "UC2Mock"
         self.BAUDRATES = -1
 
+    def flush(self):
+        pass
+    
     def isOpen(self):
         return self.is_open
 
