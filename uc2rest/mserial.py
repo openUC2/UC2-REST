@@ -9,7 +9,7 @@ class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
 
-        self.serialdevice= None
+        self.serialdevice = None
         self.serialport = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -175,7 +175,7 @@ class Serial:
             #    currentIdentifier, command = self.command_queue.get()
                 
             # device not ready yet
-            if self.serialdeviceis None:
+            if self.serialdevice is None:
                 self.is_connected = False
                 continue
             else:
@@ -288,11 +288,9 @@ class Serial:
         try:
             json_command = json.dumps(command)+"\n"
             with self.lock:
-                t0 = time.time()
                 self.serialdevice.flush()
                 self._logger.debug("[SendMessage]: "+str(json_command))
                 self.serialdevice.write(json_command.encode('utf-8') )
-                self._logger.debug("[SendMessage] took: "+str(time.time()-t0))
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
