@@ -175,7 +175,7 @@ class Serial:
             #    currentIdentifier, command = self.command_queue.get()
                 
             # device not ready yet
-            if self.serialdeviceis None:
+            if self.serialdevice is None:
                 self.is_connected = False
                 continue
             else:
