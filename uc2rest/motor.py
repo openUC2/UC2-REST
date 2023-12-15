@@ -48,6 +48,8 @@ class Motor(object):
         self.stepSizeZ =  1
         self.stepSizeA =  1
 
+        self.DEFAULT_ACCELERATION = 10000
+
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
         # register a callback function for the motor status on the serial loop
@@ -77,7 +79,24 @@ class Motor(object):
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
 
-
+    def setTrigger(self, axis="X", pin=1, offset=0, period=1):
+        # {"task": "/motor_act", "setTrig": {"steppers": [{"stepperid": 1, "trigPin": 1, "trigOff":0, "trigPer":1}]}}
+        if type(axis) is not int:
+            axis = self.xyztTo1230(axis)
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "setTrig":{
+                "steppers": [
+                {
+                 "stepperid": axis,
+                 "trigPin": pin,
+                 "trigOff": offset,
+                 "trigPer": period
+                 }]
+            }}
+        r = self._parent.post_json(path, payload)
+        return r
 
     def setIsCoreXY(self, isCoreXY = False):
         self.isCoreXY = isCoreXY
@@ -164,7 +183,7 @@ class Motor(object):
             # have to move only one motor to move in XY direction
            return self.move_xyza(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         else:
-            if len(speed)!= 2:
+            if type(speed)==int or len(speed)!= 2:
                 speed = (speed,speed)
 
             if len(acceleration)!= 2:
@@ -339,10 +358,12 @@ class Motor(object):
                              "position": int(steps[iMotor]),
                              "speed": int(speed[iMotor]),
                              "isabs": isAbsoluteArray[iMotor],
-                             "isaccel":0,
+                             "isaccel":1,
                              "isen": is_enabled}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
+                else:
+                    motorProp["accel"] = self.DEFAULT_ACCELERATION
                 motorPropList.append(motorProp)
 
         path = "/motor_act"

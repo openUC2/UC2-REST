@@ -104,6 +104,12 @@ class Serial:
         return ser
 
     def findCorrectSerialDevice(self):
+        '''
+        This function tries to find the correct serial device from the list of available ports
+        It also checks if the firmware is correct by sending a command and checking for the correct response
+        It may be that - depending on the OS - the response may be corrupted
+        If this is the case try to hard-code the COM port into the config JSON file
+        '''
         _available_ports = serial.tools.list_ports.comports(include_links=False)
         ports_to_check = ["COM", "/dev/tt", "/dev/a", "/dev/cu.SLA", "/dev/cu.wchusb"]
         descriptions_to_check = ["CH340", "CP2102"]
@@ -148,7 +154,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(100):
+        for i in range(500):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG: self._logger.debug("[checkFirmware]: "+str(mReadline))
@@ -173,7 +179,7 @@ class Serial:
             # Check if the last command went through successfully
             #if not self.command_queue.empty() and not reading_json:
             #    currentIdentifier, command = self.command_queue.get()
-                
+
             # device not ready yet
             if self.serialdevice is None:
                 self.is_connected = False
@@ -210,7 +216,7 @@ class Serial:
 
                 except Exception as e:
                     self._logger.error("Failed to load the json from serial %s" % buffer)
-                    self._logger.error("Error: %s", e)
+                    self._logger.error("Error: %s" % str(e))
                     json_response = {}
 
                 with self.lock:
@@ -233,7 +239,7 @@ class Serial:
         message = json.dumps(message)
         return self.sendMessage(message, nResponses=0, timeout=timeout)
 
-    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=1):
+    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=100):
         """Make an HTTP POST request and return the JSON response"""
         if payload is None:
             payload = {}
@@ -386,7 +392,7 @@ class MockSerial:
 
     def flush(self):
         pass
-    
+
     def isOpen(self):
         return self.is_open
 
