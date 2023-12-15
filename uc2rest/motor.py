@@ -54,8 +54,8 @@ class Motor(object):
         self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
 
         # move motor to wake them up #FIXME: Should not be necessary!
-        self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
-        self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
+        #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
+        #self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
 
     def _callback_motor_status(self, data):
         ''' cast the json in the form:
