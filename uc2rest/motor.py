@@ -97,7 +97,29 @@ class Motor(object):
             }}
         r = self._parent.post_json(path, payload)
         return r
-        
+    
+    # {"task": "/motor_act", "stagescan": {"nStepsLine": 100, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 100, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 5}}"}}
+    def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5):
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "stagescan":{
+                "nStepsLine": nStepsLine,
+                "dStepsLine": dStepsLine,
+                "nTriggerLine": nTriggerLine,
+                "nStepsPixel": nStepsPixel,
+                "dStepsPixel": dStepsPixel,
+                "nTriggerPixel": nTriggerPixel,
+                "delayTimeStep": delayTimeStep,
+                "stopped": 0,
+                "nFrames": nFrames
+            }}
+        r = self._parent.post_json(path, payload)
+        return r
+    
+    def stopStageScanning(self):
+        self.startStageScanning(stopped=1)
+    
     def setIsCoreXY(self, isCoreXY = False):
         self.isCoreXY = isCoreXY
 
