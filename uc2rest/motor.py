@@ -521,7 +521,7 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def get_position(self, axis=None, timeout=1):
+    def get_position(self, axis=None, timeout=.2):
         # pulls all current positions from the stepper controller
         path = "/motor_get"
         payload = {
@@ -532,7 +532,7 @@ class Motor(object):
         _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1)
+        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
