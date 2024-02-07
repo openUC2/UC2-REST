@@ -160,6 +160,7 @@ class UC2Client(object):
             # FIXME: this is not working
             url = f"http://{self.host}:{self.port}{path}"
             try:
+                if timeout==0: timeout=.2
                 r = requests.post(url, json=payload, headers=self.headers,  timeout=timeout)
                 returnMessage = r.json()
                 returnMessage["success"] = r.status_code==200
