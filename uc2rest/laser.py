@@ -46,7 +46,7 @@ class Laser(object):
 
         }
         #self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
-        r = self._parent.post_json(path, payload, getReturn=is_blocking)
+        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=.5)
         return r
 
     def set_laserpin(self, laserid=1, laserpin=0):
@@ -61,33 +61,3 @@ class Laser(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def get_laserpins(self):
-        path = '/laser_get'
-        
-        r = self._parent.get_json(path)
-        
-        if type(r) is dict:
-            # cast laser pins
-            if "LASER1pin" in r: r["LASER1pin"] = int(r["LASER1pin"])
-            else: r["LASER1pin"] = 0
-            if r.__contains__("LASER2pin"): r["LASER2pin"] = int(r["LASER2pin"])
-            else: r["LASER2pin"] = 0
-            if r.__contains__("LASER3pin"): r["LASER3pin"] = int(r["LASER3pin"])
-            else: r["LASER3pin"] = 0
-        else:
-            r={}
-            r["LASER1pin"] = 0
-            r["LASER2pin"] = 0
-            r["LASER3pin"] = 0
-        
-        return r
-    
-    def get_laserpin(self, laserid=1):
-        path = '/laser_get'
-        
-        payload = {
-            "task": path,
-        }
-        
-        r = self._parent.post_json(path, payload,timeout=2)
-        return r["LASER"+str(laserid)+"pin"]
