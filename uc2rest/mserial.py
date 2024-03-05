@@ -119,12 +119,14 @@ class Serial:
                any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
                 if self.tryToConnect(port.device):
                     self.is_connected = True
+                    self.manufacturer = port.manufacturer
                     return self.serialdevice
 
         self.is_connected = False
         self.serialport = "NotConnected"
         self.serialdevice = None
         self._logger.debug("No USB device connected! Using DUMMY!")
+        self.manufacturer = "UC2Mock"
         return None
 
     def tryToConnect(self, port):
@@ -175,6 +177,10 @@ class Serial:
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
         while self.running:
+
+            if self.manufacturer == "UC2Mock": 
+                self.running = False
+                return
 
             # Check if the last command went through successfully
             #if not self.command_queue.empty() and not reading_json:
@@ -311,7 +317,7 @@ class Serial:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
         self.commands[identifier]=command
-        if nResponses <= 0 or not self.is_connected or not type(self.serialdevice.BAUDRATES) is tuple:
+        if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             return identifier
         while self.running:
             time.sleep(0.002)
