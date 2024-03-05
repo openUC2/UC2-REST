@@ -80,7 +80,7 @@ class Home(object):
                  "timeout":timeout*1000,
                  "speed":direction*abs(speed),
                  "direction":direction,
-                 "endposrelease":endposrelease, 
+                 "endposrelease":endposrelease,
                  "endstoppolarity":endstoppolarity
                  }]
             }}

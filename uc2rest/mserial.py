@@ -229,6 +229,16 @@ class Serial:
                         self.responses[currentIdentifier].append(json_response.copy())
                 buffer = ""     # reset buffer
 
+            # detect a reboot of the device and return the current QIDs
+            elif line == "reboot":
+                self._logger.warning("Device rebooted")
+                self.resetLastCommand = True
+                buffer = ""
+                lineCounter = 0
+                reading_json = False
+                self.responses[currentIdentifier].append({"reboot": 1})
+                self.responses[currentIdentifier].append({"qid": currentIdentifier})
+
             if reading_json:
                 buffer += line
                 lineCounter +=1
@@ -295,7 +305,7 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             with self.lock:
                 self.serialdevice.flush()
-                self._logger.debug("[SendMessage]: "+str(json_command))
+                if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
                 self.serialdevice.write(json_command.encode('utf-8') )
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
