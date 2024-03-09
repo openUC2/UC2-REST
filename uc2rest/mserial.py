@@ -295,7 +295,7 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             with self.lock:
                 self.serialdevice.flush()
-                self._logger.debug("[SendMessage]: "+str(json_command))
+                if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
                 self.serialdevice.write(json_command.encode('utf-8') )
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
