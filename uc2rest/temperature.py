@@ -10,7 +10,7 @@ class Temperature(object):
         
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
-            self._parent.serial.register_callback(self._callback_temperature_status, pattern="temperature")
+            self._parent.serial.register_callback(self._callback_temperature_status, pattern="heat")
         
 
     '''
@@ -76,7 +76,7 @@ class Temperature(object):
                 r = -273.15
             return r
         else:
-            r = self._temperature
+            return self._temperature
 
 if __name__ == "__main__":
 
