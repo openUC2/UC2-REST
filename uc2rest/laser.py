@@ -11,7 +11,7 @@ class Laser(object):
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
                         despeckleAmplitude = 0.,
-                        despecklePeriod=10, timeout=20, is_blocking = True):
+                        despecklePeriod=10, timeout=20, is_blocking = False):
         if channel not in (0,1,2,3):
             if channel=="R":
                 channel = 1

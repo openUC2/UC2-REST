@@ -14,7 +14,7 @@ class Serial:
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
-
+        self.manufacturer = ""
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -301,7 +301,6 @@ class Serial:
         If nResponses is 1, then the command is sent and the response is returned.
         If nResponses is >1, then the command is sent and a list of responses is returned.
         '''
-        t0 = time.time()
         if type(command) == str:
             command = json.loads(command)
         identifier = self._generate_identifier()
@@ -319,6 +318,7 @@ class Serial:
         self.commands[identifier]=command
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             return identifier
+        t0 = time.time()
         while self.running:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
