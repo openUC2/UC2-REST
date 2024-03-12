@@ -5,8 +5,22 @@ import time
 
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
-port = "COM3"
+#port = "COM3"
 ESP32 = uc2rest.UC2Client(serialport=port, baudrate=500000, DEBUG=True)
+#ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
+
+#%% TEMPERATURE
+ESP32.temperature.start_temperature_polling()
+time.sleep(5)
+mTemperature = ESP32.temperature.get_temperature()
+print(mTemperature)
+
+# 
+
+ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
+ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
+
+
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 
@@ -14,7 +28,6 @@ ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 ''' ################
 HOME
 ################'''
-ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=2, isBlocking=True)
 ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
 
 # setting debug output of the serial to true - all message will be printed

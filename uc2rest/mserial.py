@@ -14,7 +14,7 @@ class Serial:
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
-
+        self.manufacturer = ""
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -119,12 +119,14 @@ class Serial:
                any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
                 if self.tryToConnect(port.device):
                     self.is_connected = True
+                    self.manufacturer = port.manufacturer
                     return self.serialdevice
 
         self.is_connected = False
         self.serialport = "NotConnected"
         self.serialdevice = None
         self._logger.debug("No USB device connected! Using DUMMY!")
+        self.manufacturer = "UC2Mock"
         return None
 
     def tryToConnect(self, port):
@@ -175,6 +177,10 @@ class Serial:
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
         while self.running:
+
+            if self.manufacturer == "UC2Mock": 
+                self.running = False
+                return
 
             # Check if the last command went through successfully
             #if not self.command_queue.empty() and not reading_json:
@@ -228,6 +234,16 @@ class Serial:
                         self.responses[currentIdentifier] = list()
                         self.responses[currentIdentifier].append(json_response.copy())
                 buffer = ""     # reset buffer
+
+            # detect a reboot of the device and return the current QIDs
+            elif line == "reboot":
+                self._logger.warning("Device rebooted")
+                self.resetLastCommand = True
+                buffer = ""
+                lineCounter = 0
+                reading_json = False
+                self.responses[currentIdentifier].append({"reboot": 1})
+                self.responses[currentIdentifier].append({"qid": currentIdentifier})
 
             if reading_json:
                 buffer += line
@@ -285,7 +301,6 @@ class Serial:
         If nResponses is 1, then the command is sent and the response is returned.
         If nResponses is >1, then the command is sent and a list of responses is returned.
         '''
-        t0 = time.time()
         if type(command) == str:
             command = json.loads(command)
         identifier = self._generate_identifier()
@@ -295,14 +310,15 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             with self.lock:
                 self.serialdevice.flush()
-                self._logger.debug("[SendMessage]: "+str(json_command))
+                if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
                 self.serialdevice.write(json_command.encode('utf-8') )
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
         self.commands[identifier]=command
-        if nResponses <= 0 or not self.is_connected or not type(self.serialdevice.BAUDRATES) is tuple:
+        if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             return identifier
+        t0 = time.time()
         while self.running:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:

@@ -53,7 +53,8 @@ class Motor(object):
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
         # register a callback function for the motor status on the serial loop
-        self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
+        if hasattr(self._parent, "serial"):
+            self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
 
         # move motor to wake them up #FIXME: Should not be necessary!
         #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
@@ -521,7 +522,7 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def get_position(self, axis=None, timeout=1):
+    def get_position(self, axis=None, timeout=.2):
         # pulls all current positions from the stepper controller
         path = "/motor_get"
         payload = {
@@ -532,7 +533,7 @@ class Motor(object):
         _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
 
         # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1)
+        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
