@@ -172,7 +172,7 @@ class UC2Client(object):
         elif self.is_serial or self.isPyScript:
             if timeout <=0:
                 getReturn = False
-            return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses)
+            return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses, timeout=timeout)
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None

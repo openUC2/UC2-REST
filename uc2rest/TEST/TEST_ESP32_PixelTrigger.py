@@ -4,15 +4,15 @@ import numpy as np
 import time
 
 port = "unknown"
-port = "COM3"
 port = "/dev/cu.SLAB_USBtoUART"
+port = "COM3"
 ESP32 = uc2rest.UC2Client(serialport=port, baudrate=500000, DEBUG=True)
 
 ''' ################
 Start Stagescanning
 ################'''
 ESP32.serial.DEBUG=True
-ESP32.motor.startStageScanning(nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5)
+ESP32.motor.startStageScanning(nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=50)
 
 
 #%%

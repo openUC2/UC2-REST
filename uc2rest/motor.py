@@ -98,8 +98,8 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    # {"task": "/motor_act", "stagescan": {"nStepsLine": 100, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 100, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 5}}"}}
-    def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5):
+    # {"task": "/motor_act", "stagescan": {"nStepsLine": 50, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 50, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 50}}"}}
+    def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5, isBlocking = False):
         path = "/motor_act"
         payload = {
             "task": path,
@@ -114,7 +114,7 @@ class Motor(object):
                 "stopped": 0,
                 "nFrames": nFrames
             }}
-        r = self._parent.post_json(path, payload)
+        r = self._parent.post_json(path, payload, getReturn=isBlocking)
         return r
 
     def stopStageScanning(self):
