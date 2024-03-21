@@ -26,7 +26,7 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
-        self.write_timeout = 0.02
+        self.write_timeout = 0.05
         self.read_timeout = 0.02
 
         self.cmdCallBackFct = None
@@ -188,7 +188,10 @@ class Serial:
             json_command = self.sender_queue.get()
             
             # Process the command
-            self.serialdevice.write(json_command.encode('utf-8'))
+            try:
+                self.serialdevice.write(json_command.encode('utf-8'))
+            except Exception as e:
+                self._logger.error("Failed to write the line in serial: "+str(e))
             
             # Signal that the command has been processed
             self.sender_queue.task_done()
