@@ -9,16 +9,6 @@ class Motor(object):
     # indicate if there is any motion happening
     isRunning = False
 
-    # a dictionary that stores all motor parameters for each dxis
-    settingsdict = {"motor": {"steppers":
-        [{"stepperid":0,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":1,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":2,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":3,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000}]
-        }}
-
-
-
     def __init__(self, parent=None):
         self._parent = parent
 
