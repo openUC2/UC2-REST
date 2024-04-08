@@ -26,7 +26,7 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
-        self.write_timeout = 0.02
+        self.write_timeout = 0.05
         self.read_timeout = 0.02
 
         self.cmdCallBackFct = None

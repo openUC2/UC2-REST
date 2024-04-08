@@ -23,7 +23,7 @@ from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
 from .temperature import Temperature
-
+from .message import Message
 try:
     import requests
 except:
@@ -140,6 +140,9 @@ class UC2Client(object):
         
         # initialize digital out
         self.digitalout = DigitalOut(self)
+        
+        # initialize messaging
+        self.message = Message(self)
         
         # initialize config
         if False: # not self.isPyScript: 
