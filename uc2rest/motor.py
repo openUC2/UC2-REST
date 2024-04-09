@@ -9,16 +9,6 @@ class Motor(object):
     # indicate if there is any motion happening
     isRunning = False
 
-    # a dictionary that stores all motor parameters for each dxis
-    settingsdict = {"motor": {"steppers":
-        [{"stepperid":0,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":1,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":2,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000},
-         {"stepperid":3,"dir":0,"step":0,"enable":0,"dir_inverted":False,"step_inverted":False,"enable_inverted":False,"speed":0,"speedmax":200000,"max_pos":100000,"min_pos":-100000}]
-        }}
-
-
-
     def __init__(self, parent=None):
         self._parent = parent
 
@@ -99,8 +89,8 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    # {"task": "/motor_act", "stagescan": {"nStepsLine": 100, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 100, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 5}}"}}
-    def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5):
+    # {"task": "/motor_act", "stagescan": {"nStepsLine": 50, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 50, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 50}}"}}
+    def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5, isBlocking = False):
         path = "/motor_act"
         payload = {
             "task": path,
@@ -115,7 +105,7 @@ class Motor(object):
                 "stopped": 0,
                 "nFrames": nFrames
             }}
-        r = self._parent.post_json(path, payload)
+        r = self._parent.post_json(path, payload, getReturn=isBlocking)
         return r
 
     def stopStageScanning(self):

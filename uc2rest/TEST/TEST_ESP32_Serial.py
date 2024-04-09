@@ -9,6 +9,14 @@ port = "/dev/cu.SLAB_USBtoUART"
 ESP32 = uc2rest.UC2Client(serialport=port, baudrate=500000, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
+#%% TEMPERATURE
+ESP32.temperature.start_temperature_polling()
+time.sleep(5)
+mTemperature = ESP32.temperature.get_temperature()
+print(mTemperature)
+
+# 
+
 ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
 ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
 

@@ -14,7 +14,7 @@ class Serial:
         self.baudrate = baudrate
         self.timeout = timeout
         self._parent = parent
-
+        self.manufacturer = ""
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -26,18 +26,19 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
-        self.write_timeout = 0.02
+        self.write_timeout = 0.05
         self.read_timeout = 0.02
 
         self.cmdCallBackFct = None
 
         # setup command queue
         self.resetLastCommand = False
-        self.command_queue = queue.Queue()
+        self.sender_queue = queue.Queue()
         self.responses = {}
         self.commands = {}
         self.lock = threading.Lock()
-
+        
+        # setup callback list for parent modules
         self.callBackList = []
 
         # initialize serial connection
@@ -101,6 +102,11 @@ class Serial:
         self.identifier_counter = 0 # Counter for generating unique identifiers
         self.thread = threading.Thread(target=self._process_commands)
         self.thread.start()
+        
+        # setup sender queue
+        self.sender_worker_thread = threading.Thread(target=self._sending_commands)
+        self.sender_worker_thread.daemon = True  # Ensure the thread exits when the main program does
+        self.sender_worker_thread.start()  
         return ser
 
     def findCorrectSerialDevice(self):
@@ -170,6 +176,29 @@ class Serial:
         self.identifier_counter += 1
         return self.identifier_counter
 
+    def _enqueue_command(self, json_command):
+        """Add a command to the queue."""
+        self.sender_queue.put(json_command)
+
+    def _sending_commands(self):
+        """Sending commands from the queue with a 1s delay between them."""
+        while self.running:
+            
+            # Wait for the next command
+            json_command = self.sender_queue.get()
+            
+            # Process the command
+            try:
+                self.serialdevice.write(json_command.encode('utf-8'))
+            except Exception as e:
+                self._logger.error("Failed to write the line in serial: "+str(e))
+            
+            # Signal that the command has been processed
+            self.sender_queue.task_done()
+            
+            # Wait for .05 second before processing the next command
+            time.sleep(0.05)
+            
     def _process_commands(self):
         buffer = ""
         reading_json = False
@@ -182,10 +211,6 @@ class Serial:
                 self.running = False
                 return
 
-            # Check if the last command went through successfully
-            #if not self.command_queue.empty() and not reading_json:
-            #    currentIdentifier, command = self.command_queue.get()
-
             # device not ready yet
             if self.serialdevice is None:
                 self.is_connected = False
@@ -194,6 +219,7 @@ class Serial:
                 self.is_connected = True
 
             # if we just want to send but not even wait for a response
+        
             try:
                 mReadline = self.serialdevice.readline()
             except Exception as e:
@@ -225,15 +251,16 @@ class Serial:
                     self._logger.error("Error: %s" % str(e))
                     json_response = {}
 
+                try: currentIdentifier = json_response["qid"]
+                except: pass
+
                 with self.lock:
-                    try: currentIdentifier = json_response["qid"]
-                    except: pass
                     try:
                         self.responses[currentIdentifier].append(json_response.copy())
                     except:
                         self.responses[currentIdentifier] = list()
                         self.responses[currentIdentifier].append(json_response.copy())
-                buffer = ""     # reset buffer
+                    buffer = ""      # reset buffer
 
             # detect a reboot of the device and return the current QIDs
             elif line == "reboot":
@@ -301,24 +328,24 @@ class Serial:
         If nResponses is 1, then the command is sent and the response is returned.
         If nResponses is >1, then the command is sent and a list of responses is returned.
         '''
-        t0 = time.time()
         if type(command) == str:
             command = json.loads(command)
         identifier = self._generate_identifier()
         command["qid"] = identifier
-        self.command_queue.put((identifier, command))
         try:
             json_command = json.dumps(command)+"\n"
-            with self.lock:
-                self.serialdevice.flush()
-                if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
-                self.serialdevice.write(json_command.encode('utf-8') )
+            self.serialdevice.flush()
+            if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
+            # we have to queue the commands and give it some time to process
+            self._enqueue_command(json_command)
+            
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
         self.commands[identifier]=command
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             return identifier
+        t0 = time.time()
         while self.running:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
