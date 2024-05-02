@@ -6,7 +6,6 @@ class Laser(object):
         self.filter_pos_2 = 0
         self.filter_pos_3 = 0
         self.filter_pos_LED = 0
-        self._parent.logger.debug("Attention, lasers are on channels 1,2,3")
         
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,

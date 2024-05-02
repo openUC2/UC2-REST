@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import time 
-gTimeout = 1
+gTimeout = 2
 class LedMatrix(object):
     def __init__(self, parent, NLeds=64):
         #TOOD: This is for the LED matrix only!
@@ -73,7 +73,7 @@ class LedMatrix(object):
         self.currentLedArrayMode = "array"            
         return r
 
-    def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=False, timeout=gTimeout):
+    def send_LEDMatrix_full(self, intensity = (255,255,255), getReturn=True, timeout=gTimeout):
         '''
         set all LEDs with te same RGB value: intensity=(255,255,255)
         '''
@@ -168,7 +168,7 @@ class LedMatrix(object):
 
         return self.ledpattern
     
-    def setAll(self, state, intensity=None, getReturn=False):
+    def setAll(self, state, intensity=None, getReturn=True):
         # fast addressing
         # turns on all LEDs at a certain intensity
         state = np.sum(state)>0
@@ -179,7 +179,7 @@ class LedMatrix(object):
         self.ledpattern = state*np.ones((self.NLeds, 3))
         return self.ledpattern
     
-    def setIntensity(self, intensity, getReturn=False):
+    def setIntensity(self, intensity, getReturn=True):
         self.intensity = intensity
         self.setPattern(getReturn=getReturn)
     

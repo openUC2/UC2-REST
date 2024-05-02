@@ -39,7 +39,7 @@ class UC2Client(object):
     is_serial = False
 
     # BAUDRATE = 500000
-    BAUDRATE = 115200
+    BAUDRATE = 500000
 
     def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, SerialManager=None, DEBUG=False, logger=None):
         '''
