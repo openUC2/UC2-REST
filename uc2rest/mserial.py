@@ -342,10 +342,11 @@ class Serial:
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
-        self.commands[identifier]=command
+        self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             return identifier
         t0 = time.time()
+        timeReturnReceived = 0.3
         while self.running:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
@@ -358,6 +359,15 @@ class Serial:
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
+            if time.time()-t0>timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
+                self._logger.debug("It takes too long to get a response, we will resend the last command")
+                try:
+                    self.DEBUG=1
+                    self.serialdevice.write(json.dumps(self.commands[identifier]).encode('utf-8'))
+                    time.sleep(0.1)
+                except Exception as e:
+                    self._logger.error("Failed to write the line in serial: "+str(e))
+            
 
     def interruptCurrentSerialCommunication(self):
         self.resetLastCommand = True
