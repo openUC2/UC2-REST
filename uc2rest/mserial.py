@@ -340,7 +340,7 @@ class Serial:
             #self.serialdevice.flush()
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
             self.serialdevice.write(json_command.encode('utf-8'))
-            time.sleep(1)
+            #time.sleep(1)
             # we have to queue the commands and give it some time to process
             #self._enqueue_command(json_command)
             

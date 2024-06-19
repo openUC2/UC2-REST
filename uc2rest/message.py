@@ -9,18 +9,16 @@ class Message(object):
     This class only parses incoming messages from the ESP32 that can be used e.g. for triggering events such as taking an image
     or converting hardware inputs such as button presses to software events
     '''
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, nCallbacks = 10):
         self._parent = parent
+        self.nCallbacks = nCallbacks
+        # initialize the callback functions
+        self.init_callback_functions(self.nCallbacks)
         
-        # create a dictionary of callback functions that can be triggered by incoming messages
-        self._callbackPerKey = {}
-        self.NCallBacks = 10
-        for i in range(self.NCallBacks):
-            self._callbackPerKey[i] = None
-
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
             self._parent.serial.register_callback(self._callback_message, pattern="message")
+
 
     def _callback_message(self, data):
         ''' cast the json in the form:
@@ -69,13 +67,20 @@ class Message(object):
         except Exception as e:
             print("Error in _callback_message: ", e)
 
+    def init_callback_functions(self, nCallbacks=10):
+        ''' initialize the callback functions '''
+        self._callbackPerKey = {}
+        self.nCallbacks = nCallbacks
+        for i in range(nCallbacks):
+            self._callbackPerKey[i] = None
+            
     def register_callback(self, key, callback):
         ''' register a callback function for a specific key '''
         self._callbackPerKey[key] = callback
         
     def trigger_message(self, key:int=1, value:int=1):
         # {"task": "/message_act", "message": 1, "key":1, "value":1}
-        path = "/heat_act"
+        path = "/message_act"
         payload = {
             "task": path,
             "key": key,

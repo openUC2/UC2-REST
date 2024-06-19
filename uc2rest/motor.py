@@ -45,11 +45,23 @@ class Motor(object):
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
             self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
-
+        # announce a function that is called when we receive a position update through the callback
+        self._callbackPerKey = {}
+        self.nCallbacks = 10
+        self._callbackPerKey = self.init_callback_functions(nCallbacks=self.nCallbacks) # only one is used for now
+        print(self._callbackPerKey)
         # move motor to wake them up #FIXME: Should not be necessary!
         #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
         #self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
 
+    def init_callback_functions(self, nCallbacks=10):
+        ''' initialize the callback functions '''
+        _callbackPerKey = {}
+        self.nCallbacks = nCallbacks
+        for i in range(nCallbacks):
+            _callbackPerKey[i] = []
+        return _callbackPerKey
+            
     def _callback_motor_status(self, data):
         ''' cast the json in the form:
         {
@@ -67,9 +79,15 @@ class Motor(object):
                 stepperID = data["steppers"][iMotor]["stepperid"]
                 # smart to re-update this variable? Will be updated by motor-sender too
                 self._position[stepperID] = data["steppers"][iMotor]["position"]
+            self._callbackPerKey[0](self._position) # we call the function with the value
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
 
+    def register_callback(self, key, callbackfct):
+        ''' register a callback function for a specific key '''
+        self._callbackPerKey[key] = callbackfct
+        
+        
     def setTrigger(self, axis="X", pin=1, offset=0, period=1):
         # {"task": "/motor_act", "setTrig": {"steppers": [{"stepperid": 1, "trigPin": 1, "trigOff":0, "trigPer":1}]}}
         if type(axis) is not int:
