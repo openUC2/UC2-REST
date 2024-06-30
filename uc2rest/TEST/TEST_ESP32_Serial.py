@@ -18,7 +18,6 @@ mTemperature = ESP32.temperature.get_temperature()
 print(mTemperature)
 
 # 
-
 ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
 ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
 
