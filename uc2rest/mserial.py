@@ -386,8 +386,10 @@ class Serial:
         self.stop()
         self.running = False
 
-    def reconnect(self):
+    def reconnect(self, baudrate=None):
         self.running = False
+        if baudrate is not None:
+            self.baudrate = baudrate
         try:
             self.serialdevice.close()
         except:
