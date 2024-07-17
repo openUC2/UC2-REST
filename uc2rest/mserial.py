@@ -349,6 +349,7 @@ class Serial:
             return "Failed to Send"
         self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
+            time.sleep(0.1)
             return identifier
         t0 = time.time()
         timeReturnReceived = 0.3
