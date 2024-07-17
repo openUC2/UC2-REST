@@ -10,26 +10,23 @@ ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
 
-time.sleep(1000)
 #%% TEMPERATURE
-ESP32.temperature.start_temperature_polling()
-time.sleep(5)
-mTemperature = ESP32.temperature.get_temperature()
-print(mTemperature)
-
-# 
-ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
-ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
-
-
-ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+if 0:
+    ESP32.temperature.start_temperature_polling()
+    time.sleep(5)
+    mTemperature = ESP32.temperature.get_temperature()
+    print(mTemperature)
 
 
 #%%
 ''' ################
 HOME
 ################'''
-ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+if 0:
+    ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+    ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
+    ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
+
 
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
@@ -67,7 +64,7 @@ mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0), getReturn=False)
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
-assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
+assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
 
 #%% 
 # test Motor
@@ -113,7 +110,7 @@ LED
 ################'''
 # test LED
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
-assert mResult["success"] == 1, "Failed sending LED command"
+assert mResult["idsuccess"] == 1, "Failed sending LED command"
 time.sleep(0.5)
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
 assert mResult["success"] == 1, "Failed sending LED command"

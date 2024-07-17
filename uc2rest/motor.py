@@ -79,7 +79,8 @@ class Motor(object):
                 stepperID = data["steppers"][iMotor]["stepperid"]
                 # smart to re-update this variable? Will be updated by motor-sender too
                 self._position[stepperID] = data["steppers"][iMotor]["position"]
-            self._callbackPerKey[0](self._position) # we call the function with the value
+            if  callable(self._callbackPerKey[0]):
+                self._callbackPerKey[0](self._position) # we call the function with the value
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
 

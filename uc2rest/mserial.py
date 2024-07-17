@@ -349,6 +349,7 @@ class Serial:
             return "Failed to Send"
         self.commands[identifier]=command
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
+            time.sleep(0.1)
             return identifier
         t0 = time.time()
         while self.running:
