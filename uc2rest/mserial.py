@@ -50,14 +50,15 @@ class Serial:
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
 
-    def     _freeSerialBuffer(self, ser, timeout=5, timeMinimum=0):
+    def _freeSerialBuffer(self, ser, timeout=5, timeMinimum=0):
         t0 = time.time()
         # free up any old data
         while True:
             try:
                 readLineRaw = ser.readline()
                 readLine = readLineRaw.decode('utf-8').strip()
-                if self.DEBUG: self._logger.debug(readLine)
+                if self.DEBUG and readLine != "": 
+                    self._logger.debug(readLine)
                 if readLine == "" and time.time()-t0 > timeMinimum:
                     break
             except Exception as e:
@@ -168,7 +169,8 @@ class Serial:
         for i in range(500):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
-            if self.DEBUG and mReadline != "": self._logger.debug("[checkFirmware]: "+str(mReadline))
+            if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
+                self._logger.debug("[checkFirmware]: "+str(mReadline))
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True

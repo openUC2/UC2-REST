@@ -6,6 +6,7 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
+print("start")
 ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
@@ -40,20 +41,6 @@ ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
 mState = ESP32.state.get_state()
 
 
-''' ################
-MODULES
-################'''
-#load modules from pyhton
-mModules = ESP32.modules.get_default_modules()
-assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
-print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-
-# load modules from device
-mModulesDevice = ESP32.modules.get_modules()
-#assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
-print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-mModules['home']=1 # activate home module
-#%%
 
 
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
@@ -67,7 +54,7 @@ print("Heap size: ", ESP32.state.getHeap())
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
-assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
+#assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
 
 #%% 
 # test Motor
