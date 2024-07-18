@@ -27,6 +27,8 @@ if 0:
     ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
     ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
 
+heapSize = ESP32.state.getHeap()
+print("Heap size: ", heapSize)
 
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
@@ -58,8 +60,9 @@ ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 # {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+print("Heap size: ", ESP32.state.getHeap())
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0), getReturn=False)
-
+print("Heap size: ", ESP32.state.getHeap())
 
 # check if we are connected 
 # see if it's the right device
@@ -112,9 +115,10 @@ LED
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
 assert mResult["idsuccess"] == 1, "Failed sending LED command"
 time.sleep(0.5)
+print("Heap size: ", ESP32.state.getHeap())
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
 assert mResult["success"] == 1, "Failed sending LED command"
-
+print("Heap size: ", ESP32.state.getHeap())
 # single LED
 ESP32.setDebugging(False)
 for iLED in range(5):
