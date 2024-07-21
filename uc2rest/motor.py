@@ -512,7 +512,7 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def get_position(self, axis=None, timeout=.2):
+    def get_position(self, axis=None, timeout=1):
         # pulls all current positions from the stepper controller
         path = "/motor_get"
         payload = {

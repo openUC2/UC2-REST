@@ -362,7 +362,6 @@ class Serial:
             if time.time()-t0>timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
                 self._logger.debug("It takes too long to get a response, we will resend the last command")
                 try:
-                    self.DEBUG=1
                     self.serialdevice.write(json.dumps(self.commands[identifier]).encode('utf-8'))
                     time.sleep(0.1)
                 except Exception as e:
