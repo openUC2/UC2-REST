@@ -84,3 +84,15 @@ class State(object):
         except:
             return r
 
+
+    def getHeap(self, timeout=1):
+        path = "/state_get"
+        payload = {
+            "task":path,
+            "heap": 1
+        }
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        try:
+            return r["heap"]
+        except:
+            return r

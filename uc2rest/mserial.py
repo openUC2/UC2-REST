@@ -1,10 +1,11 @@
 import serial
+from serial.tools  import list_ports
 import json
 import queue
 import threading
 import time
 
-T_SERIAL_WARMUP = 1.5
+T_SERIAL_WARMUP = 2.5
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
@@ -26,7 +27,7 @@ class Serial:
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
-        self.write_timeout = 0.05
+        self.write_timeout = 1
         self.read_timeout = 0.02
 
         self.cmdCallBackFct = None
@@ -37,6 +38,7 @@ class Serial:
         self.responses = {}
         self.commands = {}
         self.lock = threading.Lock()
+        self.serialLock = threading.Lock()
         
         # setup callback list for parent modules
         self.callBackList = []
@@ -53,8 +55,10 @@ class Serial:
         # free up any old data
         while True:
             try:
-                readLine = ser.readline().decode('utf-8').strip()
-                if self.DEBUG: self._logger.debug(readLine)
+                readLineRaw = ser.readline()
+                readLine = readLineRaw.decode('utf-8').strip()
+                if self.DEBUG and readLine != "": 
+                    self._logger.debug(readLine)
                 if readLine == "" and time.time()-t0 > timeMinimum:
                     break
             except Exception as e:
@@ -116,7 +120,7 @@ class Serial:
         It may be that - depending on the OS - the response may be corrupted
         If this is the case try to hard-code the COM port into the config JSON file
         '''
-        _available_ports = serial.tools.list_ports.comports(include_links=False)
+        _available_ports = list_ports.comports(include_links=False)
         ports_to_check = ["COM", "/dev/tt", "/dev/a", "/dev/cu.SLA", "/dev/cu.wchusb"]
         descriptions_to_check = ["CH340", "CP2102"]
 
@@ -165,7 +169,8 @@ class Serial:
         for i in range(500):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
-            if self.DEBUG: self._logger.debug("[checkFirmware]: "+str(mReadline))
+            if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
+                self._logger.debug("[checkFirmware]: "+str(mReadline))
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True
@@ -188,14 +193,17 @@ class Serial:
             json_command = self.sender_queue.get()
             
             # Process the command
-            try:
-                self.serialdevice.write(json_command.encode('utf-8'))
-            except Exception as e:
-                self._logger.error("Failed to write the line in serial: "+str(e))
+            with self.serialLock:
+                try:
+                    if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
+                    self.serialdevice.write(json_command.encode('utf-8'))
+                except Exception as e:
+                    self._logger.error("Failed to write the line in serial: "+str(e))
             
             # Signal that the command has been processed
             self.sender_queue.task_done()
-            
+            if self.DEBUG: self._logger.debug("[SendingCommands]: Task done")
+                        
             # Wait for .05 second before processing the next command
             time.sleep(0.05)
             
@@ -206,7 +214,6 @@ class Serial:
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
         while self.running:
-
             if self.manufacturer == "UC2Mock": 
                 self.running = False
                 return
@@ -219,15 +226,13 @@ class Serial:
                 self.is_connected = True
 
             # if we just want to send but not even wait for a response
-        
             try:
-                mReadline = self.serialdevice.readline()
+                with self.serialLock:
+                    mReadline = self.serialdevice.readline()
+                    line = mReadline.decode('utf-8').strip()
+                    if self.DEBUG and line!="": self._logger.debug("[ProcessLines]:"+str(line))
             except Exception as e:
                 self._logger.error("Failed to read the line in serial: "+str(e))
-            try:
-                line = mReadline.decode('utf-8').strip()
-                if self.DEBUG and line!="": self._logger.debug("[ProcessLines]:"+str(line))
-            except:
                 line = ""
             if line == "++":
                 reading_json = True
@@ -334,16 +339,19 @@ class Serial:
         command["qid"] = identifier
         try:
             json_command = json.dumps(command)+"\n"
-            self.serialdevice.flush()
-            if self.DEBUG: self._logger.debug("[SendMessage]: "+str(json_command))
+            #self.serialdevice.flush()
+            if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
+            self.serialdevice.write(json_command.encode('utf-8'))
+            #time.sleep(1)
             # we have to queue the commands and give it some time to process
-            self._enqueue_command(json_command)
+            #self._enqueue_command(json_command)
             
         except Exception as e:
             if self.DEBUG: self._logger.error(e)
             return "Failed to Send"
         self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
+            time.sleep(0.1)
             return identifier
         t0 = time.time()
         timeReturnReceived = 0.3
@@ -351,7 +359,7 @@ class Serial:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
                 self.resetLastCommand = False
-                return "communication interrupted"
+                return "communication interrupted by timeout or reset: "+str(identifier) + " and code:"+str(self.commands[identifier])
             with self.lock:
                 if identifier in self.responses:
                     if len(self.responses[identifier])==nResponses:
@@ -380,8 +388,10 @@ class Serial:
         self.stop()
         self.running = False
 
-    def reconnect(self):
+    def reconnect(self, baudrate=None):
         self.running = False
+        if baudrate is not None:
+            self.baudrate = baudrate
         try:
             self.serialdevice.close()
         except:

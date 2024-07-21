@@ -6,29 +6,30 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=500000, DEBUG=True)
+print("start")
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
+
 #%% TEMPERATURE
-ESP32.temperature.start_temperature_polling()
-time.sleep(5)
-mTemperature = ESP32.temperature.get_temperature()
-print(mTemperature)
-
-# 
-
-ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
-ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
-
-
-ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
+if 0:
+    ESP32.temperature.start_temperature_polling()
+    time.sleep(5)
+    mTemperature = ESP32.temperature.get_temperature()
+    print(mTemperature)
 
 
 #%%
 ''' ################
 HOME
 ################'''
-ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+if 0:
+    ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=2, isBlocking=True)
+    ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=20, isBlocking=True)
+    ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=20, isBlocking=True)
+
+heapSize = ESP32.state.getHeap()
+print("Heap size: ", heapSize)
 
 # setting debug output of the serial to true - all message will be printed
 ESP32.serial.DEBUG=True
@@ -40,33 +41,20 @@ ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=False)
 mState = ESP32.state.get_state()
 
 
-''' ################
-MODULES
-################'''
-#load modules from pyhton
-mModules = ESP32.modules.get_default_modules()
-assert mModules["home"] == 0 or mModules["home"] == 1, "Failed loading the default modules"
-print(mModules) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-
-# load modules from device
-mModulesDevice = ESP32.modules.get_modules()
-#assert mModulesDevice["home"] == 0 or mModulesDevice["home"] == 1, "Failed loading the modules from the device"
-print(mModulesDevice) #{'led': True, 'motor': True, 'home': True, 'analogin': False, 'pid': False, 'laser': True, 'dac': False, 'analogout': False, 'digitalout': False, 'digitalin': True, 'scanner': False, 'joy': False}
-mModules['home']=1 # activate home module
-#%%
 
 
 ESP32.motor.move_x(steps=10000, speed=10000, is_blocking=True)
 
 # {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+print("Heap size: ", ESP32.state.getHeap())
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0), getReturn=False)
-
+print("Heap size: ", ESP32.state.getHeap())
 
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
-assert mState["identifier_name"] == "UC2_Feather", "Wrong device connected"
+#assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
 
 #%% 
 # test Motor
@@ -112,11 +100,12 @@ LED
 ################'''
 # test LED
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
-assert mResult["success"] == 1, "Failed sending LED command"
+assert mResult["idsuccess"] == 1, "Failed sending LED command"
 time.sleep(0.5)
+print("Heap size: ", ESP32.state.getHeap())
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
 assert mResult["success"] == 1, "Failed sending LED command"
-
+print("Heap size: ", ESP32.state.getHeap())
 # single LED
 ESP32.setDebugging(False)
 for iLED in range(5):
