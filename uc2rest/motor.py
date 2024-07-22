@@ -320,6 +320,25 @@ class Motor(object):
         return r
 
 
+    def determine_axis_to_move(self, speed, steps, is_absolute):
+        # now check if the absolute axis has to be moved
+        if is_absolute:
+            steps = steps - self.currentPosition
+            is_absolute = False # now we are in relative realm 
+            
+        # Determine the axis to operate
+        axis_to_move = np.array([i if (speed[i] != 0 and (is_absolute if isinstance(is_absolute, bool) else is_absolute[i]) or steps[i] != 0) else 0 for i in range(4)])
+        
+        # Remove zero elements from array
+        axis_to_move = axis_to_move[axis_to_move != 0]
+
+
+        if axis_to_move.size == 0:
+            return False
+
+        return axis_to_move
+
+
     def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, acceleration=(None, None, None, None), is_blocking=True, is_enabled=True):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
@@ -327,16 +346,18 @@ class Motor(object):
         XYZT => 1,2,3,0
         '''
 
-        # determine the axis to operate
-        axisToMove = np.where(np.abs(speed)>0)[0]
-        if axisToMove.shape[0]==0:
-            return "{'return':-1}"
+        # determine the axis to operate # TODO: This is a mess!!
+        axisToMove = self.determine_axis_to_move(speed, steps, is_absolute)
+        if type(axisToMove) != np.ndarray and not axisToMove:
+            return {"success":1, "message":"No axis to move"}
+        
+        # convert single elements to array
         if type(is_absolute)==bool:
             isAbsoluteArray = np.zeros((4))
             isAbsoluteArray[axisToMove] = is_absolute
         else:
             isAbsoluteArray = is_absolute
-
+            
         # convert single elements to array
         if type(speed)!=list and type(speed)!=tuple and type(speed)!=np.ndarray:
             speed = np.array((speed,speed,speed,speed))
@@ -542,6 +563,7 @@ class Motor(object):
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
+        print(r)
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]

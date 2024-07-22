@@ -14,6 +14,7 @@ from uc2rest.asynciohelper import convert_async_to_sync
 Mostly migrated from here:
 https://github.com/beniroquai/sermon/blob/master/sermon/serialAsyncSyncIO.py
 '''
+
 T_SERIAL_WARMUP = .5
 class RingBuffer(deque):
     def __init__(self, size_max):
@@ -317,6 +318,7 @@ class Serial:
         await asyncio.get_event_loop().run_in_executor(None, self.serialdevice.flush)
 
     async def sendMessage_async(self, data: str, nResponses: int = 1, mTimeout: float = 20.0, blocking: bool = True):
+        returnTimeout = 1 # timeout for the qid
         if type(data) == str:
             data = json.loads(data)
         try:
@@ -333,20 +335,30 @@ class Serial:
             blocking = False
             await asyncio.sleep(0.1)
             return cqid
-
+        iResend = 0
+        nResendMax = 3
         while blocking:
             try:
+                qids = self.queueFinalizedQueryIDs.get()
+                if cqid in qids and qids.count(cqid) >= nResponses:
+                    await asyncio.sleep(0.05)  # let the serial settle for a bit
+                    return self.responses[cqid]
+                if time.time() - cTime > returnTimeout and qids.count(cqid) == 0:
+                    self._logger.debug(f"Did not receive a return for QID: {cqid}. - resend?")
+                    await self.write_data(json.dumps(data))
+                    cTime = time.time()
+                    iResend+=1
+                    if iResend > nResendMax:
+                        self._logger.debug(f"Resent {nResendMax} times - break")
+                        break
                 if time.time() - cTime > mTimeout:
                     self._logger.debug(f"Timeout of {mTimeout} seconds reached for QID: {cqid}.")
                     break
-                qids = self.queueFinalizedQueryIDs.get()
-                if cqid in qids and qids.count(cqid) >= nResponses:
-                    await asyncio.sleep(0.15)  # let the serial settle for a bit
-                    return self.responses[cqid]
                 if -cqid in qids:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
-            except queue.Empty:
+            except Exception as e: # queue.Empty:
+                print(e)
                 pass
             await asyncio.sleep(0.05)
 
