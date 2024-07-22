@@ -29,13 +29,13 @@ class RingBuffer(deque):
     
 
 class Serial:
-    def __init__(self, port, baudrate=115200, timeout=5, identity="UC2_Feather", parent=None, DEBUG=False):
+    def __init__(self, serialport, baudrate=115200, timeout=5, identity="UC2_Feather", parent=None, DEBUG=False):
         self.baudrate = baudrate
         self.timeout = timeout
         self.identity = identity
         self.DEBUG = DEBUG
         self._parent = parent
-        self.serial_port_name = port
+        self.serial_port_name = serialport
         self.serialdevice = None
         self.is_connected = False
         self.resetLastCommand = False
@@ -78,18 +78,18 @@ class Serial:
         asyncio.set_event_loop(self.loop)
         self.loop.run_forever()
 
-    async def open(self, port=None, baudrate=None):
+    async def open(self, serialport=None, baudrate=None):
         if baudrate is None:
             baudrate = self.baudrate
-        self.serialdevice = await asyncio.get_event_loop().run_in_executor(None, self.openDevice_async, port, baudrate)
+        self.serialdevice = await asyncio.get_event_loop().run_in_executor(None, self.openDevice_async, serialport, baudrate)
         self.is_connected = True
         await self.start_reading()
 
-    def openDevice(self, port=None, baudrate=None):
+    def openDevice(self, serialport=None, baudrate=None):
         self._ensure_event_loop()
         if baudrate is None:
             baudrate = self.baudrate
-        self.serialdevice = self.openDevice_async(port, baudrate)
+        self.serialdevice = self.openDevice_async(serialport, baudrate)
         self.is_connected = True
         self.start_reading_sync()
 
@@ -182,7 +182,7 @@ class Serial:
                     nEmptyLines += 1
                 if nEmptyLines > nEmptyLinesUntilBreak:
                     return 2
-                if b"setup':'done" in mLine:
+                if b"setup':'done" in mLine or b"port 80" in mLine:
                     return 1
                 
             if time.time() - cTime > timeout:

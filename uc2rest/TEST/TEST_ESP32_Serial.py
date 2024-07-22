@@ -6,8 +6,9 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
+baudrate = 500000 # 115200
 print("start")
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=baudrate, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
 
