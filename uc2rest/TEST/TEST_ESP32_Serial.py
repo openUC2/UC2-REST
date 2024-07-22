@@ -54,7 +54,7 @@ print("Heap size: ", ESP32.state.getHeap())
 # check if we are connected 
 # see if it's the right device
 mState = ESP32.state.get_state()
-#assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
+assert mState["state"]["identifier_name"] == "UC2_Feather", "Wrong device connected"
 
 #%% 
 # test Motor
@@ -100,7 +100,7 @@ LED
 ################'''
 # test LED
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
-assert mResult["idsuccess"] == 1, "Failed sending LED command"
+assert mResult["success"] == 1, "Failed sending LED command"
 time.sleep(0.5)
 print("Heap size: ", ESP32.state.getHeap())
 mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0))
@@ -195,17 +195,10 @@ ESP32.analog.get_analog(readanaloginID=1)
 ''' ################
 LASER 
 ################'''
-# get laser pins
-ESP32.laser.get_laserpins()
-ESP32.laser.get_laserpin(laserid=1)
-
 # set laser values
 ESP32.laser.set_laser(channel=1, value=1000, despeckleAmplitude=0, despecklePeriod=10, timeout=20, is_blocking = True)
 ESP32.laser.set_laser(channel=2, value=1000, despeckleAmplitude=0, despecklePeriod=10, timeout=20, is_blocking = True)
 ESP32.laser.set_laser(channel=3, value=1000, despeckleAmplitude=0, despecklePeriod=10, timeout=20, is_blocking = True)
-
-
-
 
 ''' ################
 Wifi

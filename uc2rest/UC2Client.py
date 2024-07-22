@@ -6,7 +6,7 @@ Simple client code for the ESP32 in Python
 Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 """
 from .mserial import Serial
-from .mserial import SerialManagerWrapper
+#from .mserial import SerialManagerWrapper
 from .galvo import Galvo
 from .config import config
 from .ledmatrix import LedMatrix
@@ -64,10 +64,18 @@ class UC2Client(object):
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
             # use USB connection
-            self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG)
+            
+            # get the device
+            self.serial = Serial(port=port, baudrate=baudrate, parent=self, identity=identity, DEBUG=DEBUG)
+            
+            # Ensure the event loop is running for synchronous execution
+            self.serial.openDevice(port, baudrate)
+            
+            # self state            
             self.is_serial = True
             self.is_connected = self.serial.is_connected
-            self.serial.DEBUG = DEBUG
+
+        
         elif host is not None:
             # use client in wireless mode
             self.is_wifi = True
@@ -79,7 +87,7 @@ class UC2Client(object):
             #self.is_connected = self.isConnected()
         elif SerialManager is not None:
             # we are trying to access the controller from .a web browser
-            self.serial = SerialManagerWrapper(SerialManager, parent=self)
+            #(SerialManager, parent=self)
             self.isPyScript = True
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")

@@ -429,7 +429,6 @@ class Motor(object):
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 
-
         # save direction for last iteration
         self.lastDirection = self.currentDirection.copy()
 
