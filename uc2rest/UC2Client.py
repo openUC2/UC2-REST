@@ -66,7 +66,7 @@ class UC2Client(object):
             # use USB connection
             
             # get the device
-            self.serial = Serial(port=port, baudrate=baudrate, parent=self, identity=identity, DEBUG=DEBUG)
+            self.serial = Serial(serialport=serialport, baudrate=baudrate, parent=self, identity=identity, DEBUG=DEBUG)
             
             # Ensure the event loop is running for synchronous execution
             self.serial.openDevice(serialport, baudrate)
