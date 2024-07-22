@@ -129,7 +129,7 @@ class Serial:
         if port is None or not isUC2:
             serialdevice = self.findCorrectSerialDevice()
             if serialdevice is None:
-                from MockSerial import MockSerial
+                from uc2rest.MockSerial import MockSerial
                 serialdevice = MockSerial(port, baudrate, timeout=.1)
                 self.is_connected = False
 
@@ -141,6 +141,7 @@ class Serial:
         descriptions_to_check = ["CH340", "CP2102"]
 
         for port in _available_ports:
+            self._logger.debug(f"Testing port {port.device} with baudrate {self.baudrate}")
             if any(port.device.startswith(allowed_port) for allowed_port in ports_to_check) or \
                any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
                 isUC2, serialdevice = self.tryToConnect(port.device)
@@ -156,9 +157,23 @@ class Serial:
 
     def tryToConnect(self, port):
         try:
+            self._logger.debug(f"Trying to Connect to {port}, baudrate: {self.baudrate}")
             serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=0)
-            time.sleep(T_SERIAL_WARMUP)
-            mBufferCode = self.freeSerialBuffer(serialdevice)
+            
+            # force-reset the serial device
+            try:
+                # close the device - similar to hard reset
+                serialdevice.setDTR(False)
+                serialdevice.setRTS(True)
+                time.sleep(.1)
+                serialdevice.setDTR(False)
+                serialdevice.setRTS(False)
+                
+                time.sleep(T_SERIAL_WARMUP)
+                mBufferCode = self.freeSerialBuffer(serialdevice)
+            except:
+                mBufferCode = 0
+                
             if mBufferCode == 1:
                 return True, serialdevice
             if self.checkFirmware(serialdevice):

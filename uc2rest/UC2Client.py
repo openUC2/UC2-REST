@@ -69,7 +69,7 @@ class UC2Client(object):
             self.serial = Serial(port=port, baudrate=baudrate, parent=self, identity=identity, DEBUG=DEBUG)
             
             # Ensure the event loop is running for synchronous execution
-            self.serial.openDevice(port, baudrate)
+            self.serial.openDevice(serialport, baudrate)
             
             # self state            
             self.is_serial = True
