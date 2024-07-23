@@ -62,7 +62,10 @@ class Serial:
         self._ensure_event_loop()
         
         # Asyncio queue should be created after the event loop is ensured
-        self.data_queue = asyncio.Queue(loop=self.loop)
+        try:
+            self.data_queue = asyncio.Queue(loop=self.loop)
+        except:
+            self.data_queue = asyncio.Queue() # for Python >=3.10
 
         # Convert async methods to sync
         self.openDevice = convert_async_to_sync(self.open, self.loop, self.executor)
