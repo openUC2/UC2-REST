@@ -245,7 +245,7 @@ class Motor(object):
         r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
 
-    def move_axis_by_name(self, axis="X", steps=100, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_axis_by_name(self, axis="X", steps:float=100, speed:float=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
         axis = self.xyztTo1230(axis)
         _speed=np.zeros(4)
         _speed[axis] = speed
@@ -321,11 +321,7 @@ class Motor(object):
 
 
     def determine_axis_to_move(self, speed, steps, is_absolute):
-        # now check if the absolute axis has to be moved
-        if is_absolute:
-            steps = steps - self.currentPosition
-            is_absolute = False # now we are in relative realm 
-            
+
         # Determine the axis to operate
         axis_to_move = np.array([i if (speed[i] != 0 and (is_absolute if isinstance(is_absolute, bool) else is_absolute[i]) or steps[i] != 0) else 0 for i in range(4)])
         
