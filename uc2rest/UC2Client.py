@@ -210,4 +210,4 @@ class UC2Client(object):
         self.serial.DEBUG = debug
         
     def close(self):
-        self.serial.closeSerial()
+        self.serial.close()
