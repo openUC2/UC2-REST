@@ -11,6 +11,13 @@ ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
 
+# test servo 
+for i in range(180):
+    ESP32.laser.set_servo(channel=1, value=i, is_blocking=False)
+    time.sleep(0.1)
+ESP32.laser.set_servo(channel=1, value=0, is_blocking=False)    
+
+
 #%% TEMPERATURE
 if 0:
     ESP32.temperature.start_temperature_polling()

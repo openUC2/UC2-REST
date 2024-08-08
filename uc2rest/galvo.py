@@ -1,3 +1,4 @@
+import numpy as np
 class Galvo(object):
     def __init__(self, parent=None):
         '''
@@ -15,16 +16,18 @@ class Galvo(object):
         self._parent = parent
 
     
-    def set_dac(self, channel=1, frequency=1, offset=0, amplitude=1/2, clk_div=0, timeout=1):
-        
+    def set_dac(self, channel=1, frequency=1, offset=0, amplitude=1, clk_div=0, phase=0, invert=1, timeout=1):
+        # {"task":"/dac_act", "dac_channel":1, "frequency":10, "offset":1, "amplitude":1, "divider":0, "phase":0, "invert":1, "qid":2}
         path = "/dac_act"
         payload = {
             "task": path,
             "dac_channel": channel, # 1 or 2
             "frequency": frequency,
             "offset": offset,
-            "amplitude":amplitude,
-            "clk_div": clk_div
+            "divider": clk_div,
+            "amplitude":amplitude, 
+            "phase":phase,
+            "invert":invert
         }
                         
         self._parent.post_json(path, payload, timeout=timeout, getReturn=False)

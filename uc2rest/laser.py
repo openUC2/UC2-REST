@@ -60,3 +60,18 @@ class Laser(object):
         r = self._parent.post_json(path, payload)
         return r
 
+
+
+    def set_servo(self, channel=1, value=0, is_blocking=False):
+        #{"task":"/laser_act", "LASERid":1 ,"LASERval":99, "servo":1, "qid":1}
+        path = '/laser_act'
+        
+        payload = {
+            "task": path,
+            "LASERid": channel,
+            "LASERval": value, 
+            "servo": 1
+        }
+        
+        r = self._parent.post_json(path, payload, getReturn=is_blocking)
+        return r
