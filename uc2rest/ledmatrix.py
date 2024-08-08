@@ -1,6 +1,5 @@
 import numpy as np
-import json
-import time 
+
 gTimeout = 2
 class LedMatrix(object):
     def __init__(self, parent, NLeds=64):
