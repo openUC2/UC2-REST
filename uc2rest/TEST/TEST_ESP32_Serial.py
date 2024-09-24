@@ -13,9 +13,8 @@ ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 
 # test servo 
 for i in range(180):
-    ESP32.laser.set_servo(channel=1, value=i, is_blocking=False)
     time.sleep(0.1)
-ESP32.laser.set_servo(channel=1, value=0, is_blocking=False)    
+    ESP32.laser.set_servo(channel=1, value=0, is_blocking=False)    
 
 
 #%% TEMPERATURE

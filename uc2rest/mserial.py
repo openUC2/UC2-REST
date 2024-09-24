@@ -5,7 +5,7 @@ import queue
 import threading
 import time
 
-T_SERIAL_WARMUP = 2.5
+T_SERIAL_WARMUP = 1#2.5
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
                  identity="UC2_Feather", parent=None, DEBUG=False):
@@ -142,7 +142,14 @@ class Serial:
     def tryToConnect(self, port):
         try:
             self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
-            time.sleep(T_SERIAL_WARMUP)
+            # close the device - similar to hard reset
+            self.serialdevice.setDTR(False)
+            self.serialdevice.setRTS(True)
+            time.sleep(.1)
+            self.serialdevice.setDTR(False)
+            self.serialdevice.setRTS(False)
+            time.sleep(.5)            
+            #time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
             if self.checkFirmware(self.serialdevice):
                 self.is_connected = True
@@ -213,6 +220,8 @@ class Serial:
         currentIdentifier = None
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
+        nFailedCommands = 0
+        nFailedCommandsMax = 5
         while self.running:
             if self.manufacturer == "UC2Mock": 
                 self.running = False
@@ -226,14 +235,26 @@ class Serial:
                 self.is_connected = True
 
             # if we just want to send but not even wait for a response
-            try:
-                with self.serialLock:
-                    mReadline = self.serialdevice.readline()
-                    line = mReadline.decode('utf-8').strip()
-                    if self.DEBUG and line!="": self._logger.debug("[ProcessLines]:"+str(line))
-            except Exception as e:
-                self._logger.error("Failed to read the line in serial: "+str(e))
-                line = ""
+            with self.serialLock:
+                try:
+                        mReadline = self.serialdevice.readline()
+                        line = mReadline.decode('utf-8').strip()
+                        if self.DEBUG and line!="": 
+                            self._logger.debug("[ProcessLines]:"+str(line))
+                except Exception as e:
+                    self._logger.error("Failed to read the line in serial: "+str(e))
+                    nFailedCommands += 1
+                    line = ""
+                        
+                    # if we have a problem with the serial connection, we need to reconnect
+                    for i in range(4):
+                        if self.reconnect():
+                            self._logger.debug("Reconnected to the serial device")
+                            break
+                        else:
+                            self._logger.debug("Failed to reconnect to the serial device")
+                        time.sleep(1)
+                    
             if line == "++":
                 reading_json = True
                 continue
@@ -255,6 +276,7 @@ class Serial:
                     self._logger.error("Failed to load the json from serial %s" % buffer)
                     self._logger.error("Error: %s" % str(e))
                     json_response = {}
+                    reading_json = True
 
                 try: currentIdentifier = json_response["qid"]
                 except: pass
@@ -341,7 +363,8 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             #self.serialdevice.flush()
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
-            self.serialdevice.write(json_command.encode('utf-8'))
+            with self.serialLock:
+                self.serialdevice.write(json_command.encode('utf-8'))
             #time.sleep(1)
             # we have to queue the commands and give it some time to process
             #self._enqueue_command(json_command)
@@ -390,6 +413,7 @@ class Serial:
         self.running = False
 
     def reconnect(self, baudrate=None):
+        self._logger.debug("Reconnecting to the serial device")
         self.running = False
         if baudrate is not None:
             self.baudrate = baudrate
@@ -398,6 +422,8 @@ class Serial:
         except:
             pass
         self.serialdevice = self.openDevice(port = self.serialport, baud_rate = self.baudrate)
+        if self.serialdevice: return True
+        return False
 
     def toggleCommandOutput(self, cmdCallBackFct=None):
         # if true, all commands will be output to a callback function and stored for later use
