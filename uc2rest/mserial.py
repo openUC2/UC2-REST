@@ -63,10 +63,22 @@ class Serial:
                     break
             except Exception as e:
                 if self.DEBUG: self._logger.error("[FreeSerial]: "+str(e))
-
+                self.restart_esp(ser=ser) # enforce a restart by cutting the line
                 pass
             if time.time()-t0 > timeout:
                 return
+
+    def restart_esp(self, ser=None):
+        # Send signals to restart the ESP32
+        if ser is None:
+            ser = self.serialdevice
+        ser.setDTR(False)
+        ser.setRTS(True)
+        time.sleep(0.1)
+        ser.setDTR(False)
+        ser.setRTS(False)
+        time.sleep(0.5)
+        self._logger.debug("ESP32 has been restarted.")
 
     def openDevice(self, port=None, baud_rate=115200):
         try: # try to close an eventually open serial connection
@@ -143,12 +155,6 @@ class Serial:
         try:
             self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             # close the device - similar to hard reset
-            self.serialdevice.setDTR(False)
-            self.serialdevice.setRTS(True)
-            time.sleep(.1)
-            self.serialdevice.setDTR(False)
-            self.serialdevice.setRTS(False)
-            time.sleep(.5)            
             #time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
             if self.checkFirmware(self.serialdevice):
