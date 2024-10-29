@@ -543,6 +543,7 @@ class Motor(object):
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
+        # returns {"motor": }
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
