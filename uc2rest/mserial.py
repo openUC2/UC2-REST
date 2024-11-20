@@ -466,10 +466,13 @@ class Serial:
         else:
             writeResult = self.sendMessage(data=payload, nResponses=nResponses, mTimeout=timeout, blocking=getReturn)
             return writeResult
-        
+
+          
     def toggleCommandOutput(self, cmdCallBackFct=None):
         # if true, all commands will be output to a callback function and stored for later use
         self.cmdCallBackFct = cmdCallBackFct
+        
+        
 class SerialManagerWrapper:
 
     def __init__(self) -> None:
