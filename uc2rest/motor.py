@@ -543,6 +543,7 @@ class Motor(object):
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
+        # returns {"motor": }
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
@@ -592,3 +593,38 @@ class Motor(object):
 
     def set_direction(self, axis=1, sign=1, timeout=1):
         return False
+
+    def set_tmc_parameters(self, axis=0, msteps=None, rms_current=None, stall_value=None, sgthrs=None, semin=None, semax=None, blank_time=None, toff=None, timeout=1):
+        ''' set the TMC parameters for a specific axis 
+        msteps: microsteps
+        rms_current: current in mA
+        sgthrs: stallguard threshold
+        semin: minimum current
+        semax: maximum current
+        blank_time: blank time
+        toff: off time
+        #   {"task":"/tmc_act", "msteps":32, "rms_current":600, "sgthrs":100, "semin":5, "semax":2, "blank_time":24, "toff":4, "axis":1}
+        '''
+        if type(axis)==str:
+            axis = self.xyztTo1230(axis)
+        path = "/tmc_act"
+        payload = {}
+        if axis is not None:
+            payload["axis"] = axis
+        if msteps is not None:
+            payload["msteps"] = msteps
+        if rms_current is not None:
+            payload["rms_current"] = rms_current
+        if sgthrs is not None:
+            payload["sgthrs"] = sgthrs
+        if semin is not None:
+            payload["semin"] = semin
+        if semax is not None:
+            payload["semax"] = semax
+        if blank_time is not None:
+            payload["blank_time"] = blank_time
+        if toff is not None:
+            payload["toff"] = toff
+
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
