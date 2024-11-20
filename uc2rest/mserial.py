@@ -95,6 +95,13 @@ class Serial:
         self.stop_reading()
         self.closeDevice()
         
+    def reconnect(self):
+        '''
+        Reconnect the serial port
+        '''
+        self.close()
+        self.open(port=self.serial_port_name, baudrate=self.baudrate)
+        
     def openDevice(self, port=None, baudrate=115200):
         '''
         Open the serial device and check if it is a UC2 device
@@ -495,6 +502,9 @@ class MockSerial:
 
     def close(self):
         self.is_open = False
+        
+    def in_waiting(self):
+        return
 
     def readline(self, timeout=1):
         if not self.is_open:
