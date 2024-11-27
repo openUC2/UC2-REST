@@ -192,7 +192,7 @@ class UC2Client(object):
             if timeout <=0:
                 getReturn = False
             return self.serial.post_json(path, payload=None, getReturn=getReturn, nResponses=1, timeout=timeout)
-            #return self.serial.read_json()
+            #return self.serial.read_json()<
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
             return None
@@ -202,4 +202,4 @@ class UC2Client(object):
         self.serial.DEBUG = debug
         
     def close(self):
-        self.serial.closeSerial()
+        self.serial.closeDevice()

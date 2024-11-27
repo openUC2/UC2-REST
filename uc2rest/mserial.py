@@ -95,6 +95,7 @@ class Serial:
         self.stop_reading()
         self.closeDevice()
         
+        
     def reconnect(self):
         '''
         Reconnect the serial port
@@ -140,6 +141,16 @@ class Serial:
         #self.freeSerialBuffer(serial_device)
         return serial_device
     
+    def closeDevice(self):
+        '''
+        Close the serial port
+        '''
+        if self.serial_port_name is not None:
+            try:
+                self.serial_device.close()
+            except Exception as e:
+                self._logger.error("[CloseDevice]: "+str(e))
+                
     def _find_correct_serial_device(self):
         '''
         This function tries to find the correct serial device from the list of available ports
@@ -219,7 +230,7 @@ class Serial:
         ser.write(json.dumps(payload).encode('utf-8'))
         ser.write(b'\n')
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
-        for i in range(500):
+        for i in range(700):
             # if we just want to send but not even wait for a response
             mReadline = ser.readline()
             if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
