@@ -77,10 +77,9 @@ class Home(object):
                 "steppers": [
                 {
                  "stepperid": axis,
-                 "timeout":timeout*1000,
-                 "speed":direction*abs(speed),
+                 "timeout":timeout,
+                 "speed":abs(speed),
                  "direction":direction,
-                 "endposrelease":endposrelease,
                  "endstoppolarity":endstoppolarity
                  }]
             }}

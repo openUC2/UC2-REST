@@ -218,7 +218,10 @@ class Motor(object):
             if type(speed)==int or len(speed)!= 2:
                 speed = (speed,speed)
 
-            if len(acceleration)!= 2:
+            if acceleration is None:
+                acceleration = 100000
+                
+            if type(acceleration)==int or len(acceleration)!= 2:
                 acceleration = (acceleration,acceleration)
 
             # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
@@ -237,10 +240,14 @@ class Motor(object):
         return r
 
     def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+        # everywhere, where relative steps are zero, speed should be zero, too
         if type(speed)==int:
-            speed = (speed,speed,speed,speed)
-        if type(steps)==int:
-            steps = (steps,steps,steps,steps)
+            speed = [speed,speed,speed,speed]
+        if type(speed)==tuple:
+            speed = list(speed)
+        for iMotor in range(len(steps)):
+            if steps[iMotor]==0 and not is_absolute:
+                speed[iMotor] = 0
 
         r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
         return r
