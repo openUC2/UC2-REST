@@ -75,10 +75,11 @@ class Motor(object):
         into the position array of the motors '''
         try:
             nSteppers = len(data["steppers"])
+            stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
             for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
-                # smart to re-update this variable? Will be updated by motor-sender too
-                self._position[stepperID] = data["steppers"][iMotor]["position"]
+                # FIXME:  smart to re-update this variable? Will be updated by motor-sender too
+                self._position[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID]
             if  callable(self._callbackPerKey[0]):
                 self._callbackPerKey[0](self._position) # we call the function with the value
         except Exception as e:

@@ -104,7 +104,7 @@ class Serial:
             pass
         self.running = True
         self.identifier_counter = 0 # Counter for generating unique identifiers
-        self.thread = threading.Thread(target=self._process_commands)
+        self.thread = threading.Thread(target=self._process_commands, daemon=True)
         self.thread.start()
         
         # setup sender queue
@@ -407,6 +407,8 @@ class Serial:
                     return "No response received"
                 self._logger.debug("It takes too long to get a response, we will resend the last command: "+str(self.commands[identifier]))
                 try:
+                    ERROR="We have a queue, so after a while we need to resend the wrong command!"
+                    raise Exception(ERROR)
                     self.serialdevice.write(json.dumps(self.commands[identifier]).encode('utf-8'))
                     t0 = time.time()
                     time.sleep(0.1)
