@@ -276,6 +276,7 @@ class Serial:
                         for callback in self.callBackList:
                             # check if json has key
                             try:
+                                self._logger.debug("[ProcessCommands]: "+str(json_response))
                                 if callback["pattern"] in json_response:
                                     callback["callbackfct"](json_response)
                             except Exception as e:
