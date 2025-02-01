@@ -84,9 +84,7 @@ class UC2Client(object):
         else:
             self.logger.error("No ESP32 device is connected - check IP or Serial port!")
         
-                
-        if not self.isPyScript: from .updater import updater
-        
+                        
         # import libraries depending on API version
         self.logger.debug("Using API version 2")        
 
@@ -150,11 +148,7 @@ class UC2Client(object):
             try: self.pinConfig = self.config.loadConfigDevice()
             except: self.pinConfig = None
         
-        # initialize updater 
-        if not self.isPyScript: 
-            try: self.updater = updater(parent=self)
-            except: self.updater = None
-        
+
         # initialize module controller
         self.modules = Modules(parent=self)
     
