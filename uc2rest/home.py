@@ -44,6 +44,17 @@ class Home(object):
                   endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
         
+    def home_a(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
+        # axis = 0 corresponds to 'A'
+        axis = 0
+        self.home(axis=axis,
+                  timeout=timeout, 
+                  speed = speed, 
+                  direction = direction, 
+                  endposrelease=endposrelease, 
+                  endstoppolarity=endstoppolarity,
+                  isBlocking=isBlocking)    
+    
     def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, isBlocking=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'

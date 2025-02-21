@@ -409,11 +409,11 @@ class Serial:
                 self._logger.debug("It takes too long to get a response, we will resend the last command: "+str(self.commands[identifier]))
                 try:
                     ERROR="We have a queue, so after a while we need to resend the wrong command!"
+                    iRetry += 1
                     raise Exception(ERROR)
                     self.serialdevice.write(json.dumps(self.commands[identifier]).encode('utf-8'))
                     t0 = time.time()
                     time.sleep(0.1)
-                    iRetry += 1
                 except Exception as e:
                     self._logger.error("Failed to write the line in serial: "+str(e))
             
@@ -430,6 +430,9 @@ class Serial:
         self.stop()
         self.running = False
 
+    def close(self):
+        self.closeSerial()
+        
     def reconnect(self, baudrate=None):
         self._logger.debug("Reconnecting to the serial device")
         self.running = False
