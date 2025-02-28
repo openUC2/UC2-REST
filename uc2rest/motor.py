@@ -327,6 +327,38 @@ class Motor(object):
         r = self._parent.post_json(path, payload, getReturn=False, timeout=0)
         return r
 
+    def compute_travel_time(self, steps, max_speed, acceleration):
+        import math
+        """
+        Calculate approximate travel time for a stepper motor 
+        with trapezoidal velocity profile.
+
+        steps       : total distance in steps
+        max_speed   : maximum speed in steps/second
+        acceleration: acceleration in steps/second^2
+        """
+        # Distance to accelerate from 0 to max_speed:
+        dist_accel = (max_speed ** 2) / (2.0 * acceleration)
+
+        # If distance is too short to reach max speed -> triangular profile
+        if steps < 2 * dist_accel:
+            # T = 2 * sqrt( distance / acceleration )
+            return 2.0 * math.sqrt(steps / acceleration)
+        else:
+            # Time to accelerate to max_speed
+            t_accel = max_speed / acceleration
+            # Distance spent accelerating
+            d_accel = dist_accel
+            # Distance spent decelerating (same as accelerating)
+            d_decel = dist_accel
+            # Remaining distance at constant speed
+            d_const = steps - d_accel - d_decel
+            # Time at constant speed
+            t_const = d_const / max_speed
+            # Total time
+            return t_accel + t_const + t_accel
+
+
 
     def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, acceleration=(None, None, None, None), is_blocking=True, is_enabled=True):
         '''
@@ -334,7 +366,6 @@ class Motor(object):
 
         XYZT => 1,2,3,0
         '''
-
         # determine the axis to operate
         axisToMove = np.where(np.abs(speed)>0)[0]
         if axisToMove.shape[0]==0:
@@ -358,6 +389,7 @@ class Motor(object):
             steps = np.array(steps)
 
         # detect change in direction
+        absoluteDistances = np.zeros((4))
         for iMotor in range(4):
             # for absolute motion:
             if isAbsoluteArray[iMotor]:
@@ -367,6 +399,18 @@ class Motor(object):
             if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
                 # we want to overshoot a bit
                 steps[iMotor] = steps[iMotor] +  self.currentDirection[iMotor]*self.backlash[iMotor]
+
+    
+            if isAbsoluteArray[iMotor]:
+                absoluteDistances[iMotor] = abs(self.currentPosition[iMotor] - steps[iMotor])
+            else:
+                absoluteDistances[iMotor] = abs(steps[iMotor])
+        # experimental: Let's make the timeout adaptive: 
+        # the speed of the motors is given in steps/second, so we can calculate the time it takes to move the given steps
+        # we will add a bit of time to the timeout to make sure we get a return
+        # 1.5 accounts for accel/decceleration
+        traveltime = self.compute_travel_time(np.max(np.abs(absoluteDistances)), np.max(np.abs(speed)), np.max(np.where(acceleration == None, 20000, acceleration)))
+        timeout = np.uint8(abs(timeout)>0)*(traveltime + 1) # add 1 second to the timeout to make sure we get a return
 
         # get current position
         #_positions = self.get_position() # x,y,z,t = 1,2,3,0
@@ -554,6 +598,7 @@ class Motor(object):
         # returns {"motor": }
         if "motor" in r:
             for index, istepper in enumerate(r["motor"]["steppers"]):
+                if index >3: break # TODO: We would need to handle other values too soon
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
 
 

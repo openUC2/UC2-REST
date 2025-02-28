@@ -11,12 +11,27 @@ ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
 
 
+ESP32.home.home_x(speed =15000, direction = -1, endstoppolarity=1, timeout=10, isBlocking=True)
+ESP32.home.home_y(speed =15000, direction = -1, endstoppolarity=-1, timeout=10, isBlocking=True)
+ESP32.home.home_z(speed =15000, direction = 1, endstoppolarity=-1, timeout=10, isBlocking=True)
+
+
+# test the objective module
+ESP32.objective.home(direction=-1, endstoppolarity=1, isBlocking=True)
+#ESP32.objective.calibrate(direction=-1, endstoppolarity=1, isBlocking=True)
+# set the homing positions 
+
+for i in range(2):
+    speed=25000
+    accel=40000
+    ESP32.objective.toggle(speed=speed, accel=accel, isBlocking=True)
+    ESP32.objective.toggle(speed=speed, accel=accel, isBlocking=True)
+
 # test servo 
 if 0:
     for i in range(180):
         time.sleep(0.1)
         ESP32.laser.set_servo(channel=1, value=0, is_blocking=False)    
-
 
 #%% TEMPERATURE
 if 0:
@@ -31,9 +46,36 @@ if 0:
 HOME
 ################'''
 if 1:
-    ESP32.home.home_y(speed =15000, direction = 1, endposrelease = 3000, timeout=1, isBlocking=True)
-    ESP32.home.home_x(speed =15000, direction = 1, endposrelease = 3000, timeout=1, isBlocking=True)
-    ESP32.home.home_x(speed =15000, direction = -1, endposrelease = 3000, timeout=1, isBlocking=True)
+    '''
+    for X=0
+    {"task":"/home_act","home":{"steppers":[{"stepperid":1,"timeout":20000,"speed":5000,"direction":-1,"endstoppolarity":1}]}}
+    for Y=0
+    {"task":"/home_act","home":{"steppers":[{"stepperid":2,"timeout":20000,"speed":15000,"direction":-1,"endstoppolarity":-1}]}}
+    for Z=0
+    {"task":"/home_act","home":{"steppers":[{"stepperid":3,"timeout":20000,"speed":15000,"direction":1,"endstoppolarity":-1}]}}
+    for A=0
+    {"task":"/home_act","home":{"steppers":[{"stepperid":0,"timeout":20000,"speed":5000,"direction":-1,"endstoppolarity":1}]}}
+'''
+    ESP32.home.home_x(speed =15000, direction = -1, endstoppolarity=1, timeout=1, isBlocking=True)
+    ESP32.home.home_y(speed =15000, direction = -1, endstoppolarity=-1, timeout=1, isBlocking=True)
+    ESP32.home.home_z(speed =15000, direction = 1, endstoppolarity=-1, timeout=1, isBlocking=True)
+
+    # scanning
+    dDist = 10000
+    speed = 20000
+    nDist = 4
+
+    # test Motor in scanning mode
+    ESP32.motor.move_xyza(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
+
+    for ix in range(nDist):
+        for iy in range(nDist):
+            if ix%2==0:
+                iy=nDist-iy
+            ESP32.motor.move_xy(steps=(ix*dDist,iy*dDist), speed=speed, is_absolute = True, is_blocking=True)
+            time.sleep(0.5)
+    ESP32.motor.move_xyza(steps=(0,nDist*dDist,nDist*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
+    ESP32.motor.move_xyza(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
 
 heapSize = ESP32.state.getHeap()
 print("Heap size: ", heapSize)
@@ -174,7 +216,7 @@ ESP32.motor.move_forever(speed=(0,0,0,0), is_stop=True)
 position2 = ESP32.motor.get_position(timeout=1)
 print(position2)
 
-dDist = 1000
+dDist = 10000
 speed = 20000
 nDist = 4
 
@@ -186,6 +228,7 @@ for ix in range(nDist):
         if ix%2==0:
             iy=nDist-iy
         ESP32.motor.move_xyza(steps=(0,ix*dDist,iy*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
+        time.sleep(0.5)
 ESP32.motor.move_xyza(steps=(0,nDist*dDist,nDist*dDist,0), speed=speed, is_absolute = True, is_blocking=True)
 ESP32.motor.move_xyza(steps=(0,0,0,0), speed=speed, is_absolute = True, is_blocking=True)
 
