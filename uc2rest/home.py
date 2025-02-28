@@ -55,7 +55,7 @@ class Home(object):
                   endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
     
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, isBlocking=False):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)
@@ -88,7 +88,7 @@ class Home(object):
                 "steppers": [
                 {
                  "stepperid": axis,
-                 "timeout":timeout,
+                 "timeout":endstoptimeout,
                  "speed":abs(speed),
                  "direction":direction,
                  "endstoppolarity":endstoppolarity
