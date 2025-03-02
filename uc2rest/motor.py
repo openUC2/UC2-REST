@@ -388,6 +388,12 @@ class Motor(object):
         if type(steps)==tuple:
             steps = np.array(steps)
 
+        # convert to physical units
+        steps[0] *= 1/self.stepSizeA
+        steps[1] *= 1/self.stepSizeX
+        steps[2] *= 1/self.stepSizeY
+        steps[3] *= 1/self.stepSizeZ
+        
         # detect change in direction
         absoluteDistances = np.zeros((4))
         for iMotor in range(4):
@@ -416,11 +422,7 @@ class Motor(object):
         #_positions = self.get_position() # x,y,z,t = 1,2,3,0
         #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
 
-        # convert to physical units
-        steps[0] *= 1/self.stepSizeA
-        steps[1] *= 1/self.stepSizeX
-        steps[2] *= 1/self.stepSizeY
-        steps[3] *= 1/self.stepSizeZ
+
         '''
         # check if within limits
         if pos_0+steps_0 > self.maxPosX or pos_0+steps_0 < self.minPosX:
