@@ -15,7 +15,7 @@ class Home(object):
         # axis = 1 corresponds to 'X'
         axis = 1
         self.home(axis=axis, 
-                  timeout=timeout, 
+                  endstoptimeout=timeout, 
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease,
@@ -26,7 +26,7 @@ class Home(object):
         # axis = 2 corresponds to 'Y'
         axis = 2
         self.home(axis=axis, 
-                  timeout=timeout, 
+                  endstoptimeout=timeout, 
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease, 
@@ -37,7 +37,7 @@ class Home(object):
         # axisa = 3 corresponds to 'Z'
         axis = 3
         self.home(axis=axis, 
-                  timeout=timeout, 
+                  endstoptimeout=timeout, 
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease, 
@@ -48,7 +48,7 @@ class Home(object):
         # axis = 0 corresponds to 'A'
         axis = 0
         self.home(axis=axis,
-                  timeout=timeout, 
+                  endstoptimeout=timeout, 
                   speed = speed, 
                   direction = direction, 
                   endposrelease=endposrelease, 
