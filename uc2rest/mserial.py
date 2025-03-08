@@ -387,7 +387,7 @@ class Serial:
             time.sleep(0.1)
             return identifier
         t0 = time.time()
-        timeReturnReceived = 0.3
+        timeReturnReceived = 0.5
         maxRetry = 3
         iRetry = 0
         while self.running:
@@ -398,7 +398,10 @@ class Serial:
             with self.lock:
                 if identifier in self.responses:
                     if len(self.responses[identifier])==nResponses:
-                        return self.responses[identifier][-1]
+                        returnMessage = self.responses[identifier]
+                        # remove the response from the list
+                        del self.responses[identifier]
+                        return returnMessage
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"

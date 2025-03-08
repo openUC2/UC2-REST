@@ -70,9 +70,21 @@ class Objective(object):
         payload = {
             "task": path,
         }
-        r = self._parent.post_json(path, payload)
-        return r
-
+        r = self._parent.post_json(path, payload, timeout=1)
+        # parse the response
+        try:
+            status = r[-1]["objective"]
+            status["x1"] = status["x1"]*self._parent.motor.stepSizeA
+            status["x2"] = status["x2"]*self._parent.motor.stepSizeA
+        except:
+            status = {"x1":0, 
+                      "x2":0, 
+                      "pos":0, 
+                      "isHomed":0, 
+                      "state":0, 
+                      "isRunning":0}
+        return status
+        
     def calibrate(self, direction=None, endstoppolarity=None, isBlocking=False):
         """
         Calibrate the objective (sets the position=0 position).
@@ -182,9 +194,9 @@ class Objective(object):
         # Only include x1 or x2 in JSON if they were explicitly provided
         # If x1 == -1, that instructs the MCU to take current motor position
         if x1 is not None:
-            payload["x1"] = x1
+            payload["x1"] = x1/self._parent.motor.stepSizeA
         if x2 is not None:
-            payload["x2"] = x2
+            payload["x2"] = x2/self._parent.motor.stepSizeA
 
         nResponses = 1 if isBlocking else 0
         r = self._parent.post_json(
