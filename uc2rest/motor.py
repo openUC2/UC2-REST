@@ -440,12 +440,12 @@ class Motor(object):
         motorPropList = []
         for iMotor in range(4):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
-                motorProp = { "stepperid": self.motorAxisOrder[iMotor],
+                motorProp = { "stepperid": int(self.motorAxisOrder[iMotor]),
                              "position": int(steps[iMotor]),
                              "speed": int(speed[iMotor]),
-                             "isabs": isAbsoluteArray[iMotor],
-                             "isaccel":1,
-                             "isen": is_enabled}
+                             "isabs": int(isAbsoluteArray[iMotor]),
+                             "isaccel": int(1),
+                             "isen": int(is_enabled)}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
                 else:

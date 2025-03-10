@@ -4,6 +4,7 @@ import json
 import queue
 import threading
 import time
+import sys
 
 T_SERIAL_WARMUP = 1#2.5
 class Serial:
@@ -29,6 +30,7 @@ class Serial:
         self.is_connected = False
         self.write_timeout = 1
         self.read_timeout = 0.02
+        self.timeReturnReceived = 1#  0.5
 
         self.cmdWriteCallBackFct = None
         self.cmdReadCallBackFct = None
@@ -122,12 +124,25 @@ class Serial:
         If this is the case try to hard-code the COM port into the config JSON file
         '''
         _available_ports = list_ports.comports(include_links=False)
-        ports_to_check = ["COM", "/dev/tt", "/dev/a", "/dev/cu.SLA", "/dev/cu.wchusb"]
-        descriptions_to_check = ["CH340", "CP2102"]
+        current_os = sys.platform.lower()
+
+        # OS-specific port prefixes and descriptions
+        if current_os.startswith("win"):
+            ports_to_check = ["COM"]
+            descriptions_to_check = ["CH340", "CP2102", "USB Serial"]
+        elif current_os.startswith("darwin"):
+            # prefer cu.SLAB* over others on mac
+            ports_to_check = ["/dev/cu.SLAB", "/dev/cu.wchusb", "/dev/cu.usbmodem"]
+            descriptions_to_check = ["CH340", "CP2102", "USB-Serial"]
+        else:  # linux or other
+            ports_to_check = ["/dev/ttyUSB", "/dev/ttyACM"]
+            descriptions_to_check = ["CH340", "CP2102", "USB2.0-Serial", "USB-Serial"]
 
         for port in _available_ports:
-            if any(port.device.startswith(allowed_port) for allowed_port in ports_to_check) or \
-               any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
+            if any(port.device.startswith(p) for p in ports_to_check) or \
+            any(port.description.startswith(d) for d in descriptions_to_check):
+                if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
+                    continue
                 if self.tryToConnect(port.device):
                     self.is_connected = True
                     self.manufacturer = port.manufacturer
@@ -264,10 +279,10 @@ class Serial:
             # if we just want to send but not even wait for a response
             with self.serialLock:
                 try:
-                        mReadline = self.serialdevice.readline()
-                        line = mReadline.decode('utf-8').strip()
-                        if self.DEBUG and line!="": 
-                            self._logger.debug("[ProcessLines]:"+str(line))
+                    mReadline = self._read(self.serialdevice)
+                    line = mReadline.decode('utf-8').strip()
+                    if self.DEBUG and line!="": 
+                        self._logger.debug("[ProcessLines]:"+str(line))
                 except Exception as e:
                     self._logger.error("Failed to read the line in serial: "+str(e))
                     nFailedCommands += 1
@@ -410,7 +425,6 @@ class Serial:
             time.sleep(0.1)
             return identifier
         t0 = time.time()
-        timeReturnReceived = 0.5
         maxRetry = 3
         iRetry = 0
         while self.running:
@@ -428,7 +442,7 @@ class Serial:
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
-            if time.time()-t0>timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
+            if time.time()-t0>self.timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
                 if iRetry > maxRetry:
                     self.resetLastCommand = True
                     return "No response received"
