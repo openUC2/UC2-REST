@@ -180,13 +180,15 @@ class Serial:
         return False
     
     def _write(self, serialdevice, payload):
-        serialdevice.write(json.dumps(payload).encode('utf-8'))
+        if type(payload) == dict:
+            payload = json.dumps(payload)
+        serialdevice.write(payload.encode('utf-8'))
         if self.cmdWriteCallBackFct is not None:
             self.cmdWriteCallBackFct(payload)
         
     def _read(self, serialdevice):
         mLine = serialdevice.readline()
-        if self.cmdReadCallBackFct is not None:
+        if self.cmdReadCallBackFct is not None and mLine!=b'' and mLine != b'\n' :
             self.cmdReadCallBackFct(mLine)  
         return mLine
     
@@ -213,6 +215,8 @@ class Serial:
 
         # write message to the serial
         self._write(ser, payload)
+        ser.write(b'\n')
+
         #self._write(ser, b'\n')
         
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
