@@ -4,6 +4,7 @@ import json
 import queue
 import threading
 import time
+import sys
 
 T_SERIAL_WARMUP = 1#2.5
 class Serial:
@@ -29,8 +30,10 @@ class Serial:
         self.is_connected = False
         self.write_timeout = 1
         self.read_timeout = 0.02
+        self.timeReturnReceived = 1#  0.5
 
-        self.cmdCallBackFct = None
+        self.cmdWriteCallBackFct = None
+        self.cmdReadCallBackFct = None
 
         # setup command queue
         self.resetLastCommand = False
@@ -55,7 +58,7 @@ class Serial:
         # free up any old data
         while True:
             try:
-                readLineRaw = ser.readline()
+                readLineRaw = self._read(ser)   
                 readLine = readLineRaw.decode('utf-8').strip()
                 if self.DEBUG and readLine != "": 
                     self._logger.debug(readLine)
@@ -121,12 +124,25 @@ class Serial:
         If this is the case try to hard-code the COM port into the config JSON file
         '''
         _available_ports = list_ports.comports(include_links=False)
-        ports_to_check = ["COM", "/dev/tt", "/dev/a", "/dev/cu.SLA", "/dev/cu.wchusb"]
-        descriptions_to_check = ["CH340", "CP2102"]
+        current_os = sys.platform.lower()
+
+        # OS-specific port prefixes and descriptions
+        if current_os.startswith("win"):
+            ports_to_check = ["COM"]
+            descriptions_to_check = ["CH340", "CP2102", "USB Serial"]
+        elif current_os.startswith("darwin"):
+            # prefer cu.SLAB* over others on mac
+            ports_to_check = ["/dev/cu.SLAB", "/dev/cu.wchusb", "/dev/cu.usbmodem"]
+            descriptions_to_check = ["CH340", "CP2102", "USB-Serial"]
+        else:  # linux or other
+            ports_to_check = ["/dev/ttyUSB", "/dev/ttyACM"]
+            descriptions_to_check = ["CH340", "CP2102", "USB2.0-Serial", "USB-Serial"]
 
         for port in _available_ports:
-            if any(port.device.startswith(allowed_port) for allowed_port in ports_to_check) or \
-               any(port.description.startswith(allowed_description) for allowed_description in descriptions_to_check):
+            if any(port.device.startswith(p) for p in ports_to_check) or \
+            any(port.description.startswith(d) for d in descriptions_to_check):
+                if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
+                    continue
                 if self.tryToConnect(port.device):
                     self.is_connected = True
                     self.manufacturer = port.manufacturer
@@ -162,7 +178,34 @@ class Serial:
             self._logger.debug(f"Trying out port {port} failed: "+str(e))
 
         return False
-
+    
+    def _write(self, serialdevice, payload):
+        if type(payload) == dict:
+            payload = json.dumps(payload)
+        serialdevice.write(payload.encode('utf-8'))
+        if self.cmdWriteCallBackFct is not None:
+            self.cmdWriteCallBackFct(payload)
+        
+    def _read(self, serialdevice):
+        mLine = serialdevice.readline()
+        if self.cmdReadCallBackFct is not None and mLine!=b'' and mLine != b'\n' :
+            self.cmdReadCallBackFct(mLine)  
+        return mLine
+    
+    def setWriteCallback(self, callback):
+        '''
+        We can assign a callback function to output any of the 
+        commands that are sent to the serial device
+        '''
+        self.cmdWriteCallBackFct = callback
+        
+    def setReadCallback(self, callback):    
+        '''
+        We can assign a callback function to output any of the
+        responses that are received from the serial device
+        '''
+        self.cmdReadCallBackFct = callback
+    
     def checkFirmware(self, ser):
         """Check if the firmware is correct
         We do not do that inside the queue processor yet
@@ -170,19 +213,22 @@ class Serial:
         path = "/state_get"
         payload = {"task": path}
 
-        ser.write(json.dumps(payload).encode('utf-8'))
+        # write message to the serial
+        self._write(ser, payload)
         ser.write(b'\n')
+
+        #self._write(ser, b'\n')
+        
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
         for i in range(500):
             # if we just want to send but not even wait for a response
-            mReadline = ser.readline()
+            mReadline = self._read(ser)
             if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
                 self._logger.debug("[checkFirmware]: "+str(mReadline))
             if mReadline.decode('utf-8').strip() == "++":
                 self._freeSerialBuffer(ser)
                 return True
         return False
-
 
     def _generate_identifier(self):
         self.identifier_counter += 1
@@ -203,7 +249,7 @@ class Serial:
             with self.serialLock:
                 try:
                     if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
-                    self.serialdevice.write(json_command.encode('utf-8'))
+                    self._write(self.serialdevice, json.loads(json_command))
                 except Exception as e:
                     self._logger.error("Failed to write the line in serial: "+str(e))
             
@@ -237,10 +283,10 @@ class Serial:
             # if we just want to send but not even wait for a response
             with self.serialLock:
                 try:
-                        mReadline = self.serialdevice.readline()
-                        line = mReadline.decode('utf-8').strip()
-                        if self.DEBUG and line!="": 
-                            self._logger.debug("[ProcessLines]:"+str(line))
+                    mReadline = self._read(self.serialdevice)
+                    line = mReadline.decode('utf-8').strip()
+                    if self.DEBUG and line!="": 
+                        self._logger.debug("[ProcessLines]:"+str(line))
                 except Exception as e:
                     self._logger.error("Failed to read the line in serial: "+str(e))
                     nFailedCommands += 1
@@ -329,12 +375,8 @@ class Serial:
         # write message to the serial
         if not getReturn:
             nResponses = -1
-        if self.cmdCallBackFct is not None:
-            self.cmdCallBackFct(payload)
-            return "OK"
-        else:
-            writeResult = self.sendMessage(command=payload, nResponses=nResponses, timeout=timeout)
-            return writeResult
+        writeResult = self.sendMessage(command=payload, nResponses=nResponses, timeout=timeout)
+        return writeResult
 
     def writeSerial(self, payload):
         return self.sendMessage(payload, nResponses=-1)
@@ -374,7 +416,7 @@ class Serial:
             #self.serialdevice.flush()
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
             with self.serialLock:
-                self.serialdevice.write(json_command.encode('utf-8'))
+                self._write(self.serialdevice, json_command)
             #time.sleep(1)
             # we have to queue the commands and give it some time to process
             #self._enqueue_command(json_command)
@@ -387,7 +429,6 @@ class Serial:
             time.sleep(0.1)
             return identifier
         t0 = time.time()
-        timeReturnReceived = 0.5
         maxRetry = 3
         iRetry = 0
         while self.running:
@@ -405,7 +446,7 @@ class Serial:
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
-            if time.time()-t0>timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
+            if time.time()-t0>self.timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
                 if iRetry > maxRetry:
                     self.resetLastCommand = True
                     return "No response received"
@@ -449,9 +490,6 @@ class Serial:
         if self.serialdevice: return True
         return False
 
-    def toggleCommandOutput(self, cmdCallBackFct=None):
-        # if true, all commands will be output to a callback function and stored for later use
-        self.cmdCallBackFct = cmdCallBackFct
 
 if __name__ == "__main__":
     # Usage example
