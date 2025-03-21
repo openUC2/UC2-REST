@@ -5,11 +5,13 @@ import queue
 import threading
 import time
 import sys
+from serial.serialutil import SerialException
 
-T_SERIAL_WARMUP = 1#2.5
+T_SERIAL_WARMUP = 2.5
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
-                 identity="UC2_Feather", parent=None, DEBUG=False):
+                 identity="UC2_Feather", parent=None, DEBUG=False, 
+                 skipFirmwareCheck=False):
 
         self.serialdevice = None
         self.serialport = port
@@ -17,6 +19,7 @@ class Serial:
         self.timeout = timeout
         self._parent = parent
         self.manufacturer = ""
+        self.skipFirmwareCheck = skipFirmwareCheck
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -71,13 +74,36 @@ class Serial:
             if time.time()-t0 > timeout:
                 return
 
+
+    def get_port_info(self, port_name):
+        """
+        Überprüft, ob ein Portname in der Liste der verfügbaren Ports enthalten ist,
+        und gibt die zugehörigen Portinformationen zurück.
+
+        :param port_name: Der Name des Ports (z. B. '/dev/ttyUSB0')
+        :return: Portinformationen oder None, wenn der Port nicht gefunden wurde
+        """
+        available_ports = list_ports.comports()
+        for port in available_ports:
+            if port.device == port_name:
+                return port  # Gibt die Portinformationen zurück
+        return None  # Port nicht gefunden
+
+
     def openDevice(self, port=None, baud_rate=115200):
         try: # try to close an eventually open serial connection
             if str(type(self.ser)) != "<class 'uc2rest.mserial.MockSerial'>":
                 self.serialdevice.close()
         except: pass
 
+        
         try:
+            # check if port is string and if so within available ports 
+            if type(port)==str:
+                port = self.get_port_info(port)
+                if port is None:
+                    raise ValueError("Port not found")
+                
             for i in range(2): # not good, but sometimes it  needs a second attempt
                 isUC2 = self.tryToConnect(port)
                 if isUC2:
@@ -143,7 +169,7 @@ class Serial:
             any(port.description.startswith(d) for d in descriptions_to_check):
                 if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
                     continue
-                if self.tryToConnect(port.device):
+                if self.tryToConnect(port):
                     self.is_connected = True
                     self.manufacturer = port.manufacturer
                     return self.serialdevice
@@ -157,17 +183,18 @@ class Serial:
 
     def tryToConnect(self, port):
         try:
-            self.serialdevice = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
+            self.serialdevice = serial.Serial(port.device, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             # close the device - similar to hard reset
-            self.serialdevice.setDTR(False)
-            self.serialdevice.setRTS(True)
-            time.sleep(.1)
-            self.serialdevice.setDTR(False)
-            self.serialdevice.setRTS(False)
-            time.sleep(.5)            
+            if not port.description == "USB JTAG/serial debug unit": # ESP32S3 won't work like that -> non configured device afterwards 
+                self.serialdevice.setDTR(False)
+                self.serialdevice.setRTS(True)
+                time.sleep(.1)
+                self.serialdevice.setDTR(False)
+                self.serialdevice.setRTS(False)
+                time.sleep(.5)            
             #time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
-            if self.checkFirmware(self.serialdevice):
+            if self.skipFirmwareCheck or self.checkFirmware(self.serialdevice):
                 self.is_connected = True
                 self.NumberRetryReconnect = 0
                 return True
@@ -185,12 +212,17 @@ class Serial:
         serialdevice.write(payload.encode('utf-8'))
         if self.cmdWriteCallBackFct is not None:
             self.cmdWriteCallBackFct(payload)
-        
+
+            
     def _read(self, serialdevice):
-        mLine = serialdevice.readline()
-        if self.cmdReadCallBackFct is not None and mLine!=b'' and mLine != b'\n' :
-            self.cmdReadCallBackFct(mLine)  
-        return mLine
+        try:
+            mLine = serialdevice.readline()
+            if self.cmdReadCallBackFct is not None and mLine!=b'' and mLine != b'\n' :
+                self.cmdReadCallBackFct(mLine)  
+            return mLine
+        except SerialException as e:
+            self._logger.error("Failed to read the line in serial: "+str(e))
+            return b''
     
     def setWriteCallback(self, callback):
         '''
@@ -318,15 +350,15 @@ class Serial:
                 reading_json = False
                 try:
                     json_response = json.loads(buffer)
+                    self._logger.debug("[ProcessCommands]: "+str(json_response))
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
                             try:
-                                self._logger.debug("[ProcessCommands]: "+str(json_response))
                                 if callback["pattern"] in json_response:
                                     callback["callbackfct"](json_response)
                             except Exception as e:
-                                self._logger.error("[ProcessCommands]: "+str(e))
+                                self._logger.error("[ProcessCommands Casting Callbacks]: "+str(e))
 
                 except Exception as e:
                     self._logger.error("Failed to load the json from serial %s" % buffer)

@@ -6,9 +6,29 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
+port = "/dev/cu.usbmodem1101"
 print("start")
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirmwareCheck=False)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
+
+for iLED in range(5):
+    # timeout = 0 means no timeout => mResult will be rubish!
+    mResult = ESP32.led.send_LEDMatrix_single(indexled=iLED, intensity=(255, 255, 255), timeout=0.1)
+    mResult = ESP32.led.send_LEDMatrix_single(indexled=iLED, intensity=(0, 0, 0), timeout=0.1)
+
+# display random pattern
+for i in range(5):
+    led_pattern = np.random.randint(0,55, (25,3))
+    mResult = ESP32.led.send_LEDMatrix_array(led_pattern=led_pattern,timeout=0)
+    assert mResult["success"] == 1, "Failed sending LED command"
+
+
+
+# {"task":"/ledarr_act", "led":{"LEDArrMode":1, "led_array":[{"id":0, "r":255, "g":255, "b":255}]}}
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(255, 255, 255))
+mResult = ESP32.led.send_LEDMatrix_full(intensity=(0, 0, 0), getReturn=False)
+
+#
 
 
 ESP32.home.home_x(speed =15000, direction = -1, endstoppolarity=1, timeout=10, isBlocking=True)
