@@ -6,10 +6,35 @@ import time
 port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
-port = "/dev/cu.usbmodem1101"
+port = "/dev/cu.usbmodem11101"
 print("start")
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirmwareCheck=False)
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirmwareCheck=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
+
+
+
+''' TEST LED '''
+
+# Create LedMatrix object, pass a reference to your “parent” that has post_json()
+my_led_matrix = ESP32.led
+
+# Turn off all LEDs
+my_led_matrix.send_LEDMatrix_off()
+
+# Fill entire matrix with red
+my_led_matrix.send_LEDMatrix_full((255,0,0))
+
+# Light only left half in bright white
+my_led_matrix.send_LEDMatrix_halves(region="left", intensity=(255,255,255))
+
+# Draw a ring of radius 3 in purple
+my_led_matrix.send_LEDMatrix_rings(radius=3, intensity=(128,0,128))
+
+# Draw a filled circle of radius 5 in green
+my_led_matrix.send_LEDMatrix_circles(radius=3, intensity=(0,255,0))
+
+
+
 
 for iLED in range(5):
     # timeout = 0 means no timeout => mResult will be rubish!
