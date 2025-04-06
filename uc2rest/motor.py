@@ -178,43 +178,43 @@ class Motor(object):
         y1 = (x-y)/np.sqrt(2)
         return x1, y1
 
-    def move_x(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_x(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if self.isCoreXY:
             # have to turn two motors to move in X direction
             xTemp, yTemp =  self.cartesian2corexy(steps, 0)
-            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         else:
-            return self.move_axis_by_name(axis="X", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_axis_by_name(axis="X", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
-    def move_y(self, steps=0, speed=1000, acceleration=None,  is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_y(self, steps=0, speed=1000, acceleration=None,  is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if self.isCoreXY:
             # have to turn two motors to move in Y direction
             xTemp, yTemp =  self.cartesian2corexy(0,steps)
-            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_xy(steps=(xTemp, yTemp), speed=(speed,speed), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         else:
-            return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_axis_by_name(axis="Y", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
-    def move_z(self, steps=0, speed=1000, acceleration=None,  is_blocking=False, is_absolute=False, is_dualaxis = False, is_enabled=True, timeout=gTIMEOUT):
+    def move_z(self, steps=0, speed=1000, acceleration=None,  is_blocking=False, is_absolute=False, is_dualaxis = False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if is_dualaxis:
-            self.move_az(steps=(steps, steps), speed=(speed,speed), acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=gTIMEOUT)
+            self.move_az(steps=(steps, steps), speed=(speed,speed), acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=gTIMEOUT, is_reduced=is_reduced)
         else:
-            return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
-    def move_a(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
-        return self.move_axis_by_name(axis="A", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+    def move_a(self, steps=0, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
+        return self.move_axis_by_name(axis="A", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
-    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if len(speed)!= 3:
             speed = (speed,speed,speed)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         return r
 
-    def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if self.isCoreXY:
             # have to move only one motor to move in XY direction
-           return self.move_xyza(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+           return self.move_xyza(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         else:
             if type(speed)==int or len(speed)!= 2:
                 speed = (speed,speed)
@@ -226,10 +226,10 @@ class Motor(object):
                 acceleration = (acceleration,acceleration)
 
             # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-            r = self.move_xyza(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+            r = self.move_xyza(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
             return r
 
-    def move_az(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_az(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if (type(speed)!=list and type(speed)!=tuple) or len(speed)!= 2:
             speed = (speed,speed)
 
@@ -237,10 +237,10 @@ class Motor(object):
             acceleration = (acceleration,acceleration)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_xyza(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         return r
 
-    def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         # everywhere, where relative steps are zero, speed should be zero, too
         if type(speed)==int:
             speed = [speed,speed,speed,speed]
@@ -250,17 +250,17 @@ class Motor(object):
             if steps[iMotor]==0 and not is_absolute:
                 speed[iMotor] = 0
 
-        r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout)
+        r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         return r
 
-    def move_axis_by_name(self, axis="X", steps=100, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT):
+    def move_axis_by_name(self, axis="X", steps=100, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         axis = self.xyztTo1230(axis)
         _speed=np.zeros(4)
         _speed[axis] = speed
         _steps=np.array((0,0,0,0))
         _steps[axis] = steps
         _acceleration=acceleration
-        r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled)
+        r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, is_reduced=is_reduced)
         return r
 
     def move_forever(self, speed=(0,0,0,0), is_stop=False, is_blocking=False):
@@ -360,7 +360,7 @@ class Motor(object):
 
 
 
-    def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, acceleration=(None, None, None, None), is_blocking=True, is_enabled=True):
+    def move_stepper(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False), timeout=gTIMEOUT, acceleration=(None, None, None, None), is_blocking=True, is_enabled=True, is_reduced=False):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
 
@@ -445,7 +445,8 @@ class Motor(object):
                              "speed": int(speed[iMotor]),
                              "isabs": int(isAbsoluteArray[iMotor]),
                              "isaccel": int(1),
-                             "isen": int(is_enabled)}
+                             "isen": int(is_enabled), 
+                             "redu": int(is_reduced)}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
                 else:
