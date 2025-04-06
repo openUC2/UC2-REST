@@ -222,7 +222,7 @@ class Serial:
             return mLine
         except SerialException as e:
             self._logger.error("Failed to read the line in serial: "+str(e))
-            return b''
+            return False
     
     def setWriteCallback(self, callback):
         '''
@@ -299,7 +299,7 @@ class Serial:
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
         nFailedCommands = 0
-        nFailedCommandsMax = 5
+        nFailedCommandsMax = 10
         while self.running:
             if self.manufacturer == "UC2Mock": 
                 self.running = False
@@ -316,6 +316,10 @@ class Serial:
             with self.serialLock:
                 try:
                     mReadline = self._read(self.serialdevice)
+                    if mReadline == False :
+                        nFailedCommands += 1
+                        if nFailedCommands > nFailedCommandsMax:
+                            raise Exception("Failed to read the line in serial: "+str(mReadline))
                     line = mReadline.decode('utf-8').strip()
                     if self.DEBUG and line!="": 
                         self._logger.debug("[ProcessLines]:"+str(line))
@@ -326,6 +330,7 @@ class Serial:
                         
                     # if we have a problem with the serial connection, we need to reconnect
                     for i in range(4):
+                        nFailedCommands=0
                         if self.reconnect():
                             self._logger.debug("Reconnected to the serial device")
                             break
@@ -364,7 +369,7 @@ class Serial:
                     self._logger.error("Failed to load the json from serial %s" % buffer)
                     self._logger.error("Error: %s" % str(e))
                     json_response = {}
-                    reading_json = True
+                    #reading_json = True
 
                 try: currentIdentifier = json_response["qid"]
                 except: pass
