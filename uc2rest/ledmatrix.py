@@ -303,3 +303,22 @@ class LedMatrix(object):
         }
         r = self._parent.post_json(path, payload, getReturn=getReturn, timeout=timeout)
         return r
+
+    def send_LEDMatrix_status(self, status="idle"):
+        """
+        Set the status of the LED matrix to "idle" or "busy".
+        JSON: "action":"status", "status": <string>
+        """
+        if status not in ["error", "idle", "warn", "success", "busy", "rainbow"]:
+            status = "idle"
+        path = "/ledarr_act"
+        payload = {
+            "task": path,
+            "qid": 0,
+            "led": {
+                "action": "status",
+                "status": status
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
