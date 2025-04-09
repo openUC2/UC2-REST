@@ -11,6 +11,7 @@ from .galvo import Galvo
 from .config import config
 from .ledmatrix import LedMatrix
 from .motor import Motor
+from .gripper import Gripper
 from .home import Home
 from .objective import Objective
 from .state import State
@@ -109,6 +110,9 @@ class UC2Client(object):
 
         # initilize motor
         self.motor = Motor(self)
+        
+        # initialize gripper
+        self.gripper = Gripper(self)
         
         # initialize rotator
         self.rotator = Rotator(self)
