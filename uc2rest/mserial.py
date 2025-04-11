@@ -257,7 +257,7 @@ class Serial:
             mReadline = self._read(ser)
             if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
                 self._logger.debug("[checkFirmware]: "+str(mReadline))
-            if mReadline.decode('utf-8').strip() == "++":
+            if mReadline.decode('utf-8').strip() == "++" or mReadline.decode('utf-8').strip().find("++")>=0:
                 self._freeSerialBuffer(ser)
                 return True
         return False

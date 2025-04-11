@@ -3,9 +3,9 @@ import uc2rest
 import numpy as np
 import time
 
-port = "unknown"
 port = "/dev/cu.SLAB_USBtoUART"
-ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirmwareCheck =True)
+port = "unknown"
+ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True)
 
 # open gripper
 ESP32.gripper.open(isBlocking=True)
