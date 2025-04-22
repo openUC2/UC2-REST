@@ -88,10 +88,7 @@ class UC2Client(object):
                         
         # import libraries depending on API version
         self.logger.debug("Using API version 2")        
-
-        #FIXME
-        #self.set_state(debug=False)
-
+    
         # initialize state
         self.state = State(self)
 
@@ -142,13 +139,6 @@ class UC2Client(object):
         
         # initialize messaging
         self.message = Message(self)
-        
-        # initialize config
-        if False: # not self.isPyScript: 
-            self.config = config(self)
-            try: self.pinConfig = self.config.loadConfigDevice()
-            except: self.pinConfig = None
-        
 
         # initialize module controller
         self.modules = Modules(parent=self)
