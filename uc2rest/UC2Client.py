@@ -8,7 +8,6 @@ Copyright 2021 Benedict Diederich, released under LGPL 3.0 or later
 from .mserial import Serial
 from .mserial import SerialManagerWrapper
 from .galvo import Galvo
-from .config import config
 from .ledmatrix import LedMatrix
 from .motor import Motor
 from .gripper import Gripper
@@ -39,9 +38,7 @@ class UC2Client(object):
 
     is_wifi = False
     is_serial = False
-
-    # BAUDRATE = 500000
-    BAUDRATE = 500000
+    BAUDRATE = 115200
 
     def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, 
                  NLeds=64, SerialManager=None, DEBUG=False, logger=None, skipFirmwareCheck=False,
