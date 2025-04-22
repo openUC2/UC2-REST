@@ -60,10 +60,8 @@ class Serial:
         if IS_SERIAL:
             self.serialdevice= self.openDevice(port, baudrate)
         else: 
-            self.serialdevice = MockSerial(port, baudrate, timeout=timeout)
-            self.is_connected = False
-            self.manufacturer = "UC2Mock"
-            self._logger.debug("You have to ensure that the serial device is connected to the computer!")
+            ''' this is most likely happening because we work under pyoidide '''
+            self._logger.debug("You have to provide the serial interface on your own")
 
     def breakCurrentCommunication(self):
         self.resetLastCommand = True

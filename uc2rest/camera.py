@@ -1,4 +1,8 @@
-from PIL import Image
+try:
+    from PIL import Image
+    IS_IMAGE = True
+except ImportError:
+    IS_IMAGE = False
 import base64
 import io
 import numpy as np
