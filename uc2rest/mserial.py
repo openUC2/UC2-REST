@@ -1,11 +1,11 @@
 import serial
-from serial.tools  import list_ports
 import json
 import queue
 import threading
 import time
 import sys
 try:
+    from serial.tools  import list_ports
     from serial.serialutil import SerialException
     IS_SERIAL = True
 except ImportError:
