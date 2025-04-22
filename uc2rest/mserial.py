@@ -5,7 +5,13 @@ import queue
 import threading
 import time
 import sys
-from serial.serialutil import SerialException
+try:
+    from serial.serialutil import SerialException
+    IS_SERIAL = True
+except ImportError:
+    IS_SERIAL = False
+    class SerialException(Exception):
+        pass
 
 T_SERIAL_WARMUP = 2.5
 class Serial:
@@ -51,7 +57,13 @@ class Serial:
 
         # initialize serial connection
         self.thread = None
-        self.serialdevice= self.openDevice(port, baudrate)
+        if IS_SERIAL:
+            self.serialdevice= self.openDevice(port, baudrate)
+        else: 
+            self.serialdevice = MockSerial(port, baudrate, timeout=timeout)
+            self.is_connected = False
+            self.manufacturer = "UC2Mock"
+            self._logger.debug("You have to ensure that the serial device is connected to the computer!")
 
     def breakCurrentCommunication(self):
         self.resetLastCommand = True
