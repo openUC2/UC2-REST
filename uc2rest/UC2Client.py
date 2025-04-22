@@ -43,7 +43,9 @@ class UC2Client(object):
     # BAUDRATE = 500000
     BAUDRATE = 500000
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, NLeds=64, SerialManager=None, DEBUG=False, logger=None, skipFirmwareCheck=False):
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, 
+                 NLeds=64, SerialManager=None, DEBUG=False, logger=None, skipFirmwareCheck=False,
+                 isPyScript=False):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -61,7 +63,7 @@ class UC2Client(object):
             self.logger = logger
 
         # perhaps we are in the browser?
-        self.isPyScript = False
+        self.isPyScript = isPyScript
 
         # initialize communication channel (# connect to wifi or usb)
         if serialport is not None:
@@ -95,12 +97,6 @@ class UC2Client(object):
 
         # initialize state
         self.state = State(self)
-        if not self.isPyScript: 
-            state = self.state.get_state()
-       
-        # initialize config
-        if not self.isPyScript: 
-            self.config = config(self)
 
         # initialize cmdRecorder
         self.cmdRecorder = cmdRecorder(self)
