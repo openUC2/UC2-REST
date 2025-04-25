@@ -9,6 +9,7 @@ from .mserial import Serial
 from .mserial import SerialManagerWrapper
 from .galvo import Galvo
 from .ledmatrix import LedMatrix
+from .lcddisplay import LCDDisplay
 from .motor import Motor
 from .gripper import Gripper
 from .home import Home
@@ -88,7 +89,7 @@ class UC2Client(object):
                         
         # import libraries depending on API version
         self.logger.debug("Using API version 2")        
-    
+
         # initialize state
         self.state = State(self)
 
@@ -98,6 +99,9 @@ class UC2Client(object):
         # initialize LED matrix
         self.led = LedMatrix(self, NLeds=NLeds)
 
+        # initialize LCD display
+        self.lcd = LCDDisplay(self)
+        
         # initilize motor
         self.motor = Motor(self)
         

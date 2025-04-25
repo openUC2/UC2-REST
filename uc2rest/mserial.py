@@ -33,7 +33,7 @@ class Serial:
             self._logger.addHandler(logging.StreamHandler())
         else:
             self._logger = self._parent.logger
-
+        self.identifier_counter = 0 
         self.identity = identity
         self.DEBUG = DEBUG
         self.is_connected = False
