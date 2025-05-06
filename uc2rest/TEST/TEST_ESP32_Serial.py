@@ -4,9 +4,9 @@ import numpy as np
 import time
 
 port = "unknown"
-port = "/dev/cu.SLAB_USBtoUART"
+#port = "/dev/cu.SLAB_USBtoUART"
 #port = "COM3"
-port = "/dev/cu.usbmodem11101"
+port = "/dev/cu.usbmodem101"
 print("start")
 ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirmwareCheck=True)
 #ESP32.serial.sendMessage('{"task":"/home_act", "home": {"steppers": [{"stepperid":1, "timeout": 20000, "speed": 15000, "direction":1, "endposrelease":3000}]}}')
@@ -18,12 +18,13 @@ ESP32 = uc2rest.UC2Client(serialport=port, baudrate=115200, DEBUG=True, skipFirm
 # Create LedMatrix object, pass a reference to your “parent” that has post_json()
 my_led_matrix = ESP32.led
 
-# Turn off all LEDs
-my_led_matrix.send_LEDMatrix_off()
-
-# Fill entire matrix with red
-my_led_matrix.send_LEDMatrix_full((255,0,0))
-
+for i in range(5):
+    # Turn off all LEDs
+    my_led_matrix.send_LEDMatrix_off()
+    time.sleep(0.1)
+    # Fill entire matrix with red
+    my_led_matrix.send_LEDMatrix_full((255,0,0))
+    time.sleep(0.1)
 # Light only left half in bright white
 my_led_matrix.send_LEDMatrix_halves(region="left", intensity=(255,255,255))
 
