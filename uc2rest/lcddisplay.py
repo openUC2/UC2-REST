@@ -6,15 +6,16 @@ class LCDDisplay:
         """
         self._parent = parent
         self.path = "/lcd_act"
+        self.timeout = 10
         self.color = (255, 255, 255)  # Default color
 
-    def _send(self, action, isBlocking=True, timeout=5, **kwargs):
+    def _send(self, action, isBlocking=True, **kwargs):
         payload = {
             "task": self.path,
             "action": action,
             **kwargs
         }
-        return self._parent.post_json(self.path, payload, getReturn=isBlocking, nResponses=1, timeout=timeout)
+        return self._parent.post_json(self.path, payload, getReturn=isBlocking, nResponses=1, timeout=self.timeout)
 
     def set_grating(self, perdiod, r=255, g=255, b=255, horizontal=True):
         # {"task":"/lcd_act", "action":"gratingh","period":3,"r":255,"g":255,"b":255}
@@ -23,6 +24,13 @@ class LCDDisplay:
         else:
             return self._send("gratingv", period=perdiod, r=r, g=g, b=b)
         
+    def set_timeout(self, timeout=5):
+        """
+        Set the timeout for the LCD display.
+        :param timeout: Timeout in seconds.
+        """
+        self.timeout = timeout
+                
     def set_color(self, r=255, g=255, b=255):
         self.color = (r, g, b)
 

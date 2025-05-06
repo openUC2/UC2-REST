@@ -1,5 +1,6 @@
 import time
 import json
+import numpy as np
 
 class Objective(object):
     def __init__(self, parent):

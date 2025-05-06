@@ -228,7 +228,8 @@ class Serial:
         try:
             mLine = serialdevice.readline()
             if self.cmdReadCallBackFct is not None and mLine!=b'' and mLine != b'\n' :
-                self.cmdReadCallBackFct(mLine)  
+                try:self.cmdReadCallBackFct(mLine)  
+                except:pass
             return mLine
         except SerialException as e:
             self._logger.error("Failed to read the line in serial: "+str(e))
@@ -339,19 +340,20 @@ class Serial:
                     line = ""
                         
                     # if we have a problem with the serial connection, we need to reconnect
-                    for i in range(4):
-                        nFailedCommands=0
-                        if self.reconnect():
-                            self._logger.debug("Reconnected to the serial device")
-                            break
-                        else:
-                            self._logger.debug("Failed to reconnect to the serial device")
-                        time.sleep(1)
+                    if nFailedCommands>5:
+                        for i in range(4):
+                            nFailedCommands=0
+                            if self.reconnect():
+                                self._logger.debug("Reconnected to the serial device")
+                                break
+                            else:
+                                self._logger.debug("Failed to reconnect to the serial device")
+                            time.sleep(1)
                 
             if line == "++":
                 reading_json = True
                 continue
-            elif line.find("error") != -1:
+            elif line.find("error") != -1 and currentIdentifier is not None:
                 # if we have an error, we need to reset the last command
                 self._logger.debug("Error - last command did not match the firmware: "+str(self.commands[currentIdentifier]))
                 self.resetLastCommand = True
