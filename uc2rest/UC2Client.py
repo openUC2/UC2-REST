@@ -26,6 +26,7 @@ from .logger import Logger
 from .cmdrecorder import cmdRecorder
 from .temperature import Temperature
 from .message import Message
+from .can import CAN
 try:
     import requests
 except:
@@ -104,6 +105,9 @@ class UC2Client(object):
         
         # initilize motor
         self.motor = Motor(self)
+        
+        # initialize CAN
+        self.can = CAN(self)
         
         # initialize gripper
         self.gripper = Gripper(self)
