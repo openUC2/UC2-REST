@@ -20,9 +20,7 @@ class CAN(object):
         path = "/can_act"
         payload = {
             "task": path,
-            "restart": 10,
-            "qid": qid,
-            "can_address": can_address
+            "restart": int(can_address)
         }
         nResponses = 1 if isBlocking else 0
         # Send the payload to the parent, which handles the actual communication
