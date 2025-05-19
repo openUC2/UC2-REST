@@ -461,7 +461,7 @@ class Motor(object):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
                 # if we are absolute and the last target position is the same as the current one, we don't need to move
                 if isAbsoluteArray[iMotor] and abs(steps[iMotor] - self.currentPosition[iMotor])<1:
-                    if self._parent.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {steps[iMotor]}")
+                    if self._parent.serial.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {steps[iMotor]}")
                     continue
                 motorProp = { "stepperid": int(self.motorAxisOrder[iMotor]),
                              "position": int(steps[iMotor]),
