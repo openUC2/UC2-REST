@@ -306,7 +306,7 @@ class Serial:
     def _process_commands(self):
         buffer = ""
         reading_json = False
-        currentIdentifier = None
+        currentIdentifier = 0
         nLineCountTimeout = 50 # maximum number of lines read before timeout
         lineCounter = 0
         nFailedCommands = 0
@@ -367,7 +367,7 @@ class Serial:
                 reading_json = False
                 try:
                     json_response = json.loads(buffer)
-                    self._logger.debug("[ProcessCommands]: "+str(json_response))
+                    if self.DEBUG: self._logger.debug("[ProcessCommands]: "+str(json_response))
                     if len(self.callBackList) > 0:
                         for callback in self.callBackList:
                             # check if json has key
