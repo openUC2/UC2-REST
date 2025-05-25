@@ -702,7 +702,43 @@ class Motor(object):
 
     def set_direction(self, axis=1, sign=1, timeout=1):
         return False
+    
+    def stop_stage_scanning(self):
+        # {"task":"/motor_act", "stagescan":{ "stopped":1 }}
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "stagescan": {
+                "stopped": 1
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
+    
+    
 
+    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, settle=5, illumination=(0,0,0,0), led=0):
+        #{ "task":"/motor_act", "stagescan":{ "xstart":0, "xstep":1000, "nx":20, "ystart":0, "ystep":1000, "ny":10, "settle":5, "stopped":0 }}
+	    #{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
+		#{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 255, 255, 0], "led": 0}}
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "stagescan": {
+                "xstart": xstart,
+                "xstep": xstep,
+                "nx": nx,
+                "ystart": ystart,
+                "ystep": ystep,
+                "ny": ny,
+                "settle": settle,
+                "illumination": illumination,
+                "led": led,
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
+    
     def set_tmc_parameters(self, axis=0, msteps=None, rms_current=None, stall_value=None, sgthrs=None, semin=None, semax=None, blank_time=None, toff=None, timeout=1):
         ''' set the TMC parameters for a specific axis 
         msteps: microsteps
