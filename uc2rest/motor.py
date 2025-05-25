@@ -475,7 +475,8 @@ class Motor(object):
                 else:
                     motorProp["accel"] = self.DEFAULT_ACCELERATION
                 motorPropList.append(motorProp)
-
+        if len(motorPropList)==0:
+            return "{'return':-1}"
         path = "/motor_act"
         payload = {
             "task":path,
