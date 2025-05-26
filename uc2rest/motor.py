@@ -718,23 +718,26 @@ class Motor(object):
     
     
 
-    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, settle=5, illumination=(0,0,0,0), led=0):
-        #{ "task":"/motor_act", "stagescan":{ "xstart":0, "xstep":1000, "nx":20, "ystart":0, "ystep":1000, "ny":10, "settle":5, "stopped":0 }}
-	    #{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
-		#{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 255, 255, 0], "led": 0}}
+    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, tsettle=5, tExposure=50, illumination=(0,0,0,0), led=0, speed=20000, acceleration=None):
+		#	{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
+        if acceleration is None:
+            acceleration = self.DEFAULT_ACCELERATION
         path = "/motor_act"
         payload = {
             "task": path,
             "stagescan": {
-                "xstart": xstart,
-                "xstep": xstep,
-                "nx": nx,
-                "ystart": ystart,
-                "ystep": ystep,
-                "ny": ny,
-                "settle": settle,
+                "xStart": xstart,
+                "xStep": xstep,
+                "nX": nx,
+                "yStart": ystart,
+                "yStep": ystep,
+                "nY": ny,
+                "tPre": tsettle,
+                "tPost": tExposure,
                 "illumination": illumination,
                 "led": led,
+                "accel": self.DEFAULT_ACCELERATION,  # default acceleration
+                "speed": speed,  # default speed
             }
         }
         r = self._parent.post_json(path, payload)
