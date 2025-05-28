@@ -726,11 +726,11 @@ class Motor(object):
         payload = {
             "task": path,
             "stagescan": {
-                "xStart": xstart,
-                "xStep": xstep,
+                "xStart": xstart / self.stepSizeX,
+                "xStep": xstep / self.stepSizeX,
                 "nX": nx,
-                "yStart": ystart,
-                "yStep": ystep,
+                "yStart": ystart / self.stepSizeY,
+                "yStep": ystep / self.stepSizeY,
                 "nY": ny,
                 "tPre": tsettle,
                 "tPost": tExposure,
