@@ -42,7 +42,7 @@ class Motor(object):
         self.offsetY = 0
         self.offsetZ = 0
 
-        self.DEFAULT_ACCELERATION = 10000
+        self.DEFAULT_ACCELERATION = 1000000
 
         self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
