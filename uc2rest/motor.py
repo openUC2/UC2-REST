@@ -142,6 +142,38 @@ class Motor(object):
     def setMotorAxisOrder(self, order=[0,1,2,3]):
         self.motorAxisOrder = order
 
+    # { "task": "/motor_act", "focusscan": { "zStart": 0, "zStep": 50, "nZ": 20, "tPre": 80, "tTrig": 20, "tPost": 0, "led": 0, "illumination": [0, 255, 0, 0], "speed": 20000, "acceleration": 1000000, "qid": 42 }}
+    def startFocusScanning(self, zStart=0, zStep=50, nZ=20, tPre=80, tTrig=20, tPost=0, led=0, illumination=[0, 255, 0, 0], speed=20000, acceleration=1000000, qid=42):
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "focusscan": {
+                "zStart": zStart,
+                "zStep": zStep,
+                "nZ": nZ,
+                "tPre": tPre,
+                "tTrig": tTrig,
+                "tPost": tPost,
+                "led": led,
+                "illumination": illumination,
+                "speed": speed,
+                "acceleration": acceleration,
+                "qid": qid
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
+    
+    def stopFocusScanning(self):
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "focusscan": {
+                "stopped": 1
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''
