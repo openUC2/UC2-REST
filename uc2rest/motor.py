@@ -654,9 +654,9 @@ class Motor(object):
         _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
 
         # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)
+        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)[0]
         # returns {"motor": }
-        if "motor" in r:
+        if "motor" in r :
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 if index >3: break # TODO: We would need to handle other values too soon
                 _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]-_physicalOffsets[self.motorAxisOrder[index]]
@@ -775,6 +775,32 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
     
+    def start_stage_scanning_by_coordinates(self, coordinates, tPre=50, tPost=50, led=100, illumination=[50, 75, 100, 125], stopped=0): 
+        '''
+        Example: {"task": "/motor_act", "stagescan": {"coordinates": [{"x": 100, "y": 200}, {"x": 300, "y": 400}, {"x": 500, "y": 600}], "tPre": 50, "tPost": 50, "led": 100, "illumination": [50, 75, 100, 125], "stopped": 0}}
+        
+        coordinates: list of dictionaries with x and y coordinates
+        tPre: time before exposure in ms
+        tPost: exposure time - time after action
+        led: led value for illumination
+        illumination: list of values for each channel of the illumination
+        stopped: 0 for start, 1 for stop
+        '''
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "stagescan": {
+                "coordinates": coordinates,
+                "tPre": tPre,
+                "tPost": tPost,
+                "led": led,
+                "illumination": illumination,
+                "stopped": stopped
+            }
+        }
+        r = self._parent.post_json(path, payload)
+        return r
+            
     def set_tmc_parameters(self, axis=0, msteps=None, rms_current=None, stall_value=None, sgthrs=None, semin=None, semax=None, blank_time=None, toff=None, timeout=1):
         ''' set the TMC parameters for a specific axis 
         msteps: microsteps

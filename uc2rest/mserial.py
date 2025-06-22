@@ -387,9 +387,10 @@ class Serial:
                 except: pass
 
                 with self.lock:
-                    try:
+                    try: # TODO: THis looks fishy   an
                         self.responses[currentIdentifier].append(json_response.copy())
-                    except:
+                    except Exception as e:
+                        #self._logger.error("Failed to append the response: "+str(e))
                         self.responses[currentIdentifier] = list()
                         self.responses[currentIdentifier].append(json_response.copy())
                     buffer = ""      # reset buffer
