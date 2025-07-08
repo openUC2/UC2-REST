@@ -55,13 +55,14 @@ class Home(object):
                   endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
     
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=True):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)
         speed => speed of homing (0...15000)
         direction => 1,-1 (left/right)
         endposrelease => how far to move after homing (0...3000)
+        preMove => the motor will first move by some steps in the opposite direction before homing, this is useful to avoid false triggering of the endstop
         '''
         
         # default values
@@ -79,6 +80,25 @@ class Home(object):
         if direction not in [-1,1]:
             direction = 1
 
+        if preMove:
+            # first move in the opposite direction
+            if direction == 1:
+                preMoveDirection = -1
+            else:
+                preMoveDirection = 1
+            
+            # move away from endstop
+            if axis == 1 or axis == "X":
+                self._parent.motor.move_x(steps=preMoveDirection*1000, speed=10000, is_blocking=False, is_absolute=False, is_enabled=True)
+            elif axis == 2 or axis == "Y":
+                self._parent.motor.move_y(steps=preMoveDirection*1000, speed=10000, is_blocking=False, is_absolute=False, is_enabled=True)
+            elif axis == 3 or axis == "Z":
+                self._parent.motor.move_z(steps=preMoveDirection*1000, speed=10000, is_blocking=False, is_absolute=False, is_enabled=True)
+            elif axis == 0 or axis == "A":
+                self._parent.motor.move_a(steps=preMoveDirection*1000, speed=10000, is_blocking=False, is_absolute=False, is_enabled=True)
+            else:   
+                raise ValueError("Invalid axis. Use 'X', 'Y', 'Z', or 'A'.")
+            time.sleep(0.5)
         # construct json string
         path = "/home_act"
 

@@ -56,7 +56,7 @@ class UC2Client(object):
 
         you can send commands through wifi/http or usb/serial
         '''
-        if logger is None:
+        if True: #logger is None:
             self.logger = Logger()
         else:
             self.logger = logger
