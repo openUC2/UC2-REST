@@ -55,6 +55,7 @@ class State(object):
     
     def espRestart(self,timeout=1):
         # if isController =True=> only PS jjoystick will be accepted
+        # {"task":"/state_act", "restart":1}
         path = "/state_act"
         payload = {
             "restart":1
