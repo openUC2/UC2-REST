@@ -23,7 +23,6 @@ class Motor(object):
         self.minStep = np.ones((self.nMotors))*(-np.inf)
         self.currentDirection = np.zeros((self.nMotors))
         self.currentPosition = np.zeros((self.nMotors))
-        self._position = np.zeros((self.nMotors)) # position from the last motor status update
 
         self.minPosX = -np.inf
         self.minPosY = -np.inf
@@ -84,9 +83,9 @@ class Motor(object):
             for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
                 # FIXME:  smart to re-update this variable? Will be updated by motor-sender too
-                self._position[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - offSets[stepperID]
+                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - offSets[stepperID]
             if  callable(self._callbackPerKey[0]):
-                self._callbackPerKey[0](self._position) # we call the function with the value
+                self._callbackPerKey[0](self.currentPosition) # we call the function with the value
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
 
