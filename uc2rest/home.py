@@ -86,16 +86,17 @@ class Home(object):
                 preMoveDirection = -1
             else:
                 preMoveDirection = 1
+            preMoveDistanceSteps = 1000 # steps to move away from endstop
             
             # move away from endstop
             if axis == 1 or axis == "X":
-                self._parent.motor.move_x(steps=preMoveDirection*100, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
+                self._parent.motor.move_x(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
             elif axis == 2 or axis == "Y":
-                self._parent.motor.move_y(steps=preMoveDirection*100, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
+                self._parent.motor.move_y(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
             elif axis == 3 or axis == "Z":
-                self._parent.motor.move_z(steps=preMoveDirection*100, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
+                self._parent.motor.move_z(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
             elif axis == 0 or axis == "A":
-                self._parent.motor.move_a(steps=preMoveDirection*100, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
+                self._parent.motor.move_a(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
             else:   
                 raise ValueError("Invalid axis. Use 'X', 'Y', 'Z', or 'A'.")
             time.sleep(0.5)
