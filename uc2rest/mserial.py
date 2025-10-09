@@ -353,7 +353,7 @@ class Serial:
             if line == "++":
                 reading_json = True
                 continue
-            elif line.find("error") != -1 and currentIdentifier is not None:
+            elif line.find("error") != -1 and currentIdentifier is not None and currentIdentifier >=0 :
                 # if we have an error, we need to reset the last command
                 self._logger.debug("Error - last command did not match the firmware: "+str(self.commands[currentIdentifier]))
                 self.resetLastCommand = True
