@@ -516,13 +516,14 @@ class Motor(object):
                 "steppers": motorPropList
             }
         }
-
         # safe steps to track direction for backlash compensatio
+        _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
         for iMotor in range(self.nMotors):
             if isAbsoluteArray[iMotor]:
-                self.currentPosition[iMotor] = steps[iMotor]
+                self.currentPosition[iMotor] = steps[iMotor] * _physicalStepSizes[iMotor] - _physicalOffsets[iMotor]
             else:
-                self.currentPosition[iMotor] = self.currentPosition[iMotor] + steps[iMotor]
+                self.currentPosition[iMotor] = self.currentPosition[iMotor] + steps[iMotor] * _physicalStepSizes[iMotor]
 
         # drive motor
         self.isRunning = True
