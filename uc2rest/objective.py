@@ -87,6 +87,7 @@ class Objective(object):
             status["x2"] = np.round(status["x2"]*self._parent.motor.stepSizeA)
             status["z1"] = np.round(status["z1"]*self._parent.motor.stepSizeZ)
             status["z2"] = np.round(status["z2"]*self._parent.motor.stepSizeZ)
+            status["state"] = int(status["state"])
         except:
             status = {"x1":0, 
                       "x2":0, 

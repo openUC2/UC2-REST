@@ -275,7 +275,8 @@ class Serial:
 
     def _generate_identifier(self):
         self.identifier_counter += 1
-        return self.identifier_counter
+        # get modulo 512 to avoid too large numbers
+        return self.identifier_counter % 512
 
     def _enqueue_command(self, json_command):
         """Add a command to the queue."""
