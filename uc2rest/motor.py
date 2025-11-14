@@ -79,11 +79,12 @@ class Motor(object):
         try:
             nSteppers = len(data["steppers"])
             stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            offSets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
+            _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+            _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
             for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
-                # FIXME:  smart to re-update this variable? Will be updated by motor-sender too
-                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - offSets[stepperID]
+                # Hardware returns steps, convert to physical units: (steps * stepSize - offset)
+                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - _physicalOffsets[stepperID]
             if  callable(self._callbackPerKey[0]):
                 self._callbackPerKey[0](self.currentPosition) # we call the function with the value
         except Exception as e:
@@ -438,6 +439,9 @@ class Motor(object):
         if isAbsoluteArray[3]:
             steps[3] += self.offsetZ
 
+        # Store the target position in physical units BEFORE conversion to hardware steps
+        targetPositionPhysical = steps.copy()
+        
         # convert from physical units to steps
         steps[0] *= 1/self.stepSizeA
         steps[1] *= 1/self.stepSizeX
@@ -449,11 +453,12 @@ class Motor(object):
         for iMotor in range(4):
             # for absolute motion:
             if isAbsoluteArray[iMotor]:
-                self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > steps[iMotor]) else -1
+                # Compare current position (physical) with target (physical, already includes offset)
+                self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > targetPositionPhysical[iMotor]) else -1
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
             if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
-                # we want to overshoot a bit
+                # we want to overshoot a bit (backlash is in steps, so apply before division)
                 steps[iMotor] = steps[iMotor] + self.currentDirection[iMotor]*self.backlash[iMotor]
 
     
@@ -491,8 +496,9 @@ class Motor(object):
         for iMotor in range(4):
             if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
                 # if we are absolute and the last target position is the same as the current one, we don't need to move
-                if isAbsoluteArray[iMotor] and abs(steps[iMotor] - self.currentPosition[iMotor])<1:
-                    if self._parent.serial.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {steps[iMotor]}")
+                # Compare in physical units: targetPositionPhysical vs currentPosition
+                if isAbsoluteArray[iMotor] and abs(targetPositionPhysical[iMotor] - self.currentPosition[iMotor])<1:
+                    if self._parent.serial.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {targetPositionPhysical[iMotor]}")
                     continue
                 motorProp = { "stepperid": int(self.motorAxisOrder[iMotor]),
                              "position": int(steps[iMotor]),
@@ -516,14 +522,18 @@ class Motor(object):
                 "steppers": motorPropList
             }
         }
-        # safe steps to track direction for backlash compensatio
-        _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
+
+        # Update currentPosition to track expected position in physical units
+        # steps are now in hardware units, so we need to convert back to physical
+        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        offSets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
         for iMotor in range(self.nMotors):
             if isAbsoluteArray[iMotor]:
-                self.currentPosition[iMotor] = steps[iMotor] * _physicalStepSizes[iMotor] - _physicalOffsets[iMotor]
+                # For absolute: convert hardware steps back to physical units: (steps * stepSize - offset)
+                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor] - offSets[iMotor]
             else:
-                self.currentPosition[iMotor] = self.currentPosition[iMotor] + steps[iMotor] * _physicalStepSizes[iMotor]
+                # For relative: convert step delta to physical delta and add to current position
+                self.currentPosition[iMotor] = self.currentPosition[iMotor] + (steps[iMotor] * stepSizes[iMotor])
 
         # drive motor
         self.isRunning = True
