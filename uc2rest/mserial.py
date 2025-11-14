@@ -53,7 +53,7 @@ class Serial:
         self.serialLock = threading.Lock()
         
         # setup callback list for parent modules
-        self.callBackList = []
+        self.callBackList = [] # TODO: We should pop items when list is full
 
         # initialize serial connection
         self.thread = None
@@ -352,7 +352,7 @@ class Serial:
                                 self._logger.debug("Failed to reconnect to the serial device")
                             time.sleep(1)
                 
-            if line == "++":
+            if line.find("++")>=0:
                 reading_json = True
                 continue
             elif line.find("error") != -1 and currentIdentifier is not None and currentIdentifier >=0 :
@@ -364,7 +364,7 @@ class Serial:
                 reading_json = False
                 self.responses[currentIdentifier].append({"error": 1})
                 self.responses[currentIdentifier].append({"qid": currentIdentifier})
-            elif line == "--" or lineCounter>nLineCountTimeout:
+            elif line.find("--")>=0 or lineCounter>nLineCountTimeout:
                 lineCounter = 0
                 reading_json = False
                 try:

@@ -27,6 +27,7 @@ from .cmdrecorder import cmdRecorder
 from .temperature import Temperature
 from .message import Message
 from .can import CAN
+from .canota import CANOTA
 try:
     import requests
 except:
@@ -108,6 +109,9 @@ class UC2Client(object):
         
         # initialize CAN
         self.can = CAN(self)
+        
+        # initialize CAN OTA
+        self.canota = CANOTA(self)
         
         # initialize gripper
         self.gripper = Gripper(self)

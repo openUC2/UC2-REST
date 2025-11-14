@@ -1,3 +1,4 @@
+import numpy as np
 class Laser(object):
     ## Laser
     def __init__(self, parent):
@@ -7,6 +8,62 @@ class Laser(object):
         self.filter_pos_3 = 0
         self.filter_pos_LED = 0
         
+        self.nLasers = 4
+        self.laserValues = np.zeros((self.nLasers))
+                
+        # register a callback function for the laser status on the serial loop
+        if hasattr(self._parent, "serial"):
+            self._parent.serial.register_callback(self._callback_laser_status, pattern="laser")
+        
+        # announce a function that is called when we receive a laser update through the callback
+        self._callbackPerKey = {}
+        self.nCallbacks = 10
+        self._callbackPerKey = self.init_callback_functions(nCallbacks=self.nCallbacks) # only one is used for now
+        print(self._callbackPerKey)
+        
+      
+    def init_callback_functions(self, nCallbacks=10):
+        ''' initialize the callback functions '''
+        _callbackPerKey = {}
+        self.nCallbacks = nCallbacks
+        for i in range(nCallbacks):
+            _callbackPerKey[i] = []
+        return _callbackPerKey
+            
+    def _callback_laser_status(self, data):
+        ''' cast the json in the form:
+        ++
+        {"laser":{"LASERid":1,"LASERval":512,"isDone":1},"qid":2}
+        --
+        into the laser values array '''
+        try:
+            laser_data = data["laser"]
+            # Handle both single laser and multiple lasers
+            if isinstance(laser_data, dict):
+                # Single laser format: {"LASERid":1,"LASERval":512,"isDone":1}
+                laser_id = laser_data.get("LASERid", 0)
+                laser_val = laser_data.get("LASERval", 0)
+                if 0 <= laser_id < self.nLasers:
+                    self.laserValues[laser_id] = laser_val
+            elif isinstance(laser_data, list):
+                # Multiple lasers format: [{"LASERid":1,"LASERval":512,"isDone":1}, ...]
+                for laser in laser_data:
+                    laser_id = laser.get("LASERid", 0)
+                    laser_val = laser.get("LASERval", 0)
+                    if 0 <= laser_id < self.nLasers:
+                        self.laserValues[laser_id] = laser_val
+            
+            if callable(self._callbackPerKey[0]):
+                self._callbackPerKey[0](self.laserValues) # we call the function with the value
+        except Exception as e:
+            print("Error in _callback_laser_status: ", e)
+
+    def register_callback(self, key, callbackfct):
+        ''' register a callback function for a specific key '''
+        self._callbackPerKey[key] = callbackfct
+        
+
+  
     def set_laser(self, channel=1, value=0, auto_filterswitch=False,
                         filter_axis=-1, filter_position = None,
                         despeckleAmplitude = 0.,
