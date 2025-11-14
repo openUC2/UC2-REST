@@ -219,7 +219,9 @@ class Serial:
     def _write(self, serialdevice, payload):
         if type(payload) == dict:
             payload = json.dumps(payload)
-        serialdevice.write(payload.encode('utf-8'))
+        with self.serialLock:
+            serialdevice.write(payload.encode('utf-8'))
+            time.sleep(0.02)
         if self.cmdWriteCallBackFct is not None:
             self.cmdWriteCallBackFct(payload)
 
@@ -275,8 +277,7 @@ class Serial:
 
     def _generate_identifier(self):
         self.identifier_counter += 1
-        # get modulo 512 to avoid too large numbers
-        return self.identifier_counter % 512
+        return self.identifier_counter
 
     def _enqueue_command(self, json_command):
         """Add a command to the queue."""
@@ -466,8 +467,7 @@ class Serial:
             json_command = json.dumps(command)+"\n"
             #self.serialdevice.flush()
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
-            with self.serialLock:
-                self._write(self.serialdevice, json_command)
+            self._write(self.serialdevice, json_command)
             #time.sleep(1)
             # we have to queue the commands and give it some time to process
             #self._enqueue_command(json_command)
