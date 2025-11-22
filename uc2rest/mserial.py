@@ -306,110 +306,121 @@ class Serial:
             time.sleep(0.05)
             
     def _process_commands(self):
-        buffer = ""
-        reading_json = False
-        currentIdentifier = 0
-        nLineCountTimeout = 50 # maximum number of lines read before timeout
-        lineCounter = 0
-        nFailedCommands = 0
-        nFailedCommandsMax = 10
-        while self.running:
-            if self.manufacturer == "UC2Mock": 
-                self.running = False
-                return
+        # create file writer object so save all self._read to a txt 
+        f = None
+s            f = open("serial_log.txt", "w", buffering=1)  # Line buffering
+            f.write("Serial Log Start\n")
+            f.flush()
+            buffer = ""
+            reading_json = False
+            currentIdentifier = 0
+            nLineCountTimeout = 50 # maximum number of lines read before timeout
+            lineCounter = 0
+            nFailedCommands = 0
+            nFailedCommandsMax = 10
+            while self.running:
+                if self.manufacturer == "UC2Mock": 
+                    self.running = False
+                    return
 
-            # device not ready yet
-            if self.serialdevice is None:
-                self.is_connected = False
-                continue
-            else:
-                self.is_connected = True
+                # device not ready yet
+                if self.serialdevice is None:
+                    self.is_connected = False
+                    continue
+                else:
+                    self.is_connected = True
 
-            # if we just want to send but not even wait for a response
-            with self.serialLock:
-                try:
-                    mReadline = self._read(self.serialdevice)
-                    if mReadline == False :
-                        nFailedCommands += 1
-                        if nFailedCommands > nFailedCommandsMax:
-                            raise Exception("Failed to read the line in serial: "+str(mReadline))
-                    line = mReadline.decode('utf-8').strip()
-                    if self.DEBUG and line!="": 
-                        self._logger.debug("[ProcessLines]:"+str(line))
-                except Exception as e:
-                    self._logger.error("Failed to read the line in serial: "+str(e))
-                    nFailedCommands += 1
-                    line = ""
-                        
-                    # if we have a problem with the serial connection, we need to reconnect
-                    if nFailedCommands>5:
-                        for i in range(4):
-                            nFailedCommands=0
-                            if self.reconnect():
-                                self._logger.debug("Reconnected to the serial device")
-                                break
-                            else:
-                                self._logger.debug("Failed to reconnect to the serial device")
-                            time.sleep(1)
-                
-            if line.find("++")>=0:
-                reading_json = True
-                continue
-            elif line.find("error") != -1 and currentIdentifier is not None and currentIdentifier >=0 :
-                # if we have an error, we need to reset the last command
-                self._logger.debug("Error - last command did not match the firmware: "+str(self.commands[currentIdentifier]))
-                self.resetLastCommand = True
-                buffer = ""
-                lineCounter = 0
-                reading_json = False
-                self.responses[currentIdentifier].append({"error": 1})
-                self.responses[currentIdentifier].append({"qid": currentIdentifier})
-            elif line.find("--")>=0 or lineCounter>nLineCountTimeout:
-                lineCounter = 0
-                reading_json = False
-                try:
-                    json_response = json.loads(buffer)
-                    if self.DEBUG: self._logger.debug("[ProcessCommands]: "+str(json_response))
-                    if len(self.callBackList) > 0:
-                        for callback in self.callBackList:
-                            # check if json has key
-                            try:
-                                if callback["pattern"] in json_response:
-                                    callback["callbackfct"](json_response)
-                            except Exception as e:
-                                self._logger.error("[ProcessCommands Casting Callbacks]: "+str(e))
-
-                except Exception as e:
-                    self._logger.error("Failed to load the json from serial %s" % buffer)
-                    self._logger.error("Error: %s" % str(e))
-                    json_response = {}
-                    #reading_json = True
-
-                try: currentIdentifier = json_response["qid"]
-                except: pass
-
-                with self.lock:
-                    try: # TODO: THis looks fishy   an
-                        self.responses[currentIdentifier].append(json_response.copy())
+                # if we just want to send but not even wait for a response
+                with self.serialLock:
+                    try:
+                        mReadline = self._read(self.serialdevice)
+                        if mReadline == False :
+                            nFailedCommands += 1
+                            if nFailedCommands > nFailedCommandsMax:
+                                raise Exception("Failed to read the line in serial: "+str(mReadline))
+                        line = mReadline.decode('utf-8').strip()
+                        if line!="": 
+                            f.write(line+"\n")
+                            f.flush()  # Ensure data is written immediately
+                            if self.DEBUG:
+                                self._logger.debug("[ProcessLines]:"+str(line))
                     except Exception as e:
-                        #self._logger.error("Failed to append the response: "+str(e))
-                        self.responses[currentIdentifier] = list()
-                        self.responses[currentIdentifier].append(json_response.copy())
-                    buffer = ""      # reset buffer
+                        self._logger.error("Failed to read the line in serial: "+str(e))
+                        nFailedCommands += 1
+                        line = ""
+                            
+                        # if we have a problem with the serial connection, we need to reconnect
+                        if nFailedCommands>5:
+                            for i in range(4):
+                                nFailedCommands=0
+                                if self.reconnect():
+                                    self._logger.debug("Reconnected to the serial device")
+                                    break
+                                else:
+                                    self._logger.debug("Failed to reconnect to the serial device")
+                                time.sleep(1)
+                    
+                if line.find("++")>=0:
+                    reading_json = True
+                    continue
+                elif line.find("error") != -1 and currentIdentifier is not None and currentIdentifier >=0 :
+                    # if we have an error, we need to reset the last command
+                    self._logger.debug("Error - last command did not match the firmware: "+str(self.commands[currentIdentifier]))
+                    self.resetLastCommand = True
+                    buffer = ""
+                    lineCounter = 0
+                    reading_json = False
+                    self.responses[currentIdentifier].append({"error": 1})
+                    self.responses[currentIdentifier].append({"qid": currentIdentifier})
+                elif line.find("--")>=0 or lineCounter>nLineCountTimeout:
+                    lineCounter = 0
+                    reading_json = False
+                    try:
+                        json_response = json.loads(buffer)
+                        if self.DEBUG: self._logger.debug("[ProcessCommands]: "+str(json_response))
+                        if len(self.callBackList) > 0:
+                            for callback in self.callBackList:
+                                # check if json has key
+                                try:
+                                    if callback["pattern"] in json_response:
+                                        callback["callbackfct"](json_response)
+                                except Exception as e:
+                                    self._logger.error("[ProcessCommands Casting Callbacks]: "+str(e))
 
-            # detect a reboot of the device and return the current QIDs
-            elif line == "reboot":
-                self._logger.warning("Device rebooted")
-                self.resetLastCommand = True
-                buffer = ""
-                lineCounter = 0
-                reading_json = False
-                self.responses[currentIdentifier].append({"reboot": 1})
-                self.responses[currentIdentifier].append({"qid": currentIdentifier})
+                    except Exception as e:
+                        self._logger.error("Failed to load the json from serial %s" % buffer)
+                        self._logger.error("Error: %s" % str(e))
+                        json_response = {}
+                        #reading_json = True
 
-            if reading_json:
-                buffer += line
-                lineCounter +=1
+                    try: currentIdentifier = json_response["qid"]
+                    except: pass
+
+                    with self.lock:
+                        try: # TODO: THis looks fishy   an
+                            self.responses[currentIdentifier].append(json_response.copy())
+                        except Exception as e:
+                            #self._logger.error("Failed to append the response: "+str(e))
+                            self.responses[currentIdentifier] = list()
+                            self.responses[currentIdentifier].append(json_response.copy())
+                        buffer = ""      # reset buffer
+
+                # detect a reboot of the device and return the current QIDs
+                elif line == "reboot":
+                    self._logger.warning("Device rebooted")
+                    self.resetLastCommand = True
+                    buffer = ""
+                    lineCounter = 0
+                    reading_json = False
+                    self.responses[currentIdentifier].append({"reboot": 1})
+                    self.responses[currentIdentifier].append({"qid": currentIdentifier})
+
+                if reading_json:
+                    buffer += line
+                    lineCounter +=1
+        finally:
+            if f is not None:
+                f.close()
         self.running = False
 
     def get_json(self, path, timeout=1):
