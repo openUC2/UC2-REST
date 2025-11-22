@@ -448,31 +448,62 @@ class Motor(object):
         steps[2] *= 1/self.stepSizeY
         steps[3] *= 1/self.stepSizeZ
         
-        # detect change in direction
-        absoluteDistances = np.zeros((4))
+        # detect change in direction and compute distances in HARDWARE STEPS for travel time calculation
+        absoluteDistances_steps = np.zeros((4))  # Distance in hardware steps
+        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        
         for iMotor in range(4):
             # for absolute motion:
             if isAbsoluteArray[iMotor]:
                 # Compare current position (physical) with target (physical, already includes offset)
                 self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > targetPositionPhysical[iMotor]) else -1
+                # Calculate distance to travel in HARDWARE STEPS:
+                # Current position (physical) -> convert to steps, then subtract target (already in steps)
+                currentPosition_steps = self.currentPosition[iMotor] / stepSizes[iMotor]
+                absoluteDistances_steps[iMotor] = abs(currentPosition_steps - steps[iMotor])
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
+                # For relative motion, steps[iMotor] is already the distance in hardware steps
+                absoluteDistances_steps[iMotor] = abs(steps[iMotor])
+                
             if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
-                # we want to overshoot a bit (backlash is in steps, so apply before division)
+                # we want to overshoot a bit (backlash is in steps, so apply AFTER conversion to steps)
                 steps[iMotor] = steps[iMotor] + self.currentDirection[iMotor]*self.backlash[iMotor]
-
+                # Update distance calculation if backlash was applied
+                if not isAbsoluteArray[iMotor]:
+                    absoluteDistances_steps[iMotor] = abs(steps[iMotor])
     
-            if isAbsoluteArray[iMotor]:
-                absoluteDistances[iMotor] = abs(self.currentPosition[iMotor] - steps[iMotor])
+        # Convert speed and acceleration from physical units to steps/second
+        speed_steps = np.zeros(4)
+        acceleration_steps = np.zeros(4)
+        for iMotor in range(4):
+            if speed[iMotor] != 0:
+                # Speed: µm/s -> steps/s => divide by stepSize (µm/step)
+                speed_steps[iMotor] = abs(speed[iMotor]) / stepSizes[iMotor]
+            if acceleration[iMotor] is not None and acceleration[iMotor] != 0:
+                # Acceleration: µm/s² -> steps/s² => divide by stepSize
+                acceleration_steps[iMotor] = abs(acceleration[iMotor]) / stepSizes[iMotor]
             else:
-                absoluteDistances[iMotor] = abs(steps[iMotor])
-        # experimental: Let's make the timeout adaptive: 
-        # the speed of the motors is given in steps/second, so we can calculate the time it takes to move the given steps
-        # we will add a bit of time to the timeout to make sure we get a return
-        # 1.5 accounts for accel/decceleration
-        traveltime = self.compute_travel_time(np.max(np.abs(absoluteDistances)), np.max(np.abs(speed)), np.max(np.where(acceleration == None, 20000, acceleration)))
-        timeout = np.uint8(abs(timeout)>0)*(traveltime + 1) # add 1 second to the timeout to make sure we get a return
-
+                # Default acceleration in steps/s²
+                acceleration_steps[iMotor] = 20000  # This should also be converted, but we use a safe default
+        
+        # Calculate travel time using HARDWARE STEPS and converted speed/acceleration
+        # Find the axis that will take the longest (limits overall movement time)
+        max_travel_time = 0
+        for iMotor in range(4):
+            if absoluteDistances_steps[iMotor] > 0 and speed_steps[iMotor] > 0:
+                axis_time = self.compute_travel_time(
+                    absoluteDistances_steps[iMotor], 
+                    speed_steps[iMotor], 
+                    acceleration_steps[iMotor]
+                )
+                max_travel_time = max(max_travel_time, axis_time)
+        
+        # Set timeout based on calculated travel time (add 2 seconds safety margin)
+        if max_travel_time > 0:
+            timeout = np.uint8(abs(timeout) > 0) * (max_travel_time + 2)
+        else:
+            timeout = np.uint8(abs(timeout) > 0) * 3  # Minimum 3 seconds if no movement detected
         # get current position
         #_positions = self.get_position() # x,y,z,t = 1,2,3,0
         #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
@@ -695,6 +726,224 @@ class Motor(object):
         r = self._parent.post_json(path, payload, timeout=timeout)
 
         return r
+
+    def set_soft_limits(self, axis=1, min_pos=None, max_pos=None, is_enabled=None, timeout=1):
+        '''
+        Set soft limits for a motor axis. Soft limits prevent motor movement beyond specified boundaries.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        min_pos : int, optional
+            Minimum position limit in steps
+        max_pos : int, optional  
+            Maximum position limit in steps
+        is_enabled : bool or int, optional
+            Enable (1/True) or disable (0/False) soft limits for this axis
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        Response from ESP32
+        
+        Example:
+        --------
+        # Set limits for X-axis
+        motor.set_soft_limits(axis="X", min_pos=-10000, max_pos=10000, is_enabled=True)
+        # Disable limits for Z-axis
+        motor.set_soft_limits(axis="Z", is_enabled=False)
+        
+        Note:
+        -----
+        Soft limits are automatically ignored during homing operations.
+        '''
+        if type(axis) != int:
+            axis = self.xyztTo1230(axis)
+        
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "softlimits": {
+                "steppers": [{
+                    "stepperid": axis
+                }]
+            }
+        }
+        
+        if min_pos is not None:
+            payload["softlimits"]["steppers"][0]["min"] = int(min_pos)
+        if max_pos is not None:
+            payload["softlimits"]["steppers"][0]["max"] = int(max_pos)
+        if is_enabled is not None:
+            payload["softlimits"]["steppers"][0]["isen"] = int(is_enabled)
+            
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
+
+    def get_soft_limits(self, axis=None, timeout=1):
+        '''
+        Get current soft limits configuration for all axes or a specific axis.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, returns all axes.
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        dict : Soft limits configuration
+            Contains min, max, and isen (enabled) for each axis
+            
+        Example:
+        --------
+        # Get limits for all axes
+        limits = motor.get_soft_limits()
+        # Get limits for X-axis only  
+        x_limits = motor.get_soft_limits(axis="X")
+        '''
+        motors = self.get_motors(timeout=timeout)
+        
+        if motors and "steppers" in motors:
+            if axis is not None:
+                if type(axis) != int:
+                    axis = self.xyztTo1230(axis)
+                # Find the specific axis
+                for stepper in motors["steppers"]:
+                    if stepper.get("stepperid") == axis:
+                        return {
+                            "axis": axis,
+                            "min": stepper.get("min", 0),
+                            "max": stepper.get("max", 0),
+                            "enabled": stepper.get("isen", 0)
+                        }
+            else:
+                # Return all axes
+                result = []
+                for stepper in motors["steppers"]:
+                    result.append({
+                        "axis": stepper.get("stepperid"),
+                        "min": stepper.get("min", 0),
+                        "max": stepper.get("max", 0),
+                        "enabled": stepper.get("isen", 0)
+                    })
+                return result
+        return None
+
+    def enable_soft_limits(self, axis, timeout=1):
+        '''
+        Enable soft limits for a specific axis.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        timeout : int
+            Command timeout in seconds
+        '''
+        return self.set_soft_limits(axis=axis, is_enabled=True, timeout=timeout)
+
+    def disable_soft_limits(self, axis, timeout=1):
+        '''
+        Disable soft limits for a specific axis.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        timeout : int
+            Command timeout in seconds
+        '''
+        return self.set_soft_limits(axis=axis, is_enabled=False, timeout=timeout)
+
+    def set_joystick_direction(self, axis, inverted=False, timeout=1):
+        '''
+        Set joystick direction inversion for a specific motor axis.
+        When inverted is True, joystick movements for this axis will be reversed.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        inverted : bool or int
+            True/1 to invert joystick direction, False/0 for normal direction
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        Response from ESP32
+        
+        Example:
+        --------
+        # Invert joystick direction for X-axis
+        motor.set_joystick_direction(axis="X", inverted=True)
+        # Set normal direction for Y-axis  
+        motor.set_joystick_direction(axis="Y", inverted=False)
+        '''
+        if type(axis) != int:
+            axis = self.xyztTo1230(axis)
+        
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "joystickdir": {
+                "steppers": [{
+                    "stepperid": axis,
+                    "inverted": int(inverted)
+                }]
+            }
+        }
+        
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
+
+    def get_joystick_direction(self, axis=None, timeout=1):
+        '''
+        Get joystick direction configuration for axes.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, returns all axes.
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        dict or bool : Joystick direction configuration
+            Returns inverted status for the specified axis or all axes
+            
+        Example:
+        --------
+        # Get direction for X-axis
+        x_inverted = motor.get_joystick_direction(axis="X")
+        # Get direction for all axes
+        all_directions = motor.get_joystick_direction()
+        '''
+        motors = self.get_motors(timeout=timeout)
+        
+        if motors and "steppers" in motors:
+            if axis is not None:
+                if type(axis) != int:
+                    axis = self.xyztTo1230(axis)
+                # Find the specific axis
+                for stepper in motors["steppers"]:
+                    if stepper.get("stepperid") == axis:
+                        return stepper.get("joystickDirectionInverted", False)
+            else:
+                # Return all axes
+                result = []
+                for stepper in motors["steppers"]:
+                    result.append({
+                        "axis": stepper.get("stepperid"),
+                        "inverted": stepper.get("joystickDirectionInverted", False)
+                    })
+                return result
+        return None
 
     def set_offset(self, axis=1, offset=0):
         '''
