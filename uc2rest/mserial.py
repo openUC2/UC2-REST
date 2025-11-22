@@ -308,7 +308,8 @@ class Serial:
     def _process_commands(self):
         # create file writer object so save all self._read to a txt 
         f = None
-s            f = open("serial_log.txt", "w", buffering=1)  # Line buffering
+        try:
+            f = open("serial_log.txt", "w", buffering=1)  # Line buffering
             f.write("Serial Log Start\n")
             f.flush()
             buffer = ""
