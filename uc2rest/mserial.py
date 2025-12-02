@@ -120,6 +120,8 @@ class Serial:
                     break
             if not isUC2:
                 raise ValueError('Wrong Firmware.')
+            else:
+                self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
             ser = self.serialdevice
             self.is_connected = True
 
