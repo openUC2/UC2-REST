@@ -36,10 +36,6 @@ class Motor(object):
         self.stepSizeY =  1
         self.stepSizeZ =  1
         self.stepSizeA =  1
-        self.offsetA = 0
-        self.offsetX = 0
-        self.offsetY = 0
-        self.offsetZ = 0
 
         self.DEFAULT_ACCELERATION = 1000000
 
@@ -79,12 +75,10 @@ class Motor(object):
         try:
             nSteppers = len(data["steppers"])
             stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
             for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
-                # Hardware returns steps, convert to physical units: (steps * stepSize - offset)
-                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - _physicalOffsets[stepperID]
+                # Hardware returns steps, convert to physical units: (steps * stepSize)
+                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID]
             if  callable(self._callbackPerKey[0]):
                 self._callbackPerKey[0](self.currentPosition) # we call the function with the value
         except Exception as e:
@@ -177,27 +171,23 @@ class Motor(object):
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''
-    def setup_motor(self, axis, minPos, maxPos, stepSize, backlash, offset=0):
+    def setup_motor(self, axis, minPos, maxPos, stepSize, backlash):
         if axis == "X":
             self.minPosX = minPos
             self.maxPosX = maxPos
             self.stepSizeX = stepSize
-            self.offsetX = offset
         elif axis == "Y":
             self.minPosY = minPos
             self.maxPosY = maxPos
             self.stepSizeY = stepSize
-            self.offsetY = offset
         elif axis == "Z":
             self.minPosZ = minPos
             self.maxPosZ = maxPos
             self.stepSizeZ = stepSize
-            self.offsetZ = offset
         elif axis == "A":
             self.minPosA = minPos
             self.maxPosA = maxPos
             self.stepSizeA = stepSize
-            self.offsetA = offset   
         self.backlash[self.xyztTo1230(axis)] = backlash
 
     def xyztTo1230(self, axis):
@@ -429,16 +419,6 @@ class Motor(object):
         if type(steps)==tuple:
             steps = np.array(steps)
 
-        # optionally add the offset to the steps
-        if isAbsoluteArray[0]: 
-            steps[0] += self.offsetA
-        if isAbsoluteArray[1]:
-            steps[1] += self.offsetX
-        if isAbsoluteArray[2]:
-            steps[2] += self.offsetY
-        if isAbsoluteArray[3]:
-            steps[3] += self.offsetZ
-
         # Store the target position in physical units BEFORE conversion to hardware steps
         targetPositionPhysical = steps.copy()
         
@@ -557,11 +537,10 @@ class Motor(object):
         # Update currentPosition to track expected position in physical units
         # steps are now in hardware units, so we need to convert back to physical
         stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        offSets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
         for iMotor in range(self.nMotors):
             if isAbsoluteArray[iMotor]:
-                # For absolute: convert hardware steps back to physical units: (steps * stepSize - offset)
-                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor] - offSets[iMotor]
+                # For absolute: convert hardware steps back to physical units: (steps * stepSize)
+                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor]
             else:
                 # For relative: convert step delta to physical delta and add to current position
                 self.currentPosition[iMotor] = self.currentPosition[iMotor] + (steps[iMotor] * stepSizes[iMotor])
@@ -692,7 +671,6 @@ class Motor(object):
         }
         _position = np.array((0.,0.,0.,0.)) # T,X,Y,Z
         _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)[0]
@@ -700,7 +678,7 @@ class Motor(object):
         if "motor" in r :
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 if index >3: break # TODO: We would need to handle other values too soon
-                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]-_physicalOffsets[self.motorAxisOrder[index]]
+                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
 
 
         return _position
@@ -945,36 +923,6 @@ class Motor(object):
                 return result
         return None
 
-    def set_offset(self, axis=1, offset=0):
-        '''
-        This sets the offset relative to the homed position, helpful if you have a reference point and you need to compute the offset
-        '''
-        if axis == 0 or str(axis).upper() == "A":
-            self.offsetA = offset
-        elif axis == 1 or str(axis) == "X":
-            self.offsetX = offset
-        elif axis == 2 or str(axis) == "Y":
-            self.offsetY = offset
-        elif axis == 3 or str(axis) == "Z":
-            self.offsetZ = offset
-        else:
-            self._parent.logger.error("Axis not recognized")
-            
-    def get_offset(self, axis=1):   
-        '''
-        This gets the offset relative to the homed position, helpful if you have a reference point and you need to compute the offset
-        '''
-        if axis == 0 or axis == "A":
-            return self.offsetA
-        elif axis == 1 or axis == "X":
-            return self.offsetX
-        elif axis == 2 or axis == "Y":
-            return self.offsetY
-        elif axis == 3 or axis == "Z":
-            return self.offsetZ
-        else:
-            return False
-        
     def get_motor(self, axis=1, timeout=1):
         path = "/motor_get"
         payload = {
@@ -1094,3 +1042,239 @@ class Motor(object):
 
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
+
+    def set_hard_limits(self, axis=1, enabled=True, polarity=0, timeout=1):
+        '''
+        Configure hard limits (emergency stop) for a motor axis.
+        Hard limits immediately stop the motor when an endstop is triggered during normal operation.
+        This is different from homing - the motor will stop and position will be set to 999999 (error state).
+        User must perform homing to clear the error state.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        enabled : bool or int
+            True/1 to enable hard limit protection (default), False/0 to disable
+        polarity : int
+            Endstop polarity configuration:
+            0 = Normally Open (NO) - endstop signal is LOW when not pressed, HIGH when pressed
+            1 = Normally Closed (NC) - endstop signal is HIGH when not pressed, LOW when pressed
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        Response from ESP32
+        
+        Example:
+        --------
+        # Enable hard limit protection for X-axis with normally open endstop
+        motor.set_hard_limits(axis="X", enabled=True, polarity=0)
+        # Disable hard limit protection for Z-axis
+        motor.set_hard_limits(axis="Z", enabled=False)
+        # Configure hard limit for normally closed endstop
+        motor.set_hard_limits(axis="Y", enabled=True, polarity=1)
+        
+        Note:
+        -----
+        - Hard limits are enabled by default on startup
+        - When triggered, motor position is set to 999999 to indicate error state
+        - Homing automatically clears the hard limit triggered flag
+        - Hard limits are ignored during homing operations
+        '''
+        if type(axis) != int:
+            axis = self.xyztTo1230(axis)
+        
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "hardlimits": {
+                "steppers": [{
+                    "stepperid": axis,
+                    "enabled": int(enabled),
+                    "polarity": int(polarity)
+                }]
+            }
+        }
+        
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
+
+    def clear_hard_limit(self, axis=1, timeout=1):
+        '''
+        Clear the hard limit triggered flag for a motor axis.
+        This is typically done automatically during homing, but can be called manually if needed.
+        
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        Response from ESP32
+        
+        Example:
+        --------
+        motor.clear_hard_limit(axis="X")
+        
+        Note:
+        -----
+        After clearing the flag, you should perform homing to establish a known position.
+        '''
+        if type(axis) != int:
+            axis = self.xyztTo1230(axis)
+        
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "hardlimits": {
+                "steppers": [{
+                    "stepperid": axis,
+                    "clear": 1
+                }]
+            }
+        }
+        
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
+
+    def get_hard_limits(self, axis=None, timeout=1):
+        '''
+        Get hard limit configuration and status for axes.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, returns all axes.
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        dict or list : Hard limit configuration
+            Contains enabled, polarity, and triggered status for the specified axis or all axes
+            
+        Example:
+        --------
+        # Get hard limit status for X-axis
+        x_limits = motor.get_hard_limits(axis="X")
+        # Returns: {"axis": 1, "enabled": True, "polarity": 0, "triggered": False}
+        
+        # Get hard limit status for all axes
+        all_limits = motor.get_hard_limits()
+        
+        # Check if any axis has triggered a hard limit
+        for limit in motor.get_hard_limits():
+            if limit["triggered"]:
+                print(f"Hard limit triggered on axis {limit['axis']}! Homing required.")
+        '''
+        motors = self.get_motors(timeout=timeout)
+        
+        if motors and "steppers" in motors:
+            if axis is not None:
+                if type(axis) != int:
+                    axis = self.xyztTo1230(axis)
+                # Find the specific axis
+                for stepper in motors["steppers"]:
+                    if stepper.get("stepperid") == axis:
+                        return {
+                            "axis": axis,
+                            "enabled": bool(stepper.get("hardLimitEnabled", True)),
+                            "polarity": stepper.get("hardLimitPolarity", 0),
+                            "triggered": bool(stepper.get("hardLimitTriggered", False))
+                        }
+            else:
+                # Return all axes
+                result = []
+                for stepper in motors["steppers"]:
+                    result.append({
+                        "axis": stepper.get("stepperid"),
+                        "enabled": bool(stepper.get("hardLimitEnabled", True)),
+                        "polarity": stepper.get("hardLimitPolarity", 0),
+                        "triggered": bool(stepper.get("hardLimitTriggered", False))
+                    })
+                return result
+        return None
+
+    def is_hard_limit_triggered(self, axis=None, timeout=1):
+        '''
+        Check if a hard limit has been triggered for one or more axes.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, checks all axes.
+        timeout : int
+            Command timeout in seconds
+            
+        Returns:
+        --------
+        bool : True if hard limit is triggered for the specified axis
+        dict : If axis is None, returns {axis_id: triggered_status} for all axes
+            
+        Example:
+        --------
+        # Check if X-axis hard limit is triggered
+        if motor.is_hard_limit_triggered(axis="X"):
+            print("X-axis hard limit triggered! Performing homing...")
+            motor.home_x()
+            
+        # Check all axes
+        triggered = motor.is_hard_limit_triggered()
+        for ax, is_triggered in triggered.items():
+            if is_triggered:
+                print(f"Axis {ax} needs homing!")
+        '''
+        limits = self.get_hard_limits(axis=axis, timeout=timeout)
+        
+        if limits is None:
+            return None
+            
+        if axis is not None:
+            return limits.get("triggered", False)
+        else:
+            result = {}
+            for limit in limits:
+                result[limit["axis"]] = limit["triggered"]
+            return result
+
+    def enable_hard_limits(self, axis=None, timeout=1):
+        '''
+        Enable hard limit protection for one or all axes.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, enables for X, Y, Z.
+        timeout : int
+            Command timeout in seconds
+        '''
+        if axis is not None:
+            return self.set_hard_limits(axis=axis, enabled=True, timeout=timeout)
+        else:
+            # Enable for X, Y, Z axes
+            for ax in ["X", "Y", "Z"]:
+                self.set_hard_limits(axis=ax, enabled=True, timeout=timeout)
+
+    def disable_hard_limits(self, axis=None, timeout=1):
+        '''
+        Disable hard limit protection for one or all axes.
+        Use with caution - the motor will not stop if an endstop is hit during normal operation.
+        
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, disables for X, Y, Z.
+        timeout : int
+            Command timeout in seconds
+        '''
+        if axis is not None:
+            return self.set_hard_limits(axis=axis, enabled=False, timeout=timeout)
+        else:
+            # Disable for X, Y, Z axes
+            for ax in ["X", "Y", "Z"]:
+                self.set_hard_limits(axis=ax, enabled=False, timeout=timeout)

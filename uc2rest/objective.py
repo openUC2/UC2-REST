@@ -16,10 +16,10 @@ class Objective(object):
         self.endstoppolarity = 1
         self.timeout = 10
         # Default objective positions
-        self.x1 = 1000
-        self.x2 = 2000
+        self.x0 = 1000
+        self.x1 = 2000
+        self.z0 = 0
         self.z1 = 0
-        self.z2 = 0
         self.objectiveAxis = 0
 
         
@@ -57,23 +57,23 @@ class Objective(object):
                                         nResponses=nResponses)
         return r
         
+    def setX0(self, x0):
+        self.x0 = x0
+        
     def setX1(self, x1):
         self.x1 = x1
         
-    def setX2(self, x2):
-        self.x2 = x2
-        
+    def setZ0(self, z0):
+        self.z0 = z0
+    
     def setZ1(self, z1):
         self.z1 = z1
-    
-    def setZ2(self, z2):
-        self.z2 = z2
         
     def getstatus(self):
         """
         Get the objective status.
         returns:  
-        {"objective":{"x1":1000,"x2":2000,"z1":0, "z2":0, "pos":1000,"isHomed":1,"state":1,"isRunning":0}}
+        {"objective":{"x0":1000,"x1":2000,"z0":0, "z1":0, "pos":1000,"isHomed":1,"state":1,"isRunning":0}}
         """
         path = "/objective_get"
         payload = {
@@ -83,16 +83,16 @@ class Objective(object):
         # parse the response
         try:
             status = r[-1]["objective"]
+            status["x0"] = np.round(status["x0"]*self._parent.motor.stepSizeA)
             status["x1"] = np.round(status["x1"]*self._parent.motor.stepSizeA)
-            status["x2"] = np.round(status["x2"]*self._parent.motor.stepSizeA)
+            status["z0"] = np.round(status["z0"]*self._parent.motor.stepSizeZ)
             status["z1"] = np.round(status["z1"]*self._parent.motor.stepSizeZ)
-            status["z2"] = np.round(status["z2"]*self._parent.motor.stepSizeZ)
             status["state"] = int(status["state"])
         except:
-            status = {"x1":0, 
-                      "x2":0, 
+            status = {"x0":0, 
+                      "x1":0, 
+                      "z0":0,
                       "z1":0,
-                      "z2":0,
                       "pos":0, 
                       "isHomed":0, 
                       "state":0, 
@@ -132,7 +132,7 @@ class Objective(object):
 
     def toggle(self, speed=None, accel=None, isBlocking=False):
         """
-        Toggle between x1 and x2.
+        Toggle between x0 and x1.
         speed, accel => override default speeds
         """
         if speed is None:
@@ -161,7 +161,7 @@ class Objective(object):
 
     def move(self, slot=1, speed=None, accel=None, isBlocking=False):
         """
-        Move to slot 1 (x1/z1) or slot 2 (x2/z2).
+        Move to slot 1 (x0/z0) or slot 2 (x1/z1).
         slot => 1 or 2
         speed, accel => override default speeds
         """
@@ -189,37 +189,37 @@ class Objective(object):
         )
         return r
 
-    def setPositions(self, x1=None, x2=None, z1=None, z2=None, isBlocking=False):
+    def setPositions(self, x0=None, x1=None, z0=None, z1=None, isBlocking=False):
         """
         Set explicit positions in steps.
-        If x1 == -1, the current position is used as x1.
+        If x0 == -1, the current position is used as x0.
         Example:
-            {"task":"/objective_act", "x1": 1000, "x2": 2000}
-            {"task":"/objective_act", "x1": -1, "x2": 2000}
-            {"task":"/objective_act", "x1": 1000, "x2": -1, "z1": 1, "z2": 100}
+            {"task":"/objective_act", "x0": 1000, "x1": 2000}
+            {"task":"/objective_act", "x0": -1, "x1": 2000}
+            {"task":"/objective_act", "x0": 1000, "x1": -1, "z0": 1, "z1": 100}
         """
+        if x0 is not None:
+            self.x0 = x0
         if x1 is not None:
             self.x1 = x1
-        if x2 is not None:
-            self.x2 = x2
+        if z0 is not None:
+            self.z0 = z0
         if z1 is not None:
             self.z1 = z1
-        if z2 is not None:
-            self.z2 = z2
 
         path = "/objective_act"
         payload = {"task": path}
 
-        # Only include x1 or x2 in JSON if they were explicitly provided
-        # If x1 == -1, that instructs the MCU to take current motor position
+        # Only include x0 or x1 in JSON if they were explicitly provided
+        # If x0 == -1, that instructs the MCU to take current motor position
+        if x0 is not None:
+            payload["x0"] = x0/self._parent.motor.stepSizeA
         if x1 is not None:
             payload["x1"] = x1/self._parent.motor.stepSizeA
-        if x2 is not None:
-            payload["x2"] = x2/self._parent.motor.stepSizeA
+        if z0 is not None:
+            payload["z0"] = z0/self._parent.motor.stepSizeZ
         if z1 is not None:
             payload["z1"] = z1/self._parent.motor.stepSizeZ
-        if z2 is not None:
-            payload["z2"] = z2/self._parent.motor.stepSizeZ
 
         nResponses = 1 if isBlocking else 0
         r = self._parent.post_json(

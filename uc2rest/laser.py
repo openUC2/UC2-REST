@@ -23,11 +23,11 @@ class Laser(object):
         
       
     def init_callback_functions(self, nCallbacks=10):
-        ''' initialize the callback functions '''
+        ''' initialize the callback functions - each key holds a list of callbacks '''
         _callbackPerKey = {}
         self.nCallbacks = nCallbacks
         for i in range(nCallbacks):
-            _callbackPerKey[i] = []
+            _callbackPerKey[i] = []  # Initialize as list to support multiple callbacks
         return _callbackPerKey
             
     def _callback_laser_status(self, data):
@@ -53,14 +53,23 @@ class Laser(object):
                     if 0 <= laser_id < self.nLasers:
                         self.laserValues[laser_id] = laser_val
             
-            if callable(self._callbackPerKey[0]):
-                self._callbackPerKey[0](self.laserValues) # we call the function with the value
+            # Call all registered callbacks for key 0
+            for callback in self._callbackPerKey[0]:
+                if callable(callback):
+                    try:
+                        callback(self.laserValues)
+                    except Exception as callback_error:
+                        print(f"Error in callback execution: {callback_error}")
         except Exception as e:
             print("Error in _callback_laser_status: ", e)
 
     def register_callback(self, key, callbackfct):
-        ''' register a callback function for a specific key '''
-        self._callbackPerKey[key] = callbackfct
+        ''' register a callback function for a specific key - supports multiple callbacks per key '''
+        if key not in self._callbackPerKey:
+            self._callbackPerKey[key] = []
+        if callbackfct not in self._callbackPerKey[key]:  # Avoid duplicate registrations
+            self._callbackPerKey[key].append(callbackfct)
+            print(f"Registered callback for key {key}. Total callbacks for this key: {len(self._callbackPerKey[key])}")
         
 
   
