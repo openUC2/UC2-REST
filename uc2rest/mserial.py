@@ -184,6 +184,7 @@ class Serial:
                 if self.tryToConnect(port):
                     self.is_connected = True
                     self.manufacturer = port.manufacturer
+                    self._logger.debug(f"Found correct USB device: {port.device} - {port.description}")
                     return self.serialdevice
 
         self.is_connected = False

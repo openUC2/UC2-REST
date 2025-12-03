@@ -36,10 +36,6 @@ class Motor(object):
         self.stepSizeY =  1
         self.stepSizeZ =  1
         self.stepSizeA =  1
-        self.offsetA = 0
-        self.offsetX = 0
-        self.offsetY = 0
-        self.offsetZ = 0
 
         self.DEFAULT_ACCELERATION = 1000000
 
@@ -79,12 +75,10 @@ class Motor(object):
         try:
             nSteppers = len(data["steppers"])
             stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
             for iMotor in range(nSteppers):
                 stepperID = data["steppers"][iMotor]["stepperid"]
-                # Hardware returns steps, convert to physical units: (steps * stepSize - offset)
-                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID] - _physicalOffsets[stepperID]
+                # Hardware returns steps, convert to physical units: (steps * stepSize)
+                self.currentPosition[stepperID] = data["steppers"][iMotor]["position"] * stepSizes[stepperID]
             if  callable(self._callbackPerKey[0]):
                 self._callbackPerKey[0](self.currentPosition) # we call the function with the value
         except Exception as e:
@@ -177,27 +171,23 @@ class Motor(object):
     '''################################################################################################################################################
     HIGH-LEVEL Functions that rely on basic REST-API functions
     ################################################################################################################################################'''
-    def setup_motor(self, axis, minPos, maxPos, stepSize, backlash, offset=0):
+    def setup_motor(self, axis, minPos, maxPos, stepSize, backlash):
         if axis == "X":
             self.minPosX = minPos
             self.maxPosX = maxPos
             self.stepSizeX = stepSize
-            self.offsetX = offset
         elif axis == "Y":
             self.minPosY = minPos
             self.maxPosY = maxPos
             self.stepSizeY = stepSize
-            self.offsetY = offset
         elif axis == "Z":
             self.minPosZ = minPos
             self.maxPosZ = maxPos
             self.stepSizeZ = stepSize
-            self.offsetZ = offset
         elif axis == "A":
             self.minPosA = minPos
             self.maxPosA = maxPos
             self.stepSizeA = stepSize
-            self.offsetA = offset   
         self.backlash[self.xyztTo1230(axis)] = backlash
 
     def xyztTo1230(self, axis):
@@ -429,16 +419,6 @@ class Motor(object):
         if type(steps)==tuple:
             steps = np.array(steps)
 
-        # optionally add the offset to the steps
-        if isAbsoluteArray[0]: 
-            steps[0] += self.offsetA
-        if isAbsoluteArray[1]:
-            steps[1] += self.offsetX
-        if isAbsoluteArray[2]:
-            steps[2] += self.offsetY
-        if isAbsoluteArray[3]:
-            steps[3] += self.offsetZ
-
         # Store the target position in physical units BEFORE conversion to hardware steps
         targetPositionPhysical = steps.copy()
         
@@ -557,11 +537,10 @@ class Motor(object):
         # Update currentPosition to track expected position in physical units
         # steps are now in hardware units, so we need to convert back to physical
         stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        offSets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
         for iMotor in range(self.nMotors):
             if isAbsoluteArray[iMotor]:
-                # For absolute: convert hardware steps back to physical units: (steps * stepSize - offset)
-                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor] - offSets[iMotor]
+                # For absolute: convert hardware steps back to physical units: (steps * stepSize)
+                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor]
             else:
                 # For relative: convert step delta to physical delta and add to current position
                 self.currentPosition[iMotor] = self.currentPosition[iMotor] + (steps[iMotor] * stepSizes[iMotor])
@@ -692,7 +671,6 @@ class Motor(object):
         }
         _position = np.array((0.,0.,0.,0.)) # T,X,Y,Z
         _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        _physicalOffsets = np.array((self.offsetA, self.offsetX, self.offsetY, self.offsetZ))
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)[0]
@@ -700,7 +678,7 @@ class Motor(object):
         if "motor" in r :
             for index, istepper in enumerate(r["motor"]["steppers"]):
                 if index >3: break # TODO: We would need to handle other values too soon
-                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]-_physicalOffsets[self.motorAxisOrder[index]]
+                _position[istepper["stepperid"]]=istepper["position"]*_physicalStepSizes[self.motorAxisOrder[index]]
 
 
         return _position
@@ -945,36 +923,6 @@ class Motor(object):
                 return result
         return None
 
-    def set_offset(self, axis=1, offset=0):
-        '''
-        This sets the offset relative to the homed position, helpful if you have a reference point and you need to compute the offset
-        '''
-        if axis == 0 or str(axis).upper() == "A":
-            self.offsetA = offset
-        elif axis == 1 or str(axis) == "X":
-            self.offsetX = offset
-        elif axis == 2 or str(axis) == "Y":
-            self.offsetY = offset
-        elif axis == 3 or str(axis) == "Z":
-            self.offsetZ = offset
-        else:
-            self._parent.logger.error("Axis not recognized")
-            
-    def get_offset(self, axis=1):   
-        '''
-        This gets the offset relative to the homed position, helpful if you have a reference point and you need to compute the offset
-        '''
-        if axis == 0 or axis == "A":
-            return self.offsetA
-        elif axis == 1 or axis == "X":
-            return self.offsetX
-        elif axis == 2 or axis == "Y":
-            return self.offsetY
-        elif axis == 3 or axis == "Z":
-            return self.offsetZ
-        else:
-            return False
-        
     def get_motor(self, axis=1, timeout=1):
         path = "/motor_get"
         payload = {
