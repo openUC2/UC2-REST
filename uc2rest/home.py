@@ -171,7 +171,7 @@ class Home(object):
             for i, stepper_id in enumerate(stepper_ids):
                 # Move in opposite direction
                 preMoveDirection = -directions[i]
-                preMoveDistanceSteps = 1000  # steps to move away from endstop
+                preMoveDistanceSteps = 100  # steps to move away from endstop
                 
                 # Move away from endstop using the motor controller
                 if stepper_id == 1:  # X
