@@ -265,7 +265,7 @@ class Home(object):
                 preMoveDirection = -1
             else:
                 preMoveDirection = 1
-            preMoveDistanceSteps = 1000 # steps to move away from endstop
+            preMoveDistanceSteps = 100 # steps to move away from endstop
             
             # move away from endstop
             if axis == 1 or axis == "X":

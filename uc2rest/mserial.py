@@ -489,6 +489,7 @@ class Serial:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
                 self.resetLastCommand = False
+                self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
                 return "communication interrupted by timeout or reset: "+str(identifier) + " and code:"+str(self.commands[identifier])
             with self.lock:
                 if identifier in self.responses:

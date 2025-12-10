@@ -83,12 +83,13 @@ class Objective(object):
         # parse the response
         try:
             status = r[-1]["objective"]
-            status["x0"] = np.round(status["x0"]*self._parent.motor.stepSizeA)
-            status["x1"] = np.round(status["x1"]*self._parent.motor.stepSizeA)
-            status["z0"] = np.round(status["z0"]*self._parent.motor.stepSizeZ)
-            status["z1"] = np.round(status["z1"]*self._parent.motor.stepSizeZ)
             status["state"] = int(status["state"])
-        except:
+            status["x0"] = np.round(status["x0"]*self._parent.motor.stepSizeA)
+            status["z0"] = np.round(status["z0"]*self._parent.motor.stepSizeZ)
+            status["x1"] = np.round(status["x1"]*self._parent.motor.stepSizeA)
+            status["z1"] = np.round(status["z1"]*self._parent.motor.stepSizeZ)
+        except Exception as e:
+            print(f"Could not get objective status: {e}")
             status = {"x0":0, 
                       "x1":0, 
                       "z0":0,

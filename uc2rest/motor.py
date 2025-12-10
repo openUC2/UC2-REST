@@ -459,10 +459,10 @@ class Motor(object):
         for iMotor in range(4):
             if speed[iMotor] != 0:
                 # Speed: µm/s -> steps/s => divide by stepSize (µm/step)
-                speed_steps[iMotor] = abs(speed[iMotor]) / stepSizes[iMotor]
+                speed_steps[iMotor] = abs(speed[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
             if acceleration[iMotor] is not None and acceleration[iMotor] != 0:
                 # Acceleration: µm/s² -> steps/s² => divide by stepSize
-                acceleration_steps[iMotor] = abs(acceleration[iMotor]) / stepSizes[iMotor]
+                acceleration_steps[iMotor] = abs(acceleration[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
             else:
                 # Default acceleration in steps/s²
                 acceleration_steps[iMotor] = 20000  # This should also be converted, but we use a safe default
