@@ -312,7 +312,7 @@ class Motor(object):
         # only consider those actions that are necessary
         motorPropList = []
         for iMotor in range(4):
-            if abs(speed[iMotor])>0:
+            if abs(speed[iMotor])>=0:
                 motorProp = { "stepperid": iMotor,
                              "isforever": int(not is_stop),
                              "speed": speed[iMotor]}
