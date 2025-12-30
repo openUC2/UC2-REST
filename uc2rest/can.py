@@ -129,9 +129,10 @@ class CAN(object):
                      "tx": 17
                  }
         """
-        path = "/can_get"
+        path = "/can_act"
         payload = {
-            "task": path
+            "task": path,
+            "scan": True
         }
         return self._parent.post_json(
             path,
