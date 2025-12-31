@@ -49,7 +49,7 @@ class State(object):
     def pairBT(self, timeout=1):
         path = "/bt_scan"
         payload={
-            "dummy": 1}
+            "connect": 1}
         r = self._parent.post_json(path, payload, getReturn=False, timeout=timeout)
         return r
     
