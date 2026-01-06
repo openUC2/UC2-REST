@@ -361,6 +361,7 @@ class Serial:
             elif line.find("error") != -1 and currentIdentifier is not None and currentIdentifier >=0 :
                 # if we have an error, we need to reset the last command
                 self._logger.debug("Error - last command did not match the firmware: "+str(self.commands[currentIdentifier]))
+                self._logger.debug("Error received: "+str(line))
                 self.resetLastCommand = True
                 buffer = ""
                 lineCounter = 0
