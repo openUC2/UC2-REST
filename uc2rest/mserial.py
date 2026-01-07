@@ -366,7 +366,7 @@ class Serial:
                     buffer = ""
                     lineCounter = 0
                     reading_json = False
-                    self.responses[currentIdentifier].append({"error": 1})
+                    self.responses[currentIdentifier].append({"error": 1}) # TODO: Problem: Once we have the turnaround (i.e. %255), the list is already occupied with information 
                     self.responses[currentIdentifier].append({"qid": currentIdentifier})
                 elif line.find("--")>=0 or lineCounter>nLineCountTimeout:
                     lineCounter = 0
@@ -470,7 +470,12 @@ class Serial:
         if type(command) == str:
             command = json.loads(command)
         identifier = self._generate_identifier()
-        command["qid"] = identifier
+        command["qid"] = identifier # TODO: we should switch to UUID or hash or something an
+        # in case we have the turnaround of the identifier, we need to clear the old responses
+        with self.lock:
+            if identifier in self.responses:
+                del self.responses[identifier]
+            self.responses[identifier] = []
         try:
             json_command = json.dumps(command)+"\n"
             #self.serialdevice.flush()
@@ -494,7 +499,8 @@ class Serial:
             time.sleep(0.002)
             if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
                 self.resetLastCommand = False
-                if self.DEBUG: self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
+                if self.DEBUG: 
+                    self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
                 return "communication interrupted by timeout or reset: "+str(identifier) + " and code:"+str(self.commands[identifier])
             with self.lock:
                 if identifier in self.responses:

@@ -14,7 +14,8 @@ class Home(object):
         
         self.nMotors = 4
         self.isHomed = np.zeros((self.nMotors))
-                
+        
+
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
             self._parent.serial.register_callback(self._callback_home_status, pattern="home")
@@ -132,13 +133,17 @@ class Home(object):
             )
         """
         # Convert axes to stepper IDs
+        # First get logical motor index, then map through motorAxisOrder to get physical stepper ID
         stepper_ids = []
+        motorAxisOrder = self._parent.motor.motorAxisOrder if hasattr(self._parent.motor   , 'motorAxisOrder') else [0, 1, 2, 3]
         for axis in axes:
             if isinstance(axis, str):
-                axis_id = self.xyztTo1230(axis)
+                logical_motor_index = self.xyztTo1230(axis)
             else:
-                axis_id = axis
-            stepper_ids.append(axis_id)
+                logical_motor_index = axis
+            # Map logical motor index to physical stepper ID
+            stepper_id = motorAxisOrder[logical_motor_index]
+            stepper_ids.append(stepper_id)
         
         num_motors = len(stepper_ids)
         
@@ -279,6 +284,10 @@ class Home(object):
             else:   
                 raise ValueError("Invalid axis. Use 'X', 'Y', 'Z', or 'A'.")
             time.sleep(0.5)
+        
+        # Map logical motor index to physical stepper ID through motorAxisOrder
+        stepper_id = self._parent.motor.motorAxisOrder[axis]
+        
         # construct json string
         path = "/home_act"
 
@@ -287,7 +296,7 @@ class Home(object):
             "home":{
                 "steppers": [
                 {
-                 "stepperid": axis,
+                 "stepperid": stepper_id,
                  "timeout":endstoptimeout,
                  "speed":abs(speed),
                  "direction":direction,
