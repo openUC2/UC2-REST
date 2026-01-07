@@ -111,7 +111,7 @@ class Laser(object):
 
         }
         #self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
-        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=.2)
+        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=0.5)
         return r
 
     def set_laserpin(self, laserid=1, laserpin=0):
