@@ -950,8 +950,8 @@ class Motor(object):
     
     
 
-    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, tsettle=5, tExposure=50, illumination=(0,0,0,0), led=0, speed=20000, acceleration=None):
-		#	{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "xStep": 500, "yStep": 500, "nX": 10, "nY": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
+    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, zstart=0, zstep=1000, nz=10, tsettle=5, tExposure=50, illumination=(0,0,0,0), led=0, speed=20000, acceleration=None):
+		#	{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "zStart": 0, "xStep": 500, "yStep": 500, "zStep": 500, "nX": 10, "nY": 10, "nZ": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
         if acceleration is None:
             acceleration = self.DEFAULT_ACCELERATION
         path = "/motor_act"
@@ -970,6 +970,9 @@ class Motor(object):
                 "led": led,
                 "accel": self.DEFAULT_ACCELERATION,  # default acceleration
                 "speed": speed,  # default speed
+                "zStart": zstart / self.stepSizeZ,
+                "zStep": zstep / self.stepSizeZ,
+                "nZ": nz,
             }
         }
         r = self._parent.post_json(path, payload)
@@ -977,9 +980,9 @@ class Motor(object):
     
     def start_stage_scanning_by_coordinates(self, coordinates, tPre=50, tPost=50, led=100, illumination=[50, 75, 100, 125], stopped=0): 
         '''
-        Example: {"task": "/motor_act", "stagescan": {"coordinates": [{"x": 100, "y": 200}, {"x": 300, "y": 400}, {"x": 500, "y": 600}], "tPre": 50, "tPost": 50, "led": 100, "illumination": [50, 75, 100, 125], "stopped": 0}}
+        Example: {"task": "/motor_act", "stagescan": {"coordinates": [{"x": 100, "y": 200, "z": 0}, {"x": 300, "y": 400, "z": 0}, {"x": 500, "y": 600, "z": 0}], "tPre": 50, "tPost": 50, "led": 100, "illumination": [50, 75, 100, 125], "stopped": 0}}
         
-        coordinates: list of dictionaries with x and y coordinates
+        coordinates: list of dictionaries with x, y and z coordinates
         tPre: time before exposure in ms
         tPost: exposure time - time after action
         led: led value for illumination
