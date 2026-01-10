@@ -28,6 +28,7 @@ from .temperature import Temperature
 from .message import Message
 from .can import CAN
 from .canota import CANOTA
+from .camera_trigger import CameraTrigger
 try:
     import requests
 except:
@@ -151,6 +152,9 @@ class UC2Client(object):
         
         # initialize messaging
         self.message = Message(self)
+        
+        # initialize camera trigger callback handler
+        self.camera_trigger = CameraTrigger(self)
 
         # initialize module controller
         self.modules = Modules(parent=self)
