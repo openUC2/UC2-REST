@@ -44,11 +44,17 @@ class Motor(object):
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
             self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
+            # Register callback for stagescan completion signal: {"stagescan":{},"qid":0,"success":1}
+            self._parent.serial.register_callback(self._callback_stagescan_complete, pattern="stagescan")
         # announce a function that is called when we receive a position update through the callback
         self._callbackPerKey = {}
         self.nCallbacks = 10
         self._callbackPerKey = self.init_callback_functions(nCallbacks=self.nCallbacks) # only one is used for now
         print(self._callbackPerKey)
+        
+        # Stage scan completion state
+        self._stagescan_complete = False
+        self._stagescan_callbacks = []  # List of callbacks to call when stagescan completes
         # move motor to wake them up #FIXME: Should not be necessary!
         #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
         #self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
@@ -83,6 +89,83 @@ class Motor(object):
                 self._callbackPerKey[0](self.currentPosition) # we call the function with the value
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
+
+    def _callback_stagescan_complete(self, data):
+        """
+        Callback for stagescan completion signal from firmware.
+        
+        Expected JSON format:
+        {
+            "stagescan": {},
+            "qid": 0,
+            "success": 1
+        }
+        
+        Args:
+            data: JSON data dictionary from firmware
+        """
+        try:
+            # Check if this is a completion signal (success key present)
+            if "success" in data:
+                self._stagescan_complete = True
+                success = data.get("success", 0)
+                self._parent.logger.debug(f"Stage scan complete signal received: success={success}")
+                
+                # Call all registered completion callbacks
+                for callback in self._stagescan_callbacks:
+                    try:
+                        callback(data)
+                    except Exception as e:
+                        self._parent.logger.error(f"Error in stagescan completion callback: {e}")
+            else:
+                self._parent.logger.debug("Received stagescan data without completion signal.")
+        except Exception as e:
+            print(f"Error in _callback_stagescan_complete: {e}")
+
+    def register_stagescan_callback(self, callback):
+        """
+        Register a callback function to be called when stagescan completes.
+        
+        Args:
+            callback: Function to call with completion data
+        """
+        if callback not in self._stagescan_callbacks:
+            self._stagescan_callbacks.append(callback)
+    
+    def unregister_stagescan_callback(self, callback):
+        """
+        Unregister a stagescan completion callback.
+        
+        Args:
+            callback: Function to unregister
+        """
+        if callback in self._stagescan_callbacks:
+            self._stagescan_callbacks.remove(callback)
+
+    def reset_stagescan_complete(self):
+        """Reset the stagescan completion flag."""
+        self._stagescan_complete = False
+    
+    def is_stagescan_complete(self):
+        """Check if stagescan has completed."""
+        return self._stagescan_complete
+
+    def wait_for_stagescan_complete(self, timeout=300):
+        """
+        Wait for stagescan to complete with timeout.
+        
+        Args:
+            timeout: Maximum time to wait in seconds
+            
+        Returns:
+            True if completed, False if timeout
+        """
+        start_time = time.time()
+        while not self._stagescan_complete:
+            if time.time() - start_time > timeout:
+                return False
+            time.sleep(0.1)
+        return True
 
     def register_callback(self, key, callbackfct):
         ''' register a callback function for a specific key '''
