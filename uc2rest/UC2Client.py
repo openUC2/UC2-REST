@@ -21,6 +21,7 @@ from .camera import Camera
 from .analog import Analog
 from .modules import Modules
 from .digitalout import DigitalOut
+from .digitalin import DigitalIn
 from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
@@ -149,6 +150,9 @@ class UC2Client(object):
         
         # initialize digital out
         self.digitalout = DigitalOut(self)
+        
+        # initialize digital in
+        self.digitalin = DigitalIn(self)
         
         # initialize messaging
         self.message = Message(self)
