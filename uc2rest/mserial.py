@@ -113,15 +113,29 @@ class Serial:
                 port = self.get_port_info(port)
                 if port is None:
                     raise ValueError("Port not found")
-                
-            for i in range(2): # not good, but sometimes it  needs a second attempt
-                isUC2 = self.tryToConnect(port)
+            
+            # Try multiple baudrates - prefer user-specified, then try alternatives
+            baudrates_to_try = [baud_rate]
+            if baud_rate != 921600:
+                baudrates_to_try.append(921600)
+            if baud_rate != 115200:
+                baudrates_to_try.append(115200)
+            
+            isUC2 = False
+            for try_baud in baudrates_to_try:
+                self.baudrate = try_baud
+                for i in range(2):  # Sometimes needs a second attempt
+                    isUC2 = self.tryToConnect(port)
+                    if isUC2:
+                        break
                 if isUC2:
+                    self._logger.debug(f"Connected to {port.device} at {try_baud} baud.")
                     break
+                else:
+                    self._logger.debug(f"Failed to connect at {try_baud} baud, trying next...")
+                    
             if not isUC2:
                 raise ValueError('Wrong Firmware.')
-            else:
-                self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
             ser = self.serialdevice
             self.is_connected = True
 
@@ -181,11 +195,24 @@ class Serial:
             any(port.description.startswith(d) for d in descriptions_to_check):
                 if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
                     continue
-                if self.tryToConnect(port):
-                    self.is_connected = True
-                    self.manufacturer = port.manufacturer
-                    self._logger.debug(f"Found correct USB device: {port.device} - {port.description}")
-                    return self.serialdevice
+                # Try multiple baudrates when auto-detecting
+                original_baud = self.baudrate
+                baudrates_to_try = [original_baud]
+                if original_baud != 921600:
+                    baudrates_to_try.append(921600)
+                if original_baud != 115200:
+                    baudrates_to_try.append(115200)
+                
+                for try_baud in baudrates_to_try:
+                    self.baudrate = try_baud
+                    if self.tryToConnect(port):
+                        self.is_connected = True
+                        self.manufacturer = port.manufacturer
+                        self._logger.debug(f"Found correct USB device: {port.device} at {try_baud} baud - {port.description}")
+                        return self.serialdevice
+                
+                # Restore original baudrate if all failed
+                self.baudrate = original_baud
 
         self.is_connected = False
         self.serialport = "NotConnected"
