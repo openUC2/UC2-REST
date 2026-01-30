@@ -440,18 +440,22 @@ class CANOTA(object):
             }
             print("  Sending STREAM_START command...", start_cmd)
             response = self._send_json(ser, start_cmd)
-            # {"task": "/can_ota_stream", "canid": 11, "action": "start", "firmware_size": 876784, "page_size": 4096, "chunk_size": 512, "md5": "43ba96b4d18c010201762b840476bf83", "qid": 1}
-            if response and  str(response).find("success")<=0:
-                print("  ERROR: STREAM_START command failed!")
-                print(f"  Response: {response}")
-                return False
-            print("  ✓ Streaming session started")
-            '''b\'[326584][I][CanOtaStreaming.cpp:427] actFromJsonStreaming(): Target CAN ID: 11\\r\\n[326586][I][CanOtaStreaming.cpp:456] actFromJsonStreaming(): Stream OTA START to CAN ID 11: size=876784, page_size=4096, chunk_size=512\\r\\n[326588][I][CanOtaStreaming.cpp:464] actFromJsonStreaming(): Relaying STREAM_START to slave 0x0B\\r\\n[326590][I][CanOtaStreaming.cpp:653] startStreamToSlave(): Starting stream to slave 0x0B: 876784 bytes, 215 pages\\r\\n[326968][I][CanOtaStreaming.cpp:622] handleSlaveStreamResponse(): Slave STREAM_ACK: page=65535, bytes=0, nextSeq=0\\r\\n++\\n{"success":true,"qid":1}\\n--\\n\\x00\''''
-            #self._drain_serial(ser)
-            #self._send_json(ser, {"task": "/can_act", "debug": 1})
-
+            
+            # Wait for JSON response
+            if response and str(response).find("success") <= 0:
+                if status_callback:
+                    status_callback("STREAM_START command failed", False)
+                    status_callback(f"Response: {response}", False)
+                return
+            
             if status_callback:
                 status_callback("Streaming session started, uploading...", True)
+            
+            # CRITICAL: Wait for slave to initialize via CAN
+            time.sleep(1.0)
+            
+            # Drain any pending data (logs, old ACKs, etc.)
+            self._drain_serial(ser, "post-start", verbose=False)
             
             # Step 4: Stream pages
             start_time = time.time()
@@ -468,14 +472,24 @@ class CANOTA(object):
                 if len(page_data) < PAGE_SIZE:
                     page_data = page_data + bytes(PAGE_SIZE - len(page_data))
                 
+                 # Progress display
+                progress = (page_idx + 1) / num_pages * 100
+                elapsed = time.time() - start_time
+                speed = bytes_sent / elapsed / 1024 if elapsed > 0 else 0
+                print(f"\r  Page {page_idx+1}/{num_pages} ({progress:.1f}%) - {speed:.1f} KB/s ", end="")
+                
+                
                 # Send page with retry
-                success, seq = self._send_page_with_retry(ser=ser, page_idx=page_idx, page_data=page_data, seq_start=seq)
+                # Send page with retry logic
+                success, seq, acked_page, acked_bytes = self._send_page_with_retry(
+                    ser, page_idx, page_data, seq
+                )
                 bytes_sent += PAGE_SIZE
                 
                 if not success:
                     if status_callback:
                         status_callback(f"Page {page_idx} failed after retries", False)
-                    return False
+                    return
                 
                 # Progress callback
                 if progress_callback:
@@ -560,7 +574,7 @@ class CANOTA(object):
             print(f"  [{label}] Drained {len(data)} bytes")
         return data
     
-    def _send_json(self, ser, data, wait_response=True, timeout=2.0):
+    def _send_json(self, ser, data, wait_response=True, timeout=3.0):
         """Send JSON command over serial."""
         json_str = json.dumps(data, separators=(',', ':'))
         tx_data = (json_str + '\n').encode()
@@ -585,19 +599,22 @@ class CANOTA(object):
         return None
     
     def _build_stream_data_packet(self, page_idx, offset, seq, chunk_data):
-        """Build a binary stream data packet."""
-        header = struct.pack('<HHHH', page_idx, offset, len(chunk_data), seq)
-        packet_body = bytes([STREAM_DATA]) + header + chunk_data
-        checksum = sum(packet_body) & 0xFF
-        return bytes([SYNC_1, SYNC_2]) + packet_body + bytes([checksum])
-    
+        # Match can_ota_streaming.py wire format + checksum
+        packet_body = bytes([SYNC_1, SYNC_2, STREAM_DATA]) + struct.pack(
+            '>HHHH', page_idx, offset, len(chunk_data), seq
+        ) + chunk_data
+        checksum = 0
+        for b in packet_body:
+            checksum ^= b
+        return packet_body + bytes([checksum])
+
     def _build_stream_finish_packet(self, md5_bytes):
-        """Build STREAM_FINISH packet with MD5 hash."""
-        header = bytes([STREAM_FINISH])
-        packet_body = header + md5_bytes
-        checksum = sum(packet_body) & 0xFF
-        return bytes([SYNC_1, SYNC_2]) + packet_body + bytes([checksum])
-    
+        packet_body = bytes([SYNC_1, SYNC_2, STREAM_FINISH]) + md5_bytes
+        checksum = 0
+        for b in packet_body:
+            checksum ^= b
+        return packet_body + bytes([checksum])
+
     def _wait_for_session_start(self, ser, timeout=10.0):
         """Wait for streaming session start ACK."""
         start = time.time()
@@ -712,13 +729,73 @@ class CANOTA(object):
             ser.flush()
             
             # Wait for ACK
-            success, acked_page, acked_bytes, raw = self._wait_for_page_ack(ser, page_idx)
+            success, acked_page, acked_bytes, raw = self.wait_for_stream_ack(ser, page_idx)
             
             if success:
-                return (True, seq)
+                return (True, seq, acked_page, acked_bytes)
             
             if retry < max_retries - 1:
-                time.sleep(0.5)
-                self._drain_serial(ser)
+                print(f" [RETRY {retry+1}/{max_retries}]", end="")
+                time.sleep(0.5)  # Small delay before retry
+                self._drain_serial(ser, "retry", verbose=False)
         
-        return (False, seq)
+        return (False, seq, -1, 0)
+
+
+
+    def wait_for_stream_ack(self, ser, expected_page: int, timeout: float = PAGE_ACK_TIMEOUT):
+        """
+        Wait for STREAM_ACK response.
+        Returns: (success, last_complete_page, bytes_received, raw_response)
+        """
+        start = time.time()
+        buffer = bytearray()
+        
+        while time.time() - start < timeout:
+            if ser.in_waiting:
+                new_data = ser.read(ser.in_waiting)
+                buffer.extend(new_data)
+                
+                # Check for log messages indicating success (for final ACK)
+                try:
+                    text = bytes(buffer).decode('utf-8', errors='replace')
+                    print("DEBUG TEXT:", text)
+                    if "OTA COMPLETE" in text or "Rebooting" in text:
+                        return (True, expected_page, 0, bytes(buffer))
+                except:
+                    pass
+                
+                # Search for STREAM_ACK response
+                # Format: [SYNC][CMD][status][canId][lastPage_L][lastPage_H][bytes(4)][nextSeq(2)][reserved(2)]
+                i = 0
+                while i < len(buffer) - 15:
+                    if buffer[i] == SYNC_1 and buffer[i+1] == SYNC_2:
+                        cmd = buffer[i+2]
+                        
+                        if cmd == STREAM_ACK:
+                            status = buffer[i+3]
+                            can_id = buffer[i+4]
+                            last_page = buffer[i+5] | (buffer[i+6] << 8)  # Little endian
+                            bytes_recv = struct.unpack('<I', bytes(buffer[i+7:i+11]))[0]
+                            next_seq = buffer[i+11] | (buffer[i+12] << 8)
+                            
+                            if status == 0:  # CAN_OTA_OK
+                                return (True, last_page, bytes_recv, bytes(buffer))
+                            else:
+                                print(f"  STREAM_ACK with error status: {status}")
+                                return (False, last_page, bytes_recv, bytes(buffer))
+                        
+                        elif cmd == STREAM_NAK:
+                            status = buffer[i+3]
+                            can_id = buffer[i+4]
+                            error_page = buffer[i+5] | (buffer[i+6] << 8)
+                            missing_offset = buffer[i+7] | (buffer[i+8] << 8)
+                            
+                            print(f"  STREAM_NAK: status={status}, page={error_page}, offset={missing_offset}")
+                            return (False, error_page, missing_offset, bytes(buffer))
+                    
+                    i += 1
+            else:
+                time.sleep(0.001)
+        
+        return (False, -1, 0, bytes(buffer))
