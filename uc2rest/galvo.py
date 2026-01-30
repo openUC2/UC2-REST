@@ -37,80 +37,81 @@ class Galvo(object):
     SCANNER
     ##############################################################################################################################
     '''
-    def set_scanner_pattern(self, numpyPattern, scannernFrames=1,
-            scannerLaserVal=32000,
-            scannerExposure=500, scannerDelay=500, is_blocking = False):
-
-        scannerMode="pattern"
-        path = '/scanner_act'
-        arraySize = int(np.prod(numpyPattern.shape))
+    def set_galvo_scan(self, nx=256, ny=256, x_min=500, x_max=3500, 
+                       y_min=500, y_max=3500, sample_period_us=1, 
+                       frame_count=0, bidirectional=False, timeout=1):
+        """
+        Start galvo scanner with new API (HighSpeedScannerCore)
+        
+        Args:
+            nx: Number of X samples per line (default: 256)
+            ny: Number of Y lines (default: 256)
+            x_min: Min X position 0-4095 (default: 500)
+            x_max: Max X position 0-4095 (default: 3500)
+            y_min: Min Y position 0-4095 (default: 500)
+            y_max: Max Y position 0-4095 (default: 3500)
+            sample_period_us: Microseconds per sample, 0=max speed (default: 1)
+            frame_count: Number of frames, 0=infinite (default: 0)
+            bidirectional: Enable bidirectional scanning (default: False)
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.set_galvo_scan(nx=64, ny=64, frame_count=10, bidirectional=True)
+        """
+        path = '/galvo_act'
         payload = {
-            "task":path,
-            "scannernFrames":scannernFrames,
-            "scannerMode":scannerMode,
-            "arraySize":arraySize,
-            "i":numpyPattern.flatten().tolist(),
-            "scannerLaserVal":scannerLaserVal,
-            "scannerExposure":scannerExposure,
-            "scannerDelay":scannerDelay,
-            "isblock": is_blocking
+            "task": path,
+            "config": {
+                "nx": nx,
+                "ny": ny,
+                "x_min": x_min,
+                "x_max": x_max,
+                "y_min": y_min,
+                "y_max": y_max,
+                "sample_period_us": sample_period_us,
+                "frame_count": frame_count,
+                "bidirectional": 1 if bidirectional else 0
             }
-
-        r = self.post_json(path, payload)
-        return r
-
-    def set_scanner_classic(self, scannernFrames=100,
-            scannerXFrameMin=0, scannerXFrameMax=255,
-            scannerYFrameMin=0, scannerYFrameMax=255,
-            scannerEnable=0, scannerxMin=1,
-            scannerxMax=5, scanneryMin=1,
-            scanneryMax=5, scannerXStep=25,
-            scannerYStep=25, scannerLaserVal=32000,
-            scannerExposure=500, scannerDelay=500):
-
-        scannerModec="classic",
-        path = '/scanner_act'
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+    
+    def stop_galvo_scan(self, timeout=1):
+        """
+        Stop galvo scanner
+        
+        Args:
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.stop_galvo_scan()
+        """
+        path = '/galvo_act'
         payload = {
-            "task":path,
-            "scannernFrames":scannernFrames,
-            "scannerMode":scannerModec,
-            "scannerXFrameMin":scannerXFrameMin,
-            "scannerXFrameMax":scannerXFrameMax,
-            "scannerYFrameMin":scannerYFrameMin,
-            "scannerYFrameMax":scannerYFrameMax,
-            "scannerEnable":scannerEnable,
-            "scannerxMin":scannerxMin,
-            "scannerxMax":scannerxMax,
-            "scanneryMin":scanneryMin,
-            "scanneryMax":scanneryMax,
-            "scannerXStep":scannerXStep,
-            "scannerYStep":scannerYStep,
-            "scannerLaserVal":scannerLaserVal,
-            "scannerExposure":scannerExposure,
-            "scannerDelay":scannerDelay}
+            "task": path,
+            "stop": True
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+    
+    def get_galvo_status(self, timeout=1):
+        """
+        Get galvo scanner status
+        
+        Args:
+            timeout: Request timeout in seconds (default: 1)
+            
+        Returns:
+            dict: Status including running, current_frame, current_line, config, etc.
+            
+        Example:
+            >>> status = galvo.get_galvo_status()
+            >>> print(f"Running: {status['running']}, Frame: {status['current_frame']}")
+        """
+        path = '/galvo_get'
+        payload = {
+            "task": path
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
 
-        r = self.post_json(path, payload)
-        return r
-
-
-    def set_galvo_freq(self, axis=1, value=1000):
-        if axis+1 == 1:
-            self.galvo1.frequency=value
-            payload = self.galvo1.return_dict()
-        else:
-            self.galvo2.frequency=value
-            payload = self.galvo2.return_dict()
-
-        r = self.post_json(payload["task"], payload, timeout=1)
-        return r
-
-    def set_galvo_amp(self, axis=1, value=1000):
-        if axis+1 == 1:
-            self.galvo1.amplitude=value
-            payload = self.galvo1.return_dict()
-        else:
-            self.galvo2.amplitude=value
-            payload = self.galvo2.return_dict()
-
-        r = self.post_json(payload["task"], payload, timeout=1)
-        return r

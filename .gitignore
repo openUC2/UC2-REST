@@ -20,3 +20,4 @@ docs/build_*
 build/lib/uc2rest/modules.py
 
 conda-out/*
+.DS_Store

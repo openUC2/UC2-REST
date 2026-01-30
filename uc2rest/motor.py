@@ -1031,8 +1031,6 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
     
-    
-
     def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, zstart=0, zstep=1000, nz=10, tsettle=5, tExposure=50, illumination=(0,0,0,0), led=0, speed=20000, acceleration=None):
 		#	{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "zStart": 0, "xStep": 500, "yStep": 500, "zStep": 500, "nX": 10, "nY": 10, "nZ": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
         if acceleration is None:
