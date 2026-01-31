@@ -46,11 +46,11 @@ class Serial:
 
         # setup command queue
         self.resetLastCommand = False
-        self.sender_queue = queue.Queue()
         self.responses = {}
         self.commands = {}
         self.lock = threading.Lock()
-        self.serialLock = threading.Lock()
+        self.serialReadLock = threading.Lock()
+        self.serialWriteLock = threading.Lock()
         
         # setup callback list for parent modules
         self.callBackList = [] # TODO: We should pop items when list is full
@@ -113,29 +113,15 @@ class Serial:
                 port = self.get_port_info(port)
                 if port is None:
                     raise ValueError("Port not found")
-            
-            # Try multiple baudrates - prefer user-specified, then try alternatives
-            baudrates_to_try = [baud_rate]
-            if baud_rate != 921600:
-                baudrates_to_try.append(921600)
-            if baud_rate != 115200:
-                baudrates_to_try.append(115200)
-            
-            isUC2 = False
-            for try_baud in baudrates_to_try:
-                self.baudrate = try_baud
-                for i in range(2):  # Sometimes needs a second attempt
-                    isUC2 = self.tryToConnect(port)
-                    if isUC2:
-                        break
+                
+            for i in range(2): # not good, but sometimes it  needs a second attempt
+                isUC2 = self.tryToConnect(port)
                 if isUC2:
-                    self._logger.debug(f"Connected to {port.device} at {try_baud} baud.")
                     break
-                else:
-                    self._logger.debug(f"Failed to connect at {try_baud} baud, trying next...")
-                    
             if not isUC2:
                 raise ValueError('Wrong Firmware.')
+            else:
+                self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
             ser = self.serialdevice
             self.is_connected = True
 
@@ -161,11 +147,7 @@ class Serial:
         self.identifier_counter = 0 # Counter for generating unique identifiers
         self.thread = threading.Thread(target=self._process_commands, daemon=True)
         self.thread.start()
-        
-        # setup sender queue
-        self.sender_worker_thread = threading.Thread(target=self._sending_commands)
-        self.sender_worker_thread.daemon = True  # Ensure the thread exits when the main program does
-        self.sender_worker_thread.start()  
+
         return ser
 
     def findCorrectSerialDevice(self):
@@ -195,24 +177,11 @@ class Serial:
             any(port.description.startswith(d) for d in descriptions_to_check):
                 if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
                     continue
-                # Try multiple baudrates when auto-detecting
-                original_baud = self.baudrate
-                baudrates_to_try = [original_baud]
-                if original_baud != 921600:
-                    baudrates_to_try.append(921600)
-                if original_baud != 115200:
-                    baudrates_to_try.append(115200)
-                
-                for try_baud in baudrates_to_try:
-                    self.baudrate = try_baud
-                    if self.tryToConnect(port):
-                        self.is_connected = True
-                        self.manufacturer = port.manufacturer
-                        self._logger.debug(f"Found correct USB device: {port.device} at {try_baud} baud - {port.description}")
-                        return self.serialdevice
-                
-                # Restore original baudrate if all failed
-                self.baudrate = original_baud
+                if self.tryToConnect(port):
+                    self.is_connected = True
+                    self.manufacturer = port.manufacturer
+                    self._logger.debug(f"Found correct USB device: {port.device} - {port.description}")
+                    return self.serialdevice
 
         self.is_connected = False
         self.serialport = "NotConnected"
@@ -249,7 +218,7 @@ class Serial:
     def _write(self, serialdevice, payload):
         if type(payload) == dict:
             payload = json.dumps(payload)
-        with self.serialLock:
+        with self.serialWriteLock: # TODO: Seems like this lock is slowing us down a lot - need to test without
             serialdevice.write(payload.encode('utf-8'))
             time.sleep(0.02)
         if self.cmdWriteCallBackFct is not None:
@@ -291,8 +260,6 @@ class Serial:
         # write message to the serial
         self._write(ser, payload)
         ser.write(b'\n')
-
-        #self._write(ser, b'\n')
         
         # iterate a few times in case the debug mode on the ESP32 is turned on and it sends additional lines
         for i in range(500):
@@ -309,32 +276,6 @@ class Serial:
         self.identifier_counter += 1
         return self.identifier_counter % 255  # Wrap around after 1024 to avoid large numbers
 
-    def _enqueue_command(self, json_command):
-        """Add a command to the queue."""
-        self.sender_queue.put(json_command)
-
-    def _sending_commands(self):
-        """Sending commands from the queue with a 1s delay between them."""
-        while self.running:
-            
-            # Wait for the next command
-            json_command = self.sender_queue.get()
-            
-            # Process the command
-            with self.serialLock:
-                try:
-                    if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
-                    self._write(self.serialdevice, json.loads(json_command))
-                except Exception as e:
-                    self._logger.error("Failed to write the line in serial: "+str(e))
-            
-            # Signal that the command has been processed
-            self.sender_queue.task_done()
-            if self.DEBUG: self._logger.debug("[SendingCommands]: Task done")
-                        
-            # Wait for .05 second before processing the next command
-            time.sleep(0.05)
-            
     def _process_commands(self):
         buffer = ""
         reading_json = False
@@ -357,7 +298,7 @@ class Serial:
                     self.is_connected = True
 
                 # if we just want to send but not even wait for a response
-                with self.serialLock:
+                with self.serialReadLock:
                     try:
                         mReadline = self._read(self.serialdevice)
                         if mReadline == False :
@@ -374,6 +315,8 @@ class Serial:
                             
                         # if we have a problem with the serial connection, we need to reconnect
                         if nFailedCommands>5:
+                            self._logger.debug("Too many failed commands, disconnecting ...")
+                            return # TODO: this does not work, the serial lock is aquired and never released - race condition?
                             for i in range(4):
                                 nFailedCommands=0
                                 if self.reconnect():
@@ -508,12 +451,8 @@ class Serial:
             #self.serialdevice.flush()
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
             self._write(self.serialdevice, json_command)
-            #time.sleep(1)
-            # we have to queue the commands and give it some time to process
-            #self._enqueue_command(json_command)
-            
         except Exception as e:
-            if self.DEBUG: self._logger.error(e)
+            if self.DEBUG: self._logger.error(e) # TODO:  write failed: Device not configured - why?!
             return "Failed to Send"
         self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
