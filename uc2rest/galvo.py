@@ -39,7 +39,11 @@ class Galvo(object):
     '''
     def set_galvo_scan(self, nx=256, ny=256, x_min=500, x_max=3500, 
                        y_min=500, y_max=3500, sample_period_us=1, 
-                       frame_count=0, bidirectional=False, timeout=1):
+                       frame_count=0, bidirectional=False, 
+                       pre_samples=0, fly_samples=0, trig_delay_us=0, 
+                       trig_width_us=0, line_settle_samples=0, 
+                       enable_trigger=1, apply_x_lut=0,
+                       timeout=1):
         """
         Start galvo scanner with new API (HighSpeedScannerCore)
         
@@ -54,6 +58,9 @@ class Galvo(object):
             frame_count: Number of frames, 0=infinite (default: 0)
             bidirectional: Enable bidirectional scanning (default: False)
             timeout: Request timeout in seconds (default: 1)
+            
+            sends:
+            {"task": "/galvo_act", "config": {"nx":512,"ny":512,"x_min":500,"x_max":3500,"y_min":500,"y_max":3500,"pre_samples":0,"fly_samples":0,"sample_period_us":0,"trig_delay_us":0,"trig_width_us":0,"line_settle_samples":0,"enable_trigger":1,"apply_x_lut":0,"frame_count":0,"bidirectional":true}}
             
         Example:
             >>> galvo.set_galvo_scan(nx=64, ny=64, frame_count=10, bidirectional=True)
@@ -70,7 +77,14 @@ class Galvo(object):
                 "y_max": y_max,
                 "sample_period_us": sample_period_us,
                 "frame_count": frame_count,
-                "bidirectional": 1 if bidirectional else 0
+                "bidirectional": True if bidirectional else False,
+                "pre_samples": pre_samples,
+                "fly_samples": fly_samples,
+                "trig_delay_us": trig_delay_us,
+                "trig_width_us": trig_width_us,
+                "line_settle_samples": line_settle_samples,
+                "enable_trigger": enable_trigger,
+                "apply_x_lut": apply_x_lut
             }
         }
         
