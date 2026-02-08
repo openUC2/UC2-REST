@@ -181,6 +181,7 @@ class Serial:
                     self.is_connected = True
                     self.manufacturer = port.manufacturer
                     self._logger.debug(f"Found correct USB device: {port.device} - {port.description}")
+                    self.serialport = port
                     return self.serialdevice
 
         self.is_connected = False
@@ -292,7 +293,7 @@ class Serial:
 
                 # device not ready yet
                 if self.serialdevice is None:
-                    self.is_connected = False
+                    self.is_connected = False # TODO: We have to indicate if the device is not connected or if it is just not ready yet - otherwise we will have a lot of "Failed to Send" messages in the beginning
                     continue
                 else:
                     self.is_connected = True
@@ -389,6 +390,7 @@ class Serial:
             except Exception as e:
                 self._logger.error("Error in processing serial commands: "+str(e))
         self.running = False
+        self.is_connected = False
 
     def get_json(self, path, timeout=1):
         message = {"task":path}
@@ -519,7 +521,9 @@ class Serial:
         except:
             pass
         self.serialdevice = self.openDevice(port = self.serialport, baud_rate = self.baudrate)
-        if self.serialdevice: return True
+        if self.serialdevice: 
+            self.serialport = self.serialdevice.port
+            return True
         return False
 
 

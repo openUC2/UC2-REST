@@ -630,7 +630,7 @@ class Motor(object):
 
         # drive motor
         self.isRunning = True
-        is_blocking = not self._parent.is_wifi and is_blocking and self._parent.serial.is_connected
+        is_blocking =  is_blocking and self._parent.serial.is_connected
         timeout = timeout if is_blocking else 0
         nResponses = len(payload["motor"]["steppers"]) + 1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
