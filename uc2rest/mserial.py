@@ -317,7 +317,7 @@ class Serial:
                         # if we have a problem with the serial connection, we need to reconnect
                         if nFailedCommands>5:
                             self._logger.debug("Too many failed commands, disconnecting ...")
-                            return # TODO: this does not work, the serial lock is aquired and never released - race condition?
+                            break # TODO: this does not work, the serial lock is aquired and never released - race condition?
                             for i in range(4):
                                 nFailedCommands=0
                                 if self.reconnect():
