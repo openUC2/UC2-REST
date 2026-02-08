@@ -48,6 +48,7 @@ def main():
 
     port = "/dev/cu.SLAB_USBtoUART"
     canid = 11
+    canid = 40
     firmware = "/Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/UC2-REST/binaries/latest/esp32_seeed_xiao_esp32s3_can_slave_motor.bin"
     baud = 921600
     
@@ -95,7 +96,10 @@ def main():
     print("=" * 70)
     
     return 0 if success else 1
+'''
+{"task": "/can_ota_stream", "canid": 11, "action": "start", "firmware_size": 876784, "page_size": 4096, "chunk_size": 512, "md5": "43ba96b4d18c010201762b840476bf83"}
+{"task": "/can_ota_stream", "canid": 40, "action": "start", "firmware_size": 876784, "page_size": 4096, "chunk_size": 512, "md5": "43ba96b4d18c010201762b840476bf83"}
 
-
+'''
 if __name__ == "__main__":
     sys.exit(main())

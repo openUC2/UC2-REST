@@ -30,18 +30,19 @@ from .message import Message
 from .can import CAN
 from .canota import CANOTA
 from .camera_trigger import CameraTrigger
+
+# requests is no longer used for direct ESP communication (serial-only).
+# Kept as optional import for other modules that may need HTTP (e.g. firmware downloads).
 try:
     import requests
-except:
-    print("No requests available - running on pyscript?")
+except Exception:
+    requests = None
 
 class UC2Client(object):
-    # headers = {'ESP32-version': '*'}
     headers={"Content-Type":"application/json"}
     getmessage = ""
     is_connected = False
 
-    is_wifi = False
     is_serial = False
     BAUDRATE = 115200
 
@@ -52,12 +53,13 @@ class UC2Client(object):
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
 
+        Communication is via USB/serial only.
+        The host/port parameters are deprecated and will be ignored.
+
         generally speaking you send/receive JSON documents that will cause an:
         1. action => "/XXX_act"
         2. getting => "/XXX_get"
         3. setting => "/XXX_set"
-
-        you can send commands through wifi/http or usb/serial
         '''
         if True: #logger is None:
             self.logger = Logger()
@@ -67,28 +69,27 @@ class UC2Client(object):
         # perhaps we are in the browser?
         self.isPyScript = isPyScript
 
-        # initialize communication channel (# connect to wifi or usb)
+        # Deprecation notice for WiFi mode
+        if host is not None and serialport is None and SerialManager is None:
+            self.logger.warning(
+                "WiFi/HTTP communication has been removed. "
+                "Please use serialport= instead. Ignoring host parameter."
+            )
+
+        # initialize communication channel (serial only)
         if serialport is not None:
             # use USB connection
             self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG, skipFirmwareCheck=skipFirmwareCheck)
             self.is_serial = True
             self.is_connected = self.serial.is_connected
             self.serial.DEBUG = DEBUG
-        elif host is not None:
-            # use client in wireless mode
-            self.is_wifi = True
-            self.host = host
-            self.port = port
-
-            # check if host is up
-            self.logger.debug(f"Connecting to microscope {self.host}:{self.port}")
-            #self.is_connected = self.isConnected()
         elif SerialManager is not None:
-            # we are trying to access the controller from .a web browser
+            # we are trying to access the controller from a web browser
             self.serial = SerialManagerWrapper(SerialManager, parent=self)
             self.isPyScript = True
+            self.is_serial = True
         else:
-            self.logger.error("No ESP32 device is connected - check IP or Serial port!")
+            self.logger.error("No ESP32 device is connected - please provide a serialport!")
         
                         
         # import libraries depending on API version
@@ -169,19 +170,12 @@ class UC2Client(object):
         return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses, timeout=timeout)
 
     def get_json(self, path, getReturn=True, timeout=1):
-        if self.is_wifi:
-            # FIXME: this is not working
-            url = f"http://{self.host}:{self.port}{path}"
-            r = requests.get(url, headers=self.headers, timeout=timeout)
-            return r.json()
-        elif self.is_serial or self.isPyScript:
-            # timeout is not used anymore
-            if timeout <=0:
+        if self.is_serial or self.isPyScript:
+            if timeout <= 0:
                 getReturn = False
             return self.serial.post_json(path, payload=None, getReturn=getReturn, nResponses=1, timeout=timeout)
-            #return self.serial.read_json()<
         else:
-            self.logger.error("No ESP32 device is connected - check IP or Serial port!")
+            self.logger.error("No ESP32 device is connected - serial not initialized!")
             return None
 
     def setDebugging(self, debug=False):
