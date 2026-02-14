@@ -420,11 +420,11 @@ class CANOTA(object):
             # Step 2: Open raw serial connection
             if status_callback:
                 status_callback(f"Opening streaming connection on {port} at {baud} baud...", True)
-            
+            if type(port) == serial.tools.list_ports_common.ListPortInfo:
+                port = port.device
             ser = serial.Serial(port, baud, timeout=0.1)#, write_timeout=1.0)
             time.sleep(0.5)
             self._drain_serial(ser)
-            
             # Step 3: Send streaming start command via JSON
             if status_callback:
                 status_callback(f"Initializing streaming session for CAN ID {can_id}...", True)

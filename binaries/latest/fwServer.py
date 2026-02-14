@@ -1,4 +1,8 @@
 # dummy_caddy_like_server.py
+'''
+ mv /Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/uc2-ESP/.pio/build/UC2_3_CAN_HAT_Master_v2/firmware.bin /Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/UC2-REST/binaries/latest/UC2_3_CAN_HAT_Master_v2.bin
+ mv /Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/uc2-ESP/.pio/build/seeed_xiao_esp32s3_can_slave_motor/firmware.bin /Users/bene/Dropbox/Dokumente/Promotion/PROJECTS/UC2-REST/binaries/latest/esp32_seeed_xiao_esp32s3_can_slave_motor.bin
+'''
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import (
     JSONResponse,

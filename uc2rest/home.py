@@ -239,7 +239,7 @@ class Home(object):
                 return 0
         return axis
     
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=True):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)
@@ -290,7 +290,22 @@ class Home(object):
         
         # construct json string
         path = "/home_act"
-
+        '''
+        {
+        "task": "/home_act",
+        "qid": 3,
+        "home": {
+            "steppers": [{
+            "stepperid": 2,
+            "timeout": 40000,
+            "speed": 20000,
+            "direction": -1,
+            "endstoppolarity": 1,
+            "endoffset": 5000
+            }]
+        }
+        }
+        '''
         payload = {
             "task": path,
             "home":{
@@ -300,7 +315,8 @@ class Home(object):
                  "timeout":endstoptimeout,
                  "speed":abs(speed),
                  "direction":direction,
-                 "endstoppolarity":endstoppolarity
+                 "endstoppolarity":endstoppolarity, 
+                "endoffset": endposrelease
                  }]
             }}
      
@@ -312,3 +328,28 @@ class Home(object):
 
         return r
 
+
+    def stop_home(self, axis, timeout=1):
+        ''' stop the homing process '''
+        path = "/home_act"
+        '''
+        {
+        "task": "/home_act",
+        "stop": true,
+        "home": {
+            "steppers": [{
+            "stepperid": 2
+            }]
+        }
+        }'''
+        payload = {
+            "task": path,
+            "stop": True,
+            "home":{
+                "steppers": [
+                {
+                 "stepperid": axis,
+                 }]
+            }}
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
