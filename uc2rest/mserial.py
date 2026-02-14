@@ -454,7 +454,10 @@ class Serial:
             if self.DEBUG and json_command!="": self._logger.debug("[SendingCommands]:"+str(json_command))
             self._write(self.serialdevice, json_command)
         except Exception as e:
-            if self.DEBUG: self._logger.error(e) # TODO:  write failed: Device not configured - why?!
+            if self.DEBUG: 
+                self._logger.error(e) # TODO:  write failed: Device not configured - why?!
+                # attempt to reconnect 
+                self.reconnect()
             return "Failed to Send"
         self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
