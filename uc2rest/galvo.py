@@ -129,3 +129,184 @@ class Galvo(object):
         
         return self._parent.post_json(path, payload, timeout=timeout)
 
+    def set_arbitrary_points(self, points, laser_trigger="AUTO", timeout=1):
+        """
+        Start arbitrary point scanning with custom XY coordinate list
+        
+        Each point in the list specifies an X, Y coordinate, a dwell time,
+        and optionally a laser intensity.
+        The scanner will loop through the points continuously.
+        
+        Args:
+            points: List of dicts with keys:
+                    - 'x' (0-4095): X DAC coordinate
+                    - 'y' (0-4095): Y DAC coordinate
+                    - 'dwell_us' (int): Dwell time in microseconds
+                    - 'laser_intensity' (0-255, optional): Per-point laser intensity
+                    Maximum 265 points.
+            laser_trigger: Trigger mode - "AUTO" (HIGH during dwell, LOW during movement),
+                          "HIGH" (force always on), "LOW" (force always off), 
+                          "CONTINUOUS" (HIGH during entire scan)
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> points = [
+            ...     {"x": 1024, "y": 2048, "dwell_us": 500, "laser_intensity": 128},
+            ...     {"x": 1500, "y": 2100, "dwell_us": 1000, "laser_intensity": 255},
+            ...     {"x": 2000, "y": 2500, "dwell_us": 250}
+            ... ]
+            >>> galvo.set_arbitrary_points(points)
+            >>> galvo.set_arbitrary_points(points, laser_trigger="CONTINUOUS")
+        """
+        if len(points) > 265:
+            raise ValueError("Maximum 265 points supported")
+        if len(points) == 0:
+            raise ValueError("At least 1 point required")
+        
+        # Validate points
+        for i, pt in enumerate(points):
+            if not all(k in pt for k in ('x', 'y', 'dwell_us')):
+                raise ValueError(f"Point {i} missing required keys (x, y, dwell_us)")
+            if pt['x'] < 0 or pt['x'] > 4095:
+                raise ValueError(f"Point {i} x={pt['x']} out of range (0-4095)")
+            if pt['y'] < 0 or pt['y'] > 4095:
+                raise ValueError(f"Point {i} y={pt['y']} out of range (0-4095)")
+            if 'laser_intensity' in pt:
+                if pt['laser_intensity'] < 0 or pt['laser_intensity'] > 255:
+                    raise ValueError(f"Point {i} laser_intensity={pt['laser_intensity']} out of range (0-255)")
+        
+        path = '/galvo_act'
+        payload = {
+            "task": path,
+            #"laser_trigger": laser_trigger,
+            "points": points
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+
+    def stop_arbitrary_points(self, timeout=1):
+        """
+        Stop arbitrary point scanning
+        
+        Args:
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.stop_arbitrary_points()
+        """
+        path = '/galvo_act'
+        payload = {"task":"/galvo_act", "points":[{"x":0,"y":0,"dwell_us":1000}]} # Single point at origin with long dwell to effectively stop scanning
+
+        return self._parent.post_json(path, payload, timeout=timeout)
+
+    def pause_arbitrary_points(self, timeout=1):
+        """
+        Pause arbitrary point scanning (keeps current index)
+        
+        Args:
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.pause_arbitrary_points()
+        """
+        path = '/galvo_act'
+        payload = {
+            "task": path,
+            "pause_points": True
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+
+    def resume_arbitrary_points(self, timeout=1):
+        """
+        Resume arbitrary point scanning from paused position
+        
+        Args:
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.resume_arbitrary_points()
+        """
+        path = '/galvo_act'
+        payload = {
+            "task": path,
+            "resume_points": True
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+    
+    def set_trigger_mode(self, mode="AUTO", timeout=1):
+        """
+        Set laser trigger mode override
+        
+        Args:
+            mode: Trigger mode - "AUTO", "HIGH", "LOW", "CONTINUOUS"
+            timeout: Request timeout in seconds (default: 1)
+            
+        Example:
+            >>> galvo.set_trigger_mode("HIGH")   # Force laser on
+            >>> galvo.set_trigger_mode("LOW")    # Force laser off
+            >>> galvo.set_trigger_mode("AUTO")   # Restore automatic control
+        """
+        path = '/galvo_act'
+        payload = {
+            "task": path,
+            "laser_trigger": mode
+        }
+        
+        return self._parent.post_json(path, payload, timeout=timeout)
+
+    def generate_circle_points(self, center_x=2048, center_y=2048, radius=1000, 
+                                num_points=32, dwell_us=100):
+        """
+        Generate points along a circle for arbitrary point scanning
+        
+        Args:
+            center_x: Circle center X (default: 2048)
+            center_y: Circle center Y (default: 2048)
+            radius: Circle radius in DAC units (default: 1000)
+            num_points: Number of points around circle (default: 32)
+            dwell_us: Dwell time per point in microseconds (default: 100)
+            
+        Returns:
+            list: List of point dicts suitable for set_arbitrary_points()
+            
+        Example:
+            >>> points = galvo.generate_circle_points(radius=500, num_points=64)
+            >>> galvo.set_arbitrary_points(points)
+        """
+        points = []
+        for i in range(num_points):
+            angle = 2.0 * np.pi * i / num_points
+            x = int(center_x + radius * np.cos(angle))
+            y = int(center_y + radius * np.sin(angle))
+            x = max(0, min(4095, x))
+            y = max(0, min(4095, y))
+            points.append({"x": x, "y": y, "dwell_us": dwell_us})
+        return points
+
+    def generate_grid_points(self, x_min=500, x_max=3500, y_min=500, y_max=3500,
+                              nx=4, ny=4, dwell_us=500):
+        """
+        Generate a grid of points for arbitrary point scanning
+        
+        Args:
+            x_min, x_max: X range (default: 500-3500)
+            y_min, y_max: Y range (default: 500-3500)
+            nx, ny: Number of grid points per axis (default: 4x4)
+            dwell_us: Dwell time per point in microseconds (default: 500)
+            
+        Returns:
+            list: List of point dicts suitable for set_arbitrary_points()
+            
+        Example:
+            >>> points = galvo.generate_grid_points(nx=8, ny=8, dwell_us=1000)
+            >>> galvo.set_arbitrary_points(points)
+        """
+        points = []
+        for iy in range(ny):
+            y = int(y_min + (y_max - y_min) * iy / max(1, ny - 1)) if ny > 1 else (y_min + y_max) // 2
+            for ix in range(nx):
+                x = int(x_min + (x_max - x_min) * ix / max(1, nx - 1)) if nx > 1 else (x_min + x_max) // 2
+                points.append({"x": x, "y": y, "dwell_us": dwell_us})
+        return points
