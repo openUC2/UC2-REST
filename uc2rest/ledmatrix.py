@@ -309,7 +309,7 @@ class LedMatrix(object):
         Set the status of the LED matrix to "idle" or "busy".
         JSON: "action":"status", "status": <string>
         """
-        if status not in ["error", "idle", "warn", "success", "busy", "rainbow"]:
+        if status not in ["error", "idle", "warn", "success", "busy", "rainbow", "on", "off"]:
             status = "idle"
         path = "/ledarr_act"
         payload = {

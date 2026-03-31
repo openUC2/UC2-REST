@@ -55,6 +55,11 @@ class Serial:
         # setup callback list for parent modules
         self.callBackList = [] # TODO: We should pop items when list is full
 
+        # QID-based done tracking (new mode)
+        self.use_qid_done = False  # Default: use legacy nResponses mode
+        self.qid_done_events = {}  # {qid: threading.Event}
+        self.qid_done_responses = {}  # {qid: response_data}
+
         # initialize serial connection
         self.thread = None
         if IS_SERIAL:
@@ -365,6 +370,14 @@ class Serial:
                     except Exception as e:
                         self._logger.error("No QID found in the response: "+str(e))
 
+                    # Check for QID done/state notification from firmware
+                    if self.use_qid_done and "state" in json_response:
+                        state_val = json_response["state"]
+                        resp_qid = json_response.get("qid", -1)
+                        if state_val in ("done", "error", "timeout", "paused") and resp_qid in self.qid_done_events:
+                            self.qid_done_responses[resp_qid] = json_response.copy()
+                            self.qid_done_events[resp_qid].set()
+
                     with self.lock:
                         try: # TODO: THis looks fishy   an
                             self.responses[currentIdentifier].append(json_response.copy())
@@ -463,6 +476,30 @@ class Serial:
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             time.sleep(0.1)
             return identifier
+
+        # QID-done mode: wait for {"qid":X,"state":"done"} from firmware
+        if self.use_qid_done and nResponses > 0:
+            event = threading.Event()
+            self.qid_done_events[identifier] = event
+            self.qid_done_responses.pop(identifier, None)
+
+            # Wait for done event or timeout
+            if event.wait(timeout=timeout):
+                # Got done notification
+                response = self.qid_done_responses.pop(identifier, {})
+                self.qid_done_events.pop(identifier, None)
+                # Also collect any queued responses
+                with self.lock:
+                    extra = self.responses.pop(identifier, [])
+                return [response] + extra if extra else [response]
+            else:
+                # Timeout
+                self.qid_done_events.pop(identifier, None)
+                self.qid_done_responses.pop(identifier, None)
+                if self.DEBUG:
+                    self._logger.debug("QID done timeout for qid: %s", identifier)
+                return "qid_done timeout: " + str(identifier)
+
         t0 = time.time()
         maxRetry = 3
         iRetry = 0
