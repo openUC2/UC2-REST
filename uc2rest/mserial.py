@@ -294,7 +294,7 @@ class Serial:
             try:
                 if self.manufacturer == "UC2Mock": 
                     self.running = False
-                    return
+                    break
 
                 # device not ready yet
                 if self.serialdevice is None:
