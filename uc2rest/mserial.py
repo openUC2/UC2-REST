@@ -505,7 +505,8 @@ class Serial:
         iRetry = 0
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
+            isTimeout = time.time()-t0>timeout
+            if self.resetLastCommand or isTimeout or not self.is_connected:
                 self.resetLastCommand = False
                 if self.DEBUG: 
                     self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
@@ -520,7 +521,8 @@ class Serial:
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
-            if time.time()-t0>self.timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
+            isTimeout = time.time()-t0>self.timeReturnReceived
+            if isTimeout  and not (identifier in self.responses and len(self.responses[identifier]) > 0):
                 if iRetry > maxRetry:
                     self.resetLastCommand = True
                     return "No response received"
