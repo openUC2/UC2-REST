@@ -129,6 +129,7 @@ class Serial:
                 self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
             ser = self.serialdevice
             self.is_connected = True
+            self.manufacturer = "UC2"
 
         except Exception as e:
             self._logger.error("[OpenDevice]: "+str(e))
