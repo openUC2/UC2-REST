@@ -55,6 +55,11 @@ class Serial:
         # setup callback list for parent modules
         self.callBackList = [] # TODO: We should pop items when list is full
 
+        # QID-based done tracking (new mode)
+        self.use_qid_done = False  # Default: use legacy nResponses mode
+        self.qid_done_events = {}  # {qid: threading.Event}
+        self.qid_done_responses = {}  # {qid: response_data}
+
         # initialize serial connection
         self.thread = None
         if IS_SERIAL:
@@ -124,6 +129,7 @@ class Serial:
                 self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
             ser = self.serialdevice
             self.is_connected = True
+            self.manufacturer = "UC2"
 
         except Exception as e:
             self._logger.error("[OpenDevice]: "+str(e))
@@ -289,7 +295,7 @@ class Serial:
             try:
                 if self.manufacturer == "UC2Mock": 
                     self.running = False
-                    return
+                    break
 
                 # device not ready yet
                 if self.serialdevice is None:
@@ -364,6 +370,14 @@ class Serial:
                         currentIdentifier = json_response["qid"]
                     except Exception as e:
                         self._logger.error("No QID found in the response: "+str(e))
+
+                    # Check for QID done/state notification from firmware
+                    if self.use_qid_done and "state" in json_response:
+                        state_val = json_response["state"]
+                        resp_qid = json_response.get("qid", -1)
+                        if state_val in ("done", "error", "timeout", "paused") and resp_qid in self.qid_done_events:
+                            self.qid_done_responses[resp_qid] = json_response.copy()
+                            self.qid_done_events[resp_qid].set()
 
                     with self.lock:
                         try: # TODO: THis looks fishy   an
@@ -463,12 +477,37 @@ class Serial:
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
             time.sleep(0.1)
             return identifier
+
+        # QID-done mode: wait for {"qid":X,"state":"done"} from firmware
+        if self.use_qid_done and nResponses > 0:
+            event = threading.Event()
+            self.qid_done_events[identifier] = event
+            self.qid_done_responses.pop(identifier, None)
+
+            # Wait for done event or timeout
+            if event.wait(timeout=timeout):
+                # Got done notification
+                response = self.qid_done_responses.pop(identifier, {})
+                self.qid_done_events.pop(identifier, None)
+                # Also collect any queued responses
+                with self.lock:
+                    extra = self.responses.pop(identifier, [])
+                return [response] + extra if extra else [response]
+            else:
+                # Timeout
+                self.qid_done_events.pop(identifier, None)
+                self.qid_done_responses.pop(identifier, None)
+                if self.DEBUG:
+                    self._logger.debug("QID done timeout for qid: %s", identifier)
+                return "qid_done timeout: " + str(identifier)
+
         t0 = time.time()
         maxRetry = 3
         iRetry = 0
         while self.running:
             time.sleep(0.002)
-            if self.resetLastCommand or time.time()-t0>timeout or not self.is_connected:
+            isTimeout = time.time()-t0>timeout
+            if self.resetLastCommand or isTimeout or not self.is_connected:
                 self.resetLastCommand = False
                 if self.DEBUG: 
                     self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
@@ -483,7 +522,8 @@ class Serial:
                 if -identifier in self.responses:
                     self._logger.debug("You have sent the wrong command!")
                     return "Wrong Command"
-            if time.time()-t0>self.timeReturnReceived and not (identifier in self.responses and len(self.responses[identifier]) > 0):
+            isTimeout = time.time()-t0>self.timeReturnReceived
+            if isTimeout  and not (identifier in self.responses and len(self.responses[identifier]) > 0):
                 if iRetry > maxRetry:
                     self.resetLastCommand = True
                     return "No response received"

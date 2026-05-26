@@ -57,15 +57,29 @@ class CAN(object):
         """Register a callback function for a specific key."""
         self._callbackPerKey[key] = callbackfct
 
+    def get_can_ids(self):
+        """Return CAN node IDs from the latest scan (e.g. for OTA flashing)."""
+        return [entry.get("canId") for entry in self.scanResults
+                if entry.get("canId") is not None]
+
     def reboot_remote(self, qid=1, can_address=0, isBlocking=False, timeout=2):
         """
-        Send a reboot signal to the remote CAN device.
+        Reboot a CAN device.
 
-        :param qid: Query ID for the CAN command (default: 1)
+        - ``can_address == 0`` reboots the master (this ESP32) itself.
+        - ``can_address in 1..127`` reboots a remote slave by SDO-writing 1
+          to OD index 0x2507 sub 0 on the target node. The slave's
+          CO_tmr_task observes the write and calls ESP.restart() ~200 ms
+          later.
+
+        :param qid: Query ID for the CAN command (unused by firmware, kept
+            for API compatibility)
+        :param can_address: 0 = master, 1..127 = remote slave nodeId
         :param isBlocking: If True, wait for response
         :param timeout: Timeout for the command in seconds
-        :param can_address: Address of the CAN device to reboot (0 is master)
-        :return: Response from the device
+        :return: Response from the device, e.g.
+            ``{"status":"ok","nodeId":11}`` or
+            ``{"status":"error","error":"SDO write failed","nodeId":11}``.
         """
         path = "/can_act"
         payload = {
@@ -98,7 +112,7 @@ class CAN(object):
                      "count": 2
                  }
         """
-        path = "/can_act"
+        path = "/can_act" #         {"task":"/can_act", "scan": true}
         payload = {
             "task": path,
             "scan": True,
@@ -109,7 +123,7 @@ class CAN(object):
             payload,
             getReturn=True,
             timeout=timeout,
-            nResponses=2
+            nResponses=1
         )
 
     def get_available_devices(self, timeout=2):

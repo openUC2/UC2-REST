@@ -632,7 +632,10 @@ class Motor(object):
         self.isRunning = True
         is_blocking =  is_blocking and self._parent.serial.is_connected
         timeout = timeout if is_blocking else 0
-        nResponses = len(payload["motor"]["steppers"]) + 1
+        if self._parent.serial.use_qid_done:
+            nResponses = 1  # QID mode: firmware handles completion tracking
+        else:
+            nResponses = len(payload["motor"]["steppers"]) + 1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 

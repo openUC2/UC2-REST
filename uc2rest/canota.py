@@ -1,7 +1,7 @@
 import time
 import json
-import struct
-import hashlib
+import re
+import zlib
 import threading
 from pathlib import Path
 
@@ -15,39 +15,23 @@ except ImportError:
 gTIMEOUT = 10  # seconds to wait for a response from the ESP32
 
 # ============================================================================
-# CAN OTA STREAMING PROTOCOL CONSTANTS
+# CANopen OTA (serial -> ESP32 master -> CAN) protocol constants
+# ----------------------------------------------------------------------------
+# Mirrors tools/ota/canopen_ota_serial.py in uc2-ESP. The master accepts a
+# JSON preamble ``/ota_start`` and then expects the raw firmware bytes
+# streamed over serial. After each CHUNK_SIZE bytes it answers with
+# ``{"ota_rx": <total_bytes>}`` until the final ``{"ota_status": "success"}``.
 # ============================================================================
 
-# Protocol constants (must match CanOtaStreaming.h)
-SYNC_1 = 0xAA
-SYNC_2 = 0x55
+STREAMING_BAUD = 921600       # match canopen_ota_serial.py default
+CHUNK_SIZE = 4096             # bytes per ACK-paced write
+READY_TIMEOUT_S = 10.0        # wait for {"ota_status":"ready"}
+FLASH_TIMEOUT_S = 600.0       # SDO domain transfer can take minutes
+ACK_TIMEOUT_S = 30.0          # per-chunk wait for {"ota_rx": N}
+INTER_CHUNK_DELAY_S = 0.0     # >0 only if host overruns master's UART
 
-# Stream message types
-STREAM_START  = 0x70
-STREAM_DATA   = 0x71
-STREAM_ACK    = 0x72
-STREAM_NAK    = 0x73
-STREAM_FINISH = 0x74
-STREAM_ABORT  = 0x75
-STREAM_STATUS = 0x76
-
-
-# Protocol parameters
-PORT = "/dev/cu.SLAB_USBtoUART"
-BAUD = 921600
-CAN_ID = 11
-
-# Streaming protocol constants
-PAGE_SIZE = 4096       # 4KB pages (flash-aligned)
-CHUNK_SIZE = 512       # 512 bytes per chunk within page
-CHUNKS_PER_PAGE = PAGE_SIZE // CHUNK_SIZE  # 8 chunks per page
-
-PAGE_ACK_TIMEOUT = 10.0
-MAX_PAGE_RETRIES = 3
-MAX_SESSION_RETRIES = 2
-
-# Default baud rate for streaming
-STREAMING_BAUD = 921600
+# Match standalone JSON objects on a single line.
+_JSON_LINE_RE = re.compile(rb"\{[^\n]*\}")
 
 
 class CANOTA(object):
@@ -301,95 +285,78 @@ class CANOTA(object):
             return f"platformio run -t upload --upload-port {hostname}"
 
     # ========================================================================
-    # CAN OTA STREAMING (USB-based, no WiFi required)
+    # CANopen OTA streaming (serial -> ESP32 master -> CAN)
+    # ----------------------------------------------------------------------
+    # Mirrors tools/ota/canopen_ota_serial.py: send the ``/ota_start`` JSON
+    # preamble, wait for ``{"ota_status":"ready"}``, then stream raw firmware
+    # bytes in CHUNK_SIZE blocks, blocking after each block until the master
+    # acknowledges with ``{"ota_rx": <total_bytes>}``. Verify CRC32 (not
+    # MD5) and wait for ``{"ota_status":"success"|"error"}``.
     # ========================================================================
-    
-    def start_can_streaming_ota(self, can_id: int, firmware_path: str, 
+
+    def start_can_streaming_ota(self, can_id: int, firmware_path: str,
                                  progress_callback=None, status_callback=None,
                                  port: str = None, baud: int = STREAMING_BAUD):
         """
-        Upload firmware to a CAN slave device via USB->CAN streaming protocol.
-        
-        This method:
-        1. Sends streaming start command via JSON to initialize the slave
-        2. Temporarily closes the parent's serial connection
-        3. Opens a raw serial connection for binary streaming
-        4. Uploads the firmware in 4KB pages with ACK per page
-        5. Verifies MD5 checksum
-        6. Restores the parent's serial connection
-        
-        :param can_id: CAN ID of the target device (e.g., 11 for Motor X)
+        Upload firmware to a CAN slave via the CANopen OTA path
+        (laptop -> serial -> ESP32 master -> CAN -> slave).
+
+        :param can_id: Target slave CANopen node ID (e.g., 11 for Motor X)
         :param firmware_path: Path to the firmware binary (.bin file)
-        :param progress_callback: Function(page, total_pages, bytes_sent, speed_kbps)
+        :param progress_callback: Function(chunk_idx, total_chunks, bytes_sent, speed_kbps)
         :param status_callback: Function(status_str, success_bool)
         :param port: Serial port (default: use parent's port)
-        :param baud: Baud rate for streaming (default: 921600)
-        :return: True if successful, False otherwise
-        
-        Example:
-            def on_progress(page, total, bytes_sent, speed):
-                print(f"Page {page}/{total} - {speed:.1f} KB/s")
-            
-            def on_status(msg, success):
-                print(f"Status: {msg} ({'OK' if success else 'FAIL'})")
-            
-            ESP32.canota.start_can_streaming_ota(
-                11, "/path/to/firmware.bin",
-                progress_callback=on_progress,
-                status_callback=on_status
-            )
+        :param baud: Baud rate for streaming (default: 115200)
+        :return: Thread handle; join + read .result for success/failure.
         """
         if not HAS_SERIAL:
             if status_callback:
                 status_callback("Serial library not available", False)
             return False
-        
-        # Resolve firmware path
+
         firmware_path = Path(firmware_path)
         if not firmware_path.exists():
             if status_callback:
                 status_callback(f"Firmware not found: {firmware_path}", False)
             return False
-        
-        # Get port from parent if not specified
+
         if port is None and self._parent and hasattr(self._parent, "serial"):
             port = self._parent.serial.serialport
-        
+
         if not port:
             if status_callback:
                 status_callback("No serial port specified", False)
             return False
-        
-        # Load firmware
+
         firmware_data = firmware_path.read_bytes()
+        if not firmware_data:
+            if status_callback:
+                status_callback("Firmware file is empty", False)
+            return False
+
         firmware_size = len(firmware_data)
-        md5_hex = hashlib.md5(firmware_data).hexdigest()
-        md5_bytes = bytes.fromhex(md5_hex)
-        num_pages = (firmware_size + PAGE_SIZE - 1) // PAGE_SIZE
-        
+        crc32 = zlib.crc32(firmware_data) & 0xFFFFFFFF
+        num_chunks = (firmware_size + CHUNK_SIZE - 1) // CHUNK_SIZE
+
         if status_callback:
-            status_callback(f"Firmware: {firmware_size} bytes, {num_pages} pages, MD5: {md5_hex[:16]}...", True)
-        
-        # Run streaming upload in a separate thread to not block
+            status_callback(
+                f"Firmware: {firmware_size} bytes, {num_chunks} chunks, "
+                f"CRC32: 0x{crc32:08X}", True)
+
         upload_thread = threading.Thread(
             target=self._streaming_upload_worker,
-            args=(can_id, port, baud, firmware_data, firmware_size, 
-                  md5_hex, md5_bytes, num_pages, progress_callback, status_callback)
+            args=(can_id, port, baud, firmware_data, firmware_size,
+                  crc32, num_chunks, progress_callback, status_callback)
         )
         upload_thread.daemon = True
         upload_thread.start()
-        
+
         return upload_thread
-    
+
     def start_can_streaming_ota_blocking(self, can_id: int, firmware_path: str,
                                           progress_callback=None, status_callback=None,
                                           port: str = None, baud: int = STREAMING_BAUD):
-        """
-        Blocking version of start_can_streaming_ota.
-        Waits for upload to complete before returning.
-        
-        :return: True if successful, False otherwise
-        """
+        """Blocking variant of :meth:`start_can_streaming_ota`."""
         thread = self.start_can_streaming_ota(
             can_id, firmware_path, progress_callback, status_callback, port, baud
         )
@@ -397,17 +364,18 @@ class CANOTA(object):
             thread.join()
             return getattr(thread, 'result', False)
         return False
-    
+
     def _streaming_upload_worker(self, can_id, port, baud, firmware_data, firmware_size,
-                                  md5_hex, md5_bytes, num_pages, 
+                                  crc32, num_chunks,
                                   progress_callback, status_callback):
-        """Worker thread for streaming upload."""
+        """Worker thread for the ``/ota_start`` streaming upload."""
         ser = None
         parent_serial_was_open = False
         result = False
-        
+
         try:
-            # Step 1: Close parent's serial connection temporarily
+            # Step 1: Close parent's serial connection temporarily so we can
+            # take exclusive control of the port.
             if self._parent and hasattr(self._parent, "serial"):
                 parent_serial = self._parent.serial
                 if parent_serial.serialdevice and parent_serial.serialdevice.isOpen():
@@ -415,137 +383,132 @@ class CANOTA(object):
                     if status_callback:
                         status_callback("Closing parent serial connection...", True)
                     parent_serial.closeSerial()
-                    for i in range(10): time.sleep(0.1) # wait a bit
-            
-            # Step 2: Open raw serial connection
-            if status_callback:
-                status_callback(f"Opening streaming connection on {port} at {baud} baud...", True)
-            if type(port) == serial.tools.list_ports_common.ListPortInfo:
-                port = port.device
-            ser = serial.Serial(port, baud, timeout=0.1)#, write_timeout=1.0)
-            time.sleep(0.5)
-            self._drain_serial(ser)
-            # Step 3: Send streaming start command via JSON
-            if status_callback:
-                status_callback(f"Initializing streaming session for CAN ID {can_id}...", True)
-            
-            start_cmd = {
-                "task": "/can_ota_stream",
-                "canid": can_id,
-                "action": "start",
-                "firmware_size": firmware_size,
-                "page_size": PAGE_SIZE,
-                "chunk_size": CHUNK_SIZE,
-                "md5": md5_hex
-            }
-            print("  Sending STREAM_START command...", start_cmd)
-            response = self._send_json(ser, start_cmd)
-            
-            # Wait for JSON response
-            if response and str(response).find("success") <= 0:
-                if status_callback:
-                    status_callback("STREAM_START command failed", False)
-                    status_callback(f"Response: {response}", False)
-                return
-            
-            if status_callback:
-                status_callback("Streaming session started, uploading...", True)
-            
-            # CRITICAL: Wait for slave to initialize via CAN
-            time.sleep(1.0)
-            
-            # Drain any pending data (logs, old ACKs, etc.)
-            self._drain_serial(ser, "post-start", verbose=False)
-            
-            # Step 4: Stream pages
-            start_time = time.time()
-            seq = 0
-            bytes_sent = 0
-            failed_pages = 0
+                    time.sleep(1.0)
 
-            for page_idx in range(num_pages):
-                page_start = page_idx * PAGE_SIZE
-                page_end = min(page_start + PAGE_SIZE, firmware_size)
-                page_data = firmware_data[page_start:page_end]
-                
-                # Pad last page if necessary
-                if len(page_data) < PAGE_SIZE:
-                    page_data = page_data + bytes(PAGE_SIZE - len(page_data))
-                
-                 # Progress display
-                progress = (page_idx + 1) / num_pages * 100
-                elapsed = time.time() - start_time
-                speed = bytes_sent / elapsed / 1024 if elapsed > 0 else 0
-                print(f"\r  Page {page_idx+1}/{num_pages} ({progress:.1f}%) - {speed:.1f} KB/s ", end="")
-                
-                
-                # Send page with retry
-                # Send page with retry logic
-                success, seq, acked_page, acked_bytes = self._send_page_with_retry(
-                    ser, page_idx, page_data, seq
-                )
-                bytes_sent += PAGE_SIZE
-                
-                if not success:
-                    if status_callback:
-                        status_callback(f"Page {page_idx} failed after retries", False)
-                    return
-                
-                # Progress callback
+            # Step 2: Open raw serial connection.
+            if status_callback:
+                status_callback(
+                    f"Opening streaming connection on {port} at {baud} baud...", True)
+            if hasattr(serial, "tools") and hasattr(serial.tools, "list_ports_common") \
+                    and isinstance(port, serial.tools.list_ports_common.ListPortInfo):
+                port = port.device
+            ser = serial.Serial(port, baud, timeout=0.05)
+            time.sleep(0.5)
+            ser.reset_input_buffer()
+
+            # Step 3: Send the JSON preamble and wait for ``ready``.
+            cmd = json.dumps({
+                "task": "/ota_start",
+                "ota": {
+                    "nodeId": can_id,
+                    "size": firmware_size,
+                    "crc32": f"0x{crc32:08X}",
+                },
+            })
+            if status_callback:
+                status_callback(f"Sending /ota_start for node {can_id}...", True)
+            print(f"  TX: {cmd}")
+            ser.write((cmd + "\n").encode())
+            ser.flush()
+
+            ready = self._wait_for_status(
+                ser, time.time() + READY_TIMEOUT_S, key_values=("ready",),
+                status_callback=status_callback)
+            if not ready or ready.get("ota_status") != "ready":
+                if status_callback:
+                    status_callback(f"Master did not become ready: {ready}", False)
+                return
+            if status_callback:
+                status_callback(f"Master ready: {ready}", True)
+
+            # Step 4: Stream raw firmware bytes — strictly ACK-paced.
+            if status_callback:
+                status_callback(
+                    f"Uploading {firmware_size} bytes "
+                    f"(ACK-paced, {CHUNK_SIZE} B chunks)...", True)
+
+            start_time = time.time()
+            sent = 0
+            last_ack = 0
+            ack_buf = bytearray()
+            chunk_no = 0
+
+            while sent < firmware_size:
+                end = min(sent + CHUNK_SIZE, firmware_size)
+                payload = firmware_data[sent:end]
+                chunk_no += 1
+                t_send = time.time()
+                ser.write(payload)
+                ser.flush()
+                sent = end
+
+                # Block until the master ACKs at least ``sent`` bytes.
+                deadline = time.time() + ACK_TIMEOUT_S
+                while last_ack < sent:
+                    last_ack, err = self._drain_acks(ser, ack_buf, last_ack)
+                    if err is not None:
+                        if status_callback:
+                            status_callback(
+                                f"Master reported error at chunk #{chunk_no}: {err}",
+                                False)
+                        time.sleep(0.3)
+                        self._drain_acks(ser, ack_buf, last_ack)
+                        return
+                    if last_ack >= sent:
+                        break
+                    if time.time() > deadline:
+                        if status_callback:
+                            status_callback(
+                                f"Timeout waiting for ACK at chunk #{chunk_no} "
+                                f"(sent={sent}, last_ack={last_ack})", False)
+                        time.sleep(0.3)
+                        self._drain_acks(ser, ack_buf, last_ack)
+                        return
+                    time.sleep(0.002)
+
                 if progress_callback:
                     elapsed = time.time() - start_time
-                    speed = bytes_sent / elapsed / 1024 if elapsed > 0 else 0
-                    progress_callback(page_idx + 1, num_pages, bytes_sent, speed)
-            
-            # Step 5: Send FINISH command
+                    speed = sent / elapsed / 1024 if elapsed > 0 else 0
+                    progress_callback(chunk_no, num_chunks, sent, speed)
+
+                if INTER_CHUNK_DELAY_S > 0:
+                    time.sleep(INTER_CHUNK_DELAY_S)
+
+            elapsed = time.time() - start_time
+            if elapsed > 0 and status_callback:
+                status_callback(
+                    f"Transfer: {elapsed:.1f}s "
+                    f"({firmware_size / elapsed / 1024:.1f} KB/s)", True)
+
+            # Step 5: Wait for the flashing -> success/error transition.
             if status_callback:
-                status_callback("All pages sent, verifying MD5...", True)
-            
-            finish_packet = self._build_stream_finish_packet(md5_bytes)
-            ser.write(finish_packet)
-            ser.flush()
-            
-            # Wait for final verification
-            success, raw = self._wait_for_final_ack(ser, num_pages - 1, timeout=30.0)
-            
-            if success:
-                elapsed = time.time() - start_time
-                speed = firmware_size / elapsed / 1024
+                status_callback(
+                    "Waiting for slave flash result (may take minutes)...", True)
+            final = self._wait_for_status(
+                ser, time.time() + FLASH_TIMEOUT_S,
+                key_values=("success", "error"),
+                status_callback=status_callback)
+            if final is None:
                 if status_callback:
-                    status_callback(f"SUCCESS! {firmware_size} bytes in {elapsed:.1f}s ({speed:.1f} KB/s)", True)
+                    status_callback("Timed out waiting for OTA result", False)
+                return
+            if final.get("ota_status") == "success":
+                if status_callback:
+                    status_callback(
+                        "OTA flash successful — slave will reboot.", True)
                 result = True
             else:
-                # Check for reboot indicator
-                try:
-                    raw_text = raw.decode('utf-8', errors='replace') if raw else ""
-                    if "Rebooting" in raw_text or "OTA COMPLETE" in raw_text:
-                        if status_callback:
-                            status_callback("Device rebooting - OTA successful!", True)
-                        result = True
-                    else:
-                        if status_callback:
-                            status_callback("MD5 verification failed", False)
-                except:
-                    if status_callback:
-                        status_callback("Final verification failed", False)
-        
+                if status_callback:
+                    status_callback(f"OTA flash failed: {final}", False)
+
         except Exception as e:
             if status_callback:
                 status_callback(f"Error: {str(e)}", False)
-            
-            # Try to abort
-            if ser and ser.isOpen():
-                try:
-                    self._send_json(ser, {"task": "/can_ota_stream", "canid": can_id, "action": "abort"})
-                except:
-                    pass
-        
+
         finally:
-            # Close streaming connection
             if ser and ser.isOpen():
                 ser.close()
-            
-            # Restore parent's serial connection
+
             if parent_serial_was_open and self._parent and hasattr(self._parent, "serial"):
                 if status_callback:
                     status_callback("Restoring serial connection...", True)
@@ -554,248 +517,72 @@ class CANOTA(object):
                     self._parent.serial.openDevice(port, baud)
                 except Exception as e:
                     if status_callback:
-                        status_callback(f"Warning: Could not restore serial: {e}", False)
-        
-        # Store result in thread for blocking version
+                        status_callback(
+                            f"Warning: Could not restore serial: {e}", False)
+
         threading.current_thread().result = result
-    
+
     # ========================================================================
-    # Streaming Protocol Helper Methods
+    # Streaming protocol helpers (mirror canopen_ota_serial.py)
     # ========================================================================
-    
-    def _drain_serial(self, ser, label="", verbose=True):
-        """Read and display any pending data"""
-        time.sleep(0.05)
-        data = b''
-        while ser.in_waiting:
-            data += ser.read(ser.in_waiting)
-            time.sleep(0.01)
-        if data and verbose:
-            print(f"  [{label}] Drained {len(data)} bytes")
-        return data
-    
-    def _send_json(self, ser, data, wait_response=True, timeout=3.0):
-        """Send JSON command over serial."""
-        json_str = json.dumps(data, separators=(',', ':'))
-        tx_data = (json_str + '\n').encode()
-        print(f"  TX: {json_str[:80]}{'...' if len(json_str) > 80 else ''}")
-        ser.write(tx_data)
-        ser.flush()
-        
-        if wait_response:
-            time.sleep(0.3)
-            start = time.time()
-            response = b''
-            while time.time() - start < timeout:
-                if ser.in_waiting:
-                    ser_line = ser.read(ser.in_waiting)
-                    print(ser_line)
-                    response += ser_line
-                    if b'{"success":' in response or b'{"error":' in response:
-                        break
-                time.sleep(0.05)
-            print(f"  RX: {len(response)} bytes")
-            return response
+
+    @staticmethod
+    def _try_extract_json_status(buf: bytes):
+        """Return the first JSON object on ``buf`` containing ``ota_status``
+        or ``ota_rx``, else None."""
+        for match in _JSON_LINE_RE.findall(buf):
+            try:
+                obj = json.loads(match.decode(errors="ignore"))
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict) and ("ota_status" in obj or "ota_rx" in obj):
+                return obj
         return None
-    
-    def _build_stream_data_packet(self, page_idx, offset, seq, chunk_data):
-        # Match can_ota_streaming.py wire format + checksum
-        packet_body = bytes([SYNC_1, SYNC_2, STREAM_DATA]) + struct.pack(
-            '>HHHH', page_idx, offset, len(chunk_data), seq
-        ) + chunk_data
-        checksum = 0
-        for b in packet_body:
-            checksum ^= b
-        return packet_body + bytes([checksum])
 
-    def _build_stream_finish_packet(self, md5_bytes):
-        packet_body = bytes([SYNC_1, SYNC_2, STREAM_FINISH]) + md5_bytes
-        checksum = 0
-        for b in packet_body:
-            checksum ^= b
-        return packet_body + bytes([checksum])
-
-    def _wait_for_session_start(self, ser, timeout=10.0):
-        """Wait for streaming session start ACK."""
-        start = time.time()
-        buffer = bytearray()
-        
-        while time.time() - start < timeout:
-            if ser.in_waiting:
-                buffer.extend(ser.read(ser.in_waiting))
-                
-                # Look for STREAM_ACK
-                for i in range(len(buffer) - 5):
-                    if buffer[i] == SYNC_1 and buffer[i+1] == SYNC_2:
-                        if buffer[i+2] == STREAM_ACK and buffer[i+3] == 0:  # status OK
-                            return True
+    def _wait_for_status(self, ser, deadline, key_values=None,
+                          status_callback=None):
+        """Read until ``key_values`` matches ``ota_status`` or deadline elapses."""
+        buf = bytearray()
+        while time.time() < deadline:
+            chunk = ser.read(ser.in_waiting or 1)
+            if chunk:
+                buf.extend(chunk)
+                obj = self._try_extract_json_status(bytes(buf))
+                if obj is not None:
+                    if key_values is None:
+                        return obj
+                    status = obj.get("ota_status")
+                    if status in key_values:
+                        return obj
+                    if status == "error":
+                        return obj
+                    idx = bytes(buf).rfind(b"}")
+                    if idx > 0:
+                        del buf[: idx + 1]
             else:
-                time.sleep(0.01)
-        
-        return False
-    
-    def _wait_for_page_ack(self, ser, expected_page, timeout=PAGE_ACK_TIMEOUT):
-        """
-        Wait for STREAM_ACK response.
-        Returns: (success, last_complete_page, bytes_received, raw_response)
-        """
-        start = time.time()
-        buffer = bytearray()
-        
-        while time.time() - start < timeout:
-            if ser.in_waiting:
-                new_data = ser.read(ser.in_waiting)
-                buffer.extend(new_data)
-                
-                # Check for log messages indicating success (for final ACK)
+                time.sleep(0.005)
+        return None
+
+    def _drain_acks(self, ser, ack_buf: bytearray, last_ack: int):
+        """Read pending bytes, return (latest_ack, error_obj_or_None)."""
+        latest = last_ack
+        err = None
+        if ser.in_waiting:
+            ack_buf.extend(ser.read(ser.in_waiting))
+        for match in _JSON_LINE_RE.findall(bytes(ack_buf)):
+            try:
+                obj = json.loads(match.decode(errors="ignore"))
+            except json.JSONDecodeError:
+                continue
+            if "ota_rx" in obj:
                 try:
-                    text = bytes(buffer).decode('utf-8', errors='replace')
-                    if "OTA COMPLETE" in text or "Rebooting" in text:
-                        return (True, expected_page, 0, bytes(buffer))
-                except:
+                    latest = max(latest, int(obj["ota_rx"]))
+                except (TypeError, ValueError):
                     pass
-                
-                # Search for STREAM_ACK response
-                # Format: [SYNC][CMD][status][canId][lastPage_L][lastPage_H][bytes(4)][nextSeq(2)][reserved(2)]
-                i = 0
-                while i < len(buffer) - 15:
-                    if buffer[i] == SYNC_1 and buffer[i+1] == SYNC_2:
-                        cmd = buffer[i+2]
-                        
-                        if cmd == STREAM_ACK:
-                            status = buffer[i+3]
-                            can_id = buffer[i+4]
-                            last_page = buffer[i+5] | (buffer[i+6] << 8)  # Little endian
-                            bytes_recv = struct.unpack('<I', bytes(buffer[i+7:i+11]))[0]
-                            next_seq = buffer[i+11] | (buffer[i+12] << 8)
-                            
-                            if status == 0:  # CAN_OTA_OK
-                                return (True, last_page, bytes_recv, bytes(buffer))
-                            else:
-                                print(f"  STREAM_ACK with error status: {status}")
-                                return (False, last_page, bytes_recv, bytes(buffer))
-                        
-                        elif cmd == STREAM_NAK:
-                            status = buffer[i+3]
-                            can_id = buffer[i+4]
-                            error_page = buffer[i+5] | (buffer[i+6] << 8)
-                            missing_offset = buffer[i+7] | (buffer[i+8] << 8)
-                            
-                            print(f"  STREAM_NAK: status={status}, page={error_page}, offset={missing_offset}")
-                            return (False, error_page, missing_offset, bytes(buffer))
-                    
-                    i += 1
-            else:
-                time.sleep(0.001)
-        
-        return (False, -1, 0, bytes(buffer))
-    
-    def _wait_for_final_ack(self, ser, expected_page, timeout=30.0):
-        """Wait for final ACK after FINISH command."""
-        start = time.time()
-        buffer = bytearray()
-        
-        while time.time() - start < timeout:
-            if ser.in_waiting:
-                buffer.extend(ser.read(ser.in_waiting))
-                
-                # Look for success indicators
-                for i in range(len(buffer) - 5):
-                    if buffer[i] == SYNC_1 and buffer[i+1] == SYNC_2:
-                        if buffer[i+2] == STREAM_ACK and buffer[i+3] == 0:
-                            return (True, bytes(buffer))
-            else:
-                time.sleep(0.01)
-        
-        return (False, bytes(buffer))
-    
-    def _send_page_with_retry(self, ser, page_idx, page_data, seq_start, 
-                               max_retries=MAX_PAGE_RETRIES):
-        """Send a page with retry logic."""
-        for retry in range(max_retries):
-            seq = seq_start
-            
-            # Send all chunks for this page
-            for chunk_idx in range(CHUNKS_PER_PAGE):
-                chunk_start = chunk_idx * CHUNK_SIZE
-                chunk_end = chunk_start + CHUNK_SIZE
-                chunk_data = page_data[chunk_start:chunk_end]
-                offset = chunk_idx * CHUNK_SIZE
-                
-                packet = self._build_stream_data_packet(page_idx, offset, seq, chunk_data)
-                ser.write(packet)
-                seq += 1
-            
-            ser.flush()
-            
-            # Wait for ACK
-            success, acked_page, acked_bytes, raw = self.wait_for_stream_ack(ser, page_idx)
-            
-            if success:
-                return (True, seq, acked_page, acked_bytes)
-            
-            if retry < max_retries - 1:
-                print(f" [RETRY {retry+1}/{max_retries}]", end="")
-                time.sleep(0.5)  # Small delay before retry
-                self._drain_serial(ser, "retry", verbose=False)
-        
-        return (False, seq, -1, 0)
-
-
-
-    def wait_for_stream_ack(self, ser, expected_page: int, timeout: float = PAGE_ACK_TIMEOUT):
-        """
-        Wait for STREAM_ACK response.
-        Returns: (success, last_complete_page, bytes_received, raw_response)
-        """
-        start = time.time()
-        buffer = bytearray()
-        
-        while time.time() - start < timeout:
-            if ser.in_waiting:
-                new_data = ser.read(ser.in_waiting)
-                buffer.extend(new_data)
-                
-                # Check for log messages indicating success (for final ACK)
-                try:
-                    text = bytes(buffer).decode('utf-8', errors='replace')
-                    print("DEBUG TEXT:", text)
-                    if "OTA COMPLETE" in text or "Rebooting" in text:
-                        return (True, expected_page, 0, bytes(buffer))
-                except:
-                    pass
-                
-                # Search for STREAM_ACK response
-                # Format: [SYNC][CMD][status][canId][lastPage_L][lastPage_H][bytes(4)][nextSeq(2)][reserved(2)]
-                i = 0
-                while i < len(buffer) - 15:
-                    if buffer[i] == SYNC_1 and buffer[i+1] == SYNC_2:
-                        cmd = buffer[i+2]
-                        
-                        if cmd == STREAM_ACK:
-                            status = buffer[i+3]
-                            can_id = buffer[i+4]
-                            last_page = buffer[i+5] | (buffer[i+6] << 8)  # Little endian
-                            bytes_recv = struct.unpack('<I', bytes(buffer[i+7:i+11]))[0]
-                            next_seq = buffer[i+11] | (buffer[i+12] << 8)
-                            
-                            if status == 0:  # CAN_OTA_OK
-                                return (True, last_page, bytes_recv, bytes(buffer))
-                            else:
-                                print(f"  STREAM_ACK with error status: {status}")
-                                return (False, last_page, bytes_recv, bytes(buffer))
-                        
-                        elif cmd == STREAM_NAK:
-                            status = buffer[i+3]
-                            can_id = buffer[i+4]
-                            error_page = buffer[i+5] | (buffer[i+6] << 8)
-                            missing_offset = buffer[i+7] | (buffer[i+8] << 8)
-                            
-                            print(f"  STREAM_NAK: status={status}, page={error_page}, offset={missing_offset}")
-                            return (False, error_page, missing_offset, bytes(buffer))
-                    
-                    i += 1
-            else:
-                time.sleep(0.001)
-        
-        return (False, -1, 0, bytes(buffer))
+            elif obj.get("ota_status") == "error":
+                err = obj
+        # Drop processed lines so we don't re-match them forever.
+        nl = ack_buf.rfind(b"\n")
+        if nl >= 0:
+            del ack_buf[: nl + 1]
+        return latest, err
