@@ -514,7 +514,7 @@ class Serial:
                 return "communication interrupted by timeout or reset: "+str(identifier) + " and code:"+str(self.commands[identifier])
             with self.lock:
                 if identifier in self.responses:
-                    if len(self.responses[identifier])==nResponses:
+                    if len(self.responses[identifier])>=nResponses:
                         returnMessage = self.responses[identifier]
                         # remove the response from the list
                         del self.responses[identifier]
