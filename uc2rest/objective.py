@@ -84,10 +84,14 @@ class Objective(object):
         try:
             status = r[-1]["objective"]
             status["state"] = int(status["state"])
-            status["x0"] = np.round(status["x0"]*self._parent.motor.stepSizeA)
-            status["z0"] = np.round(status["z0"]*self._parent.motor.stepSizeZ)
-            status["x1"] = np.round(status["x1"]*self._parent.motor.stepSizeA)
-            status["z1"] = np.round(status["z1"]*self._parent.motor.stepSizeZ)
+            # Use signed_step_size so that a direction=-1 axis (wiring polarity
+            # flip) still inverts the returned physical position, matching the
+            # behaviour that existed when a negative stepSize was passed to
+            # setup_motor().
+            status["x0"] = np.round(status["x0"] * self._parent.motor.signed_step_size("A"))
+            status["z0"] = np.round(status["z0"] * self._parent.motor.signed_step_size("Z"))
+            status["x1"] = np.round(status["x1"] * self._parent.motor.signed_step_size("A"))
+            status["z1"] = np.round(status["z1"] * self._parent.motor.signed_step_size("Z"))
         except Exception as e:
             print(f"Could not get objective status: {e}")
             status = {"x0":0, 
@@ -213,14 +217,16 @@ class Objective(object):
 
         # Only include x0 or x1 in JSON if they were explicitly provided
         # If x0 == -1, that instructs the MCU to take current motor position
+        # Divide by signed_step_size to convert user-frame physical units to
+        # firmware hardware steps, including the direction/polarity sign.
         if x0 is not None:
-            payload["x0"] = x0/self._parent.motor.stepSizeA
+            payload["x0"] = x0 / self._parent.motor.signed_step_size("A")
         if x1 is not None:
-            payload["x1"] = x1/self._parent.motor.stepSizeA
+            payload["x1"] = x1 / self._parent.motor.signed_step_size("A")
         if z0 is not None:
-            payload["z0"] = z0/self._parent.motor.stepSizeZ
+            payload["z0"] = z0 / self._parent.motor.signed_step_size("Z")
         if z1 is not None:
-            payload["z1"] = z1/self._parent.motor.stepSizeZ
+            payload["z1"] = z1 / self._parent.motor.signed_step_size("Z")
 
         nResponses = 1 if isBlocking else 0
         r = self._parent.post_json(

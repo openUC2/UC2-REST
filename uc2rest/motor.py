@@ -208,6 +208,16 @@ class Motor(object):
 
     # {"task": "/motor_act", "stagescan": {"nStepsLine": 50, "dStepsLine": 1, "nTriggerLine": 1, "nStepsPixel": 50, "dStepsPixel": 1, "nTriggerPixel": 1, "delayTimeStep": 10, "stopped": 0, "nFrames": 50}}"}}
     def startStageScanning(self, nStepsLine=100, dStepsLine=1, nTriggerLine=1, nStepsPixel=100, dStepsPixel=1, nTriggerPixel=1, delayTimeStep=10, nFrames=5, isBlocking = False):
+        """Start a firmware-driven XY stage scan.
+
+        .. warning:: **Raw hardware-step values.**
+            All step parameters (``dStepsLine``, ``dStepsPixel``) are forwarded
+            to the firmware without applying the per-axis direction sign, because
+            the scan API does not carry explicit axis labels and the firmware
+            assigns axes internally.  Callers that have configured an inverted
+            axis via :meth:`setup_motor` must negate the relevant ``dSteps*``
+            argument themselves before calling this method.
+        """
         path = "/motor_act"
         payload = {
             "task": path,
@@ -335,6 +345,30 @@ class Motor(object):
             axis = 0
         return axis
 
+    def signed_step_size(self, axis):
+        """Return stepSize * direction for an axis.
+
+        This combines the magnitude scale (µm/step) with the wiring-polarity
+        sign into a single signed scalar, preserving the behaviour that existed
+        before the direction field was introduced (when callers passed a
+        negative stepSize to setup_motor() to flip polarity).
+
+        Parameters
+        ----------
+        axis : str or int
+            Axis name (\"X\"/\"Y\"/\"Z\"/\"A\") or hardware index (0-3).
+
+        Returns
+        -------
+        float
+            Positive if the axis is not inverted, negative if it is.
+            ``phys = hw_steps * signed_step_size(axis)``
+            ``hw_steps = phys / signed_step_size(axis)``
+        """
+        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        scales = (self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ)
+        return scales[idx] * int(self.direction[idx])
+
     def cartesian2corexy(self, x, y):
         # convert cartesian coordinates to coreXY coordinates
         # https://www.corexy.com/theory.html
@@ -432,6 +466,9 @@ class Motor(object):
             speed=(speed, speed, speed, speed)
         if len(speed)==3:
             speed = (*speed,0)
+        # Apply per-axis direction sign so that a user-frame positive speed
+        # moves the stage in the user-positive direction even on inverted axes.
+        speed = tuple(int(speed[i]) * int(self.direction[i]) for i in range(4))
         '''
         {"task":"/motor_act",
             "motor":
@@ -826,13 +863,31 @@ class Motor(object):
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):
-
         '''
-        {"task":"/motor_act",  "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
+        Tell the firmware what the current position register should be for an
+        axis.  ``position`` is in **user-frame physical units** (same frame as
+        ``get_position()``).  The direction sign and step size are applied
+        internally so the firmware stores the corresponding hardware-step value:
+
+            hw_steps = round(position / signed_step_size(axis))
+
+        Special cases:
+        - ``position=0`` always maps to hw 0 regardless of direction (used
+          after homing to reset the step counter to zero).
+        - ``set_motor()`` / ``set_motor_currentPosition()`` are lower-level
+          helpers that accept raw hardware step values directly and do *not*
+          apply the direction conversion.
+
+        Firmware payload: {"task":"/motor_act", "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
         '''
         path = "/motor_act"
-        if type(axis) !=int:
+        if not isinstance(axis, int):
             axis = self.xyztTo1230(axis)
+
+        # Convert user-frame physical position to firmware hardware steps.
+        ss = self.signed_step_size(axis)
+        # Avoid division by zero for degenerate configurations.
+        hw_position = int(round(position / ss)) if ss != 0 else 0
 
         payload = {
             "task": path,
@@ -840,7 +895,7 @@ class Motor(object):
                 "steppers": [
                 {
                  "stepperid": axis,
-                 "posval": int(position)
+                 "posval": hw_position
                  }]
             }}
         r = self._parent.post_json(path, payload, timeout=timeout)
