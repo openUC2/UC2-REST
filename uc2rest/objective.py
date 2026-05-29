@@ -216,17 +216,18 @@ class Objective(object):
         payload = {"task": path}
 
         # Only include x0 or x1 in JSON if they were explicitly provided
-        # If x0 == -1, that instructs the MCU to take current motor position
-        # Divide by signed_step_size to convert user-frame physical units to
-        # firmware hardware steps, including the direction/polarity sign.
+        # If a coordinate == -1, that instructs the MCU to take the current
+        # motor position; preserve the sentinel as-is.  Otherwise divide by
+        # signed_step_size to convert user-frame physical units to firmware
+        # hardware steps, including the direction/polarity sign.
         if x0 is not None:
-            payload["x0"] = x0 / self._parent.motor.signed_step_size("A")
+            payload["x0"] = x0 if x0 == -1 else x0 / self._parent.motor.signed_step_size("A")
         if x1 is not None:
-            payload["x1"] = x1 / self._parent.motor.signed_step_size("A")
+            payload["x1"] = x1 if x1 == -1 else x1 / self._parent.motor.signed_step_size("A")
         if z0 is not None:
-            payload["z0"] = z0 / self._parent.motor.signed_step_size("Z")
+            payload["z0"] = z0 if z0 == -1 else z0 / self._parent.motor.signed_step_size("Z")
         if z1 is not None:
-            payload["z1"] = z1 / self._parent.motor.signed_step_size("Z")
+            payload["z1"] = z1 if z1 == -1 else z1 / self._parent.motor.signed_step_size("Z")
 
         nResponses = 1 if isBlocking else 0
         r = self._parent.post_json(
