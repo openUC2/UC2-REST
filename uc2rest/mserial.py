@@ -111,22 +111,26 @@ class Serial:
                 self.serialdevice.close()
         except: pass
 
-        
+        # Honour the baudrate passed in — previously tryToConnect used
+        # self.baudrate, so any override from openDevice/reconnect was lost.
+        if baud_rate:
+            self.baudrate = baud_rate
+
         try:
-            # check if port is string and if so within available ports 
+            # check if port is string and if so within available ports
             if type(port)==str:
                 port = self.get_port_info(port)
                 if port is None:
                     raise ValueError("Port not found")
-                
+
             for i in range(2): # not good, but sometimes it  needs a second attempt
-                isUC2 = self.tryToConnect(port)
+                isUC2 = self.tryToConnect(port, baudrate=self.baudrate)
                 if isUC2:
                     break
             if not isUC2:
                 raise ValueError('Wrong Firmware.')
             else:
-                self._logger.debug(f"Connected to {port.device} at {baud_rate} baud.")
+                self._logger.debug(f"Connected to {port.device} at {self.baudrate} baud.")
             ser = self.serialdevice
             self.is_connected = True
             self.manufacturer = "UC2"
@@ -135,7 +139,7 @@ class Serial:
             self._logger.error("[OpenDevice]: "+str(e))
             ser = self.findCorrectSerialDevice()
             if ser is None:
-                ser = MockSerial(port, baud_rate, timeout=.1)
+                ser = MockSerial(port, self.baudrate, timeout=.1)
                 self.is_connected = False
         ser.write_timeout = self.write_timeout
         if not ser.isOpen():
@@ -197,7 +201,9 @@ class Serial:
         self.manufacturer = "UC2Mock"
         return None
 
-    def tryToConnect(self, port):
+    def tryToConnect(self, port, baudrate=None):
+        if baudrate is not None:
+            self.baudrate = baudrate
         try:
             self.serialdevice = serial.Serial(port.device, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             # close the device - similar to hard reset
@@ -301,8 +307,10 @@ class Serial:
                 if self.serialdevice is None:
                     self.is_connected = False # TODO: We have to indicate if the device is not connected or if it is just not ready yet - otherwise we will have a lot of "Failed to Send" messages in the beginning
                     continue
-                else:
-                    self.is_connected = True
+                # Note: do NOT flip is_connected to True merely because the
+                # serialdevice handle exists. The handle survives unplugs on
+                # Linux until the next read, so we only consider ourselves
+                # connected once a successful read happens below.
 
                 # if we just want to send but not even wait for a response
                 with self.serialReadLock:
@@ -313,8 +321,20 @@ class Serial:
                             if nFailedCommands > nFailedCommandsMax:
                                 raise Exception("Failed to read the line in serial: "+str(mReadline))
                         line = mReadline.decode('utf-8').strip()
-                        if self.DEBUG and line!="": 
+                        if line != "":
+                            # Real bytes from the device — mark the link live
+                            # and reset the failure counter.
+                            self.is_connected = True
+                            nFailedCommands = 0
+                        if self.DEBUG and line!="":
                             self._logger.debug("[ProcessLines]:"+str(line))
+                    except SerialException as e:
+                        # Hardware-level error (port disappeared, IO error).
+                        # Flip the flag immediately so callers see the truth.
+                        self.is_connected = False
+                        self._logger.error("SerialException in read loop: "+str(e))
+                        nFailedCommands += 1
+                        line = ""
                     except Exception as e:
                         self._logger.error("Failed to read the line in serial: "+str(e))
                         nFailedCommands += 1
@@ -554,20 +574,53 @@ class Serial:
     def close(self):
         self.closeSerial()
         
-    def reconnect(self, baudrate=None):
-        self._logger.debug("Reconnecting to the serial device")
+    def reconnect(self, port=None, baudrate=None):
+        """Reconnect the serial link.
+
+        Either parameter may be omitted to keep the currently-configured value.
+        Returns True on success, False otherwise.
+        """
+        self._logger.debug(
+            f"Reconnecting to the serial device (port={port or self.serialport}, "
+            f"baud={baudrate or self.baudrate})"
+        )
         self.running = False
         if baudrate is not None:
             self.baudrate = baudrate
+        if port is not None:
+            self.serialport = port
         try:
             self.serialdevice.close()
         except:
             pass
-        self.serialdevice = self.openDevice(port = self.serialport, baud_rate = self.baudrate)
-        if self.serialdevice: 
-            self.serialport = self.serialdevice.port
+        # Give the previous thread a moment to exit before we replace it.
+        if self.thread is not None and self.thread.is_alive():
+            self.thread.join(timeout=1.0)
+        self.serialdevice = self.openDevice(port=self.serialport, baud_rate=self.baudrate)
+        if self.serialdevice:
+            try:
+                self.serialport = self.serialdevice.port
+            except Exception:
+                pass
             return True
         return False
+
+    def ping(self, timeout=0.5):
+        """Quick health check that asks the device for /state_get.
+
+        Returns True if the device responds within ``timeout`` seconds.
+        Does NOT disturb the running command loop — uses sendMessage with
+        nResponses=1 and a tight timeout. Intended for the strict variant of
+        uc2_board_is_connected on the ImSwitch side.
+        """
+        if not self.is_connected or self.manufacturer == "UC2Mock":
+            return False
+        try:
+            resp = self.sendMessage({"task": "/state_get"}, nResponses=1, timeout=timeout)
+            return isinstance(resp, list) and len(resp) > 0
+        except Exception as e:
+            self._logger.debug(f"ping failed: {e}")
+            return False
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
 from .temperature import Temperature
+from .fan import Fan
 from .message import Message
 from .can import CAN
 from .canota import CANOTA
@@ -130,6 +131,9 @@ class UC2Client(object):
         
         # initialize temperature
         self.temperature = Temperature(self)
+
+        # initialize fan controller
+        self.fan = Fan(self)
 
         # initialize laser
         self.state = State(self)
