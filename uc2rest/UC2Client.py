@@ -135,9 +135,6 @@ class UC2Client(object):
         # initialize fan controller
         self.fan = Fan(self)
 
-        # initialize laser
-        self.state = State(self)
-
         # initialize galvo
         self.galvo = Galvo(self)
 
