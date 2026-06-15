@@ -545,6 +545,8 @@ class CANOTA(object):
         buf = bytearray()
         while time.time() < deadline:
             chunk = ser.read(ser.in_waiting or 1)
+            # debug print of chunks 
+            # self._parent.logger.debug(f"Received chunk: {chunk}")
             if chunk:
                 buf.extend(chunk)
                 obj = self._try_extract_json_status(bytes(buf))
