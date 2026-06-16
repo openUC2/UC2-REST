@@ -526,7 +526,7 @@ class Serial:
         iRetry = 0
         while self.running:
             time.sleep(0.002)
-            isTimeout = time.time()-t0>timeout
+            isTimeout = (time.time()-t0)>timeout
             if self.resetLastCommand or isTimeout or not self.is_connected:
                 self.resetLastCommand = False
                 if self.DEBUG: 

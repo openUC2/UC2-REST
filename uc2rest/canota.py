@@ -58,7 +58,11 @@ class CANOTA(object):
         """
         self._parent = parent
         self.nCallbacks = nCallbacks
-        
+
+        # Threading event: set to True to request cancellation of any running
+        # streaming upload.
+        self._cancel_event = threading.Event()
+
         # Initialize callback functions for different types of OTA events
         self.init_callback_functions(self.nCallbacks)
         
@@ -294,6 +298,15 @@ class CANOTA(object):
     # MD5) and wait for ``{"ota_status":"success"|"error"}``.
     # ========================================================================
 
+    def cancel_streaming_ota(self):
+        """Request cancellation of any running streaming upload.
+
+        The upload worker checks this flag at every chunk boundary and will
+        abort cleanly (restoring the parent serial connection) on the next
+        iteration.
+        """
+        self._cancel_event.set()
+
     def start_can_streaming_ota(self, can_id: int, firmware_path: str,
                                  progress_callback=None, status_callback=None,
                                  port: str = None, baud: int = STREAMING_BAUD):
@@ -349,6 +362,8 @@ class CANOTA(object):
                   crc32, num_chunks, progress_callback, status_callback)
         )
         upload_thread.daemon = True
+        # Reset any previous cancellation before starting the new upload
+        self._cancel_event.clear()
         upload_thread.start()
 
         return upload_thread
@@ -434,6 +449,12 @@ class CANOTA(object):
             chunk_no = 0
 
             while sent < firmware_size:
+                # Honour cancellation requests between chunks
+                if self._cancel_event.is_set():
+                    if status_callback:
+                        status_callback("Upload cancelled by user", False)
+                    return
+
                 end = min(sent + CHUNK_SIZE, firmware_size)
                 payload = firmware_data[sent:end]
                 chunk_no += 1
@@ -445,6 +466,11 @@ class CANOTA(object):
                 # Block until the master ACKs at least ``sent`` bytes.
                 deadline = time.time() + ACK_TIMEOUT_S
                 while last_ack < sent:
+                    # Check for cancellation inside the ACK wait loop as well
+                    if self._cancel_event.is_set():
+                        if status_callback:
+                            status_callback("Upload cancelled by user", False)
+                        return
                     last_ack, err = self._drain_acks(ser, ack_buf, last_ack)
                     if err is not None:
                         if status_callback:
