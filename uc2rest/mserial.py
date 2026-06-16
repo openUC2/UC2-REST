@@ -490,8 +490,8 @@ class Serial:
         except Exception as e:
             if self.DEBUG: 
                 self._logger.error(e) # TODO:  write failed: Device not configured - why?!
-                # attempt to reconnect 
-                self.reconnect()
+                # attempt to reconnect # TODO: do we want that? 
+                # self.reconnect()
             return "Failed to Send"
         self.commands[identifier]=command # FIXME: Need to clear this after the response is received
         if nResponses <= 0 or not self.is_connected or self.manufacturer=="UC2Mock":
@@ -526,7 +526,7 @@ class Serial:
         iRetry = 0
         while self.running:
             time.sleep(0.002)
-            isTimeout = time.time()-t0>timeout
+            isTimeout = (time.time()-t0)>timeout
             if self.resetLastCommand or isTimeout or not self.is_connected:
                 self.resetLastCommand = False
                 if self.DEBUG: 

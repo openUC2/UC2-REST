@@ -322,6 +322,8 @@ class Home(object):
      
         timeout = timeout if isBlocking else 0
         nResponses = 2 # one for command received, one for home reached
+        if timeout and timeout > 1000:
+            timeout = timeout / 1000.0
         
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=isBlocking, timeout=timeout, nResponses=nResponses)

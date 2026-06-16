@@ -402,8 +402,10 @@ class Motor(object):
         return self.move_axis_by_name(axis="A", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        if len(speed)!= 3:
+        if not (type(speed)==list) or len(speed)!= 3:
             speed = (speed,speed,speed)
+        if acceleration is None:
+            acceleration = (self.DEFAULT_ACCELERATION,self.DEFAULT_ACCELERATION,self.DEFAULT_ACCELERATION)
 
         # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
         r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
