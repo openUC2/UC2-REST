@@ -613,10 +613,15 @@ class Motor(object):
             if isAbsoluteArray[iMotor]:
                 # Compare current position (physical) with target (physical, already includes offset)
                 self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > targetPositionPhysical[iMotor]) else -1
-                # Calculate distance to travel in HARDWARE STEPS:
-                # Current position (physical) -> convert to steps, then subtract target (already in steps)
-                currentPosition_steps = self.currentPosition[iMotor] / stepSizes[iMotor]
-                absoluteDistances_steps[iMotor] = abs(currentPosition_steps - steps[iMotor])
+                # Travel distance for the time estimate = |current - target| in
+                # PHYSICAL units, converted to hardware steps. Computing it in
+                # physical units keeps it direction-agnostic: the hardware `steps`
+                # target carries the per-axis direction sign, so subtracting it
+                # from an unsigned current-in-steps produced a *sum* (not a
+                # difference) on inverted axes, hugely inflating the estimate.
+                absoluteDistances_steps[iMotor] = abs(
+                    self.currentPosition[iMotor] - targetPositionPhysical[iMotor]
+                ) / stepSizes[iMotor]
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
                 # For relative motion, steps[iMotor] is already the distance in hardware steps
@@ -629,19 +634,20 @@ class Motor(object):
                 if not isAbsoluteArray[iMotor]:
                     absoluteDistances_steps[iMotor] = abs(steps[iMotor])
     
-        # Convert speed and acceleration from physical units to steps/second
+        # Speed and acceleration are already in firmware step units (the same raw
+        # values sent to the device), and absoluteDistances_steps is in hardware
+        # steps too, so the time estimate is unit-consistent WITHOUT any stepSize
+        # division — dividing here would desync it from the distance and break the
+        # estimate. Just take magnitudes.
         speed_steps = np.zeros(4)
         acceleration_steps = np.zeros(4)
         for iMotor in range(4):
             if speed[iMotor] != 0:
-                # Speed: µm/s -> steps/s => divide by stepSize (µm/step)
-                speed_steps[iMotor] = abs(speed[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
+                speed_steps[iMotor] = abs(speed[iMotor])
             if acceleration[iMotor] is not None and acceleration[iMotor] != 0:
-                # Acceleration: µm/s² -> steps/s² => divide by stepSize
-                acceleration_steps[iMotor] = abs(acceleration[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
+                acceleration_steps[iMotor] = abs(acceleration[iMotor])
             else:
-                # Default acceleration in steps/s²
-                acceleration_steps[iMotor] = 20000  # This should also be converted, but we use a safe default
+                acceleration_steps[iMotor] = 20000  # safe default (firmware steps/s^2)
         
         # Calculate travel time using HARDWARE STEPS and converted speed/acceleration
         # Find the axis that will take the longest (limits overall movement time)
@@ -696,8 +702,10 @@ class Motor(object):
                              "redu": int(is_reduced)}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
+                    motorProp["acceleration"] = int(acceleration[iMotor])
                 else:
                     motorProp["accel"] = self.DEFAULT_ACCELERATION
+                    motorProp["acceleleration"] = self.DEFAULT_ACCELERATION
                 motorPropList.append(motorProp)
         if len(motorPropList)==0:
             return "{'return':-1}"
