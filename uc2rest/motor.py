@@ -1243,6 +1243,44 @@ class Motor(object):
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
 
+    def get_tmc_parameters(self, axis=0, timeout=1):
+        ''' Read the TMC parameters for a specific axis back from the device.
+
+        Sends {"task":"/tmc_get", "axis":<n>} and parses the response. Returns a
+        dict with msteps/rms_current/sgthrs/semin/semax/blank_time/toff, or None
+        if the firmware does not implement TMC readback (older firmwares only
+        accept /tmc_act). Callers should fall back to their last-applied values
+        in that case.
+        '''
+        if type(axis) == str:
+            axis = self.xyztTo1230(axis)
+        path = "/tmc_get"
+        payload = {"task": path}
+        if axis is not None:
+            payload["axis"] = axis
+        try:
+            r = self._parent.post_json(path, payload, timeout=timeout)
+            if isinstance(r, list):
+                r = r[0] if r else {}
+            if not isinstance(r, dict):
+                return None
+            # firmware may nest the values under "tmc" or return them flat
+            tmc = r.get("tmc", r)
+            if not isinstance(tmc, dict):
+                return None
+            keys = ("msteps", "rms_current", "sgthrs", "semin", "semax", "blank_time", "toff")
+            if not any(k in tmc for k in keys):
+                # nothing TMC-shaped came back -> readback unsupported
+                return None
+            return {k: tmc[k] for k in keys if k in tmc}
+        except Exception as e:
+            self._parent.logger.debug(f"get_tmc_parameters failed: {e}")
+            return None
+
+    # camelCase alias used by the ImSwitch ESP32StageManager
+    def getTMCSettings(self, axis=0, timeout=1):
+        return self.get_tmc_parameters(axis=axis, timeout=timeout)
+
     def set_hard_limits(self, axis=1, enabled=True, polarity=0, timeout=1):
         '''
         Configure hard limits (emergency stop) for a motor axis.

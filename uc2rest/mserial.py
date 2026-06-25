@@ -16,8 +16,8 @@ except ImportError:
 T_SERIAL_WARMUP = 2.5
 class Serial:
     def __init__(self, port, baudrate=115200, timeout=5,
-                 identity="UC2_Feather", parent=None, DEBUG=False, 
-                 skipFirmwareCheck=False):
+                 identity="UC2_Feather", parent=None, DEBUG=False,
+                 skipFirmwareCheck=False, device_id=None, requireMaster=False):
 
         self.serialdevice = None
         self.serialport = port
@@ -26,6 +26,15 @@ class Serial:
         self._parent = parent
         self.manufacturer = ""
         self.skipFirmwareCheck = skipFirmwareCheck
+        # Connect only to a specific board / only to the CANopen master.
+        # device_id pins a physical board by its USB serial number (or a
+        # substring of the port path / hwid). requireMaster makes auto-discovery
+        # skip any board whose firmware does NOT report a "*_master" pindef, so a
+        # motor/slave board (ESP32-S3, native USB) is never picked accidentally.
+        self.device_id = device_id
+        self.requireMaster = requireMaster
+        # identity of the board we actually connected to (filled by checkFirmware)
+        self.firmware_info = {}
         if self._parent is None:
             import logging
             self._logger = logging.getLogger(__name__)
@@ -160,6 +169,64 @@ class Serial:
 
         return ser
 
+    def _portMatchesDeviceId(self, port):
+        '''True if `port` matches the configured device_id, or if no device_id
+        is set (then everything matches). The device_id is compared as a
+        case-insensitive substring against the USB serial number, the port path
+        and the hwid, so the user can pin a board by whichever is stable on
+        their OS.'''
+        if not self.device_id:
+            return True
+        did = str(self.device_id).lower()
+        candidates = [getattr(port, "serial_number", None),
+                      getattr(port, "device", None),
+                      getattr(port, "hwid", None)]
+        return any(c and did in str(c).lower() for c in candidates)
+
+    def _probeDeviceIdentity(self, ser, timeout=2):
+        '''Send /state_get and parse the firmware identity block into
+        self.firmware_info: {name, version, date, author, pindef, isMaster}.
+        Used by requireMaster to reject motor/slave boards. Best-effort: returns
+        an empty dict (and leaves firmware_info empty) if nothing parses.'''
+        info = {}
+        try:
+            self._write(ser, {"task": "/state_get"})
+            ser.write(b'\n')
+            buffer = ""
+            reading_json = False
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                raw = self._read(ser)
+                try:
+                    line = raw.decode('utf-8').strip()
+                except Exception:
+                    continue
+                if line == "":
+                    continue
+                if line.find("++") >= 0:
+                    reading_json = True
+                    continue
+                if reading_json and line.find("--") >= 0:
+                    break
+                if reading_json:
+                    buffer += line
+            if buffer:
+                data = json.loads(buffer)
+                state = data.get("state", data) if isinstance(data, dict) else {}
+                pindef = state.get("pindef", "")
+                info = {
+                    "name": state.get("identifier_name", ""),
+                    "version": state.get("identifier_id", ""),
+                    "date": state.get("identifier_date", ""),
+                    "author": state.get("identifier_author", ""),
+                    "pindef": pindef,
+                    "isMaster": "master" in str(pindef).lower(),
+                }
+        except Exception as e:
+            self._logger.debug(f"_probeDeviceIdentity failed: {e}")
+        self.firmware_info = info
+        return info
+
     def findCorrectSerialDevice(self):
         '''
         This function tries to find the correct serial device from the list of available ports
@@ -183,6 +250,9 @@ class Serial:
             descriptions_to_check = ["CH340", "CP2102", "USB2.0-Serial", "USB-Serial"]
 
         for port in _available_ports:
+            # If a specific board was requested, ignore everything else.
+            if not self._portMatchesDeviceId(port):
+                continue
             if any(port.device.startswith(p) for p in ports_to_check) or \
             any(port.description.startswith(d) for d in descriptions_to_check):
                 if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
@@ -217,6 +287,22 @@ class Serial:
             #time.sleep(T_SERIAL_WARMUP)
             self._freeSerialBuffer(self.serialdevice, timeout=2, timeMinimum=1)
             if self.skipFirmwareCheck or self.checkFirmware(self.serialdevice):
+                # When only the master may be used, read the firmware identity and
+                # reject boards that are not a CANopen master (e.g. ESP32-S3 motor
+                # boards on native USB that also speak the UC2 protocol).
+                if self.requireMaster:
+                    self._probeDeviceIdentity(self.serialdevice)
+                    if not self.firmware_info.get("isMaster", False):
+                        self._logger.debug(
+                            f"Skipping non-master board on {getattr(port, 'device', '?')} "
+                            f"(pindef={self.firmware_info.get('pindef', '?')})"
+                        )
+                        try:
+                            self.serialdevice.close()
+                        except Exception:
+                            pass
+                        self.is_connected = False
+                        return False
                 self.is_connected = True
                 self.NumberRetryReconnect = 0
                 return True

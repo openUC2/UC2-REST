@@ -137,6 +137,41 @@ class State(object):
         r = self._parent.get_json(path, timeout=timeout)
         return r
 
+    def get_firmware_info(self, timeout=3):
+        '''
+        Return the firmware identity of the USB-connected ESP32 as a flat dict:
+        {"name", "version", "date", "author", "pindef", "isMaster"}.
+
+        Parsed from /state_get, e.g.
+          {"state":{"identifier_name":"UC2_Feather","identifier_id":"V2.0",
+                    "identifier_date":"Jun 17 2026 07:17:22","identifier_author":"BD",
+                    "pindef":"UC2_canopen_master", ...},"qid":0}
+        The build date and pindef are the fields that matter for telling boards
+        apart. Returns an empty dict if nothing could be parsed.
+        '''
+        r = self.get_state(timeout=timeout)
+        try:
+            if isinstance(r, list):
+                r = r[0] if r else {}
+            state = r.get("state", r) if isinstance(r, dict) else {}
+            pindef = state.get("pindef", "")
+            return {
+                "name": state.get("identifier_name", ""),
+                "version": state.get("identifier_id", ""),
+                "date": state.get("identifier_date", ""),
+                "author": state.get("identifier_author", ""),
+                "pindef": pindef,
+                "isMaster": "master" in str(pindef).lower(),
+            }
+        except Exception as e:
+            self._parent.logger.debug(f"get_firmware_info failed: {e}")
+            return {}
+
+    def is_master(self, timeout=1):
+        '''True if the connected board reports a CANopen-master pindef.'''
+        info = self.get_firmware_info(timeout=timeout)
+        return bool(info.get("isMaster", False))
+
     def delay(self, delay=1, getReturn=True):
         path = "/state_act"
         payload = {
