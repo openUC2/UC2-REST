@@ -705,7 +705,7 @@ class Motor(object):
                     motorProp["acceleration"] = int(acceleration[iMotor])
                 else:
                     motorProp["accel"] = self.DEFAULT_ACCELERATION
-                    motorProp["acceleleration"] = self.DEFAULT_ACCELERATION
+                    motorProp["acceleration"] = self.DEFAULT_ACCELERATION
                 motorPropList.append(motorProp)
         if len(motorPropList)==0:
             return "{'return':-1}"
