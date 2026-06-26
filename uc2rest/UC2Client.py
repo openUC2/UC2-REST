@@ -47,9 +47,9 @@ class UC2Client(object):
     is_serial = False
     BAUDRATE = 115200
 
-    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE, 
+    def __init__(self, host=None, port=31950, serialport=None, identity="UC2_Feather", baudrate=BAUDRATE,
                  NLeds=64, SerialManager=None, DEBUG=False, logger=None, skipFirmwareCheck=False,
-                 isPyScript=False):
+                 isPyScript=False, device_id=None, requireMaster=False):
         '''
         This client connects to the UC2-REST microcontroller that can be found here
         https://github.com/openUC2/UC2-REST
@@ -80,7 +80,7 @@ class UC2Client(object):
         # initialize communication channel (serial only)
         if serialport is not None:
             # use USB connection
-            self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG, skipFirmwareCheck=skipFirmwareCheck)
+            self.serial = Serial(serialport, baudrate, parent=self, identity=identity, DEBUG=DEBUG, skipFirmwareCheck=skipFirmwareCheck, device_id=device_id, requireMaster=requireMaster)
             self.is_serial = True
             self.is_connected = self.serial.is_connected
             self.serial.DEBUG = DEBUG

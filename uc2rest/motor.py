@@ -613,10 +613,15 @@ class Motor(object):
             if isAbsoluteArray[iMotor]:
                 # Compare current position (physical) with target (physical, already includes offset)
                 self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > targetPositionPhysical[iMotor]) else -1
-                # Calculate distance to travel in HARDWARE STEPS:
-                # Current position (physical) -> convert to steps, then subtract target (already in steps)
-                currentPosition_steps = self.currentPosition[iMotor] / stepSizes[iMotor]
-                absoluteDistances_steps[iMotor] = abs(currentPosition_steps - steps[iMotor])
+                # Travel distance for the time estimate = |current - target| in
+                # PHYSICAL units, converted to hardware steps. Computing it in
+                # physical units keeps it direction-agnostic: the hardware `steps`
+                # target carries the per-axis direction sign, so subtracting it
+                # from an unsigned current-in-steps produced a *sum* (not a
+                # difference) on inverted axes, hugely inflating the estimate.
+                absoluteDistances_steps[iMotor] = abs(
+                    self.currentPosition[iMotor] - targetPositionPhysical[iMotor]
+                ) / stepSizes[iMotor]
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
                 # For relative motion, steps[iMotor] is already the distance in hardware steps
@@ -629,19 +634,20 @@ class Motor(object):
                 if not isAbsoluteArray[iMotor]:
                     absoluteDistances_steps[iMotor] = abs(steps[iMotor])
     
-        # Convert speed and acceleration from physical units to steps/second
+        # Speed and acceleration are already in firmware step units (the same raw
+        # values sent to the device), and absoluteDistances_steps is in hardware
+        # steps too, so the time estimate is unit-consistent WITHOUT any stepSize
+        # division — dividing here would desync it from the distance and break the
+        # estimate. Just take magnitudes.
         speed_steps = np.zeros(4)
         acceleration_steps = np.zeros(4)
         for iMotor in range(4):
             if speed[iMotor] != 0:
-                # Speed: µm/s -> steps/s => divide by stepSize (µm/step)
-                speed_steps[iMotor] = abs(speed[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
+                speed_steps[iMotor] = abs(speed[iMotor])
             if acceleration[iMotor] is not None and acceleration[iMotor] != 0:
-                # Acceleration: µm/s² -> steps/s² => divide by stepSize
-                acceleration_steps[iMotor] = abs(acceleration[iMotor]) # TODO: This is actually given in steps/s / stepSizes[iMotor]
+                acceleration_steps[iMotor] = abs(acceleration[iMotor])
             else:
-                # Default acceleration in steps/s²
-                acceleration_steps[iMotor] = 20000  # This should also be converted, but we use a safe default
+                acceleration_steps[iMotor] = 20000  # safe default (firmware steps/s^2)
         
         # Calculate travel time using HARDWARE STEPS and converted speed/acceleration
         # Find the axis that will take the longest (limits overall movement time)
@@ -696,8 +702,10 @@ class Motor(object):
                              "redu": int(is_reduced)}
                 if acceleration[iMotor] is not None:
                     motorProp["accel"] = int(acceleration[iMotor])
+                    motorProp["acceleration"] = int(acceleration[iMotor])
                 else:
                     motorProp["accel"] = self.DEFAULT_ACCELERATION
+                    motorProp["acceleleration"] = self.DEFAULT_ACCELERATION
                 motorPropList.append(motorProp)
         if len(motorPropList)==0:
             return "{'return':-1}"
@@ -1242,6 +1250,44 @@ class Motor(object):
 
         r = self._parent.post_json(path, payload, timeout=timeout)
         return r
+
+    def get_tmc_parameters(self, axis=0, timeout=1):
+        ''' Read the TMC parameters for a specific axis back from the device.
+
+        Sends {"task":"/tmc_get", "axis":<n>} and parses the response. Returns a
+        dict with msteps/rms_current/sgthrs/semin/semax/blank_time/toff, or None
+        if the firmware does not implement TMC readback (older firmwares only
+        accept /tmc_act). Callers should fall back to their last-applied values
+        in that case.
+        '''
+        if type(axis) == str:
+            axis = self.xyztTo1230(axis)
+        path = "/tmc_get"
+        payload = {"task": path}
+        if axis is not None:
+            payload["axis"] = axis
+        try:
+            r = self._parent.post_json(path, payload, timeout=timeout)
+            if isinstance(r, list):
+                r = r[0] if r else {}
+            if not isinstance(r, dict):
+                return None
+            # firmware may nest the values under "tmc" or return them flat
+            tmc = r.get("tmc", r)
+            if not isinstance(tmc, dict):
+                return None
+            keys = ("msteps", "rms_current", "sgthrs", "semin", "semax", "blank_time", "toff")
+            if not any(k in tmc for k in keys):
+                # nothing TMC-shaped came back -> readback unsupported
+                return None
+            return {k: tmc[k] for k in keys if k in tmc}
+        except Exception as e:
+            self._parent.logger.debug(f"get_tmc_parameters failed: {e}")
+            return None
+
+    # camelCase alias used by the ImSwitch ESP32StageManager
+    def getTMCSettings(self, axis=0, timeout=1):
+        return self.get_tmc_parameters(axis=axis, timeout=timeout)
 
     def set_hard_limits(self, axis=1, enabled=True, polarity=0, timeout=1):
         '''
