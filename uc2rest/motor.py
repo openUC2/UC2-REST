@@ -91,12 +91,19 @@ class Motor(object):
             nSteppers = len(data["steppers"])
             stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
             for iMotor in range(nSteppers):
-                stepperID = data["steppers"][iMotor]["stepperid"]
+                stepper = data["steppers"][iMotor]
+                # Intermediate status frames during a move carry only
+                # {stepperid, isDone} with no "position" key — skip them instead
+                # of raising KeyError 'position' (which previously aborted the
+                # whole callback and left currentPosition stale).
+                if "position" not in stepper:
+                    continue
+                stepperID = stepper["stepperid"]
                 # Hardware returns raw steps in firmware frame; convert to physical units
                 # in user frame: phys = hw_steps * stepSize * direction. The direction sign
                 # hides any wiring polarity flip from the caller.
                 self.currentPosition[stepperID] = (
-                    data["steppers"][iMotor]["position"]
+                    stepper["position"]
                     * stepSizes[stepperID]
                     * self.direction[stepperID]
                 )
@@ -332,6 +339,26 @@ class Motor(object):
             self.maxPosA = maxPos
             self.stepSizeA = stepSize
         self.backlash[axisIdx] = backlash
+
+    def set_backlash(self, axis, backlash):
+        """Set the per-axis backlash (in hardware steps) used as a reversal overshoot.
+
+        ``axis`` may be a name (\"X\"/\"Y\"/\"Z\"/\"A\") or a hardware index (0-3).
+        The value is stored in :attr:`backlash` and consumed by
+        :meth:`move_stepper`, which adds ``direction * backlash`` extra steps
+        whenever the axis changes direction, taking up the mechanical slack so the
+        stage still reaches the commanded target. Pass ``0`` to disable
+        compensation for that axis. Typically fed from a camera-based backlash
+        measurement (microns) after converting to steps with the axis step size.
+        """
+        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        self.backlash[idx] = backlash
+        return float(self.backlash[idx])
+
+    def get_backlash(self, axis):
+        """Return the per-axis backlash (in hardware steps)."""
+        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        return float(self.backlash[idx])
 
     def xyztTo1230(self, axis):
         axis = axis.upper()
