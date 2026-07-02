@@ -364,11 +364,14 @@ class Serial:
         for i in range(500):
             # if we just want to send but not even wait for a response
             mReadline = self._read(ser)
-            if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
-                self._logger.debug("[checkFirmware]: "+str(mReadline))
-            if mReadline.decode('utf-8').strip() == "++" or mReadline.decode('utf-8').strip().find("++")>=0:
-                self._freeSerialBuffer(ser)
-                return True
+            try:
+                if self.DEBUG and mReadline != "" and mReadline != "\n" and mReadline != b'' and mReadline != b'\n': 
+                    self._logger.debug("[checkFirmware]: "+str(mReadline))
+                if mReadline.decode('utf-8').strip() == "++" or mReadline.decode('utf-8').strip().find("++")>=0:
+                    self._freeSerialBuffer(ser)
+                    return True
+            except Exception as e:
+                self._logger.error("Error in checkFirmware: "+str(e))
         return False
 
     def _generate_identifier(self):
