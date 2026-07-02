@@ -150,6 +150,22 @@ class GPIO(object):
 
     def calibrate(self, node=None, timeout=1):
         """Tell the slave to take its CURRENT rolling mean as the new
-        reference (persisted in NVS). Do this while the system is idle and
-        collision-free."""
+        reference (persisted in NVS). MANUAL mode only — in AUTO the baseline
+        tracks itself. Do this while the system is idle and collision-free."""
         return self._act(node=node, timeout=timeout, calibrate=1)
+
+    def set_mode(self, mode, node=None, timeout=1):
+        """Select the detection mode (persisted on the slave in NVS).
+
+        mode: "auto"  (default, recommended) — adaptive baseline + robust
+              sigma z-score. Parameter-free: tracks a slowly drifting
+              background and trips on a fast deflection. No calibration.
+        mode: "manual" — fixed reference +/- threshold. Deterministic;
+              requires the reference to be calibrated to the idle level.
+
+        Accepts "auto"/"manual" or 0/1."""
+        if isinstance(mode, str):
+            mval = 1 if mode.lower() == "manual" else 0
+        else:
+            mval = 1 if int(mode) else 0
+        return self._act(node=node, timeout=timeout, mode=mval)
