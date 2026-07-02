@@ -22,6 +22,7 @@ from .analog import Analog
 from .modules import Modules
 from .digitalout import DigitalOut
 from .digitalin import DigitalIn
+from .gpio import GPIO
 from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
@@ -155,7 +156,10 @@ class UC2Client(object):
         
         # initialize digital in
         self.digitalin = DigitalIn(self)
-        
+
+        # initialize GPIO / collision-detector slave interface
+        self.gpio = GPIO(self)
+
         # initialize messaging
         self.message = Message(self)
         
