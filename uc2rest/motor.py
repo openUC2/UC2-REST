@@ -1098,7 +1098,7 @@ class Motor(object):
         '''
         if type(axis) != int:
             axis = self.xyztTo1230(axis)
-        
+        # {"task":"/motor_act", "joystickdir": {"steppers": [{"stepperid": 1, "inverted": 1}]}}
         path = "/motor_act"
         payload = {
             "task": path,
