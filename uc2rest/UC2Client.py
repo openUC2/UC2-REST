@@ -23,6 +23,7 @@ from .modules import Modules
 from .digitalout import DigitalOut
 from .digitalin import DigitalIn
 from .gpio import GPIO
+from .i2c import I2C
 from .rotator import Rotator
 from .logger import Logger
 from .cmdrecorder import cmdRecorder
@@ -159,6 +160,9 @@ class UC2Client(object):
 
         # initialize GPIO / collision-detector slave interface
         self.gpio = GPIO(self)
+
+        # initialize generic I2C passthrough (sensors on the GPIO slave bus)
+        self.i2c = I2C(self)
 
         # initialize messaging
         self.message = Message(self)
