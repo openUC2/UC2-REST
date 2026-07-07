@@ -23,6 +23,7 @@ from .modules import Modules
 from .digitalout import DigitalOut
 from .digitalin import DigitalIn
 from .gpio import GPIO
+from .ptz import PTZ
 from .i2c import I2C
 from .rotator import Rotator
 from .logger import Logger
@@ -160,6 +161,9 @@ class UC2Client(object):
 
         # initialize GPIO / collision-detector slave interface
         self.gpio = GPIO(self)
+
+        # initialize PTZ keyboard bridge interface (CAN node-id 61)
+        self.ptz = PTZ(self)
 
         # initialize generic I2C passthrough (sensors on the GPIO slave bus)
         self.i2c = I2C(self)
