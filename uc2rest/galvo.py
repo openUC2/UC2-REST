@@ -108,6 +108,32 @@ class Galvo(object):
         
         return self._parent.post_json(path, payload, timeout=timeout)
     
+    def set_position(self, x, y, timeout=1):
+        """
+        Move the galvo to a static XY position (DAC counts 0-4095) without scanning.
+
+        Sends the direct-positioning form of /galvo_act, which the firmware maps
+        to a "goto" command (single-point dwell). Useful e.g. for parking the
+        beam at a defined position when a scan is stopped.
+
+        Args:
+            x: X DAC coordinate (0-4095)
+            y: Y DAC coordinate (0-4095)
+            timeout: Request timeout in seconds (default: 1)
+
+        Example:
+            >>> galvo.set_position(2048, 2048)   # park at center
+        """
+        path = '/galvo_act'
+        payload = {
+            "task": path,
+            "galvo": {
+                "x": int(x),
+                "y": int(y)
+            }
+        }
+        return self._parent.post_json(path, payload, timeout=timeout)
+
     def get_galvo_status(self, timeout=1):
         """
         Get galvo scanner status
@@ -178,10 +204,10 @@ class Galvo(object):
         path = '/galvo_act'
         payload = {
             "task": path,
-            #"laser_trigger": laser_trigger,
+            "laser_trigger": laser_trigger,
             "points": points
         }
-        
+
         return self._parent.post_json(path, payload, timeout=timeout)
 
     def stop_arbitrary_points(self, timeout=1):
