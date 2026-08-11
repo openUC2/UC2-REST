@@ -37,16 +37,17 @@ class Galvo(object):
     SCANNER
     ##############################################################################################################################
     '''
-    def set_galvo_scan(self, nx=256, ny=256, x_min=500, x_max=3500, 
-                       y_min=500, y_max=3500, sample_period_us=1, 
-                       frame_count=0, bidirectional=False, 
-                       pre_samples=0, fly_samples=0, trig_delay_us=0, 
-                       trig_width_us=0, line_settle_samples=0, 
+    def set_galvo_scan(self, nx=256, ny=256, x_min=500, x_max=3500,
+                       y_min=500, y_max=3500, sample_period_us=1,
+                       frame_count=0, bidirectional=False,
+                       pre_samples=0, fly_samples=0, trig_delay_us=0,
+                       trig_width_us=0, line_settle_samples=0,
                        enable_trigger=1, apply_x_lut=0,
+                       overscan_samples=0, laser_blanking=0, hw_pixel_clock=0,
                        timeout=1):
         """
         Start galvo scanner with new API (HighSpeedScannerCore)
-        
+
         Args:
             nx: Number of X samples per line (default: 256)
             ny: Number of Y lines (default: 256)
@@ -56,14 +57,36 @@ class Galvo(object):
             y_max: Max Y position 0-4095 (default: 3500)
             sample_period_us: Microseconds per sample, 0=max speed (default: 1)
             frame_count: Number of frames, 0=infinite (default: 0)
-            bidirectional: Enable bidirectional scanning (default: False)
+            bidirectional: Enable bidirectional scanning (default: False).
+                Odd lines are scanned with a mirrored profile; the trigger
+                window stays identical, so pixel counts remain monotonic and
+                equidistant. The host must flip odd lines when reassembling.
+            trig_delay_us: Gap between the frame marker and the line marker
+                at frame start (both fire during pre-blanking, ahead of the
+                first pixel).
+            trig_width_us: Marker/pixel trigger pulse width in microseconds
+                (pixel width is capped at half the dwell time; 0 = fastest
+                possible pulse).
+            overscan_samples: Linear ramp extension (same per-pixel slope) on
+                both sides of the imaging window. Compensates galvo lag: the
+                mirror is already moving at constant velocity when triggers
+                and laser start (default: 0)
+            laser_blanking: 1 = gate the galvo laser pin HIGH only during the
+                imaging window (off during pre/overscan/flyback/settle)
+                (default: 0)
+            hw_pixel_clock: 1 = generate the pixel clock with the RMT
+                peripheral (hardware-equidistant, decoupled from the DAC/SPI
+                loop; ESP32-S3 only, silently falls back to software pulses
+                elsewhere) (default: 0)
             timeout: Request timeout in seconds (default: 1)
-            
+
             sends:
-            {"task": "/galvo_act", "config": {"nx":512,"ny":512,"x_min":500,"x_max":3500,"y_min":500,"y_max":3500,"pre_samples":0,"fly_samples":0,"sample_period_us":0,"trig_delay_us":0,"trig_width_us":0,"line_settle_samples":0,"enable_trigger":1,"apply_x_lut":0,"frame_count":0,"bidirectional":true}}
-            
+            {"task": "/galvo_act", "config": {"nx":512,"ny":512,"x_min":500,"x_max":3500,"y_min":500,"y_max":3500,"pre_samples":0,"fly_samples":0,"sample_period_us":0,"trig_delay_us":0,"trig_width_us":0,"line_settle_samples":0,"enable_trigger":1,"apply_x_lut":0,"frame_count":0,"bidirectional":true,"overscan_samples":0,"laser_blanking":0,"hw_pixel_clock":0}}
+
         Example:
-            >>> galvo.set_galvo_scan(nx=64, ny=64, frame_count=10, bidirectional=True)
+            >>> galvo.set_galvo_scan(nx=64, ny=64, frame_count=10,
+            ...                      overscan_samples=8, laser_blanking=1,
+            ...                      hw_pixel_clock=1)
         """
         path = '/galvo_act'
         payload = {
@@ -84,10 +107,13 @@ class Galvo(object):
                 "trig_width_us": trig_width_us,
                 "line_settle_samples": line_settle_samples,
                 "enable_trigger": enable_trigger,
-                "apply_x_lut": apply_x_lut
+                "apply_x_lut": apply_x_lut,
+                "overscan_samples": overscan_samples,
+                "laser_blanking": 1 if laser_blanking else 0,
+                "hw_pixel_clock": 1 if hw_pixel_clock else 0
             }
         }
-        
+
         return self._parent.post_json(path, payload, timeout=timeout)
     
     def stop_galvo_scan(self, timeout=1):
