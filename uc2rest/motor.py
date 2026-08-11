@@ -55,6 +55,9 @@ class Motor(object):
             self._parent.serial.register_callback(self._callback_motor_status, pattern="steppers")
             # Register callback for stagescan completion signal: {"stagescan":{},"qid":0,"success":1}
             self._parent.serial.register_callback(self._callback_stagescan_complete, pattern="stagescan")
+            # Register callback for async closed-loop axis fault events (design v2):
+            # {"axisEvent":{"axis":n,"fault":"STALL","posErrSteps":-142,...}}
+            self._parent.serial.register_callback(self._callback_axis_event, pattern="axisEvent")
         # announce a function that is called when we receive a position update through the callback
         self._callbackPerKey = {}
         self.nCallbacks = 10
@@ -64,6 +67,8 @@ class Motor(object):
         # Stage scan completion state
         self._stagescan_complete = False
         self._stagescan_callbacks = []  # List of callbacks to call when stagescan completes
+        # Closed-loop axis fault event listeners (design v2, WP9)
+        self._axis_event_callbacks = []  # called with the fault dict on STALL/LOST_STEPS/…
         # move motor to wake them up #FIXME: Should not be necessary!
         #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
         #self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
@@ -192,8 +197,189 @@ class Motor(object):
     def register_callback(self, key, callbackfct):
         ''' register a callback function for a specific key '''
         self._callbackPerKey[key] = callbackfct
-        
-        
+
+    # ========================================================================
+    # Closed-loop / encoder feedback (design v2, WP9)
+    #
+    # All values are in STEPS — do NOT convert to µm here; µm conversion stays
+    # in the higher-level ImSwitch code. Every method is safe when the firmware
+    # lacks encoder support: it returns sensible defaults and never raises.
+    #
+    # The firmware exposes per-axis feedback in the CANopen AXIS OD block
+    # (0x2040-0x204B) on each motor slave, addressed as (node, sub-index). The
+    # sub-index is the slave's motor axis id (usually 1). Reach it through the
+    # master's generic SDO bridge (/can_act {"sdo":{...}}).
+    # ========================================================================
+
+    # AXIS OD indices (mirror lib/uc2_od + tools/canopen registry, base 0x2040)
+    _AXIS_MEASURED_STEPS        = 0x2040
+    _AXIS_POSITION_ERROR_STEPS  = 0x2041
+    _AXIS_MODE                  = 0x2042
+    _AXIS_HEALTH                = 0x2043
+    _AXIS_FAULT                 = 0x2044
+    _AXIS_RESET                 = 0x2045
+    _AXIS_CALIBRATED            = 0x2046
+    _AXIS_REFERENCED            = 0x2047
+    _AXIS_CALIBRATE             = 0x2048
+    _AXIS_COUNTS_PER_STEP_Q16   = 0x2049
+    _AXIS_BACKLASH_STEPS        = 0x204A
+    _AXIS_RAW_COUNTS            = 0x204B
+
+    _AXIS_MODE_NAMES  = {0: "OPEN_LOOP", 1: "MONITOR", 2: "CORRECT", 3: "SERVO"}
+    _AXIS_HEALTH_NAMES = {0: "OK", 1: "DEGRADED", 2: "FAULT"}
+    _AXIS_FAULT_NAMES = {0: "NONE", 1: "STALL", 2: "LOST_STEPS", 3: "DIVERGENCE",
+                         4: "TIMEOUT", 5: "CAL_INVALID", 6: "CAL_FAILED", 7: "ENC_NOISE"}
+    _AXIS_RESET_POLICIES = {"TRUST_ENCODER": 1, "TRUST_STEPS": 2, "FORCE_REHOME": 3}
+
+    def _axis_sdo(self, node, index, sub, op, ctype="i32", value=None, timeout=2):
+        """Low-level SDO read/write to a slave AXIS OD entry via the master.
+
+        Returns the integer value on a successful read, True on a successful
+        write, and None on any failure (never raises), so callers can degrade
+        gracefully when the firmware has no encoder/axis support.
+        """
+        sdo = {"node": int(node), "index": int(index), "sub": int(sub),
+               "op": op, "type": ctype}
+        if op == "w":
+            sdo["value"] = int(value)
+        payload = {"task": "/can_act", "sdo": sdo}
+        try:
+            resp = self._parent.post_json("/can_act", payload, getReturn=True,
+                                          timeout=timeout, nResponses=1)
+        except Exception as e:
+            self._parent.logger.debug(f"axis SDO transport error: {e}")
+            return None
+        if not isinstance(resp, dict) or resp.get("status") != "ok":
+            return None
+        return True if op == "w" else resp.get("value", None)
+
+    def _callback_axis_event(self, data):
+        """Serial callback for async axis fault events from firmware:
+        {"axisEvent":{"axis":n,"fault":"STALL","posErrSteps":-142,
+                      "commandedSteps":..,"measuredSteps":..,"node":..}}
+        Forwards the inner fault dict to every registered listener so ImSwitch
+        can react to STALL / LOST_STEPS / DIVERGENCE during long acquisitions.
+        """
+        try:
+            event = data.get("axisEvent", data) if isinstance(data, dict) else data
+            for callback in list(self._axis_event_callbacks):
+                try:
+                    callback(event)
+                except Exception as e:
+                    self._parent.logger.error(f"Error in axis event callback: {e}")
+        except Exception as e:
+            print(f"Error in _callback_axis_event: {e}")
+
+    def register_axis_event_callback(self, callback):
+        """Register a callback invoked with the fault dict on every axis event."""
+        if callback not in self._axis_event_callbacks:
+            self._axis_event_callbacks.append(callback)
+
+    def unregister_axis_event_callback(self, callback):
+        """Unregister a previously registered axis-event callback."""
+        if callback in self._axis_event_callbacks:
+            self._axis_event_callbacks.remove(callback)
+
+    def setAxisMode(self, node, mode, axis=1):
+        """Set the closed-loop mode of a motor-slave axis.
+
+        :param node: CAN node id of the motor slave
+        :param mode: 0/1/2/3 or "OPEN_LOOP"/"MONITOR"/"CORRECT"/"SERVO"
+        :param axis: OD sub-index (the slave's motor axis id, usually 1)
+        :return: True on success, False otherwise (never raises)
+        """
+        if isinstance(mode, str):
+            inv = {v: k for k, v in self._AXIS_MODE_NAMES.items()}
+            mode = inv.get(mode.upper(), 0)
+        ok = self._axis_sdo(node, self._AXIS_MODE, axis, "w", "u8", int(mode))
+        return ok is True
+
+    def getAxisFeedback(self, node, axis=1):
+        """Read a motor-slave axis's live feedback (all values in STEPS).
+
+        :return: dict with commandedSteps, measuredSteps, positionErrorSteps,
+            mode, health, fault (ints + *_name), calibrated, referenced,
+            rawCounts. When the firmware has no encoder support the read fails
+            and OPEN_LOOP / zero-error defaults are returned; never raises.
+        """
+        measured = self._axis_sdo(node, self._AXIS_MEASURED_STEPS, axis, "r", "i32")
+        if measured is None:
+            # No encoder / no axis support — uniform, non-raising default.
+            return {"commandedSteps": 0, "measuredSteps": 0, "positionErrorSteps": 0,
+                    "mode": 0, "mode_name": "OPEN_LOOP", "health": 0, "health_name": "OK",
+                    "fault": 0, "fault_name": "NONE", "calibrated": False,
+                    "referenced": False, "rawCounts": 0}
+        posErr    = self._axis_sdo(node, self._AXIS_POSITION_ERROR_STEPS, axis, "r", "i32") or 0
+        mode      = self._axis_sdo(node, self._AXIS_MODE, axis, "r", "u8") or 0
+        health    = self._axis_sdo(node, self._AXIS_HEALTH, axis, "r", "u8") or 0
+        fault     = self._axis_sdo(node, self._AXIS_FAULT, axis, "r", "u8") or 0
+        calibrated = self._axis_sdo(node, self._AXIS_CALIBRATED, axis, "r", "u8") or 0
+        referenced = self._axis_sdo(node, self._AXIS_REFERENCED, axis, "r", "u8") or 0
+        rawCounts = self._axis_sdo(node, self._AXIS_RAW_COUNTS, axis, "r", "i32") or 0
+        return {
+            "commandedSteps": int(measured) - int(posErr),
+            "measuredSteps": int(measured),
+            "positionErrorSteps": int(posErr),
+            "mode": int(mode), "mode_name": self._AXIS_MODE_NAMES.get(int(mode), "?"),
+            "health": int(health), "health_name": self._AXIS_HEALTH_NAMES.get(int(health), "?"),
+            "fault": int(fault), "fault_name": self._AXIS_FAULT_NAMES.get(int(fault), "?"),
+            "calibrated": bool(calibrated), "referenced": bool(referenced),
+            "rawCounts": int(rawCounts),
+        }
+
+    def resetAxis(self, node, policy="TRUST_ENCODER", axis=1):
+        """Clear a latched fault and re-establish the axis origin.
+
+        :param policy: "TRUST_ENCODER"|"TRUST_STEPS"|"FORCE_REHOME" or 1/2/3
+        :return: True on success (never raises)
+        """
+        if isinstance(policy, str):
+            policy = self._AXIS_RESET_POLICIES.get(policy.upper(), 1)
+        ok = self._axis_sdo(node, self._AXIS_RESET, axis, "w", "u8", int(policy))
+        return ok is True
+
+    def getAxisCalibration(self, node, axis=1):
+        """Read the persisted calibration of a motor-slave axis.
+
+        :return: dict with countsPerStepQ16 (signed Q16.16), backlashSteps,
+            calibrated. None fields default to 0/False; never raises.
+        """
+        cps = self._axis_sdo(node, self._AXIS_COUNTS_PER_STEP_Q16, axis, "r", "i32")
+        backlash = self._axis_sdo(node, self._AXIS_BACKLASH_STEPS, axis, "r", "i32")
+        calibrated = self._axis_sdo(node, self._AXIS_CALIBRATED, axis, "r", "u8")
+        return {
+            "countsPerStepQ16": int(cps) if cps is not None else 0,
+            "countsPerStep": (int(cps) / 65536.0) if cps is not None else 0.0,
+            "backlashSteps": int(backlash) if backlash is not None else 0,
+            "calibrated": bool(calibrated) if calibrated is not None else False,
+        }
+
+    def calibrateAxis(self, node, axis=1, wait=True, timeout=30, **params):
+        """Trigger the firmware sign/scale/backlash calibration routine.
+
+        The routine runs ON the slave (it moves the motor through probe moves);
+        `params` are accepted for API forward-compatibility but the firmware
+        currently uses its built-in defaults. With ``wait=True`` this polls until
+        the axis reports calibrated (or ``timeout`` s) and returns the resulting
+        calibration dict; otherwise returns {"status": "triggered"}.
+        """
+        ok = self._axis_sdo(node, self._AXIS_CALIBRATE, axis, "w", "u8", 1)
+        if ok is not True:
+            return {"status": "error", "error": "calibration trigger failed (no encoder?)"}
+        if not wait:
+            return {"status": "triggered"}
+        start = time.time()
+        while time.time() - start < timeout:
+            cal = self.getAxisCalibration(node, axis)
+            fb = self.getAxisFeedback(node, axis)
+            if cal["calibrated"] or fb["fault_name"] in ("CAL_FAILED",):
+                cal["status"] = "ok" if cal["calibrated"] else "failed"
+                cal["fault"] = fb["fault_name"]
+                return cal
+            time.sleep(0.5)
+        return {"status": "timeout"}
+
+
     def setTrigger(self, axis="X", pin=1, offset=0, period=1):
         # {"task": "/motor_act", "setTrig": {"steppers": [{"stepperid": 1, "trigPin": 1, "trigOff":0, "trigPer":1}]}}
         if type(axis) is not int:
