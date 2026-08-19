@@ -373,10 +373,10 @@ class Serial:
             except Exception as e:
                 self._logger.error("Error in checkFirmware: "+str(e))
         return False
-
+    
     def _generate_identifier(self):
-        self.identifier_counter += 1
-        return self.identifier_counter % 255  # Wrap around after 1024 to avoid large numbers
+        self.identifier_counter = (self.identifier_counter % 254) + 1
+        return self.identifier_counter          # 1..254, never 0
 
     def _process_commands(self):
         buffer = ""
