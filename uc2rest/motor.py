@@ -1343,6 +1343,87 @@ class Motor(object):
                 return result
         return None
 
+    def set_speed_multiplier(self, axis, multiplier=1, timeout=1):
+        '''
+        Set the joystick-jog speed multiplier for a specific motor axis.
+        Scales how fast the stage moves per joystick tick on the device.
+
+        Parameters:
+        -----------
+        axis : int or str
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z")
+        multiplier : int or float
+            Speed multiplier applied on the device for joystick jogging
+        timeout : int
+            Command timeout in seconds
+
+        Returns:
+        --------
+        Response from ESP32
+
+        Example:
+        --------
+        # Triple the joystick jog speed for the X-axis
+        motor.set_speed_multiplier(axis="X", multiplier=3)
+        '''
+        if type(axis) != int:
+            axis = self.xyztTo1230(axis)
+        # {"task":"/motor_act", "speedmult": {"steppers": [{"stepperid": 1, "multiplier": 15}]}}
+        path = "/motor_act"
+        payload = {
+            "task": path,
+            "speedmult": {
+                "steppers": [{
+                    "stepperid": axis,
+                    "multiplier": multiplier
+                }]
+            }
+        }
+
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        return r
+
+    def get_speed_multiplier(self, axis=None, timeout=1):
+        '''
+        Get the joystick-jog speed multiplier configuration for axes.
+
+        Parameters:
+        -----------
+        axis : int or str, optional
+            Motor axis (0/"A", 1/"X", 2/"Y", 3/"Z"). If None, returns all axes.
+        timeout : int
+            Command timeout in seconds
+
+        Returns:
+        --------
+        int/float or list : Speed multiplier for the specified axis, or all axes
+
+        Example:
+        --------
+        # Get multiplier for X-axis
+        x_mult = motor.get_speed_multiplier(axis="X")
+        # Get multiplier for all axes
+        all_mult = motor.get_speed_multiplier()
+        '''
+        motors = self.get_motors(timeout=timeout)
+
+        if motors and "steppers" in motors:
+            if axis is not None:
+                if type(axis) != int:
+                    axis = self.xyztTo1230(axis)
+                for stepper in motors["steppers"]:
+                    if stepper.get("stepperid") == axis:
+                        return stepper.get("speedMultiplier", 1)
+            else:
+                result = []
+                for stepper in motors["steppers"]:
+                    result.append({
+                        "axis": stepper.get("stepperid"),
+                        "multiplier": stepper.get("speedMultiplier", 1)
+                    })
+                return result
+        return None
+
     def get_motor(self, axis=1, timeout=1):
         path = "/motor_get"
         payload = {
