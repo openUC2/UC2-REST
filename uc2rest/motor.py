@@ -1456,10 +1456,30 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
     
-    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, zstart=0, zstep=1000, nz=10, tsettle=5, tExposure=50, illumination=(0,0,0,0), led=0, speed=20000, acceleration=None):
-		#	{"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "zStart": 0, "xStep": 500, "yStep": 500, "zStep": 500, "nX": 10, "nY": 10, "nZ": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0], "led": 255}}
+    def start_stage_scanning(self, xstart=0, xstep=1000, nx=20, ystart=0, ystep=1000, ny=10, zstart=0, zstep=1000, nz=10,
+                             tsettle=5, tExposure=50, illumination=(0, 0, 0, 0, 0), led=0, speed=20000, acceleration=None,
+                             tTrig=None, zicZac=True, nonstop=False):
+        '''Hardware-triggered grid scan run entirely by the firmware.
+
+        {"task": "/motor_act", "stagescan": {"xStart": 0, "yStart": 0, "zStart": 0, "xStep": 500, "yStep": 500,
+         "zStep": 500, "nX": 10, "nY": 10, "nZ": 10, "tPre": 50, "tPost": 50, "illumination": [0, 1, 0, 0, 0],
+         "led": 255, "speed": 20000, "acceleration": 1000000}}
+
+        Positions are in physical units and converted to steps here. The firmware walks
+        rows outer, X reversed on odd rows (zicZac), then Z, and fires one camera trigger per
+        light channel (illumination[0..4] > 0 in ascending order, then led > 0); with no light
+        set it triggers once per position. Returns immediately; completion arrives as
+        {"stagescan":{...},"success":1} (see register_stagescan_callback).
+
+        tsettle: ms to wait after a move before the trigger (firmware "tPre")
+        tExposure: ms to wait after the trigger, i.e. the exposure (firmware "tPost")
+        tTrig: trigger pulse width in ms (None = firmware default)
+        nonstop: sweep each row continuously and trigger on the fly instead of stop-and-go
+        '''
         if acceleration is None:
             acceleration = self.DEFAULT_ACCELERATION
+        illumination = list(illumination) if illumination is not None else []
+        illumination = (illumination + [0] * 5)[:5]  # firmware channels 0..4, unused ones stay 0
         path = "/motor_act"
         payload = {
             "task": path,
@@ -1470,20 +1490,25 @@ class Motor(object):
                 "yStart": ystart / self.stepSizeY,
                 "yStep": ystep / self.stepSizeY,
                 "nY": ny,
-                "tPre": tsettle,
-                "tPost": tExposure,
-                "illumination": illumination,
-                "led": led,
-                "accel": self.DEFAULT_ACCELERATION,  # default acceleration
-                "speed": speed,  # default speed
                 "zStart": zstart / self.stepSizeZ,
                 "zStep": zstep / self.stepSizeZ,
                 "nZ": nz,
+                "tPre": tsettle,
+                "tPost": tExposure,
+                "illumination": illumination,
+                "led": led if led is not None else 0,
+                "speed": speed,
+                "acceleration": acceleration,  # the firmware key; "accel" was never read
+                "zicZac": 1 if zicZac else 0,
+                "nonstop": 1 if nonstop else 0,
             }
         }
+        if tTrig is not None:
+            payload["stagescan"]["tTrig"] = tTrig
+        self._stagescan_complete = False
         r = self._parent.post_json(path, payload)
         return r
-    
+
     def start_stage_scanning_by_coordinates(self, coordinates, tPre=50, tPost=50, led=100, illumination=[50, 75, 100, 125], stopped=0): 
         '''
         Example: {"task": "/motor_act", "stagescan": {"coordinates": [{"x": 100, "y": 200, "z": 0}, {"x": 300, "y": 400, "z": 0}, {"x": 500, "y": 600, "z": 0}], "tPre": 50, "tPost": 50, "led": 100, "illumination": [50, 75, 100, 125], "stopped": 0}}

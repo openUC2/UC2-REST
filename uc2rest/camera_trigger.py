@@ -85,13 +85,16 @@ class CameraTrigger(object):
             # Extract trigger information
             cam_data = data.get("cam", {})
             
-            # Handle simple trigger ({"cam": 1})
+            # Handle simple trigger ({"cam": 1}); newer firmware adds the
+            # 0-based trigger number of the running scan ({"cam": 1, "frame": n})
             if isinstance(cam_data, (int, float)):
                 trigger_info = {
                     "trigger": int(cam_data),
                     "frame_id": self._trigger_count,
                     "timestamp": self._last_trigger_time
                 }
+                if data.get("frame") is not None:
+                    trigger_info["frame"] = int(data["frame"])
                 self._parent.logger.debug(f"Camera trigger received: {trigger_info}")
             else:
                 # Handle extended trigger data
