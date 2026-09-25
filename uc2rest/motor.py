@@ -954,7 +954,26 @@ class Motor(object):
         else:
             nResponses = len(payload["motor"]["steppers"]) + 1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
-        r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
+        expectedPosition = self.currentPosition.copy()  # callbacks overwrite currentPosition while we wait
+        if is_blocking and timeout > 0:
+            # The firmware sometimes acknowledges a short move ({"isDone":0}) but
+            # never sends the final {"isDone":1} / {"state":"done"} (seen on
+            # 3-step Z moves). Waiting for the full timeout then stalls the
+            # caller for seconds. Wait only about as long as the move should
+            # take; if no completion arrives, ask the controller where the axes
+            # are and return as soon as they sit at their targets.
+            expected_wait = min(timeout, 1.5 * max_travel_time + 0.5)
+            r = self._parent.post_json(path, payload, getReturn=True, timeout=expected_wait, nResponses=nResponses)
+            if isinstance(r, str) and expected_wait < timeout:
+                movedIDs = [m["stepperid"] for m in motorPropList]
+                if self._wait_until_at_target(movedIDs, timeout - expected_wait, expectedPosition):
+                    if self._parent.serial.DEBUG:
+                        self._parent.logger.debug(f"No completion message for {movedIDs}; position poll confirms target reached")
+                    r = [{"qid": -1, "state": "done", "source": "position_poll"}]
+            if isinstance(r, list):
+                self._verify_reported_positions([m["stepperid"] for m in motorPropList], expectedPosition)
+        else:
+            r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
 
 
         # save direction for last iteration
@@ -964,6 +983,59 @@ class Motor(object):
         self.isRunning = False
 
         return r
+
+    def _read_firmware_positions(self, timeout=1):
+        '''{stepperid: physical position} from /motor_get, or {} if no reply.'''
+        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        r = self._parent.post_json("/motor_get", {"task": "/motor_get", "position": True},
+                                   getReturn=True, nResponses=1, timeout=timeout)
+        reply = r[0] if isinstance(r, list) and r and isinstance(r[0], dict) else {}
+        return {st["stepperid"]: st["position"] * stepSizes[st["stepperid"]] * self.direction[st["stepperid"]]
+                for st in reply.get("motor", {}).get("steppers", [])
+                if "position" in st and 0 <= st["stepperid"] < 4}
+
+    def _verify_reported_positions(self, stepperIDs, expectedPosition):
+        '''The firmware occasionally reports another axis's position under a
+        stepper id (e.g. the A axis value in the isDone of an X or Z move).
+        Stored as-is, it poisons currentPosition: the next absolute move to
+        the same target is not skipped, its timeout is estimated from the
+        bogus distance (20 s for a 0.3 um Z step), and the firmware - already
+        at target - never confirms it. On such a mismatch re-read the real
+        position.'''
+        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        suspect = [sid for sid in stepperIDs
+                   if abs(self.currentPosition[sid] - expectedPosition[sid]) > 2 * abs(stepSizes[sid])]
+        if not suspect:
+            return
+        try:
+            fw = self._read_firmware_positions()
+        except Exception:
+            fw = {}
+        for sid in suspect:
+            self._parent.logger.warning(
+                f"Motor {sid}: move reported position {self.currentPosition[sid]:.2f}, commanded "
+                f"{expectedPosition[sid]:.2f}; /motor_get says {fw.get(sid)}")
+            self.currentPosition[sid] = fw.get(sid, expectedPosition[sid])
+
+    def _wait_until_at_target(self, stepperIDs, timeout, expectedPosition, poll_interval=0.1):
+        '''Poll /motor_get until the given steppers are at the commanded
+        positions (within 1.5 steps). Returns True when reached, False on timeout.'''
+        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            try:
+                # Not get_position(): it returns zeros when the reply is lost,
+                # which would falsely "reach" a target of 0.
+                fw = self._read_firmware_positions()
+                if fw and all(sid in fw and abs(fw[sid] - expectedPosition[sid]) <= 1.5 * abs(stepSizes[sid])
+                              for sid in stepperIDs):
+                    for sid in stepperIDs:
+                        self.currentPosition[sid] = fw[sid]
+                    return True
+            except Exception:
+                pass
+            time.sleep(poll_interval)
+        return False
 
     def isBusy(self, steps, timeout=1):
         path = "/motor_get"
