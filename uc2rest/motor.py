@@ -1,4 +1,5 @@
 import numpy as np
+import threading
 import time
 import json
 
@@ -58,6 +59,10 @@ class Motor(object):
             # Register callback for async closed-loop axis fault events (design v2):
             # {"axisEvent":{"axis":n,"fault":"STALL","posErrSteps":-142,...}}
             self._parent.serial.register_callback(self._callback_axis_event, pattern="axisEvent")
+            # Strobed sweep reports/completion: {"strobesweep":{"n":[..],"x":[..]}} / {"strobesweep":true,...}
+            self._parent.serial.register_callback(self._callback_strobesweep, pattern="strobesweep")
+            # /modules_get answers carry no qid, so they are caught by pattern
+            self._parent.serial.register_callback(self._callback_modules, pattern="modules")
         # announce a function that is called when we receive a position update through the callback
         self._callbackPerKey = {}
         self.nCallbacks = 10
@@ -69,6 +74,12 @@ class Motor(object):
         self._stagescan_callbacks = []  # List of callbacks to call when stagescan completes
         # Closed-loop axis fault event listeners (design v2, WP9)
         self._axis_event_callbacks = []  # called with the fault dict on STALL/LOST_STEPS/…
+        # Strobed sweep state
+        self._strobesweep_callbacks = []
+        self._strobesweep_axis = 1
+        self._strobesweep_running = False
+        self._modules = None
+        self._modules_event = threading.Event()
         # move motor to wake them up #FIXME: Should not be necessary!
         #self.move_stepper(steps=(1,1,1,1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
         #self.move_stepper(steps=(-1,-1,-1,-1), speed=(1000,1000,1000,1000), is_absolute=(False,False,False,False))
@@ -1444,6 +1455,116 @@ class Motor(object):
     def set_direction(self, axis=1, sign=1, timeout=1):
         return False
     
+    # ------------------------------------------------------------------
+    # Strobed sweep (firmware /motor_act "strobesweep"): constant-velocity move
+    # with one camera trigger + LED flash per frame, positions latched by the
+    # motor node. See ImSwitch docs/STROBED_STAGEMAP_SYNC.md.
+    # ------------------------------------------------------------------
+    def _axis_step_size(self, axis):
+        return (self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ)[axis]
+
+    def _callback_modules(self, data):
+        modules = data.get("modules")
+        if isinstance(modules, dict):
+            self._modules = modules
+            self._modules_event.set()
+
+    def get_firmware_modules(self, timeout=1.0):
+        """Module flags reported by /modules_get, or None when the firmware did not answer."""
+        self._modules_event.clear()
+        self._parent.post_json("/modules_get", {"task": "/modules_get"}, getReturn=False)
+        if not self._modules_event.wait(timeout):
+            return None
+        return self._modules
+
+    def has_strobe_sweep(self, timeout=1.0):
+        """True when the firmware can run strobed sweeps. Older firmware lacks the flag -> False."""
+        modules = self.get_firmware_modules(timeout=timeout)
+        return bool(modules) and int(modules.get("strobesweep", 0)) == 1
+
+    def _callback_strobesweep(self, data):
+        payload = data.get("strobesweep")
+        if isinstance(payload, dict):
+            ax = self._strobesweep_axis
+            step_size = self._axis_step_size(ax)
+            sign = self.direction[ax]
+            steps = [int(v) for v in payload.get("x", [])]
+            event = {
+                "type": "report",
+                "n": [int(v) for v in payload.get("n", [])],
+                # physical units in the user frame, same conversion as motor positions
+                "x": [s * step_size * sign for s in steps],
+                "x_steps": steps,
+            }
+        else:
+            event = {"type": "done"}
+            event.update({k: v for k, v in data.items() if k != "strobesweep"})
+            self._strobesweep_running = False
+        for callback in list(self._strobesweep_callbacks):
+            try:
+                callback(event)
+            except Exception as e:
+                self._parent.logger.error(f"Error in strobesweep callback: {e}")
+
+    def register_strobesweep_callback(self, callback):
+        """Called with {"type": "report", "n", "x", "x_steps"} batches and one {"type": "done", ...}."""
+        if callback not in self._strobesweep_callbacks:
+            self._strobesweep_callbacks.append(callback)
+
+    def unregister_strobesweep_callback(self, callback):
+        if callback in self._strobesweep_callbacks:
+            self._strobesweep_callbacks.remove(callback)
+
+    def is_strobe_sweep_running(self):
+        return self._strobesweep_running
+
+    def start_strobe_sweep(self, axis="X", target=0.0, speed=10000, period_us=33333, trig_us=100,
+                           laser=-1, delay_us=None, width_us=None, latch=True, report=16,
+                           acceleration=None, max_frames=0, is_absolute=True, timeout=2.0):
+        """Start a strobed constant-velocity sweep; returns the firmware acknowledgement.
+
+        target: end position in physical units (user frame); relative to the
+            current position when is_absolute is False. Converted to steps with
+            stepSize and direction exactly like move_stepper.
+        speed: passed through unchanged, like the speed of move_stepper.
+        period_us: frame period; trig_us: camera trigger pulse width.
+        laser: firmware logical laser id for the flash, -1 = none.
+        delay_us, width_us: if both are given (and laser >= 0) the firmware enables
+            the strobe for this sweep and disables it afterwards; otherwise it uses
+            whatever set_strobe configured.
+        latch: latch the axis position on every frame (reported via callbacks).
+        max_frames: > 0 runs exactly that many frames, even without motion.
+        Returns immediately; progress arrives through register_strobesweep_callback.
+        """
+        ax = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        if not is_absolute:
+            target = float(self.currentPosition[ax]) + float(target)
+        target_steps = int(round(float(target) * self.direction[ax] / self._axis_step_size(ax)))
+        sweep = {
+            "axis": ax,
+            "target": target_steps,
+            "speed": int(speed),
+            "periodUs": int(period_us),
+            "trigUs": int(trig_us),
+            "laser": int(laser) if laser is not None else -1,
+            "latch": 1 if latch else 0,
+            "report": int(report),
+            "maxFrames": int(max_frames),
+        }
+        if acceleration is not None:
+            sweep["acceleration"] = int(acceleration)
+        if delay_us is not None and width_us is not None:
+            sweep["delayUs"] = int(delay_us)
+            sweep["widthUs"] = int(width_us)
+        self._strobesweep_axis = ax
+        self._strobesweep_running = True
+        path = "/motor_act"
+        return self._parent.post_json(path, {"task": path, "strobesweep": sweep}, timeout=timeout)
+
+    def stop_strobe_sweep(self):
+        path = "/motor_act"
+        return self._parent.post_json(path, {"task": path, "strobesweep": {"stopped": 1}}, getReturn=False)
+
     def stop_stage_scanning(self):
         # {"task":"/motor_act", "stagescan":{ "stopped":1 }}
         path = "/motor_act"

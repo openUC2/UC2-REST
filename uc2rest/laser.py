@@ -114,6 +114,30 @@ class Laser(object):
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=0.5)
         return r
 
+    def set_strobe(self, channel, enable=True, delay_us=0, width_us=20, timeout=2.0):
+        """Configure the strobe of a logical laser id (one flash per strobed-sweep frame).
+
+        {"task":"/laser_act","LASERid":channel,"strobe":{"enable":1,"delayUs":..,"widthUs":..}}
+        Returns the firmware answer, e.g.
+        {"strobe":{"supported":1,"enabled":1,"remote":1,"node":30,"delayUs":1200,"widthUs":20,"count":0},"return":1}
+        or {"strobe":{"supported":0,...},"return":0,"error":"..."}; None when the
+        firmware did not answer (older firmware).
+        """
+        path = "/laser_act"
+        payload = {
+            "task": path,
+            "LASERid": int(channel),
+            "strobe": {"enable": 1 if enable else 0, "delayUs": int(delay_us), "widthUs": int(width_us)},
+        }
+        r = self._parent.post_json(path, payload, timeout=timeout)
+        if isinstance(r, list):
+            for item in r:
+                if isinstance(item, dict) and "strobe" in item:
+                    return item
+        if isinstance(r, dict) and "strobe" in r:
+            return r
+        return None
+
     def set_laserpin(self, laserid=1, laserpin=0):
         path = '/laser_set'
         

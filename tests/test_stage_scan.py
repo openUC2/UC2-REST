@@ -105,3 +105,109 @@ class CameraTriggerNotificationTest(unittest.TestCase):
         self.trigger._callback_camera_trigger({"cam": 1, "frame": 5})
         self.assertEqual([g["frame"] for g in self.got], [0, 5])
         self.assertEqual([g["frame_id"] for g in self.got], [1, 2])
+
+
+class StrobeSweepTest(unittest.TestCase):
+    """Strobed sweep payloads, unit conversion and event parsing."""
+
+    def setUp(self):
+        self.parent = _Parent()
+        self.motor = Motor(parent=self.parent)
+        self.motor.stepSizeX = 0.5
+        self.motor.direction[1] = -1
+
+    def _sweep(self):
+        path, payload = self.parent.sent[-1]
+        self.assertEqual(path, "/motor_act")
+        return payload["strobesweep"]
+
+    def test_registers_pattern_callbacks(self):
+        patterns = [c.kwargs.get("pattern") for c in self.parent.serial.register_callback.call_args_list]
+        self.assertIn("strobesweep", patterns)
+        self.assertIn("modules", patterns)
+
+    def test_start_payload_converts_target_to_steps(self):
+        self.motor.start_strobe_sweep(axis="X", target=1000.0, speed=4000, period_us=20000,
+                                      laser=4, delay_us=1200, width_us=20, report=8)
+        s = self._sweep()
+        self.assertEqual(s["axis"], 1)
+        self.assertEqual(s["target"], -2000)          # 1000 µm / 0.5 µm/step, direction -1
+        self.assertEqual((s["speed"], s["periodUs"], s["trigUs"]), (4000, 20000, 100))
+        self.assertEqual((s["laser"], s["delayUs"], s["widthUs"]), (4, 1200, 20))
+        self.assertEqual((s["latch"], s["report"], s["maxFrames"]), (1, 8, 0))
+        self.assertNotIn("acceleration", s)
+
+    def test_strobe_keys_only_when_both_given(self):
+        self.motor.start_strobe_sweep(axis="X", target=0, laser=4, delay_us=1200)
+        s = self._sweep()
+        self.assertNotIn("delayUs", s)
+        self.assertNotIn("widthUs", s)
+
+    def test_relative_target_and_calibration_mode(self):
+        self.motor.currentPosition[1] = 250.0
+        self.motor.start_strobe_sweep(axis=1, target=-50.0, is_absolute=False, max_frames=12, latch=False)
+        s = self._sweep()
+        self.assertEqual(s["target"], -400)            # (250 - 50) / 0.5 * -1
+        self.assertEqual((s["maxFrames"], s["latch"], s["laser"]), (12, 0, -1))
+
+    def test_stop_payload(self):
+        self.motor.stop_strobe_sweep()
+        self.assertEqual(self._sweep(), {"stopped": 1})
+
+    def test_report_and_done_events(self):
+        events = []
+        self.motor.register_strobesweep_callback(events.append)
+        self.motor.start_strobe_sweep(axis="X", target=10)
+        self.assertTrue(self.motor.is_strobe_sweep_running())
+        self.motor._callback_strobesweep({"strobesweep": {"n": [1, 2, 4], "x": [100, 102, 106]}})
+        self.motor._callback_strobesweep({"strobesweep": True, "frames": 4, "camera": 4, "flashes": 4,
+                                          "positions": 3, "latch": 1, "strobe": 1, "aborted": 0,
+                                          "success": 1, "qid": 5})
+        self.assertEqual(events[0], {"type": "report", "n": [1, 2, 4], "x": [-50.0, -51.0, -53.0],
+                                     "x_steps": [100, 102, 106]})
+        self.assertEqual(events[1]["type"], "done")
+        self.assertEqual((events[1]["frames"], events[1]["success"]), (4, 1))
+        self.assertFalse(self.motor.is_strobe_sweep_running())
+        self.motor.unregister_strobesweep_callback(events.append)
+        self.motor._callback_strobesweep({"strobesweep": {"n": [5], "x": [1]}})
+        self.assertEqual(len(events), 2)
+
+    def test_capability_probe(self):
+        # new firmware answers /modules_get with the flag; the answer arrives by pattern
+        def answer(path, payload, **kwargs):
+            self.parent.sent.append((path, payload))
+            self.motor._callback_modules({"modules": {"motor": 1, "strobesweep": 1}})
+        self.parent.post_json = answer
+        self.assertTrue(self.motor.has_strobe_sweep(timeout=0.2))
+        self.assertEqual(self.parent.sent[-1][1]["task"], "/modules_get")
+
+    def test_capability_probe_old_firmware(self):
+        def old(path, payload, **kwargs):
+            self.motor._callback_modules({"modules": {"motor": 1}})
+        self.parent.post_json = old
+        self.assertFalse(self.motor.has_strobe_sweep(timeout=0.2))
+        self.parent.post_json = lambda *a, **k: None   # no answer at all
+        self.assertFalse(self.motor.has_strobe_sweep(timeout=0.05))
+
+
+class LaserStrobeTest(unittest.TestCase):
+    def setUp(self):
+        from uc2rest.laser import Laser
+        self.parent = _Parent()
+        self.laser = Laser(parent=self.parent)
+
+    def test_payload_and_answer(self):
+        self.parent.post_json = lambda path, payload, **kw: (
+            self.parent.sent.append((path, payload)) or
+            [{"strobe": {"supported": 1, "enabled": 1, "delayUs": 1200, "widthUs": 20, "count": 0},
+              "return": 1, "qid": 3}])
+        r = self.laser.set_strobe(4, enable=True, delay_us=1200, width_us=20)
+        path, payload = self.parent.sent[-1]
+        self.assertEqual(path, "/laser_act")
+        self.assertEqual(payload["LASERid"], 4)
+        self.assertEqual(payload["strobe"], {"enable": 1, "delayUs": 1200, "widthUs": 20})
+        self.assertEqual(r["strobe"]["enabled"], 1)
+
+    def test_old_firmware_returns_none(self):
+        self.parent.post_json = lambda *a, **k: "communication interrupted by timeout or reset: 3"
+        self.assertIsNone(self.laser.set_strobe(4, enable=False))
