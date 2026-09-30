@@ -23,9 +23,11 @@ gTIMEOUT = 10  # seconds to wait for a response from the ESP32
 # ``{"ota_rx": <total_bytes>}`` until the final ``{"ota_status": "success"}``.
 # ============================================================================
 
-STREAMING_BAUD = 921600       # match canopen_ota_serial.py default
+STREAMING_BAUD = 921600       # fallback only: streaming must use the master's UART rate,
+                              # so the parent link's baudrate is the default
 CHUNK_SIZE = 4096             # bytes per ACK-paced write
-READY_TIMEOUT_S = 10.0        # wait for {"ota_status":"ready"}
+READY_TIMEOUT_S = 15.0        # wait for {"ota_status":"ready"}; longer than the master's
+                              # 10 s waitForNodeReachable, so a late "ready" is not missed
 FLASH_TIMEOUT_S = 600.0       # SDO domain transfer can take minutes
 ACK_TIMEOUT_S = 30.0          # per-chunk wait for {"ota_rx": N}
 INTER_CHUNK_DELAY_S = 0.0     # >0 only if host overruns master's UART
@@ -309,7 +311,7 @@ class CANOTA(object):
 
     def start_can_streaming_ota(self, can_id: int, firmware_path: str,
                                  progress_callback=None, status_callback=None,
-                                 port: str = None, baud: int = STREAMING_BAUD):
+                                 port: str = None, baud: int = None):
         """
         Upload firmware to a CAN slave via the CANopen OTA path
         (laptop -> serial -> ESP32 master -> CAN -> slave).
@@ -319,7 +321,10 @@ class CANOTA(object):
         :param progress_callback: Function(chunk_idx, total_chunks, bytes_sent, speed_kbps)
         :param status_callback: Function(status_str, success_bool)
         :param port: Serial port (default: use parent's port)
-        :param baud: Baud rate for streaming (default: 115200)
+        :param baud: Baud rate for streaming. The master never switches baud,
+            so this must be its UART rate (default: the parent link's baudrate,
+            STREAMING_BAUD without a parent). The parent link is restored at
+            its own baudrate afterwards.
         :return: Thread handle; join + read .result for success/failure.
         """
         if not HAS_SERIAL:
@@ -335,6 +340,9 @@ class CANOTA(object):
 
         if port is None and self._parent and hasattr(self._parent, "serial"):
             port = self._parent.serial.serialport
+        if baud is None:
+            parent_serial = getattr(self._parent, "serial", None)
+            baud = getattr(parent_serial, "baudrate", None) or STREAMING_BAUD
 
         if not port:
             if status_callback:
@@ -370,7 +378,7 @@ class CANOTA(object):
 
     def start_can_streaming_ota_blocking(self, can_id: int, firmware_path: str,
                                           progress_callback=None, status_callback=None,
-                                          port: str = None, baud: int = STREAMING_BAUD):
+                                          port: str = None, baud: int = None):
         """Blocking variant of :meth:`start_can_streaming_ota`."""
         thread = self.start_can_streaming_ota(
             can_id, firmware_path, progress_callback, status_callback, port, baud
@@ -386,6 +394,14 @@ class CANOTA(object):
         """Worker thread for the ``/ota_start`` streaming upload."""
         ser = None
         parent_serial_was_open = False
+        restore_baud = baud
+        # True once the master itself ended the session (ready-phase error,
+        # error during streaming, or the final success/error). Then it is back
+        # in JSON mode and the parent link can be re-attached without the
+        # DTR/RTS reset. After a host-side timeout/cancel/exception the master
+        # may still be in binary receive mode (it swallows JSON for 30 s), so
+        # the reset stays the recovery path.
+        master_idle = False
         result = False
 
         try:
@@ -395,6 +411,7 @@ class CANOTA(object):
                 parent_serial = self._parent.serial
                 if parent_serial.serialdevice and parent_serial.serialdevice.isOpen():
                     parent_serial_was_open = True
+                    restore_baud = parent_serial.baudrate or baud
                     if status_callback:
                         status_callback("Closing parent serial connection...", True)
                     parent_serial.closeSerial()
@@ -430,6 +447,7 @@ class CANOTA(object):
                 ser, time.time() + READY_TIMEOUT_S, key_values=("ready",),
                 status_callback=status_callback)
             if not ready or ready.get("ota_status") != "ready":
+                master_idle = ready is not None  # it answered with an error
                 if status_callback:
                     status_callback(f"Master did not become ready: {ready}", False)
                 return
@@ -473,6 +491,7 @@ class CANOTA(object):
                         return
                     last_ack, err = self._drain_acks(ser, ack_buf, last_ack)
                     if err is not None:
+                        master_idle = True  # the master cleaned up before reporting
                         if status_callback:
                             status_callback(
                                 f"Master reported error at chunk #{chunk_no}: {err}",
@@ -518,6 +537,7 @@ class CANOTA(object):
                 if status_callback:
                     status_callback("Timed out waiting for OTA result", False)
                 return
+            master_idle = True
             if final.get("ota_status") == "success":
                 if status_callback:
                     status_callback(
@@ -540,7 +560,7 @@ class CANOTA(object):
                     status_callback("Restoring serial connection...", True)
                 time.sleep(1.0)
                 try:
-                    self._parent.serial.openDevice(port, baud)
+                    self._parent.serial.openDevice(port, restore_baud, reset=not master_idle)
                 except Exception as e:
                     if status_callback:
                         status_callback(

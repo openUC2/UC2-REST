@@ -208,7 +208,7 @@ class CAN(object):
             cid = entry.get("canId")
             if cid is None:
                 continue
-            fields = {k: entry[k] for k in ("build", "fwVersion", "mac")
+            fields = {k: entry[k] for k in ("build", "fwVersion", "fwImage", "mac")
                       if k in entry}
             if fields:
                 info[cid] = fields
