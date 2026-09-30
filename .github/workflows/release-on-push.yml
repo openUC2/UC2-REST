@@ -1,0 +1,80 @@
+name: Release on push to master
+
+# Every push/merge to master publishes a new release, like UC2-REST-CANOPEN's
+# publish.yml: the highest four-part tag vX.Y.Z.N plus one (v0.2.0.41 ->
+# v0.2.0.42) becomes the git tag, the GitHub release and the PyPI version.
+#
+# Tag-only: the version is injected into uc2rest/__version__.py at build time
+# (the repo keeps the "v0.0.0" placeholder, as python-publish.yml expects), so
+# nothing is committed back to master and the push cannot re-trigger itself.
+# The release is created with GITHUB_TOKEN, which does not trigger
+# python-publish.yml, so the package is uploaded exactly once. Manual releases
+# through the GitHub UI keep working via python-publish.yml.
+# Three-part tags such as the stray v2.1.0 are ignored.
+#
+# Skip a release: put "[skip release]" in the head commit message.
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: release-master   # one bump at a time, so two merges never pick the same tag
+  cancel-in-progress: false
+
+permissions:
+  contents: write         # push the tag + create the release
+
+jobs:
+  release:
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # all tags
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST=$(git tag --list 'v*.*.*.*' --sort=-v:refname | head -1)
+          if [ -z "$LATEST" ]; then echo "No vX.Y.Z.N tag found" >&2; exit 1; fi
+          NEXT=$(python3 -c "import sys; p = sys.argv[1][1:].split('.'); p[-1] = str(int(p[-1]) + 1); print('v' + '.'.join(p))" "$LATEST")
+          echo "latest: $LATEST -> next: $NEXT"
+          echo "tag=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Set package version
+        run: |
+          sed -i 's/^__version__ = "v0.0.0"$/__version__ = "${{ steps.version.outputs.tag }}"/' uc2rest/__version__.py
+          grep -q '^__version__ = "${{ steps.version.outputs.tag }}"$' uc2rest/__version__.py \
+            || { echo "uc2rest/__version__.py lost its \"v0.0.0\" placeholder" >&2; exit 1; }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      # Tag before uploading: the tag reserves the version. If the upload then
+      # fails, the next push simply takes the next number.
+      - name: Tag the commit
+        run: |
+          git tag "${{ steps.version.outputs.tag }}" "$GITHUB_SHA"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          files: dist/*
+          generate_release_notes: true
