@@ -114,7 +114,10 @@ class Serial:
         return None  # Port nicht gefunden
 
 
-    def openDevice(self, port=None, baud_rate=115200):
+    def openDevice(self, port=None, baud_rate=115200, reset=True):
+        '''Open the link to the board. reset=False skips the DTR/RTS pulse
+        that hard-resets boards with a USB-UART bridge (see tryToConnect);
+        use it to re-attach to a board that is known to be running and idle.'''
         try: # try to close an eventually open serial connection
             if str(type(self.ser)) != "<class 'uc2rest.mserial.MockSerial'>":
                 self.serialdevice.close()
@@ -133,7 +136,7 @@ class Serial:
                     raise ValueError("Port not found")
 
             for i in range(2): # not good, but sometimes it  needs a second attempt
-                isUC2 = self.tryToConnect(port, baudrate=self.baudrate)
+                isUC2 = self.tryToConnect(port, baudrate=self.baudrate, reset=reset)
                 if isUC2:
                     break
             if not isUC2:
@@ -185,7 +188,7 @@ class Serial:
 
     def _probeDeviceIdentity(self, ser, timeout=2):
         '''Send /state_get and parse the firmware identity block into
-        self.firmware_info: {name, version, date, author, pindef, isMaster}.
+        self.firmware_info: {name, version, fwVersion, fwImage, date, author, pindef, isMaster}.
         Used by requireMaster to reject motor/slave boards. Best-effort: returns
         an empty dict (and leaves firmware_info empty) if nothing parses.'''
         info = {}
@@ -217,6 +220,8 @@ class Serial:
                 info = {
                     "name": state.get("identifier_name", ""),
                     "version": state.get("identifier_id", ""),
+                    "fwVersion": state.get("identifier_version", ""),
+                    "fwImage": state.get("identifier_image", ""),
                     "date": state.get("identifier_date", ""),
                     "author": state.get("identifier_author", ""),
                     "pindef": pindef,
@@ -271,13 +276,13 @@ class Serial:
         self.manufacturer = "UC2Mock"
         return None
 
-    def tryToConnect(self, port, baudrate=None):
+    def tryToConnect(self, port, baudrate=None, reset=True):
         if baudrate is not None:
             self.baudrate = baudrate
         try:
             self.serialdevice = serial.Serial(port.device, baudrate=self.baudrate, timeout=self.read_timeout, write_timeout=self.write_timeout)
             # close the device - similar to hard reset
-            if not port.description == "USB JTAG/serial debug unit": # ESP32S3 won't work like that -> non configured device afterwards 
+            if reset and not port.description == "USB JTAG/serial debug unit": # ESP32S3 won't work like that -> non configured device afterwards 
                 self.serialdevice.setDTR(False)
                 self.serialdevice.setRTS(True)
                 time.sleep(.1)

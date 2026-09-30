@@ -86,7 +86,7 @@ class Home(object):
                   endstoppolarity=endstoppolarity,
                   isBlocking=isBlocking)    
     
-    def home_z(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
+    def home_z(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False, hardhome=False):
         # axisa = 3 corresponds to 'Z'
         axis = 3
         self.home(axis=axis, 
@@ -95,7 +95,8 @@ class Home(object):
                   direction = direction, 
                   endposrelease=endposrelease, 
                   endstoppolarity=endstoppolarity,
-                  isBlocking=isBlocking)    
+                  isBlocking=isBlocking,
+                  hardhome=hardhome)    
         
     def home_a(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
         # axis = 0 corresponds to 'A'
@@ -239,7 +240,7 @@ class Home(object):
                 return 0
         return axis
     
-    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=False):
+    def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=False, hardhome=False):
         '''
         axis = 0,1,2,3 or 'A, 'X','Y','Z'
         timeout => when to stop homing (it's a while loop on the MCU)
@@ -247,6 +248,7 @@ class Home(object):
         direction => 1,-1 (left/right)
         endposrelease => how far to move after homing (0...3000)
         preMove => the motor will first move by some steps in the opposite direction before homing, this is useful to avoid false triggering of the endstop
+        hardhome => home, overshoot into the mechanical stop (squares dual-motor axes), back off and home again
         '''
         
         # default values
@@ -319,6 +321,9 @@ class Home(object):
                 "endoffset": endposrelease
                  }]
             }}
+        if hardhome:
+            payload["home"]["steppers"][0]["hardhome"] = 1
+            timeout *= 2  # two homing cycles; firmware restarts its own timer per cycle
      
         timeout = timeout if isBlocking else 0
         nResponses = 2 # one for command received, one for home reached

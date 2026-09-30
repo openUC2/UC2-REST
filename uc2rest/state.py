@@ -140,14 +140,20 @@ class State(object):
     def get_firmware_info(self, timeout=3):
         '''
         Return the firmware identity of the USB-connected ESP32 as a flat dict:
-        {"name", "version", "date", "author", "pindef", "isMaster"}.
+        {"name", "version", "fwVersion", "fwImage", "date", "author", "pindef", "isMaster"}.
 
         Parsed from /state_get, e.g.
           {"state":{"identifier_name":"UC2_Feather","identifier_id":"V2.0",
-                    "identifier_date":"Jun 17 2026 07:17:22","identifier_author":"BD",
+                    "identifier_date":"Jun 17 2026 07:17:22",
+                    "identifier_version":"v2026.0.0-beta.4-6-g2108590-t20260930092622",
+                    "identifier_image":"esp32_UC2_canopen_master_release.bin",
+                    "identifier_author":"BD",
                     "pindef":"UC2_canopen_master", ...},"qid":0}
-        The build date and pindef are the fields that matter for telling boards
-        apart. Returns an empty dict if nothing could be parsed.
+        "fwVersion" is the release the firmware was built from (same string as
+        the CAN bus scan's "fwVersion" and version.json on the firmware server);
+        empty on firmware built before it was reported. "fwImage" is the image
+        file it was built as on the firmware server. "version" is the fixed
+        API generation ("V2.0"). Returns an empty dict if nothing could be parsed.
         '''
         r = self.get_state(timeout=timeout)
         try:
@@ -158,6 +164,8 @@ class State(object):
             return {
                 "name": state.get("identifier_name", ""),
                 "version": state.get("identifier_id", ""),
+                "fwVersion": state.get("identifier_version", ""),
+                "fwImage": state.get("identifier_image", ""),
                 "date": state.get("identifier_date", ""),
                 "author": state.get("identifier_author", ""),
                 "pindef": pindef,
