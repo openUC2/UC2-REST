@@ -5,6 +5,11 @@ import json
 
 
 gTIMEOUT = 100 # seconds to wait for a response from the ESP32
+
+# Firmware stepper ids (uc2-esp32 enum Stepper): A=0, X=1, Y=2, Z=3, B..G=4..9.
+# 10 = MOTOR_AXIS_COUNT on CAN masters; ids >= 4 are usually CAN satellites (/route_set).
+AXIS_NAMES = ("A", "X", "Y", "Z", "B", "C", "D", "E", "F", "G")
+
 class Motor(object):
 
     # indicate if there is any motion happening
@@ -16,16 +21,22 @@ class Motor(object):
         # do we have a coreXY setup?
         self.isCoreXY = False
 
-        self.nMotors = 4
+        # Every per-axis array is indexed by firmware stepperid.
+        self.nMotors = len(AXIS_NAMES)
+        # axis name -> stepperid; add or remap names with set_axis_ids()
+        self.axisIds = {name: i for i, name in enumerate(AXIS_NAMES)}
+        # ids that stop() without an axis addresses. The firmware does not bounds-check
+        # stepperid on every build, so never send ids nobody has commanded.
+        self._usedIds = set(range(4))
         self.lastDirection = np.zeros((self.nMotors))
         self.backlash = np.zeros((self.nMotors))
-        self.stepSize = np.ones((self.nMotors))
-        self.maxStep = np.ones((self.nMotors))*np.inf
-        self.minStep = np.ones((self.nMotors))*(-np.inf)
+        self.stepSize = np.ones((self.nMotors))       # physical units per step, > 0
+        self.minPos = np.full(self.nMotors, -np.inf)  # soft limits from setup_motor (informational)
+        self.maxPos = np.full(self.nMotors, np.inf)
         self.currentDirection = np.zeros((self.nMotors))
         self.currentPosition = np.zeros((self.nMotors))
 
-        # Per-axis hardware-direction sign (+1 or -1), indexed as [A, X, Y, Z]
+        # Per-axis hardware-direction sign (+1 or -1).
         # Applied internally at the firmware boundary: outbound commands are
         # multiplied by this sign before being sent, and inbound positions are
         # multiplied by this sign before being reported. This lets callers keep
@@ -34,22 +45,7 @@ class Motor(object):
         # an explicit `direction` argument or by passing a negative stepSize).
         self.direction = np.ones((self.nMotors), dtype=np.int8)
 
-        self.minPosX = -np.inf
-        self.minPosY = -np.inf
-        self.minPosZ = -np.inf
-        self.minPosA = -np.inf
-        self.maxPosX = np.inf
-        self.maxPosY = np.inf
-        self.maxPosZ = np.inf
-        self.maxPosA = np.inf
-        self.stepSizeX =  1
-        self.stepSizeY =  1
-        self.stepSizeZ =  1
-        self.stepSizeA =  1
-
         self.DEFAULT_ACCELERATION = 1000000
-
-        self.motorAxisOrder = [0,1,2,3] # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
 
         # register a callback function for the motor status on the serial loop
         if hasattr(self._parent, "serial"):
@@ -104,10 +100,7 @@ class Motor(object):
         }
         into the position array of the motors '''
         try:
-            nSteppers = len(data["steppers"])
-            stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-            for iMotor in range(nSteppers):
-                stepper = data["steppers"][iMotor]
+            for stepper in data["steppers"]:
                 # Intermediate status frames during a move carry only
                 # {stepperid, isDone} with no "position" key — skip them instead
                 # of raising KeyError 'position' (which previously aborted the
@@ -115,16 +108,19 @@ class Motor(object):
                 if "position" not in stepper:
                     continue
                 stepperID = stepper["stepperid"]
+                if not 0 <= stepperID < self.nMotors:
+                    continue
                 # Hardware returns raw steps in firmware frame; convert to physical units
                 # in user frame: phys = hw_steps * stepSize * direction. The direction sign
                 # hides any wiring polarity flip from the caller.
                 self.currentPosition[stepperID] = (
                     stepper["position"]
-                    * stepSizes[stepperID]
+                    * self.stepSize[stepperID]
                     * self.direction[stepperID]
                 )
-            if  callable(self._callbackPerKey[0]):
-                self._callbackPerKey[0](self.currentPosition) # we call the function with the value
+            for callback in list(self._callbackPerKey.values()):
+                if callable(callback):
+                    callback(self.currentPosition)  # array indexed by stepperid
         except Exception as e:
             print("Error in _callback_motor_status: ", e)
 
@@ -206,7 +202,8 @@ class Motor(object):
         return True
 
     def register_callback(self, key, callbackfct):
-        ''' register a callback function for a specific key '''
+        ''' register a position callback under any key (e.g. a stage name); every registered
+        callback is called with the position array, indexed by stepperid '''
         self._callbackPerKey[key] = callbackfct
 
     # ========================================================================
@@ -393,8 +390,7 @@ class Motor(object):
 
     def setTrigger(self, axis="X", pin=1, offset=0, period=1):
         # {"task": "/motor_act", "setTrig": {"steppers": [{"stepperid": 1, "trigPin": 1, "trigOff":0, "trigPer":1}]}}
-        if type(axis) is not int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         path = "/motor_act"
         payload = {
             "task": path,
@@ -446,7 +442,27 @@ class Motor(object):
         self.isCoreXY = isCoreXY
 
     def setMotorAxisOrder(self, order=[0,1,2,3]):
-        self.motorAxisOrder = order
+        ''' legacy: order[i] is the stepperid of axis A, X, Y, Z (i = 0..3) '''
+        self.set_axis_ids(dict(zip(("A", "X", "Y", "Z"), order)))
+
+    def set_axis_ids(self, ids):
+        ''' add or remap axis names, e.g. {"T": 4} or {"X": 5}; names are case-insensitive '''
+        for name, stepperid in ids.items():
+            self.axisIds[str(name).strip().upper()] = self.axis_id(int(stepperid))
+
+    def axis_id(self, axis):
+        ''' firmware stepperid of an axis name ("X", "B", ...) or id (int) '''
+        if isinstance(axis, str):
+            name = axis.strip().upper()
+            if name not in self.axisIds:
+                raise ValueError(f"Unknown axis {axis!r}; known: {', '.join(self.axisIds)}")
+            return self.axisIds[name]
+        stepperid = int(axis)
+        if not 0 <= stepperid < self.nMotors:
+            raise ValueError(f"stepperid {stepperid} out of range 0-{self.nMotors - 1}")
+        return stepperid
+
+    xyztTo1230 = axis_id  # legacy name
 
     # { "task": "/motor_act", "focusscan": { "zStart": 0, "zStep": 50, "nZ": 20, "tPre": 80, "tTrig": 20, "tPost": 0, "led": 0, "illumination": [0, 255, 0, 0], "speed": 20000, "acceleration": 1000000, "qid": 42 }}
     def startFocusScanning(self, zStart=0, zStep=50, nZ=20, tPre=80, tTrig=20, tPost=0, led=0, illumination=[0, 255, 0, 0], speed=20000, acceleration=1000000, qid=42):
@@ -488,13 +504,14 @@ class Motor(object):
 
         The ``stepSize`` is stored internally as a positive magnitude (physical
         units per step). The wiring polarity is tracked separately in
-        ``self.direction[axis]`` so the user/physical coordinate frame stays
+        ``self.direction[stepperid]`` so the user/physical coordinate frame stays
         consistent in both directions of communication.
 
         Parameters
         ----------
-        axis : str
-            One of "X", "Y", "Z", "A".
+        axis : str or int
+            Axis name ("A", "X", "Y", "Z", "B" ... "G" or one added with
+            set_axis_ids) or firmware stepperid.
         minPos, maxPos : float
             Soft limits in physical (user-frame) units.
         stepSize : float
@@ -514,33 +531,18 @@ class Motor(object):
             sign = -1 if stepSize < 0 else 1
         else:
             sign = -1 if direction < 0 else 1
-        stepSize = abs(stepSize)
 
-        axisIdx = self.xyztTo1230(axis)
+        axisIdx = self.axis_id(axis)
         self.direction[axisIdx] = sign
-
-        if axis == "X":
-            self.minPosX = minPos
-            self.maxPosX = maxPos
-            self.stepSizeX = stepSize
-        elif axis == "Y":
-            self.minPosY = minPos
-            self.maxPosY = maxPos
-            self.stepSizeY = stepSize
-        elif axis == "Z":
-            self.minPosZ = minPos
-            self.maxPosZ = maxPos
-            self.stepSizeZ = stepSize
-        elif axis == "A":
-            self.minPosA = minPos
-            self.maxPosA = maxPos
-            self.stepSizeA = stepSize
+        self.stepSize[axisIdx] = abs(stepSize)
+        self.minPos[axisIdx] = minPos
+        self.maxPos[axisIdx] = maxPos
         self.backlash[axisIdx] = backlash
 
     def set_backlash(self, axis, backlash):
         """Set the per-axis backlash (in hardware steps) used as a reversal overshoot.
 
-        ``axis`` may be a name (\"X\"/\"Y\"/\"Z\"/\"A\") or a hardware index (0-3).
+        ``axis`` may be a name (\"X\", \"B\", ...) or a stepperid.
         The value is stored in :attr:`backlash` and consumed by
         :meth:`move_stepper`, which adds ``direction * backlash`` extra steps
         whenever the axis changes direction, taking up the mechanical slack so the
@@ -548,26 +550,13 @@ class Motor(object):
         compensation for that axis. Typically fed from a camera-based backlash
         measurement (microns) after converting to steps with the axis step size.
         """
-        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        idx = self.axis_id(axis)
         self.backlash[idx] = backlash
         return float(self.backlash[idx])
 
     def get_backlash(self, axis):
         """Return the per-axis backlash (in hardware steps)."""
-        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
-        return float(self.backlash[idx])
-
-    def xyztTo1230(self, axis):
-        axis = axis.upper()
-        if axis == "X":
-            axis = 1
-        if axis == "Y":
-            axis = 2
-        if axis == "Z":
-            axis = 3
-        if axis == "A":
-            axis = 0
-        return axis
+        return float(self.backlash[self.axis_id(axis)])
 
     def signed_step_size(self, axis):
         """Return stepSize * direction for an axis.
@@ -580,7 +569,7 @@ class Motor(object):
         Parameters
         ----------
         axis : str or int
-            Axis name (\"X\"/\"Y\"/\"Z\"/\"A\") or hardware index (0-3).
+            Axis name (\"X\", \"B\", ...) or stepperid.
 
         Returns
         -------
@@ -589,9 +578,8 @@ class Motor(object):
             ``phys = hw_steps * signed_step_size(axis)``
             ``hw_steps = phys / signed_step_size(axis)``
         """
-        idx = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
-        scales = (self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ)
-        return scales[idx] * int(self.direction[idx])
+        idx = self.axis_id(axis)
+        return self.stepSize[idx] * int(self.direction[idx])
 
     def cartesian2corexy(self, x, y):
         # convert cartesian coordinates to coreXY coordinates
@@ -618,7 +606,7 @@ class Motor(object):
 
     def move_z(self, steps=0, speed=1000, acceleration=None,  is_blocking=False, is_absolute=False, is_dualaxis = False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
         if is_dualaxis:
-            self.move_az(steps=(steps, steps), speed=(speed,speed), acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=gTIMEOUT, is_reduced=is_reduced)
+            return self.move_az(steps=(steps, steps), speed=(speed,speed), acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
         else:
             return self.move_axis_by_name(axis="Z", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
@@ -626,93 +614,70 @@ class Motor(object):
         return self.move_axis_by_name(axis="A", steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_xyz(self, steps=(0,0,0), speed=(1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        if not (type(speed)==list) or len(speed)!= 3:
-            speed = (speed,speed,speed)
         if acceleration is None:
-            acceleration = (self.DEFAULT_ACCELERATION,self.DEFAULT_ACCELERATION,self.DEFAULT_ACCELERATION)
-
-        # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(0,steps[0],steps[1],steps[2]), acceleration=(0,acceleration[0],acceleration[1],acceleration[2]), speed=(0,speed[0],speed[1],speed[2]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
-        return r
+            acceleration = self.DEFAULT_ACCELERATION
+        return self.move_axes(dict(zip("XYZ", steps)), speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_xy(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        if self.isCoreXY:
-            # have to move only one motor to move in XY direction
-           return self.move_xyza(steps=(0,steps[0], steps[1], 0), speed=(0,speed[0],speed[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
-        else:
-            if type(speed)==int or len(speed)!= 2:
-                speed = (speed,speed)
-
-            if acceleration is None:
-                acceleration = 100000
-                
-            if type(acceleration)==int or len(acceleration)!= 2:
-                acceleration = (acceleration,acceleration)
-
-            # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-            r = self.move_xyza(steps=(0, steps[0],steps[1],0), speed=(0,speed[0],speed[1],0), acceleration=(0,acceleration[0],acceleration[1],0), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
-            return r
+        if acceleration is None and not self.isCoreXY:
+            acceleration = 100000
+        return self.move_axes(dict(zip("XY", steps)), speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_az(self, steps=(0,0), speed=(1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        if (type(speed)!=list and type(speed)!=tuple) or len(speed)!= 2:
-            speed = (speed,speed)
-
-        if (type(acceleration)!=list and type(acceleration)!=tuple) or len(acceleration)!= 2:
-            acceleration = (acceleration,acceleration)
-
-        # motor axis is 1,2,3,0 => X,Y,Z,T # FIXME: Hardcoded
-        r = self.move_xyza(steps=(steps[0],0,0,steps[1]), speed=(speed[0],0,0,speed[1]), acceleration=(acceleration[0],0,0,acceleration[1]), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
-        return r
+        return self.move_axes(dict(zip("AZ", steps)), speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_xyza(self, steps=(0,0,0,0), speed=(1000,1000,1000,1000), acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        # everywhere, where relative steps are zero, speed should be zero, too
-        if type(speed)==int:
-            speed = [speed,speed,speed,speed]
-        if type(speed)==tuple:
-            speed = list(speed)
-        for iMotor in range(len(steps)):
-            if steps[iMotor]==0 and not is_absolute:
-                speed[iMotor] = 0
-
-        r = self.move_stepper(steps=steps, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
-        return r
+        ''' steps, speed, acceleration in the order A, X, Y, Z '''
+        return self.move_axes(dict(zip("AXYZ", steps)), speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_axis_by_name(self, axis="X", steps=100, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
-        axis = self.xyztTo1230(axis)
-        _speed=np.zeros(4)
-        _speed[axis] = speed
-        _steps=np.array((0,0,0,0))
-        _steps[axis] = steps
-        _acceleration=acceleration
-        r = self.move_stepper(_steps, speed=_speed, acceleration=_acceleration, timeout=timeout, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, is_reduced=is_reduced)
-        return r
+        ''' move one axis, given by name ("X", "B", ...) or stepperid '''
+        return self.move_axes({axis: steps}, speed=speed, acceleration=acceleration, is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
+
+    def move_axes(self, steps, speed=1000, acceleration=None, is_blocking=False, is_absolute=False, is_enabled=True, timeout=gTIMEOUT, is_reduced=False):
+        '''
+        Move several axes in one command.
+        steps: {axis: value}, axis = name ("X", "B", ...) or stepperid; value in physical units.
+        speed, acceleration: one value for all axes, a sequence in the order of steps, or {axis: value}.
+        Relative moves leave axes with 0 steps alone.
+        '''
+        axes = list(steps)
+
+        def spread(values, fill):
+            if isinstance(values, dict):
+                values = [values[a] for a in axes]
+            out = [fill] * self.nMotors
+            if values is None or np.isscalar(values):
+                values = [values] * len(axes)
+            for axis, value in zip(axes, values):
+                out[self.axis_id(axis)] = value
+            return out
+
+        _steps = np.array(spread(list(steps.values()), 0), dtype=float)
+        _speed = spread(speed, 0)
+        if not is_absolute:
+            _speed = [0 if s == 0 else v for s, v in zip(_steps, _speed)]
+        return self.move_stepper(_steps, speed=_speed, acceleration=spread(acceleration, None), is_blocking=is_blocking, is_absolute=is_absolute, is_enabled=is_enabled, timeout=timeout, is_reduced=is_reduced)
 
     def move_forever(self, speed=(0,0,0,0), is_stop=False, is_blocking=False):
-        if type(speed)==int:
-            speed=(speed, speed, speed, speed)
-        if len(speed)==3:
-            speed = (*speed,0)
-        # Apply per-axis direction sign so that a user-frame positive speed
-        # moves the stage in the user-positive direction even on inverted axes.
-        speed = tuple(int(speed[i]) * int(self.direction[i]) for i in range(4))
         '''
-        {"task":"/motor_act",
-            "motor":
-            {
-                "steppers": [
-                    { "stepperid": 3, "isforever": 1, "speed": 2000}
-                ]
-            }
-        }
+        Run axes at constant speed until stopped.
+        speed: {axis: speed} (axis = name or stepperid), or legacy (A, X, Y, Z) / (A, X, Y), or one value for A/X/Y/Z.
+        {"task":"/motor_act", "motor": {"steppers": [{"stepperid": 3, "isforever": 1, "speed": 2000}]}}
         '''
-        # only consider those actions that are necessary
+        if not isinstance(speed, dict):
+            if np.isscalar(speed):
+                speed = (speed,) * 4
+            speed = dict(zip("AXYZ", speed))
         motorPropList = []
-        for iMotor in range(4):
-            if abs(speed[iMotor])>=0:
-                motorProp = { "stepperid": iMotor,
-                             "isforever": int(not is_stop),
-                             "speed": speed[iMotor]}
-                motorPropList.append(motorProp)
+        for axis, value in speed.items():
+            i = self.axis_id(axis)
+            self._usedIds.add(i)
+            # Apply per-axis direction sign so that a user-frame positive speed
+            # moves the stage in the user-positive direction even on inverted axes.
+            motorPropList.append({"stepperid": i,
+                                  "isforever": int(not is_stop),
+                                  "speed": int(value) * int(self.direction[i])})
 
         path = "/motor_act"
         payload = {
@@ -727,18 +692,15 @@ class Motor(object):
         return r
 
     def stop(self, axis=None):
-        axisNumberList = []
+        ''' stop one axis, a list of axes, or (None) A/X/Y/Z and every axis commanded so far '''
         if axis is None:
-            for iMotor in range(self.nMotors):
-                axisNumberList.append(iMotor)
+            ids = sorted(self._usedIds)
+        elif isinstance(axis, (list, tuple)):
+            ids = [self.axis_id(a) for a in axis]
         else:
-            axisNumberList.append(self.xyztTo1230(axis))
+            ids = [self.axis_id(axis)]
 
-        motorPropList = []
-        for iMotor in axisNumberList:
-            motorProp = { "stepperid": self.motorAxisOrder[iMotor],
-                            "isstop": True}
-            motorPropList.append(motorProp)
+        motorPropList = [{"stepperid": i, "isstop": True} for i in ids]
 
         path = "/motor_act"
         payload = {
@@ -791,29 +753,30 @@ class Motor(object):
         '''
         This tells the motor to run at a given speed for a specific number of steps; Multiple motors can run simultaneously
 
-        XYZT => 1,2,3,0
+        Every argument is indexed by stepperid (A=0, X=1, Y=2, Z=3, B..G=4..9). Shorter
+        sequences are padded; a single value applies to the first len(steps) ids.
+        Positions are in physical units (see setup_motor). Prefer move_axes() for named axes.
         '''
+        n = self.nMotors
+        nGiven = len(steps)
+
+        def pad(values, fill):
+            values = [values] * nGiven if values is None or np.isscalar(values) else list(values)
+            return values + [fill] * (n - len(values))
+
+        steps = np.array(pad(steps, 0), dtype=float)
+        speed = pad(speed, 0)
+        acceleration = pad(acceleration, None)
+
         # determine the axis to operate
-        axisToMove = np.where(np.abs(speed)>0)[0]
-        if axisToMove.shape[0]==0:
+        axisToMove = [i for i in range(n) if abs(speed[i]) > 0]
+        if not axisToMove:
             return "{'return':-1}"
-        if type(is_absolute)==bool:
-            isAbsoluteArray = np.zeros((4))
-            isAbsoluteArray[axisToMove] = is_absolute
+        if np.isscalar(is_absolute):
+            isAbsoluteArray = np.zeros(n, dtype=bool)
+            isAbsoluteArray[axisToMove] = bool(is_absolute)
         else:
-            isAbsoluteArray = is_absolute
-
-        # convert single elements to array
-        if type(speed)!=list and type(speed)!=tuple and type(speed)!=np.ndarray:
-            speed = np.array((speed,speed,speed,speed))
-
-        # convert single elements to array
-        if type(acceleration)!=list and type(acceleration)!=tuple and type(acceleration)!=np.ndarray:
-            acceleration = np.array((acceleration,acceleration,acceleration,acceleration))
-
-        # make sure value is an array
-        if type(steps)==tuple:
-            steps = np.array(steps)
+            isAbsoluteArray = np.array(pad(is_absolute, False), dtype=bool)
 
         # Store the target position in physical units BEFORE conversion to hardware steps
         targetPositionPhysical = steps.copy()
@@ -823,114 +786,65 @@ class Motor(object):
         #   hw_steps = phys / |stepSize| * direction
         # (For relative moves this flips the requested delta; for absolute targets it
         # flips the absolute position the firmware should drive to.)
-        steps[0] = steps[0] * self.direction[0] / self.stepSizeA
-        steps[1] = steps[1] * self.direction[1] / self.stepSizeX
-        steps[2] = steps[2] * self.direction[2] / self.stepSizeY
-        steps[3] = steps[3] * self.direction[3] / self.stepSizeZ
-        
+        steps = steps * self.direction / self.stepSize
+
         # detect change in direction and compute distances in HARDWARE STEPS for travel time calculation
-        absoluteDistances_steps = np.zeros((4))  # Distance in hardware steps
-        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        
-        for iMotor in range(4):
-            # for absolute motion:
+        absoluteDistances_steps = np.zeros(n)
+        for iMotor in axisToMove:
             if isAbsoluteArray[iMotor]:
-                # Compare current position (physical) with target (physical, already includes offset)
-                self.currentDirection[iMotor] = 1 if (self.currentPosition[iMotor]  > targetPositionPhysical[iMotor]) else -1
-                # Travel distance for the time estimate = |current - target| in
-                # PHYSICAL units, converted to hardware steps. Computing it in
-                # physical units keeps it direction-agnostic: the hardware `steps`
-                # target carries the per-axis direction sign, so subtracting it
-                # from an unsigned current-in-steps produced a *sum* (not a
-                # difference) on inverted axes, hugely inflating the estimate.
-                absoluteDistances_steps[iMotor] = abs(
-                    self.currentPosition[iMotor] - targetPositionPhysical[iMotor]
-                ) / stepSizes[iMotor]
+                # hardware-frame direction of travel, same convention as relative moves
+                currentSteps = self.currentPosition[iMotor] / self.stepSize[iMotor] * self.direction[iMotor]
+                self.currentDirection[iMotor] = np.sign(steps[iMotor] - currentSteps)
+                absoluteDistances_steps[iMotor] = abs(steps[iMotor] - currentSteps)
             else:
                 self.currentDirection[iMotor] = np.sign(steps[iMotor])
-                # For relative motion, steps[iMotor] is already the distance in hardware steps
                 absoluteDistances_steps[iMotor] = abs(steps[iMotor])
-                
-            if self.lastDirection[iMotor] != self.currentDirection[iMotor]:
+
+            if self.currentDirection[iMotor] != 0 and self.lastDirection[iMotor] != self.currentDirection[iMotor]:
                 # we want to overshoot a bit (backlash is in steps, so apply AFTER conversion to steps)
                 steps[iMotor] = steps[iMotor] + self.currentDirection[iMotor]*self.backlash[iMotor]
-                # Update distance calculation if backlash was applied
                 if not isAbsoluteArray[iMotor]:
                     absoluteDistances_steps[iMotor] = abs(steps[iMotor])
-    
+                self.lastDirection[iMotor] = self.currentDirection[iMotor]
+
         # Speed and acceleration are already in firmware step units (the same raw
         # values sent to the device), and absoluteDistances_steps is in hardware
         # steps too, so the time estimate is unit-consistent WITHOUT any stepSize
-        # division — dividing here would desync it from the distance and break the
-        # estimate. Just take magnitudes.
-        speed_steps = np.zeros(4)
-        acceleration_steps = np.zeros(4)
-        for iMotor in range(4):
-            if speed[iMotor] != 0:
-                speed_steps[iMotor] = abs(speed[iMotor])
-            if acceleration[iMotor] is not None and acceleration[iMotor] != 0:
-                acceleration_steps[iMotor] = abs(acceleration[iMotor])
-            else:
-                acceleration_steps[iMotor] = 20000  # safe default (firmware steps/s^2)
-        
-        # Calculate travel time using HARDWARE STEPS and converted speed/acceleration
-        # Find the axis that will take the longest (limits overall movement time)
+        # division. Find the axis that will take the longest.
         max_travel_time = 0
-        for iMotor in range(4):
-            if absoluteDistances_steps[iMotor] > 0 and speed_steps[iMotor] > 0:
-                axis_time = self.compute_travel_time(
-                    absoluteDistances_steps[iMotor], 
-                    speed_steps[iMotor], 
-                    acceleration_steps[iMotor]
-                )
-                max_travel_time = max(max_travel_time, axis_time)
-        
+        for iMotor in axisToMove:
+            accel = abs(acceleration[iMotor]) if acceleration[iMotor] else 20000  # safe default (firmware steps/s^2)
+            if absoluteDistances_steps[iMotor] > 0:
+                max_travel_time = max(max_travel_time, self.compute_travel_time(
+                    absoluteDistances_steps[iMotor], abs(speed[iMotor]), accel))
+
         # Set timeout based on calculated travel time (add 2 seconds safety margin)
         if max_travel_time > 0:
             timeout = np.uint8(abs(timeout) > 0) * (max_travel_time + 2)
         else:
             timeout = np.uint8(abs(timeout) > 0) * 3  # Minimum 3 seconds if no movement detected
-        # get current position
-        #_positions = self.get_position() # x,y,z,t = 1,2,3,0
-        #pos_3, pos_0, pos_1, pos_2 = _positions[0],_positions[1],_positions[2],_positions[3]
-
-
-        '''
-        # check if within limits
-        if pos_0+steps_0 > self.maxPosX or pos_0+steps_0 < self.minPosX:
-            steps_0=0
-        if pos_1+steps_1 > self.maxPosY or pos_1+steps_1 < self.minPosY:
-            steps_1=0
-        if pos_2+steps_2 > self.maxPosZ or pos_2+steps_2 < self.minPosZ:
-            steps_2 = 0
-        if pos_3+steps_3 > self.maxPosA or pos_3+steps_3 < self.minPosA:
-            steps_3 = 0
-        '''
-
 
         # only consider those actions that are necessary
         motorPropList = []
-        for iMotor in range(4):
-            if isAbsoluteArray[iMotor] or abs(steps[iMotor])>0:
-                # if we are absolute and the last target position is the same as the current one, we don't need to move
-                # Compare in physical units: targetPositionPhysical vs currentPosition
-                if isAbsoluteArray[iMotor] and abs(targetPositionPhysical[iMotor] - self.currentPosition[iMotor])<1:
-                    if self._parent.serial.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {targetPositionPhysical[iMotor]}")
-                    continue
-                motorProp = { "stepperid": int(self.motorAxisOrder[iMotor]),
-                             "position": int(steps[iMotor]),
-                             "speed": int(speed[iMotor]),
-                             "isabs": int(isAbsoluteArray[iMotor]),
-                             "isaccel": int(1),
-                             "isen": int(is_enabled), 
-                             "redu": int(is_reduced)}
-                if acceleration[iMotor] is not None:
-                    motorProp["accel"] = int(acceleration[iMotor])
-                    motorProp["acceleration"] = int(acceleration[iMotor])
-                else:
-                    motorProp["accel"] = self.DEFAULT_ACCELERATION
-                    motorProp["acceleration"] = self.DEFAULT_ACCELERATION
-                motorPropList.append(motorProp)
+        for iMotor in axisToMove:
+            if not (isAbsoluteArray[iMotor] or abs(steps[iMotor]) > 0):
+                continue
+            # if we are absolute and the last target position is the same as the current one, we don't need to move
+            # Compare in physical units: targetPositionPhysical vs currentPosition
+            if isAbsoluteArray[iMotor] and abs(targetPositionPhysical[iMotor] - self.currentPosition[iMotor])<1:
+                if self._parent.serial.DEBUG: self._parent.logger.debug(f"Motor {iMotor} is already at target position {targetPositionPhysical[iMotor]}")
+                continue
+            accel = acceleration[iMotor] if acceleration[iMotor] is not None else self.DEFAULT_ACCELERATION
+            motorPropList.append({"stepperid": iMotor,
+                                  "position": int(round(steps[iMotor])),
+                                  "speed": int(speed[iMotor]),
+                                  "isabs": int(isAbsoluteArray[iMotor]),
+                                  "isaccel": 1,
+                                  "isen": int(is_enabled),
+                                  "redu": int(is_reduced),
+                                  "accel": int(accel),
+                                  "acceleration": int(accel)})
+            self._usedIds.add(iMotor)
         if len(motorPropList)==0:
             return "{'return':-1}"
         path = "/motor_act"
@@ -945,16 +859,12 @@ class Motor(object):
         # Update currentPosition to track expected position in physical (user-frame) units.
         # ``steps`` is in hardware/firmware frame at this point, so we convert back with
         #   phys = hw_steps * stepSize * direction
-        stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        for iMotor in range(self.nMotors):
+        for iMotor in axisToMove:
+            physical = steps[iMotor] * self.stepSize[iMotor] * self.direction[iMotor]
             if isAbsoluteArray[iMotor]:
-                # For absolute: convert hardware steps back to physical (user) units.
-                self.currentPosition[iMotor] = steps[iMotor] * stepSizes[iMotor] * self.direction[iMotor]
+                self.currentPosition[iMotor] = physical
             else:
-                # For relative: convert hw step delta to physical delta and accumulate.
-                self.currentPosition[iMotor] = self.currentPosition[iMotor] + (
-                    steps[iMotor] * stepSizes[iMotor] * self.direction[iMotor]
-                )
+                self.currentPosition[iMotor] = self.currentPosition[iMotor] + physical
 
         # drive motor
         self.isRunning = True
@@ -966,10 +876,6 @@ class Motor(object):
             nResponses = len(payload["motor"]["steppers"]) + 1
         # if we get a return, we will receive the latest position feedback from the driver  by means of the axis that moves the longest
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=timeout, nResponses=nResponses)
-
-
-        # save direction for last iteration
-        self.lastDirection = self.currentDirection.copy()
 
         # Reset busy flag
         self.isRunning = False
@@ -984,13 +890,7 @@ class Motor(object):
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
         try:
-            isbusy = 0
-            for iMotor in range(self.nMotors):
-                isbusy += r["motor"]["steppers"][iMotor]["isbusy"]
-            if isbusy:
-                return True
-            else :
-                return False
+            return any(s.get("isbusy", 0) for s in r["motor"]["steppers"])
         except Exception as e:
             return False
 
@@ -1001,7 +901,7 @@ class Motor(object):
         payload = {"task":path,
                     "motor":{
                     "steppers": [
-                        {   "stepperid": self.motorAxisOrder[stepperid]}]
+                        {   "stepperid": self.axis_id(stepperid)}]
                     }}
 
         if stepPin is not None: payload['motor']["steppers"][0]["step"] = stepPin
@@ -1027,15 +927,13 @@ class Motor(object):
         return r
 
     def set_motor_currentPosition(self, axis=0, currentPosition=10000):
-        if type(axis)==str:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
 
         r = self.set_motor(stepperid = axis, position = currentPosition)
         return r
 
     def set_motor_acceleration(self, axis=0, acceleration=40000):
-        if type(axis)==str:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
 
         path = "/motor_act"
         payload = {
@@ -1070,30 +968,33 @@ class Motor(object):
         return r
 
     def get_position(self, axis=None, timeout=1):
-        # pulls all current positions from the stepper controller
+        '''
+        Positions in physical units as an array indexed by stepperid (0 where unknown).
+        axis None: what a bare /motor_get lists (the board's own axes); a name, id or a list
+        of them asks for exactly those axes, which CAN axes (e.g. ids 4-9 on a HAT) need.
+        '''
         path = "/motor_get"
         payload = {
             "task":path,
             "position":True,
         }
-        _position = np.array((0.,0.,0.,0.)) # T,X,Y,Z
-        _physicalStepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
+        if axis is not None:
+            axes = axis if isinstance(axis, (list, tuple)) else [axis]
+            payload["motor"] = {"steppers": [{"stepperid": self.axis_id(a)} for a in axes]}
+        _position = np.zeros(self.nMotors)
 
         # this may be an asynchronous call.. #FIXME!
         r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)[0]
-        # returns {"motor": }
-        if "motor" in r :
-            for index, istepper in enumerate(r["motor"]["steppers"]):
-                if index >3: break # TODO: We would need to handle other values too soon
-                stepperID = istepper["stepperid"]
+        # bare request: {"motor":{"steppers":[...]}}, filtered request (CAN builds): {"steppers":[...]}
+        for istepper in r.get("motor", r).get("steppers", []) if isinstance(r, dict) else []:
+            stepperID = istepper.get("stepperid", -1)
+            if 0 <= stepperID < self.nMotors and "position" in istepper:
                 # phys = hw_steps * stepSize * direction (apply wiring sign at boundary)
                 _position[stepperID] = (
                     istepper["position"]
-                    * _physicalStepSizes[self.motorAxisOrder[index]]
+                    * self.stepSize[stepperID]
                     * self.direction[stepperID]
                 )
-
-
         return _position
 
     def set_position(self, axis=1, position=0, timeout=1):
@@ -1115,8 +1016,7 @@ class Motor(object):
         Firmware payload: {"task":"/motor_act", "setpos": {"steppers": [{"stepperid":1, "posval": 0}]}}
         '''
         path = "/motor_act"
-        if not isinstance(axis, int):
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
 
         # Convert user-frame physical position to firmware hardware steps.
         ss = self.signed_step_size(axis)
@@ -1168,8 +1068,7 @@ class Motor(object):
         -----
         Soft limits are automatically ignored during homing operations.
         '''
-        if type(axis) != int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         
         path = "/motor_act"
         payload = {
@@ -1218,8 +1117,7 @@ class Motor(object):
         
         if motors and "steppers" in motors:
             if axis is not None:
-                if type(axis) != int:
-                    axis = self.xyztTo1230(axis)
+                axis = self.axis_id(axis)
                 # Find the specific axis
                 for stepper in motors["steppers"]:
                     if stepper.get("stepperid") == axis:
@@ -1293,8 +1191,7 @@ class Motor(object):
         # Set normal direction for Y-axis  
         motor.set_joystick_direction(axis="Y", inverted=False)
         '''
-        if type(axis) != int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         # {"task":"/motor_act", "joystickdir": {"steppers": [{"stepperid": 1, "inverted": 1}]}}
         path = "/motor_act"
         payload = {
@@ -1337,8 +1234,7 @@ class Motor(object):
         
         if motors and "steppers" in motors:
             if axis is not None:
-                if type(axis) != int:
-                    axis = self.xyztTo1230(axis)
+                axis = self.axis_id(axis)
                 # Find the specific axis
                 for stepper in motors["steppers"]:
                     if stepper.get("stepperid") == axis:
@@ -1377,8 +1273,7 @@ class Motor(object):
         # Triple the joystick jog speed for the X-axis
         motor.set_speed_multiplier(axis="X", multiplier=3)
         '''
-        if type(axis) != int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         # {"task":"/motor_act", "speedmult": {"steppers": [{"stepperid": 1, "multiplier": 15}]}}
         path = "/motor_act"
         payload = {
@@ -1420,8 +1315,7 @@ class Motor(object):
 
         if motors and "steppers" in motors:
             if axis is not None:
-                if type(axis) != int:
-                    axis = self.xyztTo1230(axis)
+                axis = self.axis_id(axis)
                 for stepper in motors["steppers"]:
                     if stepper.get("stepperid") == axis:
                         return stepper.get("speedMultiplier", 1)
@@ -1441,8 +1335,11 @@ class Motor(object):
             "task":path,
         }
         r = self._parent.post_json(path, payload, timeout=timeout)
-        try: return r["steppers"][self.motorAxisOrder[axis]]
-        except: return False
+        try:
+            stepperid = self.axis_id(axis)
+            return next(st for st in r.get("motor", r)["steppers"] if st.get("stepperid") == stepperid)
+        except Exception:
+            return False
 
     def get_motors(self, timeout=1):
         path = "/motor_get"
@@ -1461,7 +1358,7 @@ class Motor(object):
     # motor node. See ImSwitch docs/STROBED_STAGEMAP_SYNC.md.
     # ------------------------------------------------------------------
     def _axis_step_size(self, axis):
-        return (self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ)[axis]
+        return self.stepSize[axis]
 
     def _callback_modules(self, data):
         modules = data.get("modules")
@@ -1536,7 +1433,7 @@ class Motor(object):
         max_frames: > 0 runs exactly that many frames, even without motion.
         Returns immediately; progress arrives through register_strobesweep_callback.
         """
-        ax = self.xyztTo1230(axis) if isinstance(axis, str) else int(axis)
+        ax = self.axis_id(axis)
         if not is_absolute:
             target = float(self.currentPosition[ax]) + float(target)
         target_steps = int(round(float(target) * self.direction[ax] / self._axis_step_size(ax)))
@@ -1667,8 +1564,8 @@ class Motor(object):
         toff: off time
         #   {"task":"/tmc_act", "msteps":32, "rms_current":600, "sgthrs":100, "semin":5, "semax":2, "blank_time":24, "toff":4, "axis":1}
         '''
-        if type(axis)==str:
-            axis = self.xyztTo1230(axis)
+        if axis is not None:
+            axis = self.axis_id(axis)
         path = "/tmc_act"
         payload = {}
         if axis is not None:
@@ -1700,8 +1597,8 @@ class Motor(object):
         accept /tmc_act). Callers should fall back to their last-applied values
         in that case.
         '''
-        if type(axis) == str:
-            axis = self.xyztTo1230(axis)
+        if axis is not None:
+            axis = self.axis_id(axis)
         path = "/tmc_get"
         payload = {"task": path}
         if axis is not None:
@@ -1769,8 +1666,7 @@ class Motor(object):
         - Homing automatically clears the hard limit triggered flag
         - Hard limits are ignored during homing operations
         '''
-        if type(axis) != int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         
         path = "/motor_act"
         payload = {
@@ -1811,8 +1707,7 @@ class Motor(object):
         -----
         After clearing the flag, you should perform homing to establish a known position.
         '''
-        if type(axis) != int:
-            axis = self.xyztTo1230(axis)
+        axis = self.axis_id(axis)
         
         path = "/motor_act"
         payload = {
@@ -1862,8 +1757,7 @@ class Motor(object):
         
         if motors and "steppers" in motors:
             if axis is not None:
-                if type(axis) != int:
-                    axis = self.xyztTo1230(axis)
+                axis = self.axis_id(axis)
                 # Find the specific axis
                 for stepper in motors["steppers"]:
                     if stepper.get("stepperid") == axis:
@@ -1964,3 +1858,12 @@ class Motor(object):
             # Disable for X, Y, Z axes
             for ax in ["X", "Y", "Z"]:
                 self.set_hard_limits(axis=ax, enabled=False, timeout=timeout)
+
+
+def _legacy_step_size(name):
+    return property(lambda self: float(self.stepSize[self.axis_id(name)]),
+                    lambda self, value: self.stepSize.__setitem__(self.axis_id(name), value))
+
+# Legacy attributes stepSizeA/X/Y/Z read and write the stepSize array
+for _name in ("A", "X", "Y", "Z"):
+    setattr(Motor, f"stepSize{_name}", _legacy_step_size(_name))
