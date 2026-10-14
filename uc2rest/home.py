@@ -1,6 +1,7 @@
 import time
 import json      
 import numpy as np  
+from .motor import AXIS_NAMES
         
 class Home(object):
     ## Laser
@@ -12,8 +13,8 @@ class Home(object):
         self.timeout = 20000
         self.endstoppolarity = 1
         
-        self.nMotors = 4
-        self.isHomed = np.zeros((self.nMotors))
+        self.nMotors = len(AXIS_NAMES)
+        self.isHomed = np.zeros((self.nMotors))  # indexed by stepperid
         
 
         # register a callback function for the motor status on the serial loop
@@ -43,15 +44,10 @@ class Home(object):
         into the position array of the motors '''
         try:
             steppers = data["home"]["steppers"]
-            # Handle both single stepper and multiple steppers
-            if isinstance(steppers, dict):
-                # Single stepper format: {"axis":1,"pos":0,"isDone":1}
-                stepperID = steppers["axis"]
-                self.isHomed[stepperID] = steppers["isDone"]
-            elif isinstance(steppers, list):
-                # Multiple steppers format: [{"axis":1,"pos":0,"isDone":1}, ...]
-                for stepper in steppers:
-                    stepperID = stepper["axis"]
+            # Single stepper {"axis":1,"pos":0,"isDone":1} or a list of them
+            for stepper in ([steppers] if isinstance(steppers, dict) else steppers):
+                stepperID = stepper["axis"]
+                if 0 <= stepperID < self.nMotors:
                     self.isHomed[stepperID] = stepper["isDone"]
             
             if callable(self._callbackPerKey[0]):
@@ -65,49 +61,21 @@ class Home(object):
         
                 
     def home_x(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
-        # axis = 1 corresponds to 'X'
-        axis = 1
-        self.home(axis=axis, 
-                  endstoptimeout=timeout, 
-                  speed = speed, 
-                  direction = direction, 
-                  endposrelease=endposrelease,
-                  endstoppolarity=endstoppolarity,
-                  isBlocking=isBlocking)
+        return self.home(axis="X", endstoptimeout=timeout, speed=speed, direction=direction,
+                         endposrelease=endposrelease, endstoppolarity=endstoppolarity, isBlocking=isBlocking)
 
     def home_y(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
-        # axis = 2 corresponds to 'Y'
-        axis = 2
-        self.home(axis=axis, 
-                  endstoptimeout=timeout, 
-                  speed = speed, 
-                  direction = direction, 
-                  endposrelease=endposrelease, 
-                  endstoppolarity=endstoppolarity,
-                  isBlocking=isBlocking)    
-    
+        return self.home(axis="Y", endstoptimeout=timeout, speed=speed, direction=direction,
+                         endposrelease=endposrelease, endstoppolarity=endstoppolarity, isBlocking=isBlocking)
+
     def home_z(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False, hardhome=False):
-        # axisa = 3 corresponds to 'Z'
-        axis = 3
-        self.home(axis=axis, 
-                  endstoptimeout=timeout, 
-                  speed = speed, 
-                  direction = direction, 
-                  endposrelease=endposrelease, 
-                  endstoppolarity=endstoppolarity,
-                  isBlocking=isBlocking,
-                  hardhome=hardhome)    
-        
+        return self.home(axis="Z", endstoptimeout=timeout, speed=speed, direction=direction,
+                         endposrelease=endposrelease, endstoppolarity=endstoppolarity, isBlocking=isBlocking,
+                         hardhome=hardhome)
+
     def home_a(self, speed = None, direction = None, endposrelease = None, endstoppolarity=None, timeout=None, isBlocking=False):
-        # axis = 0 corresponds to 'A'
-        axis = 0
-        self.home(axis=axis,
-                  endstoptimeout=timeout, 
-                  speed = speed, 
-                  direction = direction, 
-                  endposrelease=endposrelease, 
-                  endstoppolarity=endstoppolarity,
-                  isBlocking=isBlocking)    
+        return self.home(axis="A", endstoptimeout=timeout, speed=speed, direction=direction,
+                         endposrelease=endposrelease, endstoppolarity=endstoppolarity, isBlocking=isBlocking)
 
     def home_xy(self, axes=["X", "Y"], speeds=None, directions=None, endposreleases=None, 
                 endstoppolarities=None, timeouts=None, isBlocking=False, preMove=True):
@@ -133,18 +101,8 @@ class Home(object):
                 timeouts=[400, 200]
             )
         """
-        # Convert axes to stepper IDs
-        # First get logical motor index, then map through motorAxisOrder to get physical stepper ID
-        stepper_ids = []
-        motorAxisOrder = self._parent.motor.motorAxisOrder if hasattr(self._parent.motor   , 'motorAxisOrder') else [0, 1, 2, 3]
-        for axis in axes:
-            if isinstance(axis, str):
-                logical_motor_index = self.xyztTo1230(axis)
-            else:
-                logical_motor_index = axis
-            # Map logical motor index to physical stepper ID
-            stepper_id = motorAxisOrder[logical_motor_index]
-            stepper_ids.append(stepper_id)
+        # axis names or stepperids -> stepperids
+        stepper_ids = [self.xyztTo1230(axis) for axis in axes]
         
         num_motors = len(stepper_ids)
         
@@ -180,18 +138,8 @@ class Home(object):
                 preMoveDistanceSteps = 100  # steps to move away from endstop
                 
                 # Move away from endstop using the motor controller
-                if stepper_id == 1:  # X
-                    self._parent.motor.move_x(steps=preMoveDirection*preMoveDistanceSteps, 
-                                            speed=speeds[i], is_blocking=True, is_absolute=False, is_enabled=True)
-                elif stepper_id == 2:  # Y
-                    self._parent.motor.move_y(steps=preMoveDirection*preMoveDistanceSteps, 
-                                            speed=speeds[i], is_blocking=True, is_absolute=False, is_enabled=True)
-                elif stepper_id == 3:  # Z
-                    self._parent.motor.move_z(steps=preMoveDirection*preMoveDistanceSteps, 
-                                            speed=speeds[i], is_blocking=True, is_absolute=False, is_enabled=True)
-                elif stepper_id == 0:  # A
-                    self._parent.motor.move_a(steps=preMoveDirection*preMoveDistanceSteps, 
-                                            speed=speeds[i], is_blocking=True, is_absolute=False, is_enabled=True)
+                self._parent.motor.move_axis_by_name(axis=stepper_id, steps=preMoveDirection*preMoveDistanceSteps,
+                                                     speed=speeds[i], is_blocking=True, is_absolute=False, is_enabled=True)
             time.sleep(0.5)
         
         # Build the steppers list for the JSON payload
@@ -227,22 +175,12 @@ class Home(object):
         return r
     
     def xyztTo1230(self, axis):
-        """Convert axis string to stepper ID number."""
-        if isinstance(axis, str):
-            axis = axis.upper()
-            if axis == "X":
-                return 1
-            elif axis == "Y":
-                return 2
-            elif axis == "Z":
-                return 3
-            elif axis == "A":
-                return 0
-        return axis
+        """Axis name ("X", "B", ...) or stepperid -> stepperid, see Motor.axis_id."""
+        return self._parent.motor.axis_id(axis)
     
     def home(self, axis=None, timeout=None, speed=None, direction=None, endposrelease=None, endstoppolarity=None, endstoptimeout=10000, isBlocking=False, preMove=False, hardhome=False):
         '''
-        axis = 0,1,2,3 or 'A, 'X','Y','Z'
+        axis = stepperid (A=0, X=1, Y=2, Z=3, B..G=4..9) or axis name ('X', 'B', ...)
         timeout => when to stop homing (it's a while loop on the MCU)
         speed => speed of homing (0...15000)
         direction => 1,-1 (left/right)
@@ -275,20 +213,10 @@ class Home(object):
             preMoveDistanceSteps = 100 # steps to move away from endstop
             
             # move away from endstop
-            if axis == 1 or axis == "X":
-                self._parent.motor.move_x(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
-            elif axis == 2 or axis == "Y":
-                self._parent.motor.move_y(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
-            elif axis == 3 or axis == "Z":
-                self._parent.motor.move_z(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
-            elif axis == 0 or axis == "A":
-                self._parent.motor.move_a(steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
-            else:   
-                raise ValueError("Invalid axis. Use 'X', 'Y', 'Z', or 'A'.")
+            self._parent.motor.move_axis_by_name(axis=axis, steps=preMoveDirection*preMoveDistanceSteps, speed=self.speed, is_blocking=True, is_absolute=False, is_enabled=True)
             time.sleep(0.5)
         
-        # Map logical motor index to physical stepper ID through motorAxisOrder
-        stepper_id = self._parent.motor.motorAxisOrder[axis]
+        stepper_id = self.xyztTo1230(axis)
         
         # construct json string
         path = "/home_act"
