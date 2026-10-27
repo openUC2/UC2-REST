@@ -38,20 +38,12 @@ class Laser(object):
         into the laser values array '''
         try:
             laser_data = data["laser"]
-            # Handle both single laser and multiple lasers
-            if isinstance(laser_data, dict):
-                # Single laser format: {"LASERid":1,"LASERval":512,"isDone":1}
-                laser_id = laser_data.get("LASERid", 0)
-                laser_val = laser_data.get("LASERval", 0)
-                if 0 <= laser_id < self.nLasers:
-                    self.laserValues[laser_id] = laser_val
-            elif isinstance(laser_data, list):
-                # Multiple lasers format: [{"LASERid":1,"LASERval":512,"isDone":1}, ...]
-                for laser in laser_data:
-                    laser_id = laser.get("LASERid", 0)
-                    laser_val = laser.get("LASERval", 0)
-                    if 0 <= laser_id < self.nLasers:
-                        self.laserValues[laser_id] = laser_val
+            # single update {"LASERid":..}, a list of them, or the /laser_get answer {"lasers":[..]}
+            lasers = laser_data if isinstance(laser_data, list) else laser_data.get("lasers", [laser_data])
+            for laser in lasers:
+                laser_id = laser.get("LASERid", -1)
+                if "LASERval" in laser and 0 <= laser_id < self.nLasers:
+                    self.laserValues[laser_id] = laser["LASERval"]
             
             # Call all registered callbacks for key 0
             for callback in self._callbackPerKey[0]:
@@ -113,6 +105,37 @@ class Laser(object):
         #self._parent.logger.debug("Setting Laser "+str(channel)+", value: "+str(value))
         r = self._parent.post_json(path, payload, getReturn=is_blocking, timeout=0.5)
         return r
+
+    def get_laser(self, channel=None, timeout=1):
+        """Laser parameters from /laser_get, one dict per laser, e.g.
+        {"LASERid":1,"LASERpin":12,"LASERval":0,"LASERmax":1024,"LASERRes":10,"LASERFreq":5000,
+         "LASERdespeckle":0,"LASERdespecklePeriod":20}
+        CAN lasers carry "node" (and "error" if the slave did not answer).
+        channel None: {LASERid: params} for all lasers; an id: that laser's dict or None.
+        Firmware without the "lasers" list yields {} / None.
+        """
+        r = self._parent.post_json("/laser_get", {"task": "/laser_get"}, getReturn=True, nResponses=1, timeout=timeout)
+        if isinstance(r, list):
+            r = next((i for i in r if isinstance(i, dict) and "laser" in i), {})
+        laser = r.get("laser", {}) if isinstance(r, dict) else {}
+        lasers = {l["LASERid"]: l for l in laser.get("lasers", []) if "LASERid" in l}
+        return lasers if channel is None else lasers.get(channel)
+
+    def get_laser_max(self, channel=1, timeout=1):
+        """Maximum PWM value of a laser (2**resolution, i.e. fully on), None if unknown."""
+        return (self.get_laser(channel, timeout=timeout) or {}).get("LASERmax")
+
+    def set_laser_pwm(self, channel=1, frequency=None, resolution=None, value=0, timeout=1):
+        """Change PWM frequency (Hz) and/or resolution (bits) of a laser; LASERmax becomes 2**resolution.
+        The firmware needs a LASERval with it, so the laser is set to `value` (default off) afterwards.
+        Only on-board lasers: CAN slaves ignore LASERFreq/LASERRes.
+        """
+        payload = {"task": "/laser_act", "LASERid": channel, "LASERval": int(value)}
+        if frequency is not None:
+            payload["LASERFreq"] = int(frequency)
+        if resolution is not None:
+            payload["LASERRes"] = int(resolution)
+        return self._parent.post_json("/laser_act", payload, timeout=timeout)
 
     def set_strobe(self, channel, enable=True, delay_us=0, width_us=20, timeout=2.0):
         """Configure the strobe of a logical laser id (one flash per strobed-sweep frame).
