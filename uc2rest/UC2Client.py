@@ -177,10 +177,13 @@ class UC2Client(object):
         # initialize module controller
         self.modules = Modules(parent=self)
     
-    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=1):
+    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=1, accept=None):
         if timeout <=0:
             getReturn = False
-        return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses, timeout=timeout)
+        if accept is None:      # serial implementations without the accept argument keep working
+            return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses, timeout=timeout)
+        return self.serial.post_json(path, payload, getReturn=getReturn, nResponses=nResponses, timeout=timeout,
+                                     accept=accept)
 
     def get_json(self, path, getReturn=True, timeout=1):
         if self.is_serial or self.isPyScript:
