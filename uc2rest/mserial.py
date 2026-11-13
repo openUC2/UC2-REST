@@ -525,8 +525,9 @@ class Serial:
         message = json.dumps(message)
         return self.sendMessage(message, nResponses=0, timeout=timeout)
 
-    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=100):
-        """Make an HTTP POST request and return the JSON response"""
+    def post_json(self, path, payload, getReturn=True, nResponses=1, timeout=100, accept=None):
+        """Make an HTTP POST request and return the JSON response.
+        accept: see sendMessage."""
         if payload is None:
             payload = {}
         if "task" not in payload:
@@ -535,7 +536,7 @@ class Serial:
         # write message to the serial
         if not getReturn:
             nResponses = -1
-        writeResult = self.sendMessage(command=payload, nResponses=nResponses, timeout=timeout)
+        writeResult = self.sendMessage(command=payload, nResponses=nResponses, timeout=timeout, accept=accept)
         return writeResult
 
     def writeSerial(self, payload):
@@ -560,12 +561,17 @@ class Serial:
         '''
         self.callBackList.append({"callbackfct":callback, "pattern":pattern})
 
-    def sendMessage(self, command, nResponses=1, timeout = 20):
+    def sendMessage(self, command, nResponses=1, timeout = 20, accept=None):
         '''
         Sends a command to the device and optionally waits for a response.
         If nResponses is 0, then the command is sent but no response is expected.
         If nResponses is 1, then the command is sent and the response is returned.
         If nResponses is >1, then the command is sent and a list of responses is returned.
+        accept: optional predicate on one response. Responses are routed by their qid, and the
+        firmware also tags unsolicited frames with a qid (a motor's position push carries the
+        qid of that motor's last move; qids wrap after 254 commands), so the first frame with
+        our qid need not be the answer. With accept, wait until a response satisfies it and
+        return [that response] + the others.
         '''
         if type(command) == str:
             command = json.loads(command)
@@ -627,7 +633,16 @@ class Serial:
                     self._logger.debug("Communication interrupted by timeout or reset for command: "+str(self.commands[identifier]))
                 return "communication interrupted by timeout or reset: "+str(identifier) + " and code:"+str(self.commands[identifier])
             with self.lock:
-                if identifier in self.responses:
+                if accept is not None and identifier in self.responses:
+                    got = self.responses[identifier]
+                    hit = next((r for r in got if accept(r)), None)
+                    if hit is not None:
+                        del self.responses[identifier]
+                        others = [r for r in got if r is not hit]
+                        if others and self.DEBUG:
+                            self._logger.debug(f"qid {identifier}: skipped {len(others)} frame(s) that are not the answer: {others}")
+                        return [hit] + others
+                elif identifier in self.responses:
                     if len(self.responses[identifier])>=nResponses:
                         returnMessage = self.responses[identifier]
                         # remove the response from the list

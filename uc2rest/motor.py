@@ -901,12 +901,25 @@ class Motor(object):
 
         return r
 
+    def _post_motor_get(self, payload, timeout, ids=None):
+        '''Send a /motor_get and return its answer (a dict), or {} when none came: frames that
+        only share its qid (position pushes) are skipped, see _is_motor_get_reply.'''
+        accept = lambda x: self._is_motor_get_reply(x, ids)
+        try:
+            r = self._parent.post_json("/motor_get", payload, getReturn=True, nResponses=1, timeout=timeout,
+                                       accept=accept)
+        except TypeError:       # a parent without the accept argument: take the first frame, but check it
+            r = self._parent.post_json("/motor_get", payload, getReturn=True, nResponses=1, timeout=timeout)
+        if isinstance(r, dict):
+            r = [r]
+        if not isinstance(r, list):     # "communication interrupted by timeout ...", "Failed to Send"
+            return {}
+        return next((x for x in r if accept(x)), {})
+
     def _read_firmware_positions(self, timeout=1):
         '''{stepperid: physical position} from /motor_get, or {} if no reply.'''
         stepSizes = np.array((self.stepSizeA, self.stepSizeX, self.stepSizeY, self.stepSizeZ))
-        r = self._parent.post_json("/motor_get", {"task": "/motor_get", "position": True},
-                                   getReturn=True, nResponses=1, timeout=timeout)
-        reply = r[0] if isinstance(r, list) and r and isinstance(r[0], dict) else {}
+        reply = self._post_motor_get({"task": "/motor_get", "position": True}, timeout)
         return {st["stepperid"]: st["position"] * stepSizes[st["stepperid"]] * self.direction[st["stepperid"]]
                 for st in reply.get("motor", {}).get("steppers", [])
                 if "position" in st and 0 <= st["stepperid"] < 4}
@@ -1039,9 +1052,27 @@ class Motor(object):
         r = self._parent.post_json(path, payload)
         return r
 
-    def get_position(self, axis=None, timeout=1):
+    @staticmethod
+    def _is_motor_get_reply(r, ids=None):
+        '''A /motor_get answer, not a position push of one motor ({"steppers":[{..,"isDone":..}]}),
+        which the firmware tags with the qid of that motor's last move - after the 254-command
+        qid wrap that can be ours. Taken as the answer it reported every other axis as 0
+        (ImSwitch FRAME calibration 2026-11-12: "X reads 728.2 after a move to 19394.5").
+        Answers: {"motor":{"steppers":[...]}}; for a request filtered to stepper ``ids`` (CAN
+        builds) also {"steppers":[...]} listing all of them.'''
+        if not isinstance(r, dict):
+            return False
+        if isinstance(r.get("motor"), dict):
+            return "steppers" in r["motor"]
+        st = r.get("steppers")
+        if not ids or not isinstance(st, list):
+            return False
+        return set(ids) <= {s.get("stepperid") for s in st if isinstance(s, dict)}
+
+    def get_position(self, axis=None, timeout=1, missing=0.0):
         '''
-        Positions in physical units as an array indexed by stepperid (0 where unknown).
+        Positions in physical units as an array indexed by stepperid (``missing`` where unknown:
+        no reply, or the axis not in it; pass np.nan to tell a lost reading from position 0).
         axis None: what a bare /motor_get lists (the board's own axes); a name, id or a list
         of them asks for exactly those axes, which CAN axes (e.g. ids 4-9 on a HAT) need.
         '''
@@ -1053,10 +1084,10 @@ class Motor(object):
         if axis is not None:
             axes = axis if isinstance(axis, (list, tuple)) else [axis]
             payload["motor"] = {"steppers": [{"stepperid": self.axis_id(a)} for a in axes]}
-        _position = np.zeros(self.nMotors)
+        _position = np.full(self.nMotors, missing, dtype=float)
 
-        # this may be an asynchronous call.. #FIXME!
-        r = self._parent.post_json(path, payload, getReturn = True, nResponses=1, timeout=timeout)[0]
+        r = self._post_motor_get(payload, timeout,
+                                 ids=None if axis is None else [s["stepperid"] for s in payload["motor"]["steppers"]])
         # bare request: {"motor":{"steppers":[...]}}, filtered request (CAN builds): {"steppers":[...]}
         for istepper in r.get("motor", r).get("steppers", []) if isinstance(r, dict) else []:
             stepperID = istepper.get("stepperid", -1)
