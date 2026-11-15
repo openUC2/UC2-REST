@@ -43,7 +43,11 @@ class Home(object):
         --
         into the position array of the motors '''
         try:
-            steppers = data["home"]["steppers"]
+            home = data["home"]
+            if "stepperid" in home:  # current firmware: {"home":{"stepperid":1,"status":"done"|"timeout","pos":0}}
+                steppers = {"axis": home["stepperid"], "isDone": int(home.get("status") == "done")}
+            else:
+                steppers = home["steppers"]
             # Single stepper {"axis":1,"pos":0,"isDone":1} or a list of them
             for stepper in ([steppers] if isinstance(steppers, dict) else steppers):
                 stepperID = stepper["axis"]
