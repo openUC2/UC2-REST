@@ -35,6 +35,19 @@ class Display(object):
     def __init__(self, parent):
         self._parent = parent
         self._state = {}
+        self._fresh = False  # a {"display":...} reply arrived since get_display() started
+
+        # Replies are matched to requests by qid. Firmware that answers /display_get
+        # without echoing it (before 2026-11-18) never reaches the blocking read below,
+        # so the reply is also picked up here by its key, as Fan does.
+        if hasattr(self._parent, "serial"):
+            self._parent.serial.register_callback(self._callback_display, pattern="display")
+
+    def _callback_display(self, data):
+        state = data.get("display")
+        if isinstance(state, dict):
+            self._state = state
+            self._fresh = True
 
     # ── getters ──────────────────────────────────────────────────────────────
 
@@ -44,13 +57,15 @@ class Display(object):
         {present, on, addr, name, status, progress, fw, flip, contrast, splash}.
         Returns {} when the firmware has no display module / did not answer.
         """
+        self._fresh = False
         r = self._parent.get_json("/display_get", timeout=timeout)
         try:
             if isinstance(r, list):
                 r = r[0]
             self._state = r["display"]
         except Exception:
-            self._state = {}
+            if not self._fresh:  # no qid-less reply either: nothing answered
+                self._state = {}
         return self._state
 
     def is_present(self, timeout=1):

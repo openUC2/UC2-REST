@@ -39,6 +39,21 @@ class DisplayTest(unittest.TestCase):
         self.assertEqual(Display(_Parent(None)).get_display(), {})
         self.assertFalse(Display(_Parent(None)).is_present())
 
+    def test_reply_without_qid_is_still_parsed(self):
+        # Firmware before 2026-11-18 sent {"display":{...}} without the qid: the serial layer
+        # cannot match it to the request (the blocking read times out), the callback still sees it.
+        parent = _Parent("communication interrupted by timeout or reset: 7")
+        display = Display(parent)
+        callback = parent.serial.register_callback.call_args.kwargs["callbackfct"] \
+            if "callbackfct" in parent.serial.register_callback.call_args.kwargs \
+            else parent.serial.register_callback.call_args.args[0]
+        parent.get_json = lambda path, **kw: (callback(REPLY[0]), "communication interrupted by timeout or reset: 7")[1]
+        self.assertTrue(display.is_present())
+        self.assertEqual(display.get_display()["fw"], "v2026.0.0-beta.4")
+        # a stale cache must not survive a get that nobody answered
+        parent.get_json = lambda path, **kw: "communication interrupted by timeout or reset: 8"
+        self.assertEqual(display.get_display(), {})
+
     def test_get_display_reports_missing_panel(self):
         display = Display(_Parent([{"display": {"present": 0, "on": 1}}]))
         self.assertFalse(display.is_present())
