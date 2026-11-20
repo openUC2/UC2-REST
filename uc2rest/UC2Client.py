@@ -30,6 +30,7 @@ from .logger import Logger
 from .cmdrecorder import cmdRecorder
 from .temperature import Temperature
 from .fan import Fan
+from .display import Display
 from .message import Message
 from .can import CAN
 from .canota import CANOTA
@@ -137,6 +138,9 @@ class UC2Client(object):
 
         # initialize fan controller
         self.fan = Fan(self)
+
+        # initialize status OLED (SSD1306 128x32 on the CAN-HAT master)
+        self.display = Display(self)
 
         # initialize galvo
         self.galvo = Galvo(self)
