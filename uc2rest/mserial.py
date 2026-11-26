@@ -248,19 +248,24 @@ class Serial:
             descriptions_to_check = ["CH340", "CP2102", "USB Serial"]
         elif current_os.startswith("darwin"):
             # prefer cu.SLAB* over others on mac
-            ports_to_check = ["/dev/cu.SLAB", "/dev/cu.wchusb", "/dev/cu.usbmodem"]
-            descriptions_to_check = ["CH340", "CP2102", "USB-Serial"]
+            ports_to_check = ["/dev/cu.SLAB", "/dev/cu.wchusb", "/dev/cu.usbmodem", "/dev/cu.usbserial-"]
+            descriptions_to_check = ["CH340", "CP2102", "USB-Serial", "USB Serial"]
         else:  # linux or other
             ports_to_check = ["/dev/ttyUSB", "/dev/ttyACM"]
             descriptions_to_check = ["CH340", "CP2102", "USB2.0-Serial", "USB-Serial"]
 
+        # With the WCH driver installed macOS lists a CH340/CH9102 twice, as
+        # cu.wchusbserial* (WCH) and cu.usbserial-* (Apple); use the WCH one only.
+        # Without it the board is only cu.usbserial-* and must not be skipped.
+        has_wch_port = any(p.device.startswith("/dev/cu.wchusb") for p in _available_ports)
         for port in _available_ports:
             # If a specific board was requested, ignore everything else.
             if not self._portMatchesDeviceId(port):
                 continue
             if any(port.device.startswith(p) for p in ports_to_check) or \
             any(port.description.startswith(d) for d in descriptions_to_check):
-                if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-"):
+                if current_os.startswith("darwin") and port.device.startswith("/dev/cu.usbserial-") \
+                        and has_wch_port:
                     continue
                 if self.tryToConnect(port):
                     self.is_connected = True
@@ -480,10 +485,15 @@ class Serial:
                         json_response = {}
                         #reading_json = True
 
-                    try: 
+                    try:
                         currentIdentifier = json_response["qid"]
-                    except Exception as e:
-                        self._logger.error("No QID found in the response: "+str(e))
+                    except Exception:
+                        # e.g. the trailing {"return": 1} that /laser_act sends after its
+                        # {"qid": n, "state": "done"}: it belongs to the command before
+                        # it, where it is filed below. Not an error (was logged as one
+                        # on every LED/laser switch).
+                        if self.DEBUG:
+                            self._logger.debug(f"Response without qid, filed under qid {currentIdentifier}: {json_response}")
 
                     # Check for QID done/state notification from firmware
                     if self.use_qid_done and "state" in json_response:
